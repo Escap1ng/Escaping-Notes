@@ -13,19 +13,22 @@ const index = [
 </script>
 
 <template>
-  <GravityWell />
+  <!-- 单根包裹：Transition 子组件需单一根节点 -->
+  <div>
+    <GravityWell />
 
-  <section class="home-index-wrap">
-    <p class="readout index-head">// escape_index · 逃逸目录</p>
-    <nav class="home-index" aria-label="站点内容索引">
-      <RouterLink v-for="item in index" :key="item.code" :to="item.to" class="index-row">
-        <span class="readout index-code">{{ item.code }}</span>
-        <span class="index-name">{{ item.name }}</span>
-        <span class="readout index-desc">{{ item.desc }}</span>
-        <span class="index-arrow" aria-hidden="true">→</span>
-      </RouterLink>
-    </nav>
-  </section>
+    <section class="home-index-wrap">
+      <p class="readout index-head">// escape_index · 逃逸目录</p>
+      <nav class="home-index" aria-label="站点内容索引">
+        <RouterLink v-for="item in index" :key="item.code" :to="item.to" class="index-row">
+          <span class="readout index-code">{{ item.code }}</span>
+          <span class="index-name">{{ item.name }}</span>
+          <span class="readout index-desc">{{ item.desc }}</span>
+          <span class="index-arrow" aria-hidden="true">→</span>
+        </RouterLink>
+      </nav>
+    </section>
+  </div>
 </template>
 
 <style scoped>

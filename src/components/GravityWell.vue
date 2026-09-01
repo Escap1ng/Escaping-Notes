@@ -15,8 +15,8 @@ const NAV = [
 
 const trackRef = ref(null)
 const canvasRef = ref(null)
+const clockRef = ref(null)
 const progress = ref(0)
-const now = ref('--:--:--')
 
 // 仪表读数：海拔随爬升推进
 const alt = computed(() => String(Math.round(progress.value * 11200)).padStart(5, '0'))
@@ -25,9 +25,7 @@ const escaped = computed(() => progress.value > 0.97)
 // 蓄能：长按 ≥800ms 起充，VEL 逼近 11.2；松开缓慢回落
 const charge = ref(0)
 const charged = ref(false)
-const sync = ref(false)
 let chargeTimer = 0
-let resonanceUntil = 0
 
 const vel = computed(() => {
   const base = 2 + progress.value * 9.2
@@ -46,35 +44,41 @@ let pressX = 0
 let pressY = 0
 const whisperTimers = []
 let fired = false
+let tapOk = false
 let rippleStart = 0
 const escapers = []
 const traces = []
 
-function fireEscape() {
-  if (!reduced) {
-    escapers.push({
-      x: cx > -1e3 ? cx : W / 2,
-      y: cy > -1e3 ? cy : H * 0.6,
-      v: 5,
-      trail: [],
-    })
-    rippleStart = performance.now()
-  }
-  navigator.vibrate?.(30)
-  const list = content.whispers || []
-  let text = '已达到逃逸速度，井外见。'
-  if (list.length) {
-    const i = Number(localStorage.getItem('en-whisper-idx') || 0) % list.length
-    text = list[i]
-    localStorage.setItem('en-whisper-idx', String(i + 1))
-  }
-  const inst = { id: ++wid, x: pressX, y: pressY, text }
+// 低语定点实例：轻点 1.4s / 长按发射 2.6s；同处（≤48px）新句立即替换旧句，不重叠
+function pushWhisper(text, life) {
+  whispersActive.value = whispersActive.value.filter(
+    (w) => Math.hypot(w.x - pressX, w.y - pressY) > 48
+  )
+  const inst = { id: ++wid, x: pressX, y: pressY, text, life }
   whispersActive.value.push(inst)
   whisperTimers.push(
     setTimeout(() => {
       whispersActive.value = whispersActive.value.filter((w) => w.id !== inst.id)
-    }, 2600)
+    }, life)
   )
+}
+
+function nextWhisperText(fallback) {
+  const list = content.whispers || []
+  if (!list.length) return fallback
+  const i = Number(localStorage.getItem('en-whisper-idx') || 0) % list.length
+  localStorage.setItem('en-whisper-idx', String(i + 1))
+  return list[i]
+}
+
+function fireEscape() {
+  if (!reduced) {
+    // 单颗主粒，从按压点正下方的井底发射：起步慢、逐渐加速冲出
+    escapers.push({ x: pressX, y: H - 20, v: 1.8, r: 4, trail: [] })
+    rippleStart = performance.now()
+  }
+  navigator.vibrate?.(30)
+  pushWhisper(nextWhisperText('已达到逃逸速度，井外见。'), 2600)
 }
 
 function onDown(e) {
@@ -86,10 +90,13 @@ function onDown(e) {
   pressX = e.clientX - r.left
   pressY = e.clientY - r.top
   fired = false
+  // 轻点候选：点导航坐标不触发低语
+  tapOk = !e.target.closest('a')
   clearInterval(chargeTimer)
   chargeTimer = setInterval(() => {
     const held = performance.now() - downAt
-    charge.value = held < 800 ? 0 : Math.min(1, (held - 800) / 1700)
+    // 总蓄能 1875ms（800ms 防误触门槛 + 1075ms 充能），比原 2500ms 缩短四分之一
+    charge.value = held < 800 ? 0 : Math.min(1, (held - 800) / 1075)
     charged.value = charge.value > 0.97
     if (charged.value && !fired) {
       fired = true
@@ -98,13 +105,29 @@ function onDown(e) {
   }, 80)
 }
 
-// 位移>10px 视为滚动意图，取消蓄能（触摸滚动不误触发）
+// 位移>10px 视为滚动意图，取消蓄能与轻点（触摸滚动不误触发）
 function onPtrMove(e) {
-  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) onUp()
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) {
+    tapOk = false
+    onUp()
+  }
+}
+
+// 离开/取消视为放弃，不触发轻点低语
+function onLeaveCancel() {
+  tapOk = false
+  onUp()
 }
 
 function onUp() {
   clearInterval(chargeTimer)
+  const held = performance.now() - downAt
+  // 轻点（<800ms 且未位移、未点链接）= 一句低语，与长按发射分层
+  if (tapOk && !fired && held < 800) {
+    navigator.vibrate?.(10)
+    pushWhisper(nextWhisperText('……'), 1600)
+  }
+  tapOk = false
   const decay = setInterval(() => {
     charge.value = Math.max(0, charge.value - 0.06)
     charged.value = charge.value > 0.97
@@ -112,11 +135,35 @@ function onUp() {
   }, 50)
 }
 
-// 共振：三连点 logo → 全部轨迹同相位 2s
+// 共振：三连点 logo → 2s 内持续发射流星（不快于主粒、彼此不靠近）
+const burstTimers = []
 function onResonance() {
-  resonanceUntil = performance.now() + 2000
-  sync.value = true
-  setTimeout(() => (sync.value = false), 2000)
+  if (reduced) return
+  rippleStart = performance.now()
+  const xs = []
+  let spawned = 0
+  const dir = Math.random() < 0.5 ? -1 : 1 // 本轮统一倾斜方向，成平行阵雨
+  const tick = () => {
+    if (++spawned > 10) return
+    // 随机落点，但与本轮已发粒子保持 ≥60px 间距
+    let x = W / 2
+    for (let tries = 0; tries < 8; tries++) {
+      x = 20 + Math.random() * (W - 40)
+      if (xs.every((o) => Math.abs(o - x) > 60)) break
+    }
+    xs.push(x)
+    escapers.push({
+      x,
+      y: H - 10 - Math.random() * 20,
+      v: 1.0 + Math.random() * 0.3, // 慢速流星
+      acc: 1.012,
+      vx: dir * (0.3 + Math.random() * 0.4),
+      r: 1.6 + Math.random() * 1.2,
+      trail: [],
+    })
+    burstTimers.push(setTimeout(tick, 160 + Math.random() * 120))
+  }
+  tick()
 }
 
 let ctx = null
@@ -134,6 +181,15 @@ let visible = true
 let clockTimer = 0
 let observer = null
 
+function rgbOf(c) {
+  if (c[0] === '#') {
+    const n = parseInt(c.slice(1), 16)
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+  }
+  const m = c.match(/\d+/g)
+  return m ? [m[0] | 0, m[1] | 0, m[2] | 0] : [152, 163, 183]
+}
+
 // 颜色统一读 CSS 变量：井底/井外双主题零额外成本
 function readColors() {
   const cs = getComputedStyle(document.documentElement)
@@ -142,6 +198,8 @@ function readColors() {
     dim: cs.getPropertyValue('--text-1').trim() || colors.dim,
     signal: cs.getPropertyValue('--signal').trim() || colors.signal,
   }
+  colors.dimRGB = rgbOf(colors.dim)
+  colors.sigRGB = rgbOf(colors.signal)
   if (reduced) draw(0)
 }
 
@@ -153,6 +211,7 @@ function spawn(anywhere) {
     seed: Math.random() * 1000,
     curve: (Math.random() - 0.5) * 90,
     v: 0.018 + Math.random() * 0.028,
+    born: performance.now(), // 丝线淡入起点
   }
 }
 
@@ -167,8 +226,14 @@ function resize() {
   ctx = canvas.getContext('2d')
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   // 粒子数随面积缩放：桌面≈180 / 移动≈90
+  // resize（如移动端地址栏收放）保留既有粒子，只增减数量，避免整片星场瞬移闪烁
   const count = Math.max(60, Math.min(180, Math.round((W * H) / 9000)))
-  particles = Array.from({ length: count }, () => spawn(true))
+  if (!particles.length) {
+    particles = Array.from({ length: count }, () => spawn(true))
+  } else {
+    while (particles.length < count) particles.push(spawn(true))
+    if (particles.length > count) particles.length = count
+  }
   if (reduced) draw(0)
 }
 
@@ -218,8 +283,8 @@ function draw(t) {
 
   for (const pt of particles) {
     if (!reduced) {
-      // 挣扎感上升：慢-快-慢 + 个体相位；共振期间同相位；蓄能加速
-      const phase = t < resonanceUntil ? 0 : pt.seed
+      // 挣扎感上升：慢-快-慢 + 个体相位；蓄能加速
+      const phase = pt.seed
       const struggle = 0.55 + 0.9 * Math.abs(Math.sin(t * 0.0006 * (0.5 + pt.z) + phase))
       pt.y -= pt.v * struggle * 16 * (0.5 + pt.z) * (1 + charge.value * 2.2)
       if (pt.y < -20) Object.assign(pt, spawn(false))
@@ -227,7 +292,7 @@ function draw(t) {
     const jx = Math.sin(t * 0.001 + pt.seed) * 5 * pt.z
     const py0 = pt.y
 
-    // 轨迹=意图路径：中点受光标引力弯曲
+    // 轨迹=意图路径：三次贝塞尔，双控制点各自低频摆动（seed 定相位，随机且连续）
     const cX = pt.x + pt.curve
     const cY = H * 0.5
     let bend = 0
@@ -235,11 +300,21 @@ function draw(t) {
     const dcy = cY - cy
     const dc = Math.hypot(dcx, dcy)
     if (dc < R * 1.4 && dc > 0.001) bend = -(dcx / dc) * (1 - dc / (R * 1.4)) * 70
+    const wob1 = Math.sin(t * 0.00035 + pt.seed) * 12 * pt.z
+    const wob2 = Math.sin(t * 0.00028 + pt.seed * 1.7 + 2) * 16 * pt.z
+    // 丝线随生命周期淡入（重生后 1.2s）淡出（临近顶部），避免突然闪现
+    const fadeIn = reduced ? 1 : Math.min(1, (t - pt.born) / 1200)
+    const fadeOut = Math.min(1, Math.max(0, pt.y / (H * 0.2)))
     ctx.strokeStyle = colors.line
-    ctx.globalAlpha = 0.05 + 0.07 * pt.z
+    // 轨迹线透明度与 --line 相乘：移动端可见、井底不过亮
+    ctx.globalAlpha = (0.12 + 0.14 * pt.z) * fadeIn * fadeOut
     ctx.beginPath()
     ctx.moveTo(pt.x, H + 10)
-    ctx.quadraticCurveTo(cX + bend, cY, pt.x + pt.curve * 1.6, -10)
+    ctx.bezierCurveTo(
+      pt.x + pt.curve * 0.6 + wob1 + bend, H * 0.66,
+      pt.x + pt.curve * 1.2 + wob2 + bend, H * 0.33,
+      pt.x + pt.curve * 1.8, -10
+    )
     ctx.stroke()
 
     // 粒子：被光标吸引、点亮
@@ -256,7 +331,13 @@ function draw(t) {
     }
     if (ripple) px += Math.sin(t * 0.02 + pt.seed) * 3 * ripple
     ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * 0.5 + charge.value * 0.3)
-    ctx.fillStyle = f > 0.22 ? colors.signal : colors.dim
+    // 颜色随引力强度平滑过渡（灰→琥珀），消除二元切换的闪烁
+    const k = Math.min(1, Math.max(0, (f - 0.08) / 0.3))
+    const dC = colors.dimRGB
+    const sC = colors.sigRGB
+    ctx.fillStyle = `rgb(${Math.round(dC[0] + (sC[0] - dC[0]) * k)},${Math.round(
+      dC[1] + (sC[1] - dC[1]) * k
+    )},${Math.round(dC[2] + (sC[2] - dC[2]) * k)})`
     ctx.beginPath()
     ctx.arc(px, py, 0.8 + 1.5 * pt.z + f * 1.3, 0, Math.PI * 2)
     ctx.fill()
@@ -272,25 +353,32 @@ function draw(t) {
     ctx.stroke()
   }
 
-  // 逃逸粒子：加速上升 + 拖尾
+  // 逃逸粒子：加速上升 + 拖尾（加长加亮，带微光晕）
   for (let i = escapers.length - 1; i >= 0; i--) {
     const es = escapers[i]
-    es.v *= 1.04
+    es.v *= es.acc || 1.03 // 起步慢、逐渐加速冲出井口（流星用更低系数）
     es.y -= es.v
+    es.x += es.vx || 0 // 流星横向漂移，拖尾成斜线
     es.trail.push({ x: es.x, y: es.y })
-    if (es.trail.length > 36) es.trail.shift()
+    if (es.trail.length > 60) es.trail.shift()
     ctx.strokeStyle = colors.signal
+    ctx.lineWidth = 1.6
     for (let j = 1; j < es.trail.length; j++) {
-      ctx.globalAlpha = (j / es.trail.length) * 0.5
+      ctx.globalAlpha = (j / es.trail.length) * 0.9
       ctx.beginPath()
       ctx.moveTo(es.trail[j - 1].x, es.trail[j - 1].y)
       ctx.lineTo(es.trail[j].x, es.trail[j].y)
       ctx.stroke()
     }
-    ctx.globalAlpha = 1
+    ctx.lineWidth = 1
+    ctx.globalAlpha = 0.45
     ctx.fillStyle = colors.signal
     ctx.beginPath()
-    ctx.arc(es.x, es.y, 2.5, 0, Math.PI * 2)
+    ctx.arc(es.x, es.y, es.r * 3, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 1
+    ctx.beginPath()
+    ctx.arc(es.x, es.y, es.r, 0, Math.PI * 2)
     ctx.fill()
     if (es.y < -60) {
       traces.push({ x: es.x })
@@ -365,7 +453,9 @@ onMounted(() => {
   const tick = () => {
     const d = new Date()
     const q = (n) => String(n).padStart(2, '0')
-    now.value = `${q(d.getHours())}:${q(d.getMinutes())}:${q(d.getSeconds())}`
+    // 直写 DOM，避免每秒重渲染整视图（out-in 转场对此敏感）
+    if (clockRef.value)
+      clockRef.value.textContent = `T ${q(d.getHours())}:${q(d.getMinutes())}:${q(d.getSeconds())}`
   }
   tick()
   clockTimer = setInterval(tick, 1000)
@@ -378,6 +468,7 @@ onUnmounted(() => {
   clearInterval(clockTimer)
   clearInterval(chargeTimer)
   whisperTimers.forEach(clearTimeout)
+  burstTimers.forEach(clearTimeout)
   if (observer) observer.disconnect()
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', resize)
@@ -400,25 +491,24 @@ onUnmounted(() => {
       @pointerdown="onDown"
       @pointermove="onPtrMove"
       @pointerup="onUp"
-      @pointerleave="onUp"
-      @pointercancel="onUp"
+      @pointerleave="onLeaveCancel"
+      @pointercancel="onLeaveCancel"
     >
       <canvas ref="canvasRef" class="well-canvas" aria-hidden="true"></canvas>
 
       <div class="readout well-readout">
         <span>LOC {{ content.site.coords }}</span>
-        <span>T {{ now }}</span>
+        <span ref="clockRef">T --:--:--</span>
         <span>ALT {{ alt }} M</span>
         <span>VEL {{ vel }}</span>
         <span class="esc" :class="{ lit: escaped }">ESC 11.2</span>
-        <span v-if="sync" class="sync">SYNC OK</span>
       </div>
 
       <div
         v-for="w in whispersActive"
         :key="w.id"
         class="charge-panel"
-        :style="{ left: w.x + 'px', top: w.y + 'px' }"
+        :style="{ left: w.x + 'px', top: w.y + 'px', animationDuration: w.life + 'ms' }"
         aria-hidden="true"
       >
         <p class="readout charge-line">{{ w.text }}</p>
@@ -437,7 +527,8 @@ onUnmounted(() => {
               : { left: n.x + '%', top: n.y + '%' }
           "
         >
-          <i class="dot" aria-hidden="true"></i>{{ n.code }} {{ n.label }}
+          <i class="dot" aria-hidden="true"></i><span class="code">{{ n.code }}</span
+          ><span class="label">{{ n.label }}</span>
         </RouterLink>
       </nav>
 
@@ -495,10 +586,6 @@ onUnmounted(() => {
   color: var(--signal);
 }
 
-.sync {
-  color: var(--signal);
-}
-
 /* 低语浮现在按压位置，略高于指尖避免被遮挡；定点缓慢淡出 */
 .charge-panel {
   position: absolute;
@@ -509,11 +596,12 @@ onUnmounted(() => {
   animation: whisper-life 2.6s ease forwards;
 }
 
+/* 缓慢浮现 + 极慢上飘 + 缓慢消逝 */
 @keyframes whisper-life {
-  0% { opacity: 0; }
-  12% { opacity: 1; }
+  0% { opacity: 0; transform: translate(-50%, -122%); }
+  30% { opacity: 1; }
   70% { opacity: 1; }
-  100% { opacity: 0; }
+  100% { opacity: 0; transform: translate(-50%, -140%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -539,8 +627,9 @@ onUnmounted(() => {
   transform: translate(-50%, -50%);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 4px 6px;
+  font-size: 16px;
   color: var(--text-1);
   transition: color 0.3s;
   white-space: nowrap;
@@ -555,10 +644,16 @@ onUnmounted(() => {
 }
 
 .well-coord .dot {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: currentColor;
+}
+
+/* 编号等宽、标签黑体微字距，三段间距由 flex gap 统一 */
+.well-coord .label {
+  font-family: var(--font-sans);
+  letter-spacing: 0.14em;
 }
 
 .well-coord:hover,
@@ -611,7 +706,7 @@ onUnmounted(() => {
     height: 220vh;
   }
   .well-coord {
-    font-size: 11px;
+    font-size: 15px;
   }
 }
 </style>
