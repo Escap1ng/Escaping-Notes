@@ -8,8 +8,9 @@ const NAV = [
   { to: '/updates', label: '动态', code: '02', x: 27, y: 24, at: 0.24 },
   { to: '/links', label: '收藏', code: '03', x: 42, y: 36, at: 0.38 },
   { to: '/projects', label: '项目', code: '04', x: 57, y: 22, at: 0.52 },
-  { to: '/wall', label: '留言墙', code: '05', x: 72, y: 34, at: 0.66 },
-  { to: '/about', label: '关于', code: '06', x: 87, y: 24, at: 0.8 },
+  // anchor:'r' = 右锚定位，避免移动端左定位剩余宽度不足导致换行/圆点压缩
+  { to: '/wall', label: '留言墙', code: '05', x: 72, y: 34, at: 0.66, anchor: 'r' },
+  { to: '/about', label: '关于', code: '06', x: 87, y: 24, at: 0.8, anchor: 'r' },
 ]
 
 const trackRef = ref(null)
@@ -315,8 +316,12 @@ onUnmounted(() => {
           :key="n.code"
           :to="n.to"
           class="readout well-coord"
-          :class="{ lit: progress >= n.at }"
-          :style="{ left: n.x + '%', top: n.y + '%' }"
+          :class="{ lit: progress >= n.at, 'coord-r': n.anchor === 'r' }"
+          :style="
+            n.anchor === 'r'
+              ? { right: 100 - n.x + '%', top: n.y + '%' }
+              : { left: n.x + '%', top: n.y + '%' }
+          "
         >
           <i class="dot" aria-hidden="true"></i>{{ n.code }} {{ n.label }}
         </RouterLink>
@@ -404,6 +409,15 @@ onUnmounted(() => {
   padding: 4px 6px;
   color: var(--text-1);
   transition: color 0.3s;
+  white-space: nowrap;
+}
+
+.well-coord .dot {
+  flex-shrink: 0;
+}
+
+.coord-r {
+  transform: translate(50%, -50%);
 }
 
 .well-coord .dot {
