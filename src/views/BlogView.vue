@@ -118,26 +118,32 @@ const filtered = computed(() =>
   color: var(--signal);
 }
 
+/* 卡片网格：桌面三列 / 中屏两列 / 小屏一列 */
 .post-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.post-list li {
+  display: flex;
 }
 
 .post-row {
-  display: grid;
-  grid-template-columns: 12ch 1fr;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  transition: border-color 0.2s;
 }
 
-.post-list li:last-child .post-row {
-  border-bottom: 1px solid var(--line);
-}
-
-.post-date {
-  padding-top: 4px;
+.post-row:hover {
+  border-color: var(--signal);
 }
 
 .post-main {
@@ -163,14 +169,20 @@ const filtered = computed(() =>
 }
 
 .empty {
+  grid-column: 1 / -1;
   padding: var(--space-2) 0;
   border-top: 1px solid var(--line);
 }
 
-@media (max-width: 720px) {
-  .post-row {
+@media (max-width: 1024px) {
+  .post-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .post-list {
     grid-template-columns: 1fr;
-    gap: 4px;
   }
 }
 </style>

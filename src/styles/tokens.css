@@ -50,6 +50,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* 预留滚动条槽位：长短页切换时视口宽度不变，消除横向抽搐 */
+  scrollbar-gutter: stable;
 }
 
 body {

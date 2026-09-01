@@ -38,15 +38,15 @@ async function submit() {
 
     <form class="auth-form" @submit.prevent="submit">
       <label class="readout">
-        USERNAME
+        USERNAME · 用户名（注册后不可修改）
         <input v-model="form.username" class="field" autocomplete="username" required />
       </label>
       <label v-if="needsSetup" class="readout">
-        NICKNAME
+        NICKNAME · 昵称（可随意修改）
         <input v-model="form.nickname" class="field" autocomplete="nickname" />
       </label>
       <label class="readout">
-        PASSWORD
+        PASSWORD · 密码
         <input v-model="form.password" class="field" type="password" autocomplete="current-password" required />
       </label>
       <p v-if="err" class="readout err">// {{ err }}</p>

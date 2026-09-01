@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { content } from '../lib/content.js'
+
+const router = useRouter()
 
 // 逃逸坐标：at = 爬升进度点亮阈值；位置为视口百分比
 const NAV = [
@@ -9,7 +12,7 @@ const NAV = [
   { to: '/links', label: '收藏', code: '03', x: 42, y: 36, at: 0.38 },
   { to: '/projects', label: '项目', code: '04', x: 57, y: 22, at: 0.52 },
   // anchor:'r' = 右锚定位，避免移动端左定位剩余宽度不足导致换行/圆点压缩
-  { to: '/wall', label: '留言墙', code: '05', x: 72, y: 34, at: 0.66, anchor: 'r' },
+  { to: '/wall', label: '留言', code: '05', x: 72, y: 34, at: 0.66, anchor: 'r' },
   { to: '/about', label: '关于', code: '06', x: 87, y: 24, at: 0.8, anchor: 'r' },
 ]
 
@@ -20,12 +23,14 @@ const progress = ref(0)
 
 // 仪表读数：海拔随爬升推进
 const alt = computed(() => String(Math.round(progress.value * 11200)).padStart(5, '0'))
-const escaped = computed(() => progress.value > 0.97)
+// 逃逸提示透明度：松手后约 3s 隐去（charge 8s 回落映射），平方根缓动
+const escOpacity = computed(() => Math.sqrt(Math.max(0, (charge.value - 0.625) / 0.375)))
 
 // 蓄能：长按 ≥800ms 起充，VEL 逼近 11.2；松开缓慢回落
 const charge = ref(0)
 const charged = ref(false)
-let chargeTimer = 0
+let pressing = false
+let chargeStart = 0
 
 const vel = computed(() => {
   const base = 2 + progress.value * 9.2
@@ -43,7 +48,7 @@ let wid = 0
 let pressX = 0
 let pressY = 0
 const whisperTimers = []
-let fired = false
+const fired = ref(false)
 let tapOk = false
 let rippleStart = 0
 const escapers = []
@@ -73,12 +78,33 @@ function nextWhisperText(fallback) {
 
 function fireEscape() {
   if (!reduced) {
-    // 单颗主粒，从按压点正下方的井底发射：起步慢、逐渐加速冲出
-    escapers.push({ x: pressX, y: H - 20, v: 1.8, r: 4, trail: [] })
+    // 逃逸达成：自按压点附近涌起一轮快速流星雨（比共振流星更快，逃逸感更强）
+    const dir = Math.random() < 0.5 ? -1 : 1
+    const xs = []
+    let spawned = 0
+    const tick = () => {
+      if (++spawned > 7) return
+      let x = pressX
+      for (let tries = 0; tries < 8; tries++) {
+        x = Math.max(20, Math.min(W - 20, pressX + (Math.random() - 0.5) * W * 0.5))
+        if (xs.every((o) => Math.abs(o - x) > 50)) break
+      }
+      xs.push(x)
+      escapers.push({
+        x,
+        y: H - 10 - Math.random() * 20,
+        v: 2 + Math.random() * 1.2,
+        acc: 1.02 + Math.random() * 0.01,
+        vx: dir * (0.4 + Math.random() * 0.6),
+        r: 2 + Math.random() * 1.5,
+        trail: [],
+      })
+      burstTimers.push(setTimeout(tick, 90 + Math.random() * 90))
+    }
+    tick()
     rippleStart = performance.now()
   }
   navigator.vibrate?.(30)
-  pushWhisper(nextWhisperText('已达到逃逸速度，井外见。'), 2600)
 }
 
 function onDown(e) {
@@ -89,20 +115,12 @@ function onDown(e) {
   const r = e.currentTarget.getBoundingClientRect()
   pressX = e.clientX - r.left
   pressY = e.clientY - r.top
-  fired = false
+  fired.value = false
   // 轻点候选：点导航坐标不触发低语
   tapOk = !e.target.closest('a')
-  clearInterval(chargeTimer)
-  chargeTimer = setInterval(() => {
-    const held = performance.now() - downAt
-    // 总蓄能 1875ms（800ms 防误触门槛 + 1075ms 充能），比原 2500ms 缩短四分之一
-    charge.value = held < 800 ? 0 : Math.min(1, (held - 800) / 1075)
-    charged.value = charge.value > 0.97
-    if (charged.value && !fired) {
-      fired = true
-      fireEscape()
-    }
-  }, 80)
+  // 再次长按：打断回落，从当前值续充（无突变）；充/放逐帧平滑计算，见 frame()
+  chargeStart = charge.value
+  pressing = true
 }
 
 // 位移>10px 视为滚动意图，取消蓄能与轻点（触摸滚动不误触发）
@@ -120,19 +138,79 @@ function onLeaveCancel() {
 }
 
 function onUp() {
-  clearInterval(chargeTimer)
   const held = performance.now() - downAt
   // 轻点（<800ms 且未位移、未点链接）= 一句低语，与长按发射分层
-  if (tapOk && !fired && held < 800) {
+  if (tapOk && !fired.value && held < 800) {
     navigator.vibrate?.(10)
     pushWhisper(nextWhisperText('……'), 1600)
   }
   tapOk = false
-  const decay = setInterval(() => {
-    charge.value = Math.max(0, charge.value - 0.06)
-    charged.value = charge.value > 0.97
-    if (charge.value === 0) clearInterval(decay)
-  }, 50)
+  pressing = false // 松手后由 frame() 逐帧 10s 平滑回落
+}
+
+// 坐标点击：先碎裂后入轨——文字像素采样成琥珀碎片炸开，0.3s 后跳转
+const shards = []
+let offCtx = null
+
+// 将链接文字按原字体原位置离屏渲染，逐点采样生成碎片（文字破碎本体）
+function textShards(a, x0, y0) {
+  const w = Math.ceil(a.offsetWidth)
+  const h = Math.ceil(a.offsetHeight)
+  if (w < 4 || h < 4) return
+  if (!offCtx) offCtx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+  const c = offCtx.canvas
+  c.width = w
+  c.height = h
+  offCtx.clearRect(0, 0, w, h)
+  offCtx.fillStyle = '#fff'
+  offCtx.textBaseline = 'top'
+  const ar = a.getBoundingClientRect()
+  for (const el of [a.querySelector('.code'), a.querySelector('.label')]) {
+    if (!el) continue
+    const r = el.getBoundingClientRect()
+    offCtx.font = getComputedStyle(el).font
+    offCtx.fillText(el.textContent, r.left - ar.left, r.top - ar.top)
+  }
+  const data = offCtx.getImageData(0, 0, w, h).data
+  for (let py = 0; py < h; py += 2) {
+    for (let px = 0; px < w; px += 2) {
+      if (data[(py * w + px) * 4 + 3] > 100) {
+        const dx = px - w / 2
+        const dy = py - h / 2
+        shards.push({
+          x: x0 + px,
+          y: y0 + py,
+          vx: dx * 0.14 + (Math.random() - 0.5) * 3,
+          vy: dy * 0.14 + (Math.random() - 0.5) * 3,
+          life: 1,
+          r: 1.1,
+        })
+      }
+    }
+  }
+}
+
+function onNavClick(e) {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return // 保留新标签等原生行为
+  const a = e.target.closest('a')
+  const n = a && NAV.find((x) => a.getAttribute('href') === x.to)
+  if (!n) return
+  if (reduced || !canvasRef.value) return
+  e.preventDefault() // 拦住 RouterLink，碎裂播完再走
+  const crect = canvasRef.value.getBoundingClientRect()
+  const ar = a.getBoundingClientRect()
+  textShards(a, ar.left - crect.left, ar.top - crect.top)
+  a.classList.add('coord-hide')
+  setTimeout(() => a.classList.remove('coord-hide'), 900)
+  // 火花点缀点击中心，大范围炸开
+  const x = e.clientX - crect.left
+  const y = e.clientY - crect.top
+  for (let i = 0; i < 12; i++) {
+    const ang = Math.random() * Math.PI * 2
+    const sp = 2 + Math.random() * 3.5
+    shards.push({ x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 1, r: 1.5 + Math.random() * 1.5 })
+  }
+  setTimeout(() => router.push(n.to), 300)
 }
 
 // 共振：三连点 logo → 2s 内持续发射流星（不快于主粒、彼此不靠近）
@@ -289,7 +367,7 @@ function draw(t, step = 1) {
       // 挣扎感上升：慢-快-慢 + 个体相位；蓄能加速
       const phase = pt.seed
       const struggle = 0.55 + 0.9 * Math.abs(Math.sin(t * 0.0006 * (0.5 + pt.z) + phase))
-      pt.y -= pt.v * struggle * 16 * step * (0.5 + pt.z) * (1 + charge.value * 2.2)
+      pt.y -= pt.v * struggle * 16 * step * (0.5 + pt.z) * (1 + charge.value * 7.4)
       if (pt.y < -20) Object.assign(pt, spawn(false))
     }
     const jx = Math.sin(t * 0.001 + pt.seed) * 5 * pt.z
@@ -391,6 +469,27 @@ function draw(t, step = 1) {
     }
   }
 
+  // 碎裂粒子：四散 + 阻尼 + 淡出
+  ctx.fillStyle = colors.signal
+  for (let i = shards.length - 1; i >= 0; i--) {
+    const s = shards[i]
+    s.x += s.vx * step * 2
+    s.y += s.vy * step * 2
+    const drag = Math.pow(0.92, step)
+    s.vx *= drag
+    s.vy *= drag
+    s.life -= 0.018 * step
+    if (s.life <= 0) {
+      shards.splice(i, 1)
+      continue
+    }
+    ctx.globalAlpha = s.life
+    ctx.beginPath()
+    ctx.arc(s.x, s.y, s.r * s.life, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
   // 逃逸坐标连线：随爬升进度分段生长；起点不早于 0.02，初始不露线
   for (const n of NAV) {
     const lp = Math.min(1, Math.max(0, (p - Math.max(0.02, n.at - 0.14)) / 0.14))
@@ -414,6 +513,19 @@ function frame(t) {
   if (r.bottom < 0) return // 滚过装置后停绘，省 CPU
   const dt = lastT ? Math.min(50, Math.max(0, t - lastT)) : 16.7
   lastT = t
+  // 充/放逐帧连续计算（dt 归一），消除离散定时步进的顿挫感
+  if (pressing) {
+    const held = performance.now() - downAt
+    const ramp = Math.min(1, Math.max(0, (held - 800) / 1075))
+    charge.value = chargeStart + (1 - chargeStart) * ramp
+    if (!fired.value && charge.value > 0.97) {
+      fired.value = true
+      fireEscape()
+    }
+  } else if (charge.value > 0) {
+    charge.value = Math.max(0, charge.value - dt / 8000) // 松手 8s 滑回 0
+  }
+  charged.value = charge.value > 0.97
   draw(t, dt / 16.7)
 }
 
@@ -462,7 +574,7 @@ onMounted(() => {
     const q = (n) => String(n).padStart(2, '0')
     // 直写 DOM，避免每秒重渲染整视图（out-in 转场对此敏感）
     if (clockRef.value)
-      clockRef.value.textContent = `T ${q(d.getHours())}:${q(d.getMinutes())}:${q(d.getSeconds())}`
+      clockRef.value.textContent = `TIM ${q(d.getHours())}:${q(d.getMinutes())}:${q(d.getSeconds())}`
   }
   tick()
   clockTimer = setInterval(tick, 1000)
@@ -473,7 +585,6 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   clearInterval(clockTimer)
-  clearInterval(chargeTimer)
   whisperTimers.forEach(clearTimeout)
   burstTimers.forEach(clearTimeout)
   if (observer) observer.disconnect()
@@ -505,10 +616,10 @@ onUnmounted(() => {
 
       <div class="readout well-readout">
         <span>LOC {{ content.site.coords }}</span>
-        <span ref="clockRef">T --:--:--</span>
-        <span>ALT {{ alt }} M</span>
+        <span ref="clockRef">TIM --:--:--</span>
         <span>VEL {{ vel }}</span>
-        <span class="esc" :class="{ lit: escaped }">ESC 11.2</span>
+        <span>ALT {{ alt }} M</span>
+        <span v-if="fired && charge > 0.625" class="esc-msg" :style="{ opacity: escOpacity }">已达到逃逸速度 VEL 11.2</span>
       </div>
 
       <div
@@ -521,7 +632,7 @@ onUnmounted(() => {
         <p class="readout charge-line">{{ w.text }}</p>
       </div>
 
-      <nav class="well-nav" aria-label="逃逸坐标">
+      <nav class="well-nav" aria-label="逃逸坐标" @click.capture="onNavClick">
         <RouterLink
           v-for="n in NAV"
           :key="n.code"
@@ -589,8 +700,18 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--line);
 }
 
-.esc.lit {
+/* 逃逸达成提示：读数栏下方居中，琥珀色，透明度随 VEL 回落淡出 */
+.esc-msg {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-2);
+  text-align: center;
   color: var(--signal);
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 12px var(--ink-0);
+  pointer-events: none;
 }
 
 /* 低语浮现在按压位置，略高于指尖避免被遮挡；定点缓慢淡出 */
@@ -666,6 +787,11 @@ onUnmounted(() => {
 .well-coord:hover,
 .well-coord.lit {
   color: var(--signal);
+}
+
+/* 碎裂期间隐藏 DOM 文字，由画布碎片接管 */
+.coord-hide {
+  visibility: hidden;
 }
 
 .well-title {

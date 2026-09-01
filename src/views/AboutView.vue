@@ -71,7 +71,7 @@ import { content } from '../lib/content.js'
 }
 
 .social-title {
-  margin: 0 0 var(--space-2);
+  margin: var(--space-3) 0 var(--space-2);
 }
 
 .gear {

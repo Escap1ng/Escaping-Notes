@@ -3,7 +3,6 @@ import { onMounted } from 'vue'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
-import OrbitVeil from './components/OrbitVeil.vue'
 import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
 
@@ -26,28 +25,28 @@ onMounted(() => {
   </main>
   <SiteFooter />
   <MusicPlayer />
-  <OrbitVeil />
 </template>
 
 <style>
-/* 入轨转场：全站唯一转场——环心展开 */
+/* 入轨转场：同心圆已移除，进入方轻量淡入，与坐标碎裂衔接 */
 .orbit-enter-active {
-  animation: orbit-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: orbit-in 0.3s ease-out;
 }
 
-/* 并行模式：离开方绝对定位叠在新页之上淡出，避免布局堆叠 */
+/* 并行模式：离开方绝对定位叠在新页之上淡出，避免布局堆叠
+   left/right 同时置 0：保留 .page 的 margin:auto 居中，避免左跳 */
 .orbit-leave-active {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
+  right: 0;
   pointer-events: none;
   animation: orbit-out 0.18s ease-in;
 }
 
 @keyframes orbit-in {
-  from { clip-path: circle(0% at 50% 42%); }
-  to { clip-path: circle(140% at 50% 42%); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes orbit-out {

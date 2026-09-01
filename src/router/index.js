@@ -24,7 +24,8 @@ const router = createRouter({
     { path: '/:pathMatch(.*)*', component: () => import('../views/NotFoundView.vue'), meta: { t: `信号丢失 · ${T}` } },
   ],
   scrollBehavior() {
-    return { top: 0 }
+    // 瞬时回顶：避免 smooth 滚动在转场期间产生滑动抽搐
+    return { top: 0, behavior: 'instant' }
   },
 })
 

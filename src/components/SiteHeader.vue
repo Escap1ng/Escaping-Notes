@@ -26,7 +26,7 @@ const nav = [
   { to: '/updates', label: '动态', code: '02' },
   { to: '/links', label: '收藏', code: '03' },
   { to: '/projects', label: '项目', code: '04' },
-  { to: '/wall', label: '留言墙', code: '05' },
+  { to: '/wall', label: '留言', code: '05' },
   { to: '/about', label: '关于', code: '06' },
 ]
 </script>
@@ -52,7 +52,7 @@ const nav = [
         title="切换井底/井外主题"
         @click="toggleTheme"
       >
-        LOC: {{ theme.mode === 'well' ? '井底' : '井外' }}
+        {{ theme.mode === 'well' ? '深色:井底' : '浅色:井外' }}
       </button>
       <div class="auth readout">
         <template v-if="auth.user">
@@ -60,10 +60,7 @@ const nav = [
           <span class="auth-name">{{ auth.user.nickname }}</span>
           <button class="auth-link" type="button" @click="logout">登出</button>
         </template>
-        <template v-else>
-          <RouterLink to="/login">登录</RouterLink>
-          <RouterLink to="/register">注册</RouterLink>
-        </template>
+        <RouterLink v-else to="/login" class="auth-toggle readout">登录/注册</RouterLink>
       </div>
     </div>
   </header>
@@ -167,6 +164,19 @@ const nav = [
 
 .auth a:hover,
 .auth-link:hover {
+  color: var(--signal);
+}
+
+/* 登录/注册：与主题开关同款框线 */
+.auth-toggle {
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  color: var(--text-1);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.auth-toggle:hover {
+  border-color: var(--signal);
   color: var(--signal);
 }
 

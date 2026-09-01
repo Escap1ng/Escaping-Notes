@@ -14,6 +14,7 @@ import { content } from '../lib/content.js'
             {{ item.name }}<span aria-hidden="true">↗</span>
           </a>
         </li>
+        <li v-if="!group.items.length" class="readout empty">// 虚位以待</li>
       </ul>
     </div>
   </section>
@@ -26,5 +27,10 @@ import { content } from '../lib/content.js'
 
 .group-title {
   margin: 0 0 var(--space-2);
+}
+
+.empty {
+  list-style: none;
+  color: var(--text-1);
 }
 </style>
