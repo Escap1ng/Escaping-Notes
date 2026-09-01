@@ -155,9 +155,9 @@ function onResonance() {
     escapers.push({
       x,
       y: H - 10 - Math.random() * 20,
-      v: 1.0 + Math.random() * 0.3, // 慢速流星
-      acc: 1.012,
-      vx: dir * (0.3 + Math.random() * 0.4),
+      v: 0.9 + Math.random() * 0.6, // 慢速流星，个体随机
+      acc: 1.008 + Math.random() * 0.008,
+      vx: dir * (0.25 + Math.random() * 0.5),
       r: 1.6 + Math.random() * 1.2,
       trail: [],
     })
