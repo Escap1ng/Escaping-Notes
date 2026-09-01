@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { content } from '../lib/content.js'
+import { theme, toggleTheme } from '../lib/theme.js'
 
 // 逃逸坐标：at = 爬升进度点亮阈值；位置为视口百分比
 const NAV = [
@@ -38,15 +39,51 @@ let downAt = 0
 let downX = 0
 let downY = 0
 
+// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕/低语轮播
+const whisper = ref('')
+let fired = false
+let rippleStart = 0
+const escapers = []
+const traces = []
+
+function fireEscape() {
+  if (!reduced) {
+    escapers.push({
+      x: cx > -1e3 ? cx : W / 2,
+      y: cy > -1e3 ? cy : H * 0.6,
+      v: 5,
+      trail: [],
+    })
+    rippleStart = performance.now()
+  }
+  navigator.vibrate?.(30)
+  const list = content.whispers || []
+  if (list.length) {
+    const i = Number(localStorage.getItem('en-whisper-idx') || 0) % list.length
+    whisper.value = list[i]
+    localStorage.setItem('en-whisper-idx', String(i + 1))
+  }
+}
+
+function flipTheme() {
+  toggleTheme()
+  onUp()
+}
+
 function onDown(e) {
   downAt = performance.now()
   downX = e.clientX
   downY = e.clientY
+  fired = false
   clearInterval(chargeTimer)
   chargeTimer = setInterval(() => {
     const held = performance.now() - downAt
     charge.value = held < 800 ? 0 : Math.min(1, (held - 800) / 1700)
     charged.value = charge.value > 0.97
+    if (charged.value && !fired) {
+      fired = true
+      fireEscape()
+    }
   }, 80)
 }
 
@@ -161,6 +198,13 @@ function draw(t) {
   cy += (my - cy) * 0.12
   const R = 150
 
+  // 涟漪：逃逸发生后 900ms 内轨迹轻微扰动
+  let ripple = 0
+  if (rippleStart) {
+    const rdt = t - rippleStart
+    if (rdt < 900) ripple = 1 - rdt / 900
+  }
+
   for (const pt of particles) {
     if (!reduced) {
       // 挣扎感上升：慢-快-慢 + 个体相位；共振期间同相位；蓄能加速
@@ -199,11 +243,49 @@ function draw(t) {
       px -= (dx / d) * f * 26
       py -= (dy / d) * f * 26
     }
+    if (ripple) px += Math.sin(t * 0.02 + pt.seed) * 3 * ripple
     ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * 0.5 + charge.value * 0.3)
     ctx.fillStyle = f > 0.22 ? colors.signal : colors.dim
     ctx.beginPath()
     ctx.arc(px, py, 0.8 + 1.5 * pt.z + f * 1.3, 0, Math.PI * 2)
     ctx.fill()
+  }
+
+  // 逃逸痕：本次会话内保留的极淡竖线
+  ctx.strokeStyle = colors.line
+  ctx.globalAlpha = 0.1
+  for (const tr of traces) {
+    ctx.beginPath()
+    ctx.moveTo(tr.x, 0)
+    ctx.lineTo(tr.x, H)
+    ctx.stroke()
+  }
+
+  // 逃逸粒子：加速上升 + 拖尾
+  for (let i = escapers.length - 1; i >= 0; i--) {
+    const es = escapers[i]
+    es.v *= 1.04
+    es.y -= es.v
+    es.trail.push({ x: es.x, y: es.y })
+    if (es.trail.length > 36) es.trail.shift()
+    ctx.strokeStyle = colors.signal
+    for (let j = 1; j < es.trail.length; j++) {
+      ctx.globalAlpha = (j / es.trail.length) * 0.5
+      ctx.beginPath()
+      ctx.moveTo(es.trail[j - 1].x, es.trail[j - 1].y)
+      ctx.lineTo(es.trail[j].x, es.trail[j].y)
+      ctx.stroke()
+    }
+    ctx.globalAlpha = 1
+    ctx.fillStyle = colors.signal
+    ctx.beginPath()
+    ctx.arc(es.x, es.y, 2.5, 0, Math.PI * 2)
+    ctx.fill()
+    if (es.y < -60) {
+      traces.push({ x: es.x })
+      if (traces.length > 5) traces.shift()
+      escapers.splice(i, 1)
+    }
   }
 
   // 逃逸坐标连线：随爬升进度分段生长
@@ -320,7 +402,12 @@ onUnmounted(() => {
         <span v-if="sync" class="sync">SYNC OK</span>
       </div>
 
-      <p v-if="charged" class="charge-line readout">已达到逃逸速度，井外见。</p>
+      <div v-if="charged" class="charge-panel">
+        <p class="readout charge-line">{{ whisper || '已达到逃逸速度，井外见。' }}</p>
+        <button class="charge-btn readout" type="button" @click="flipTheme">
+          {{ theme.mode === 'well' ? '去井外？' : '下井？' }}
+        </button>
+      </div>
 
       <nav class="well-nav" aria-label="逃逸坐标">
         <RouterLink
@@ -398,14 +485,38 @@ onUnmounted(() => {
   color: var(--signal);
 }
 
-.charge-line {
+.charge-panel {
   position: absolute;
   left: 50%;
   top: 40%;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  max-width: 86vw;
+}
+
+.charge-line {
   color: var(--signal);
   letter-spacing: 0.2em;
-  pointer-events: none;
+}
+
+.charge-btn {
+  background: none;
+  border: 1px solid var(--signal);
+  color: var(--signal);
+  padding: 6px 16px;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.charge-btn:hover {
+  background: var(--signal);
+  color: var(--ink-0);
 }
 
 .well-nav {

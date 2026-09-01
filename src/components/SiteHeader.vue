@@ -1,21 +1,11 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { content } from '../lib/content.js'
 import { auth, logout } from '../lib/auth.js'
+import { theme, applyTheme, toggleTheme } from '../lib/theme.js'
 
 // 井底/井外双主题：切换是叙事行为（逃逸/档案），见 docs/design.md §3
-const theme = ref('well')
-function applyTheme(t) {
-  theme.value = t
-  document.documentElement.dataset.theme = t
-  localStorage.setItem('en-theme', t)
-}
-onMounted(() => {
-  if (localStorage.getItem('en-theme') === 'out') applyTheme('out')
-})
-function toggleTheme() {
-  applyTheme(theme.value === 'well' ? 'out' : 'well')
-}
+onMounted(() => applyTheme(theme.mode))
 
 // 共振彩蛋：600ms 内连点 logo 三次
 let clicks = 0
@@ -58,11 +48,11 @@ const nav = [
       <button
         class="theme-toggle readout"
         type="button"
-        :aria-pressed="theme === 'out'"
+        :aria-pressed="theme.mode === 'out'"
         title="切换井底/井外主题"
         @click="toggleTheme"
       >
-        LOC: {{ theme === 'well' ? '井底' : '井外' }}
+        LOC: {{ theme.mode === 'well' ? '井底' : '井外' }}
       </button>
       <div class="auth readout">
         <template v-if="auth.user">

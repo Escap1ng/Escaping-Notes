@@ -23,6 +23,7 @@ const linksForm = ref('')
 const projectsForm = ref('')
 const gearForm = ref('')
 const playlistForm = ref('')
+const whispersForm = ref('')
 const uploadUrl = ref('')
 
 const tabs = computed(() => {
@@ -52,6 +53,7 @@ function fillForms() {
   projectsForm.value = content.projects.map((p) => `${p.name}|${p.desc}|${p.year}|${p.url}`).join('\n')
   gearForm.value = content.gear.join('\n')
   playlistForm.value = content.playlist.map((p) => `${p.title}|${p.artist}|${p.file}`).join('\n')
+  whispersForm.value = content.whispers.join('\n')
 }
 
 async function refresh() {
@@ -189,6 +191,13 @@ async function saveProjects() {
 async function saveGear() {
   if (await api('/api/content/gear', { method: 'PUT', body: lines(gearForm.value) })) {
     await loadContent(); fillForms(); flash('装备已保存')
+  }
+}
+async function saveWhispers() {
+  if (await api('/api/content/whispers', { method: 'PUT', body: lines(whispersForm.value) })) {
+    await loadContent()
+    fillForms()
+    flash('低语已保存')
   }
 }
 async function savePlaylist() {
@@ -341,6 +350,11 @@ async function onFile(e) {
         <h3 class="readout">// PLAYLIST · 每行 title|artist|file(/uploads/…)</h3>
         <textarea v-model="playlistForm" class="field mono" rows="4"></textarea>
         <button class="submit readout" @click="savePlaylist">保存歌单</button>
+      </div>
+      <div class="set-block">
+        <h3 class="readout">// WHISPERS · 井外低语，每行一句（满蓄能轮播）</h3>
+        <textarea v-model="whispersForm" class="field mono" rows="6"></textarea>
+        <button class="submit readout" @click="saveWhispers">保存低语</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// UPLOAD · 图片/音乐 ≤8MB</h3>

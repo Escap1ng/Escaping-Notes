@@ -36,7 +36,7 @@ VIEW_F = DATA / 'views.json'
 CONTENT_F = DATA / 'content.json'
 UPLOADS = DATA / 'uploads'
 UPLOADS.mkdir(exist_ok=True)
-CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist'}
+CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist', 'whispers'}
 CTYPES = {'.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
           '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
 
