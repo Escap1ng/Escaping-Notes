@@ -34,14 +34,25 @@ const vel = computed(() => {
   return (base + charge.value * (11.2 - base)).toFixed(1)
 })
 
-function onDown() {
-  const downAt = performance.now()
+let downAt = 0
+let downX = 0
+let downY = 0
+
+function onDown(e) {
+  downAt = performance.now()
+  downX = e.clientX
+  downY = e.clientY
   clearInterval(chargeTimer)
   chargeTimer = setInterval(() => {
     const held = performance.now() - downAt
     charge.value = held < 800 ? 0 : Math.min(1, (held - 800) / 1700)
     charged.value = charge.value > 0.97
   }, 80)
+}
+
+// 位移>10px 视为滚动意图，取消蓄能（触摸滚动不误触发）
+function onPtrMove(e) {
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 10) onUp()
 }
 
 function onUp() {
@@ -293,6 +304,7 @@ onUnmounted(() => {
     <div
       class="well-sticky"
       @pointerdown="onDown"
+      @pointermove="onPtrMove"
       @pointerup="onUp"
       @pointerleave="onUp"
       @pointercancel="onUp"
@@ -354,6 +366,7 @@ onUnmounted(() => {
   /* 点击/拖动玩引力干扰时不出现文本光标与选区 */
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .well-canvas {

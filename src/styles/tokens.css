@@ -204,6 +204,15 @@ a {
   margin: var(--space-3) 0;
 }
 
+/* 移动端输入框 ≥16px，避免 iOS 聚焦自动缩放 */
+@media (max-width: 720px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* 系统开启“减弱视觉效果”时：全局关停动画。
    轨迹场装置另有静态轨迹图降级（阶段一实现）。 */
 @media (prefers-reduced-motion: reduce) {

@@ -42,6 +42,7 @@ watch(idx, () => {
     <audio
       ref="audio"
       :src="cur?.file"
+      preload="none"
       @play="playing = true"
       @pause="playing = false"
       @ended="next"

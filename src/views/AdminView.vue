@@ -236,6 +236,7 @@ async function onFile(e) {
         :key="t.id"
         class="tab"
         :class="{ on: tab === t.id }"
+        :aria-pressed="tab === t.id"
         @click="tab = t.id"
       >
         {{ t.label }}
@@ -245,6 +246,7 @@ async function onFile(e) {
 
     <!-- 用户 -->
     <div v-if="tab === 'users'">
+      <div class="table-wrap">
       <table class="grid">
         <thead>
           <tr class="readout"><th>USERNAME</th><th>NICKNAME</th><th>ROLE</th><th>STATE</th><th>ACTIONS</th></tr>
@@ -269,6 +271,7 @@ async function onFile(e) {
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- 留言墙 -->
@@ -377,8 +380,13 @@ async function onFile(e) {
   color: var(--signal);
 }
 
+.table-wrap {
+  overflow-x: auto;
+}
+
 .grid {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
 }
 

@@ -193,4 +193,19 @@ const nav = [
 .auth-name {
   color: var(--signal);
 }
+
+/* 移动端头部紧凑化：隐藏编号、收紧间距 */
+@media (max-width: 720px) {
+  .site-header {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .nav {
+    gap: var(--space-1);
+  }
+
+  .nav-code {
+    display: none;
+  }
+}
 </style>
