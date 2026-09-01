@@ -475,42 +475,7 @@ async function onFile(e) {
   min-width: 200px;
 }
 
-.field {
-  background: none;
-  border: 1px solid var(--line);
-  color: var(--text-0);
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: inherit;
-  width: 100%;
-}
 
-.field.mono {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: 1.7;
-}
-
-.field:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-
-.submit {
-  align-self: flex-start;
-  background: none;
-  border: 1px solid var(--signal);
-  color: var(--signal);
-  padding: 6px 16px;
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-}
-
-.submit:hover {
-  background: var(--signal);
-  color: var(--ink-0);
-}
 
 .set-block {
   margin-bottom: var(--space-3);

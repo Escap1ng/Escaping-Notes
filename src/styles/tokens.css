@@ -204,6 +204,53 @@ a {
   margin: var(--space-3) 0;
 }
 
+/* 表单控件：登录/注册/留言墙/管理 共用 */
+.field {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.field.mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.submit {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--signal);
+  color: var(--signal);
+  padding: 8px 18px;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.submit:hover {
+  background: var(--signal);
+  color: var(--ink-0);
+}
+
+.err {
+  color: var(--signal);
+}
+
 /* 移动端输入框 ≥16px，避免 iOS 聚焦自动缩放 */
 @media (max-width: 720px) {
   input,

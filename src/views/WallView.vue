@@ -134,36 +134,5 @@ onMounted(refresh)
   max-width: 560px;
 }
 
-.field {
-  background: none;
-  border: 1px solid var(--line);
-  color: var(--text-0);
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: inherit;
-}
 
-.textarea {
-  resize: vertical;
-}
-
-.field:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-
-.submit {
-  align-self: flex-start;
-  background: none;
-  border: 1px solid var(--signal);
-  color: var(--signal);
-  padding: 8px 18px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.submit:hover {
-  background: var(--signal);
-  color: var(--ink-0);
-}
 </style>
