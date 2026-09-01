@@ -1,7 +1,18 @@
-# Escaping Notes
+# Escaping Notes · 逃逸笔记
 
-日常是引力，把我拉回井底；笔记是逃逸，送我抵达井外。
+> 日常是引力，把我拉回井底；笔记是逃逸，送我抵达井外。
 
-生产站：https://escaping.top（服务器配置后启用）
+**在线体验（GitHub Pages）：https://escap1ng.github.io/Escaping-Notes/**
 
-在线测试站（GitHub Pages）：https://escap1ng.github.io/Escaping-Notes/
+生产域名：https://escaping.top （服务器配置后启用）
+
+## 项目简介
+
+Escaping Notes 是一个手工建造的个人博客，以「引力井与逃逸轨迹」为核心隐喻：
+首页是一幅仪器面板式的引力井装置——粒子沿轨迹挣扎上升，光标是干扰引力，
+滚动是爬升，长按蓄能达到逃逸速度；文章、动态、收藏、项目、留言墙、关于
+构成六个逃逸坐标。每一次书写，都是一次逃逸。
+
+- **前端**：Vue 3 + Vite + Vue Router，canvas 2D 核心装置，井底/井外双主题，零 webfont、零第三方 UI 依赖
+- **后端**：Python 3 标准库单文件（`server/api.py`），零依赖，支持注册/登录、三角色权限、留言墙、文章与站点内容的网页端编辑（`/admin`）
+- **文档**：`docs/design.md` 设计依据 · `docs/manual.md` 使用手册（编辑 / 适配 / 上传）
