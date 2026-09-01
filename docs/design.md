@@ -88,7 +88,7 @@
 - **存储**：跨设备共享数据走自托管极简 API（JSON 文件）；API 不可达时 localStorage 降级；无第三方服务、无密钥。
 - **双主题架构**：颜色全部走 CSS 变量，`:root[data-theme='out']` 覆盖；阶段一 canvas 统一用 `getComputedStyle` 读取变量取色，双主题零额外成本。
 - **部署硬约束（2核2G 服务器）**：nginx 托管 `dist` 即运行，内存 <10MB、CPU 近零。部署步骤见手册 §4.3。
-- **公开形态**：自有域名 + HTTPS + 备案（大陆服务器）为主方案；Vercel/GitHub Pages 仅作只读镜像（登录/留言自动禁用）。`data/` 目录=整站数据，备份=复制。
+- **公开形态**：自有域名 + HTTPS + 备案（大陆服务器）为主方案；Vercel/GitHub Pages 仅作只读镜像（登录/留言自动禁用）。`data/` 目录=整站数据，备份=复制。测试期先托管 GitHub Pages（仓库 `Escap1ng/Escaping-Notes`，Actions 自动部署，`--mode pages` 启用 base 与 hash 路由），域名就绪后切主方案。
 - **公开呈现（SEO/OG/RSS）**：后端对文档路由做 meta 注入（index.html 占位改写），链接预览与爬虫拿到真实 meta；RSS 发文时写出；`site.url` 为 canonical/OG/RSS 的唯一来源。
 - **自托管极简后端（必需组件）**：`server/api.py`，Python3 标准库单文件、零安装、零依赖；JSON 文件存储，无数据库；仅监听 127.0.0.1:8787，nginx 反代 `/api/`；内存约 20MB；内置限流与长度限制。前端任何情况下 API 不可达即降级只读/本地模式，站点永不报错。
 - **鉴权与角色（标准库实现）**：密码 `hashlib.pbkdf2_hmac` 加盐哈希，不存明文；会话=`secrets` token+过期；注册/登录限流。三角色：访客（注册）/管理员/站长；首跑无账号时前端引导初始化站长；管理员由站长任命。

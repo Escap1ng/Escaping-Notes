@@ -171,7 +171,7 @@ export const site = {
 
 ## 4. 上传方法（部署上线）
 
-主推荐：**自有服务器 + 域名（方式 C，§4.3）**——登录/留言墙/全网计数依赖后端，只有自有服务器能跑完整版。方式 A/B（Vercel/GitHub Pages）定位为**只读镜像**：能看文章，登录/发文/留言自动禁用，用作备份出口。
+主推荐：**自有服务器 + 域名（方式 C，§4.3）**——登录/留言墙/全网计数依赖后端，只有自有服务器能跑完整版。方式 A/B（Vercel/GitHub Pages）定位为**只读镜像**：能看文章，登录/发文/留言自动禁用，用作备份出口。**当前测试期先用方式 B（GitHub Pages）**，域名备案就绪后切方式 C。
 
 ### 4.0 上传前自检
 
@@ -199,20 +199,15 @@ npm run preview   # 本地模拟线上环境，浏览器打开检查一遍
 4. 完成后得到 `https://xxx.vercel.app` 地址。以后每次 `git push`，Vercel 自动重新部署。
 5. 项目里已含 `vercel.json`，刷新任何子页面都不会 404。
 
-### 4.2 方式 B：GitHub Pages（免费）
+### 4.2 方式 B：GitHub Pages（免费，当前测试期主用）
 
-1. 打开 `vite.config.js`，加上你的仓库名：
+项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**——`build:pages` 会自动启用 `/Escaping-Notes/` 前缀与 hash 路由，本地 `dev`/`build` 始终是自有域名生产参数。
 
-   ```js
-   export default defineConfig({
-     base: '/你的仓库名/',
-     plugins: [vue()],
-   })
-   ```
+1. 仓库 Settings → Pages → **Source** 选 **GitHub Actions**（仅首次）。
+2. 推送代码：`git push`。
+3. 等 Actions 跑完（约 1 分钟），访问 `https://escap1ng.github.io/Escaping-Notes/`。
 
-2. 打开 `src/router/index.js`，把 `createWebHistory()` 改成 `createWebHashHistory()`（同文件顶部导入处一并改）。原因：Pages 不支持单页路由刷新，hash 模式最省心。
-3. `npm run build`，然后把 `dist` 文件夹发布到 `gh-pages` 分支（可用 `npx gh-pages -d dist`），并在仓库 Settings → Pages 里选择 `gh-pages` 分支。
-4. 访问 `https://你的用户名.github.io/你的仓库名/`。
+Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不可用（无后端）。域名就绪后按 §4.3 切自有服务器，Pages 可保留作备份镜像或关停。
 
 ### 4.3 方式 C：自有轻量服务器（nginx，适用 2核2G）
 
@@ -313,7 +308,7 @@ npm run preview   # 本地模拟线上环境，浏览器打开检查一遍
 | 双击 `index.html` 打开是空白 | 必须通过 `npm run dev` 或 `npm run preview` 访问，不能直接双击文件 |
 | 改了配置页面报错 | 99% 是少了逗号/引号。看终端报错行号，对照 §2.1 示例修复 |
 | `npm install` 很慢 | 可换国内镜像：`npm install --registry=https://registry.npmmirror.com` |
-| GitHub Pages 刷新 404 | 按 §4.2 第 2 步切换 hash 路由 |
+| GitHub Pages 刷新 404 | Pages 版自动用 hash 路由；若手动构建，确认用的是 `npm run build:pages` |
 | 端口 5173 被占用 | Vite 会自动换 5174…，以终端显示为准 |
 
 ## 6. 当前进度与阶段说明
