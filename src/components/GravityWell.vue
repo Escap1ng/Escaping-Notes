@@ -254,24 +254,27 @@ function partialQuad(x0, y0, x1, y1, x2, y2, lp) {
   ctx.quadraticCurveTo(p1x, p1y, bx, by)
 }
 
-function draw(t) {
+// step=帧时长系数（dt/16.7）：高刷屏 rAF 更快时按时间归一，粒子速度恒定
+function draw(t, step = 1) {
   if (!ctx) return
   ctx.clearRect(0, 0, W, H)
   const p = progress.value
 
-  // 井口：三道同心弧，随爬升下沉
+  // 井口：三道同心弧，随爬升下沉；初始（未爬升）完全隐藏，起步后淡入
   const sink = p * H * 0.45
+  const wellIn = Math.min(1, p / 0.06)
   ctx.strokeStyle = colors.line
   for (let i = 1; i <= 3; i++) {
-    ctx.globalAlpha = 0.55 - i * 0.14
+    ctx.globalAlpha = (0.55 - i * 0.14) * wellIn
     ctx.beginPath()
     ctx.arc(W / 2, H + 70 + sink, 70 * i, Math.PI, Math.PI * 2)
     ctx.stroke()
   }
 
-  // 光标=干扰引力：弹簧阻尼跟随
-  cx += (mx - cx) * 0.12
-  cy += (my - cy) * 0.12
+  // 光标=干扰引力：弹簧阻尼跟随（帧率归一）
+  const spring = 1 - Math.pow(0.88, step)
+  cx += (mx - cx) * spring
+  cy += (my - cy) * spring
   const R = 150
 
   // 涟漪：逃逸发生后 900ms 内轨迹轻微扰动
@@ -286,7 +289,7 @@ function draw(t) {
       // 挣扎感上升：慢-快-慢 + 个体相位；蓄能加速
       const phase = pt.seed
       const struggle = 0.55 + 0.9 * Math.abs(Math.sin(t * 0.0006 * (0.5 + pt.z) + phase))
-      pt.y -= pt.v * struggle * 16 * (0.5 + pt.z) * (1 + charge.value * 2.2)
+      pt.y -= pt.v * struggle * 16 * step * (0.5 + pt.z) * (1 + charge.value * 2.2)
       if (pt.y < -20) Object.assign(pt, spawn(false))
     }
     const jx = Math.sin(t * 0.001 + pt.seed) * 5 * pt.z
@@ -331,8 +334,9 @@ function draw(t) {
     }
     if (ripple) px += Math.sin(t * 0.02 + pt.seed) * 3 * ripple
     ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * 0.5 + charge.value * 0.3)
-    // 颜色随引力强度平滑过渡（灰→琥珀），消除二元切换的闪烁
-    const k = Math.min(1, Math.max(0, (f - 0.08) / 0.3))
+    // 颜色随引力强度 steep-smoothstep 过渡（灰→琥珀）：连续不闪烁，但快速点满琥珀
+    const kr = Math.min(1, Math.max(0, (f - 0.1) / 0.22))
+    const k = kr * kr * (3 - 2 * kr)
     const dC = colors.dimRGB
     const sC = colors.sigRGB
     ctx.fillStyle = `rgb(${Math.round(dC[0] + (sC[0] - dC[0]) * k)},${Math.round(
@@ -356,9 +360,9 @@ function draw(t) {
   // 逃逸粒子：加速上升 + 拖尾（加长加亮，带微光晕）
   for (let i = escapers.length - 1; i >= 0; i--) {
     const es = escapers[i]
-    es.v *= es.acc || 1.03 // 起步慢、逐渐加速冲出井口（流星用更低系数）
-    es.y -= es.v
-    es.x += es.vx || 0 // 流星横向漂移，拖尾成斜线
+    es.v *= Math.pow(es.acc || 1.03, step) // 起步慢、逐渐加速冲出井口（流星用更低系数）
+    es.y -= es.v * step
+    es.x += (es.vx || 0) * step // 流星横向漂移，拖尾成斜线
     es.trail.push({ x: es.x, y: es.y })
     if (es.trail.length > 60) es.trail.shift()
     ctx.strokeStyle = colors.signal
@@ -387,9 +391,9 @@ function draw(t) {
     }
   }
 
-  // 逃逸坐标连线：随爬升进度分段生长
+  // 逃逸坐标连线：随爬升进度分段生长；起点不早于 0.02，初始不露线
   for (const n of NAV) {
-    const lp = Math.min(1, Math.max(0, (p - (n.at - 0.14)) / 0.14))
+    const lp = Math.min(1, Math.max(0, (p - Math.max(0.02, n.at - 0.14)) / 0.14))
     if (lp <= 0) continue
     const lx = (n.x / 100) * W
     const ly = (n.y / 100) * H
@@ -402,12 +406,15 @@ function draw(t) {
   ctx.globalAlpha = 1
 }
 
+let lastT = 0
 function frame(t) {
   raf = requestAnimationFrame(frame)
   if (!visible) return
   const r = trackRef.value.getBoundingClientRect()
   if (r.bottom < 0) return // 滚过装置后停绘，省 CPU
-  draw(t)
+  const dt = lastT ? Math.min(50, Math.max(0, t - lastT)) : 16.7
+  lastT = t
+  draw(t, dt / 16.7)
 }
 
 function onMove(e) {
