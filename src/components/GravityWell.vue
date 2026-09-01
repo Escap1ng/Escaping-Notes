@@ -38,12 +38,13 @@ let downAt = 0
 let downX = 0
 let downY = 0
 
-// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕/低语轮播（低语出现在按压位置）
-const whisper = ref('')
-const whisperVisible = ref(false)
-const chargeX = ref(0)
-const chargeY = ref(0)
-let whisperTimer = 0
+// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕/低语轮播
+// 低语实例化：固定于按压点缓慢淡出；另一点长按另起一条，互不跳转
+const whispersActive = ref([])
+let wid = 0
+let pressX = 0
+let pressY = 0
+const whisperTimers = []
 let fired = false
 let rippleStart = 0
 const escapers = []
@@ -61,25 +62,29 @@ function fireEscape() {
   }
   navigator.vibrate?.(30)
   const list = content.whispers || []
+  let text = '已达到逃逸速度，井外见。'
   if (list.length) {
     const i = Number(localStorage.getItem('en-whisper-idx') || 0) % list.length
-    whisper.value = list[i]
+    text = list[i]
     localStorage.setItem('en-whisper-idx', String(i + 1))
   }
-  // 松手后仍停留 2.2s，避免“一松手就消失”
-  whisperVisible.value = true
-  clearTimeout(whisperTimer)
-  whisperTimer = setTimeout(() => (whisperVisible.value = false), 2200)
+  const inst = { id: ++wid, x: pressX, y: pressY, text }
+  whispersActive.value.push(inst)
+  whisperTimers.push(
+    setTimeout(() => {
+      whispersActive.value = whispersActive.value.filter((w) => w.id !== inst.id)
+    }, 2600)
+  )
 }
 
 function onDown(e) {
   downAt = performance.now()
   downX = e.clientX
   downY = e.clientY
-  // 低语显示在按压位置（相对装置容器）
+  // 记录按压位置（相对装置容器），供本次蓄能的低语定点
   const r = e.currentTarget.getBoundingClientRect()
-  chargeX.value = e.clientX - r.left
-  chargeY.value = e.clientY - r.top
+  pressX = e.clientX - r.left
+  pressY = e.clientY - r.top
   fired = false
   clearInterval(chargeTimer)
   chargeTimer = setInterval(() => {
@@ -372,7 +377,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf)
   clearInterval(clockTimer)
   clearInterval(chargeTimer)
-  clearTimeout(whisperTimer)
+  whisperTimers.forEach(clearTimeout)
   if (observer) observer.disconnect()
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', resize)
@@ -410,12 +415,13 @@ onUnmounted(() => {
       </div>
 
       <div
-        v-if="whisperVisible"
+        v-for="w in whispersActive"
+        :key="w.id"
         class="charge-panel"
-        :style="{ left: chargeX + 'px', top: chargeY + 'px' }"
+        :style="{ left: w.x + 'px', top: w.y + 'px' }"
         aria-hidden="true"
       >
-        <p class="readout charge-line">{{ whisper || '已达到逃逸速度，井外见。' }}</p>
+        <p class="readout charge-line">{{ w.text }}</p>
       </div>
 
       <nav class="well-nav" aria-label="逃逸坐标">
@@ -493,13 +499,28 @@ onUnmounted(() => {
   color: var(--signal);
 }
 
-/* 低语浮现在按压位置，略高于指尖避免被遮挡 */
+/* 低语浮现在按压位置，略高于指尖避免被遮挡；定点缓慢淡出 */
 .charge-panel {
   position: absolute;
   transform: translate(-50%, -130%);
   text-align: center;
   max-width: 76vw;
   pointer-events: none;
+  animation: whisper-life 2.6s ease forwards;
+}
+
+@keyframes whisper-life {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charge-panel {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .charge-line {
