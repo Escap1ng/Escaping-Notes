@@ -135,6 +135,75 @@ a {
   color: var(--signal);
 }
 
+/* 文章正文（纸感阅读栏） */
+.prose {
+  max-width: var(--measure);
+  margin: var(--space-3) auto 0;
+  line-height: 1.9;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-serif);
+  line-height: 1.4;
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.prose h2 { font-size: 26px; }
+.prose h3 { font-size: 20px; }
+.prose h4 { font-size: 17px; }
+
+.prose p { margin: var(--space-2) 0; }
+
+.prose a {
+  color: var(--signal);
+  border-bottom: 1px solid var(--signal-dim);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--ink-2);
+  padding: 2px 6px;
+}
+
+.prose pre {
+  background: var(--ink-1);
+  border: 1px solid var(--line);
+  padding: var(--space-2);
+  overflow: auto;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+
+.prose blockquote {
+  border-left: 2px solid var(--signal);
+  margin: var(--space-2) 0;
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-1);
+}
+
+.prose img {
+  max-width: 100%;
+  border: 1px solid var(--line);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+  margin: var(--space-2) 0;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: var(--space-3) 0;
+}
+
 /* 系统开启“减弱视觉效果”时：全局关停动画。
    轨迹场装置另有静态轨迹图降级（阶段一实现）。 */
 @media (prefers-reduced-motion: reduce) {
