@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { site } from '../config/site.js'
+import { content } from '../lib/content.js'
+import { auth, logout } from '../lib/auth.js'
 
 // 井底/井外双主题：切换是叙事行为（逃逸/档案），见 docs/design.md §3
 const theme = ref('well')
@@ -21,8 +22,9 @@ const nav = [
   { to: '/blog', label: '文章', code: '01' },
   { to: '/updates', label: '动态', code: '02' },
   { to: '/links', label: '收藏', code: '03' },
-  { to: '/wall', label: '留言墙', code: '04' },
-  { to: '/about', label: '关于', code: '05' },
+  { to: '/projects', label: '项目', code: '04' },
+  { to: '/wall', label: '留言墙', code: '05' },
+  { to: '/about', label: '关于', code: '06' },
 ]
 </script>
 
@@ -31,7 +33,7 @@ const nav = [
     <a class="skip-link" href="#main">跳到内容</a>
     <RouterLink to="/" class="brand" aria-label="返回首页">
       <span class="brand-mark" aria-hidden="true">↗</span>
-      <span class="readout brand-name">{{ site.name }}</span>
+      <span class="readout brand-name">{{ content.site.name }}</span>
     </RouterLink>
     <nav class="nav" aria-label="主导航">
       <RouterLink v-for="item in nav" :key="item.to" :to="item.to" class="nav-link readout">
@@ -39,15 +41,28 @@ const nav = [
         {{ item.label }}
       </RouterLink>
     </nav>
-    <button
-      class="theme-toggle readout"
-      type="button"
-      :aria-pressed="theme === 'out'"
-      title="切换井底/井外主题"
-      @click="toggleTheme"
-    >
-      LOC: {{ theme === 'well' ? '井底' : '井外' }}
-    </button>
+    <div class="header-right">
+      <button
+        class="theme-toggle readout"
+        type="button"
+        :aria-pressed="theme === 'out'"
+        title="切换井底/井外主题"
+        @click="toggleTheme"
+      >
+        LOC: {{ theme === 'well' ? '井底' : '井外' }}
+      </button>
+      <div class="auth readout">
+        <template v-if="auth.user">
+          <RouterLink to="/admin" class="auth-link">ADMIN</RouterLink>
+          <span class="auth-name">{{ auth.user.nickname }}</span>
+          <button class="auth-link" type="button" @click="logout">登出</button>
+        </template>
+        <template v-else>
+          <RouterLink to="/login">登录</RouterLink>
+          <RouterLink to="/register">注册</RouterLink>
+        </template>
+      </div>
+    </div>
   </header>
 </template>
 
@@ -121,6 +136,12 @@ const nav = [
   margin-right: 4px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .theme-toggle {
   border: 1px solid var(--line);
   background: none;
@@ -132,6 +153,31 @@ const nav = [
 
 .theme-toggle:hover {
   border-color: var(--signal);
+  color: var(--signal);
+}
+
+.auth {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.auth a:hover,
+.auth-link:hover {
+  color: var(--signal);
+}
+
+.auth-link {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+}
+
+.auth-name {
   color: var(--signal);
 }
 </style>

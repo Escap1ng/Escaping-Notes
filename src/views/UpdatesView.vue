@@ -1,5 +1,5 @@
 <script setup>
-import { updates } from '../config/updates.js'
+import { content } from '../lib/content.js'
 </script>
 
 <template>
@@ -7,10 +7,11 @@ import { updates } from '../config/updates.js'
     <p class="readout page-code">// MODULE_02 · UPDATES</p>
     <h2 class="page-title">动态</h2>
     <ol class="update-list">
-      <li v-for="u in updates" :key="u.date + u.text" class="update-item">
+      <li v-for="u in content.updates" :key="u.date + u.text" class="update-item">
         <span class="readout update-date">{{ u.date }}</span>
         <p class="update-text">{{ u.text }}</p>
       </li>
+      <li v-if="!content.updates.length" class="readout empty">// 暂无动态</li>
     </ol>
   </section>
 </template>
@@ -38,6 +39,11 @@ import { updates } from '../config/updates.js'
 .update-text {
   margin: 0;
   max-width: var(--measure);
+}
+
+.empty {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
 }
 
 @media (max-width: 720px) {

@@ -1,12 +1,12 @@
 <script setup>
-import { linkGroups } from '../config/links.js'
+import { content } from '../lib/content.js'
 </script>
 
 <template>
   <section class="page">
     <p class="readout page-code">// MODULE_03 · LINKS</p>
     <h2 class="page-title">收藏</h2>
-    <div v-for="group in linkGroups" :key="group.group" class="link-group">
+    <div v-for="group in content.linkGroups" :key="group.group" class="link-group">
       <p class="readout group-title">// {{ group.group }} · {{ group.label }}</p>
       <ul class="link-list">
         <li v-for="item in group.items" :key="item.name">

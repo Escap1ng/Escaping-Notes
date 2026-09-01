@@ -241,10 +241,11 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
            add_header Cache-Control "public, max-age=31536000, immutable";
        }
 
-       # 文档路由经后端做 meta 注入（SEO/分享卡片）；RSS 同源
+       # 文档路由经后端做 meta 注入（SEO/分享卡片）；RSS 同源；上传文件同源
        location = / { proxy_pass http://127.0.0.1:8787; }
        location /blog/ { proxy_pass http://127.0.0.1:8787; }
        location = /rss.xml { proxy_pass http://127.0.0.1:8787; }
+       location /uploads/ { proxy_pass http://127.0.0.1:8787; }
 
        # SPA history 路由回退：刷新子页面不 404
        location / {

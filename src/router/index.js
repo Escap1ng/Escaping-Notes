@@ -12,8 +12,12 @@ const router = createRouter({
     { path: '/blog/:slug', component: () => import('../views/PostView.vue') },
     { path: '/updates', component: () => import('../views/UpdatesView.vue') },
     { path: '/links', component: () => import('../views/LinksView.vue') },
+    { path: '/projects', component: () => import('../views/ProjectsView.vue') },
     { path: '/wall', component: () => import('../views/WallView.vue') },
     { path: '/about', component: () => import('../views/AboutView.vue') },
+    { path: '/login', component: () => import('../views/LoginView.vue') },
+    { path: '/register', component: () => import('../views/RegisterView.vue') },
+    { path: '/admin', component: () => import('../views/AdminView.vue') },
   ],
   scrollBehavior() {
     return { top: 0 }

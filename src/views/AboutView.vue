@@ -1,34 +1,42 @@
 <script setup>
-import { site } from '../config/site.js'
+import { content } from '../lib/content.js'
 </script>
 
 <template>
   <section class="page">
-    <p class="readout page-code">// MODULE_05 · OBSERVER</p>
+    <p class="readout page-code">// MODULE_06 · OBSERVER</p>
     <h2 class="page-title">关于</h2>
     <dl class="about-list">
       <div class="about-row">
         <dt class="readout">OBSERVER</dt>
-        <dd>{{ site.author }}</dd>
+        <dd>{{ content.site.author }}</dd>
       </div>
       <div class="about-row">
         <dt class="readout">STATUS</dt>
-        <dd>{{ site.bio }}</dd>
+        <dd>{{ content.site.bio }}</dd>
       </div>
       <div class="about-row">
         <dt class="readout">LOC</dt>
-        <dd>{{ site.location }}</dd>
+        <dd>{{ content.site.location }}</dd>
       </div>
       <div class="about-row">
         <dt class="readout">MAIL</dt>
         <dd>
-          <a class="mail" :href="`mailto:${site.email}`">{{ site.email }}</a>
+          <a class="mail" :href="`mailto:${content.site.email}`">{{ content.site.email }}</a>
         </dd>
       </div>
     </dl>
+
+    <p class="readout social-title">// 逃逸装备</p>
+    <ul class="link-list gear-list">
+      <li v-for="g in content.gear" :key="g">
+        <span class="link-item gear">{{ g }}</span>
+      </li>
+    </ul>
+
     <p class="readout social-title">// SOCIAL</p>
     <ul class="link-list">
-      <li v-for="s in site.socials" :key="s.label">
+      <li v-for="s in content.site.socials" :key="s.label">
         <a class="link-item" :href="s.url" target="_blank" rel="noopener noreferrer">
           {{ s.label }}<span aria-hidden="true">↗</span>
         </a>
@@ -64,6 +72,10 @@ import { site } from '../config/site.js'
 
 .social-title {
   margin: 0 0 var(--space-2);
+}
+
+.gear {
+  color: var(--text-1);
 }
 
 @media (max-width: 720px) {

@@ -1,14 +1,15 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { site } from '../config/site.js'
+import { content } from '../lib/content.js'
 
 // 逃逸坐标：at = 爬升进度点亮阈值；位置为视口百分比
 const NAV = [
-  { to: '/blog', label: '文章', code: '01', x: 14, y: 38, at: 0.12 },
-  { to: '/updates', label: '动态', code: '02', x: 32, y: 24, at: 0.28 },
-  { to: '/links', label: '收藏', code: '03', x: 50, y: 34, at: 0.44 },
-  { to: '/wall', label: '留言墙', code: '04', x: 68, y: 22, at: 0.6 },
-  { to: '/about', label: '关于', code: '05', x: 86, y: 36, at: 0.76 },
+  { to: '/blog', label: '文章', code: '01', x: 12, y: 38, at: 0.1 },
+  { to: '/updates', label: '动态', code: '02', x: 27, y: 24, at: 0.24 },
+  { to: '/links', label: '收藏', code: '03', x: 42, y: 36, at: 0.38 },
+  { to: '/projects', label: '项目', code: '04', x: 57, y: 22, at: 0.52 },
+  { to: '/wall', label: '留言墙', code: '05', x: 72, y: 34, at: 0.66 },
+  { to: '/about', label: '关于', code: '06', x: 87, y: 24, at: 0.8 },
 ]
 
 const trackRef = ref(null)
@@ -251,7 +252,7 @@ onUnmounted(() => {
       <canvas ref="canvasRef" class="well-canvas" aria-hidden="true"></canvas>
 
       <div class="readout well-readout">
-        <span>LOC {{ site.coords }}</span>
+        <span>LOC {{ content.site.coords }}</span>
         <span>T {{ now }}</span>
         <span>ALT {{ alt }} M</span>
         <span>VEL {{ vel }}</span>
@@ -272,8 +273,8 @@ onUnmounted(() => {
       </nav>
 
       <div class="well-title">
-        <h1>{{ site.name }}</h1>
-        <p>{{ site.subtitle }}</p>
+        <h1>{{ content.site.name }}</h1>
+        <p>{{ content.site.subtitle }}</p>
       </div>
 
       <span class="readout well-hint" aria-hidden="true">SCROLL = 爬升</span>

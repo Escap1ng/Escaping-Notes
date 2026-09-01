@@ -11,4 +11,5 @@ export const site = {
   socials: [
     { label: 'GitHub', url: 'https://github.com/Escap1ng' },
   ],
+  gear: ['Vue 3', 'Vite', 'Python', 'nginx', 'Canvas 2D'], // 逃逸装备（关于页）
 }

@@ -33,6 +33,12 @@ USERS_F = DATA / 'users.json'
 SESS_F = DATA / 'sessions.json'
 MSG_F = DATA / 'messages.json'
 VIEW_F = DATA / 'views.json'
+CONTENT_F = DATA / 'content.json'
+UPLOADS = DATA / 'uploads'
+UPLOADS.mkdir(exist_ok=True)
+CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist'}
+CTYPES = {'.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+          '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
 
 LOCK = threading.RLock()  # 可重入：setup/register 外层持锁时 new_session 需再入
 RATE = {}
@@ -264,6 +270,15 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._json(200, [{k: x.get(k) for k in ('id', 'username', 'nickname', 'role', 'ban', 'created')}
                                  for x in load(USERS_F, [])])
+        elif path == '/api/content':
+            with LOCK:
+                self._json(200, load(CONTENT_F, {}))
+        elif (m := re.match(r'^/uploads/([a-z0-9._-]+)$', path)):
+            f = UPLOADS / m.group(1)
+            if f.exists():
+                self._raw(200, CTYPES.get(f.suffix, 'application/octet-stream'), f.read_bytes())
+            else:
+                self._json(404, {'error': 'not found'})
         elif path == '/rss.xml':
             self._raw(200, 'application/rss+xml; charset=utf-8', rss_xml())
         elif path == '/' or re.match(r'^/blog/[a-z0-9-]+$', path):
@@ -278,11 +293,28 @@ class Handler(BaseHTTPRequestHandler):
         if self._rate_limited():
             self._json(429, {'error': 'too fast'})
             return
+        u = self._user()
+
+        # 上传是 multipart，必须在 JSON 解析之前处理
+        if path == '/api/upload':
+            if not u or u['role'] != 'owner':
+                self._json(403, {'error': 'owner only'})
+                return
+            up = self._multipart()
+            if not up:
+                self._json(400, {'error': 'bad file'})
+                return
+            name, filedata = up
+            safe = re.sub(r'[^a-z0-9._-]', '', name.lower()) or 'file'
+            dest = f'{int(time.time())}-{safe}'
+            (UPLOADS / dest).write_bytes(filedata)
+            self._json(200, {'ok': True, 'url': f'/uploads/{dest}'})
+            return
+
         data = self._body()
         if data is None:
             self._json(400, {'error': 'bad json'})
             return
-        u = self._user()
 
         if path == '/api/setup':
             with LOCK:
@@ -345,6 +377,48 @@ class Handler(BaseHTTPRequestHandler):
             self._user_ban(u, m.group(1), data)
         else:
             self._json(404, {'error': 'not found'})
+
+    # ---------- PUT（站点内容网页化，仅站长） ----------
+    def do_PUT(self):
+        path = urlparse(self.path).path
+        m = re.match(r'^/api/content/([a-z]+)$', path)
+        if not m or m.group(1) not in CONTENT_KEYS:
+            self._json(404, {'error': 'not found'})
+            return
+        u = self._user()
+        if not u or u['role'] != 'owner':
+            self._json(403, {'error': 'owner only'})
+            return
+        data = self._body()
+        if data is None:
+            self._json(400, {'error': 'bad json'})
+            return
+        with LOCK:
+            c = load(CONTENT_F, {})
+            c[m.group(1)] = data
+            save(CONTENT_F, c)
+        self._json(200, {'ok': True})
+
+    # ---------- multipart 极简解析（单文件，≤8MB） ----------
+    def _multipart(self):
+        ctype = self.headers.get('Content-Type', '')
+        bm = re.search(r'boundary=(?:"([^"]+)"|([^;]+))', ctype)
+        if not bm:
+            return None
+        boundary = (bm.group(1) or bm.group(2)).strip().encode()
+        length = int(self.headers.get('Content-Length', 0) or 0)
+        if length <= 0 or length > 8 * 1024 * 1024:
+            return None
+        raw = self.rfile.read(length)
+        for part in raw.split(b'--' + boundary):
+            if b'filename="' not in part:
+                continue
+            head, _, filedata = part.partition(b'\r\n\r\n')
+            if filedata.endswith(b'\r\n'):
+                filedata = filedata[:-2]
+            nm = re.search(rb'filename="([^"]*)"', head)
+            return (nm.group(1).decode('utf-8', 'replace') if nm else 'file'), filedata
+        return None
 
     # ---------- DELETE ----------
     def do_DELETE(self):
