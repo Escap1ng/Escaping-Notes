@@ -7,7 +7,7 @@ export const site = {
   location: 'Hangzhou, Zhejiang',
   coords: '30.25°N 120.17°E',
   email: 'chunqi-yu@outlook.com',
-  url: 'https://example.com', // 站点公开地址（RSS/OG/canonical 用）；域名备案生效后改成你的 https 域名
+  url: 'https://escaping.top', // 站点公开地址（RSS/OG/canonical 用）
   socials: [
     { label: 'GitHub', url: 'https://github.com/Escap1ng' },
   ],

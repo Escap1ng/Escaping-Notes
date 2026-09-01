@@ -25,7 +25,7 @@ BASE = Path(__file__).resolve().parent
 DATA = BASE / 'data'
 POSTS_DIR = DATA / 'posts'
 DIST = BASE.parent / 'dist'
-SITE_URL = os.environ.get('SITE_URL', 'https://example.com')
+SITE_URL = os.environ.get('SITE_URL', 'https://escaping.top')
 DATA.mkdir(exist_ok=True)
 POSTS_DIR.mkdir(exist_ok=True)
 

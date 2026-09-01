@@ -229,7 +229,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
    ```nginx
    server {
        listen 80;
-       server_name 你的域名或IP;
+       server_name escaping.top;
        root /var/www/escaping-notes;
        index index.html;
 
@@ -275,6 +275,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
    After=network.target
 
    [Service]
+   Environment=SITE_URL=https://escaping.top
    ExecStart=/usr/bin/python3 /opt/escaping-notes/api.py
    Restart=always
 
