@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Escaping Notes —— 日常是引力井，每条笔记都是一次逃逸。记录技术思考、设计实践与生活片段。" />
+    <!-- OG 占位：文章路由由后端 meta 注入改写（阶段二），见 docs/design.md §7 -->
+    <meta property="og:site_name" content="Escaping Notes" />
+    <meta property="og:title" content="Escaping Notes · 逃逸笔记" />
+    <meta property="og:description" content="日常是引力井，每条笔记都是一次逃逸。" />
+    <meta property="og:type" content="website" />
+    <title>Escaping Notes · 逃逸笔记</title>
+    <script>
+      // 首帧前应用主题，避免井外主题闪一下井底
+      document.documentElement.dataset.theme =
+        localStorage.getItem('en-theme') === 'out' ? 'out' : 'well'
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

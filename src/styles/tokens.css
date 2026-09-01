@@ -1,0 +1,151 @@
+/* ==========================================================================
+   Escaping Notes · 视觉基线 tokens
+   改主题色 / 字体 / 栏宽 → 只改这里的变量，见 docs/manual.md §3
+   ========================================================================== */
+
+:root {
+  /* 墨蓝灰阶：背景 → 前景 */
+  --ink-0: #07090f;
+  --ink-1: #0c101a;
+  --ink-2: #141a28;
+
+  /* 发丝线与文字 */
+  --line: rgba(216, 226, 240, 0.14);
+  --text-0: #e9edf5;
+  --text-1: #98a3b7;
+
+  /* 夜视琥珀：全站唯一信号色（天文台夜间红光传统的变体） */
+  --signal: #ffb454;
+  --signal-dim: rgba(255, 180, 84, 0.4);
+
+  /* 字体：全部系统字体栈，零外部依赖 */
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
+  --font-serif: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+
+  /* 阅读栏宽与节奏 */
+  --measure: 68ch;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 32px;
+  --space-4: 64px;
+}
+
+/* 井外主题：逃逸完成后的纸质档案（头部 LOC 开关切换，localStorage 记忆）
+   改井外配色 → 只改这个块，见 docs/manual.md §3.3 */
+:root[data-theme='out'] {
+  --ink-0: #f5f2ea;
+  --ink-1: #ede8dc;
+  --ink-2: #e3dccb;
+  --line: rgba(30, 34, 42, 0.18);
+  --text-0: #1c212b;
+  --text-1: #596273;
+  --signal: #b45309;
+  --signal-dim: rgba(180, 83, 9, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-0);
+  color: var(--text-0);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--ink-0);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+/* 仪表读数样式：全站所有“仪器文字”共用 */
+.readout {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-1);
+  text-transform: uppercase;
+}
+
+/* 通用页面骨架 */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3);
+}
+
+.page-code {
+  margin: 0;
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: var(--space-1) 0 var(--space-3);
+}
+
+.page-hint {
+  max-width: var(--measure);
+}
+
+/* 外链胶囊：链接页 / 关于页共用 */
+.link-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.link-item {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  border: 1px solid var(--line);
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.link-item:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+/* 系统开启“减弱视觉效果”时：全局关停动画。
+   轨迹场装置另有静态轨迹图降级（阶段一实现）。 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
