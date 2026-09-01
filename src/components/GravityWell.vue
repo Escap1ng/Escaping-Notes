@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { content } from '../lib/content.js'
-import { theme, toggleTheme } from '../lib/theme.js'
 
 // 逃逸坐标：at = 爬升进度点亮阈值；位置为视口百分比
 const NAV = [
@@ -39,8 +38,12 @@ let downAt = 0
 let downX = 0
 let downY = 0
 
-// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕/低语轮播
+// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕/低语轮播（低语出现在按压位置）
 const whisper = ref('')
+const whisperVisible = ref(false)
+const chargeX = ref(0)
+const chargeY = ref(0)
+let whisperTimer = 0
 let fired = false
 let rippleStart = 0
 const escapers = []
@@ -63,17 +66,20 @@ function fireEscape() {
     whisper.value = list[i]
     localStorage.setItem('en-whisper-idx', String(i + 1))
   }
-}
-
-function flipTheme() {
-  toggleTheme()
-  onUp()
+  // 松手后仍停留 2.2s，避免“一松手就消失”
+  whisperVisible.value = true
+  clearTimeout(whisperTimer)
+  whisperTimer = setTimeout(() => (whisperVisible.value = false), 2200)
 }
 
 function onDown(e) {
   downAt = performance.now()
   downX = e.clientX
   downY = e.clientY
+  // 低语显示在按压位置（相对装置容器）
+  const r = e.currentTarget.getBoundingClientRect()
+  chargeX.value = e.clientX - r.left
+  chargeY.value = e.clientY - r.top
   fired = false
   clearInterval(chargeTimer)
   chargeTimer = setInterval(() => {
@@ -366,6 +372,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf)
   clearInterval(clockTimer)
   clearInterval(chargeTimer)
+  clearTimeout(whisperTimer)
   if (observer) observer.disconnect()
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', resize)
@@ -402,11 +409,13 @@ onUnmounted(() => {
         <span v-if="sync" class="sync">SYNC OK</span>
       </div>
 
-      <div v-if="charged" class="charge-panel">
+      <div
+        v-if="whisperVisible"
+        class="charge-panel"
+        :style="{ left: chargeX + 'px', top: chargeY + 'px' }"
+        aria-hidden="true"
+      >
         <p class="readout charge-line">{{ whisper || '已达到逃逸速度，井外见。' }}</p>
-        <button class="charge-btn readout" type="button" @click="flipTheme">
-          {{ theme.mode === 'well' ? '去井外？' : '下井？' }}
-        </button>
       </div>
 
       <nav class="well-nav" aria-label="逃逸坐标">
@@ -432,7 +441,6 @@ onUnmounted(() => {
       </div>
 
       <div class="well-cue" :class="{ gone: progress > 0.02 }" aria-hidden="true">
-        <i class="cue-line"><b class="cue-tick"></b></i>
         <span class="readout">SCROLL = 爬升</span>
       </div>
     </div>
@@ -485,38 +493,19 @@ onUnmounted(() => {
   color: var(--signal);
 }
 
+/* 低语浮现在按压位置，略高于指尖避免被遮挡 */
 .charge-panel {
   position: absolute;
-  left: 50%;
-  top: 40%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  transform: translate(-50%, -130%);
   text-align: center;
-  max-width: 86vw;
+  max-width: 76vw;
+  pointer-events: none;
 }
 
 .charge-line {
   color: var(--signal);
   letter-spacing: 0.2em;
-}
-
-.charge-btn {
-  background: none;
-  border: 1px solid var(--signal);
-  color: var(--signal);
-  padding: 6px 16px;
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-  transition: background 0.2s, color 0.2s;
-}
-
-.charge-btn:hover {
-  background: var(--signal);
-  color: var(--ink-0);
+  text-shadow: 0 0 12px var(--ink-0);
 }
 
 .well-nav {
@@ -594,32 +583,7 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.cue-line {
-  position: relative;
-  display: block;
-  width: 1px;
-  height: 56px;
-  background: var(--line);
-}
 
-.cue-tick {
-  position: absolute;
-  left: -2px;
-  top: 0;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--signal);
-  animation: cue-rise 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* 上升=爬升预演，与全站“滚动=爬升”的反转约定一致 */
-@keyframes cue-rise {
-  0% { transform: translateY(51px); opacity: 0; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { transform: translateY(0); opacity: 0; }
-}
 
 @media (max-width: 720px) {
   .well-track {
