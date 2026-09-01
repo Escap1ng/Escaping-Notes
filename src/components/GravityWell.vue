@@ -277,7 +277,10 @@ onUnmounted(() => {
         <p>{{ content.site.subtitle }}</p>
       </div>
 
-      <span class="readout well-hint" aria-hidden="true">SCROLL = 爬升</span>
+      <div class="well-cue" :class="{ gone: progress > 0.02 }" aria-hidden="true">
+        <i class="cue-line"><b class="cue-tick"></b></i>
+        <span class="readout">SCROLL = 爬升</span>
+      </div>
     </div>
   </div>
 </template>
@@ -372,10 +375,48 @@ onUnmounted(() => {
   color: var(--text-1);
 }
 
-.well-hint {
+/* 仪器式下坠提示：开始爬升后淡出 */
+.well-cue {
   position: absolute;
   right: var(--space-3);
   bottom: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.6s;
+  pointer-events: none;
+}
+
+.well-cue.gone {
+  opacity: 0;
+}
+
+.cue-line {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 56px;
+  background: var(--line);
+}
+
+.cue-tick {
+  position: absolute;
+  left: -2px;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--signal);
+  animation: cue-rise 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 上升=爬升预演，与全站“滚动=爬升”的反转约定一致 */
+@keyframes cue-rise {
+  0% { transform: translateY(51px); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
 }
 
 @media (max-width: 720px) {
