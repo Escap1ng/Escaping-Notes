@@ -2,14 +2,13 @@
 export const site = {
   name: 'Escaping Notes',
   subtitle: '每一次书写，都是一次逃逸',
-  author: 'Xia',
-  bio: 'Sichuan Normal University · Undergraduate',
-  location: 'Chengdu, Sichuan',
-  coords: '30.66°N 104.06°E',
-  email: 'Kzxia001@gmail.com',
+  author: 'Yu',
+  bio: 'China Jiliang University · Undergraduate',
+  location: 'Hangzhou, Zhejiang',
+  coords: '30.25°N 120.17°E',
+  email: 'chunqi-yu@outlook.com',
   url: 'https://example.com', // 站点公开地址（RSS/OG/canonical 用）；域名备案生效后改成你的 https 域名
   socials: [
-    { label: 'GitHub', url: 'https://github.com/' },
-    { label: 'Bilibili', url: 'https://www.bilibili.com/' },
+    { label: 'GitHub', url: 'https://github.com/Escap1ng' },
   ],
 }

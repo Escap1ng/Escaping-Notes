@@ -292,6 +292,9 @@ onUnmounted(() => {
   top: 0;
   height: 100vh;
   overflow: hidden;
+  /* 点击/拖动玩引力干扰时不出现文本光标与选区 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .well-canvas {
