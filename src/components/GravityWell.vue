@@ -17,10 +17,47 @@ const canvasRef = ref(null)
 const progress = ref(0)
 const now = ref('--:--:--')
 
-// 仪表读数：海拔与速度随爬升推进，逼近逃逸速度
+// 仪表读数：海拔随爬升推进
 const alt = computed(() => String(Math.round(progress.value * 11200)).padStart(5, '0'))
-const vel = computed(() => (2 + progress.value * 9.2).toFixed(1))
 const escaped = computed(() => progress.value > 0.97)
+
+// 蓄能：长按 ≥800ms 起充，VEL 逼近 11.2；松开缓慢回落
+const charge = ref(0)
+const charged = ref(false)
+const sync = ref(false)
+let chargeTimer = 0
+let resonanceUntil = 0
+
+const vel = computed(() => {
+  const base = 2 + progress.value * 9.2
+  return (base + charge.value * (11.2 - base)).toFixed(1)
+})
+
+function onDown() {
+  const downAt = performance.now()
+  clearInterval(chargeTimer)
+  chargeTimer = setInterval(() => {
+    const held = performance.now() - downAt
+    charge.value = held < 800 ? 0 : Math.min(1, (held - 800) / 1700)
+    charged.value = charge.value > 0.97
+  }, 80)
+}
+
+function onUp() {
+  clearInterval(chargeTimer)
+  const decay = setInterval(() => {
+    charge.value = Math.max(0, charge.value - 0.06)
+    charged.value = charge.value > 0.97
+    if (charge.value === 0) clearInterval(decay)
+  }, 50)
+}
+
+// 共振：三连点 logo → 全部轨迹同相位 2s
+function onResonance() {
+  resonanceUntil = performance.now() + 2000
+  sync.value = true
+  setTimeout(() => (sync.value = false), 2000)
+}
 
 let ctx = null
 let W = 0
@@ -114,9 +151,10 @@ function draw(t) {
 
   for (const pt of particles) {
     if (!reduced) {
-      // 挣扎感上升：慢-快-慢 + 个体相位
-      const struggle = 0.55 + 0.9 * Math.abs(Math.sin(t * 0.0006 * (0.5 + pt.z) + pt.seed))
-      pt.y -= pt.v * struggle * 16 * (0.5 + pt.z)
+      // 挣扎感上升：慢-快-慢 + 个体相位；共振期间同相位；蓄能加速
+      const phase = t < resonanceUntil ? 0 : pt.seed
+      const struggle = 0.55 + 0.9 * Math.abs(Math.sin(t * 0.0006 * (0.5 + pt.z) + phase))
+      pt.y -= pt.v * struggle * 16 * (0.5 + pt.z) * (1 + charge.value * 2.2)
       if (pt.y < -20) Object.assign(pt, spawn(false))
     }
     const jx = Math.sin(t * 0.001 + pt.seed) * 5 * pt.z
@@ -149,7 +187,7 @@ function draw(t) {
       px -= (dx / d) * f * 26
       py -= (dy / d) * f * 26
     }
-    ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * 0.5)
+    ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * 0.5 + charge.value * 0.3)
     ctx.fillStyle = f > 0.22 ? colors.signal : colors.dim
     ctx.beginPath()
     ctx.arc(px, py, 0.8 + 1.5 * pt.z + f * 1.3, 0, Math.PI * 2)
@@ -205,6 +243,7 @@ onMounted(() => {
 
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('resize', resize)
+  window.addEventListener('en-resonance', onResonance)
   document.addEventListener('visibilitychange', onVis)
   const canvas = canvasRef.value
   if (!reduced) {
@@ -232,10 +271,12 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   clearInterval(clockTimer)
+  clearInterval(chargeTimer)
   if (observer) observer.disconnect()
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', resize)
   window.removeEventListener('mousemove', onMove)
+  window.removeEventListener('en-resonance', onResonance)
   document.removeEventListener('visibilitychange', onVis)
   const canvas = canvasRef.value
   if (canvas) {
@@ -248,7 +289,13 @@ onUnmounted(() => {
 
 <template>
   <div ref="trackRef" class="well-track">
-    <div class="well-sticky">
+    <div
+      class="well-sticky"
+      @pointerdown="onDown"
+      @pointerup="onUp"
+      @pointerleave="onUp"
+      @pointercancel="onUp"
+    >
       <canvas ref="canvasRef" class="well-canvas" aria-hidden="true"></canvas>
 
       <div class="readout well-readout">
@@ -257,7 +304,10 @@ onUnmounted(() => {
         <span>ALT {{ alt }} M</span>
         <span>VEL {{ vel }}</span>
         <span class="esc" :class="{ lit: escaped }">ESC 11.2</span>
+        <span v-if="sync" class="sync">SYNC OK</span>
       </div>
+
+      <p v-if="charged" class="charge-line readout">已达到逃逸速度，井外见。</p>
 
       <nav class="well-nav" aria-label="逃逸坐标">
         <RouterLink
@@ -324,6 +374,20 @@ onUnmounted(() => {
 
 .esc.lit {
   color: var(--signal);
+}
+
+.sync {
+  color: var(--signal);
+}
+
+.charge-line {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  color: var(--signal);
+  letter-spacing: 0.2em;
+  pointer-events: none;
 }
 
 .well-nav {

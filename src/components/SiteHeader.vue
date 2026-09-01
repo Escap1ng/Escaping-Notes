@@ -17,6 +17,19 @@ function toggleTheme() {
   applyTheme(theme.value === 'well' ? 'out' : 'well')
 }
 
+// 共振彩蛋：600ms 内连点 logo 三次
+let clicks = 0
+let clickT = 0
+function onBrand() {
+  const now = Date.now()
+  clicks = now - clickT < 600 ? clicks + 1 : 1
+  clickT = now
+  if (clicks >= 3) {
+    clicks = 0
+    window.dispatchEvent(new Event('en-resonance'))
+  }
+}
+
 const nav = [
   { to: '/', label: '首页', code: '00' },
   { to: '/blog', label: '文章', code: '01' },
@@ -31,7 +44,7 @@ const nav = [
 <template>
   <header class="site-header">
     <a class="skip-link" href="#main">跳到内容</a>
-    <RouterLink to="/" class="brand" aria-label="返回首页">
+    <RouterLink to="/" class="brand" aria-label="返回首页" @click="onBrand">
       <span class="brand-mark" aria-hidden="true">↗</span>
       <span class="readout brand-name">{{ content.site.name }}</span>
     </RouterLink>
