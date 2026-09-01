@@ -2,14 +2,14 @@
 export const site = {
   name: 'Escaping Notes',
   subtitle: '每一次书写，都是一次逃逸',
-  author: 'Yu',
+  author: 'Yu · Escap1ng',
   bio: 'China Jiliang University · Undergraduate',
   location: 'Hangzhou, Zhejiang',
   coords: '30.25°N 120.17°E',
   email: 'chunqi-yu@outlook.com',
   url: 'https://escaping.top', // 站点公开地址（RSS/OG/canonical 用）
   socials: [
-    { label: 'GitHub', url: 'https://github.com/Escap1ng' },
+    { label: 'GitHub · Escap1ng', url: 'https://github.com/Escap1ng' },
   ],
   gear: ['Vue 3', 'Vite', 'Python', 'nginx', 'Canvas 2D'], // 逃逸装备（关于页）
 }

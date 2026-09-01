@@ -1,5 +1,10 @@
 <script setup>
 import { content } from '../lib/content.js'
+
+// 友情链接（关于页展示，后续可直接在此追加）
+const friends = [
+  { label: "Soren's Blog", url: 'https://soren-s-blog-base.pages.dev/' },
+]
 </script>
 
 <template>
@@ -39,6 +44,15 @@ import { content } from '../lib/content.js'
       <li v-for="s in content.site.socials" :key="s.label">
         <a class="link-item" :href="s.url" target="_blank" rel="noopener noreferrer">
           {{ s.label }}<span aria-hidden="true">↗</span>
+        </a>
+      </li>
+    </ul>
+
+    <p class="readout social-title">// FRIENDS · 友情链接</p>
+    <ul class="link-list">
+      <li v-for="f in friends" :key="f.url">
+        <a class="link-item" :href="f.url" target="_blank" rel="noopener noreferrer">
+          {{ f.label }}<span aria-hidden="true">↗</span>
         </a>
       </li>
     </ul>

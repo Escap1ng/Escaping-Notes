@@ -17,7 +17,6 @@ const notice = ref('')
 const ed = ref({ slug: '', title: '', date: '', tags: '', summary: '', body: '' })
 
 // 设置页签（行式编辑，格式见各占位提示）
-const siteForm = ref('')
 const updatesForm = ref('')
 const linksForm = ref('')
 const projectsForm = ref('')
@@ -41,11 +40,6 @@ function flash(s) {
 }
 
 function fillForms() {
-  const s = content.site
-  siteForm.value =
-    [s.name, s.subtitle, s.author, s.bio, s.location, s.coords, s.email, s.url].join('\n') +
-    '\n' +
-    (s.socials || []).map((x) => `${x.label}|${x.url}`).join('\n')
   updatesForm.value = content.updates.map((u) => `${u.date} | ${u.text}`).join('\n')
   linksForm.value = content.linkGroups
     .map((g) => g.items.map((i) => `${g.group}|${g.label}|${i.name}|${i.url}`).join('\n'))
@@ -139,22 +133,6 @@ async function delPost(slug) {
 // ---------- 设置 ----------
 const lines = (s) => s.split('\n').map((l) => l.trim()).filter(Boolean)
 
-async function saveSite() {
-  const ls = siteForm.value.split('\n').map((l) => l.trim())
-  const [name, subtitle, author, bio, location, coords, email, url] = ls.slice(0, 8)
-  const socials = ls.slice(8).filter(Boolean).map((l) => {
-    const [label, u] = l.split('|')
-    return { label: label || '', url: u || '#' }
-  })
-  const res = await api('/api/content/site', {
-    method: 'PUT',
-    body: { name, subtitle, author, bio, location, coords, email, url, socials, gear: content.gear },
-  })
-  if (res) {
-    await loadContent()
-    flash('站点信息已保存')
-  }
-}
 async function saveUpdates() {
   const arr = lines(updatesForm.value).map((l) => {
     const [date, ...rest] = l.split('|')
@@ -321,11 +299,6 @@ async function onFile(e) {
 
     <!-- 设置（站长） -->
     <div v-if="tab === 'settings' && isOwner()">
-      <div class="set-block">
-        <h3 class="readout">// SITE · 8 行字段 + 社交行 label|url</h3>
-        <textarea v-model="siteForm" class="field mono" rows="12"></textarea>
-        <button class="submit readout" @click="saveSite">保存站点信息</button>
-      </div>
       <div class="set-block">
         <h3 class="readout">// UPDATES · 每行 date | text</h3>
         <textarea v-model="updatesForm" class="field mono" rows="6"></textarea>
