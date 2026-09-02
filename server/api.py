@@ -278,6 +278,7 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 self._json(200, load(CONTENT_F, {}))
         elif path == '/api/fragments':
+            # 公开只读（同留言墙语义）：碎片无草稿/私密态，读公开、写/删 owner
             with LOCK:
                 self._json(200, load(FRAG_F, [])[-200:])
         elif path == '/api/uploads':
@@ -292,7 +293,7 @@ class Handler(BaseHTTPRequestHandler):
                     'mtime': int(f.stat().st_mtime),
                     'kind': 'image' if f.suffix in IMAGE_EXTS else ('audio' if f.suffix == '.mp3' else 'other'),
                 } for f in files[:100]])
-        elif (m := re.match(r'^/uploads/([a-z0-9._-]+)$', path)):
+        elif (m := re.match(r'^/uploads/([a-z0-9._-]+)\Z', path)):
             f = UPLOADS / m.group(1)
             if f.exists():
                 self._raw(200, CTYPES.get(f.suffix, 'application/octet-stream'), f.read_bytes())
@@ -492,7 +493,7 @@ class Handler(BaseHTTPRequestHandler):
                     frags = load(FRAG_F, [])
                     save(FRAG_F, [x for x in frags if x.get('ts') != ts])
                 self._json(200, {'ok': True})
-        elif (m := re.match(r'^/api/uploads/([a-z0-9._-]+)$', path)):
+        elif (m := re.match(r'^/api/uploads/([a-z0-9._-]+)\Z', path)):
             if not u or u['role'] != 'owner':
                 self._json(403, {'error': 'owner only'})
             else:

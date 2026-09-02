@@ -84,11 +84,13 @@ onMounted(async () => {
   }
 
   addEventListener('scroll', onScroll, { passive: true })
+  addEventListener('keydown', onKey)
   onScroll()
 })
 
 onUnmounted(() => {
   removeEventListener('scroll', onScroll)
+  removeEventListener('keydown', onKey)
   document.title = 'Escaping Notes · 逃逸笔记'
 })
 </script>
