@@ -17,6 +17,8 @@
   /* 夜视琥珀：全站唯一信号色（天文台夜间红光传统的变体） */
   --signal: #ffb454;
   --signal-dim: rgba(255, 180, 84, 0.4);
+  /* 画布信号色：轨迹场小点/拖尾专用，可按主题单独加深 */
+  --signal-canvas: #ffb454;
 
   /* 字体：全部系统字体栈，零外部依赖 */
   --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
@@ -42,6 +44,8 @@
   --text-1: #596273;
   --signal: #b45309;
   --signal-dim: rgba(180, 83, 9, 0.4);
+  /* 纸面上小点/拖尾用深锈红，保证清晰 */
+  --signal-canvas: #8a3403;
 }
 
 * {

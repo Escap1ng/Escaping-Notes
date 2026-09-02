@@ -1,6 +1,6 @@
 <template>
   <footer class="site-footer readout">
-    <span>// escape_log · 继续逃逸</span>
+    <span>// escape_blog · 继续逃逸</span>
   </footer>
 </template>
 

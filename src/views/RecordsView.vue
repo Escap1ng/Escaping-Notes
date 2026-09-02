@@ -31,8 +31,6 @@ import { records } from '../config/records.js'
         </a>
       </li>
     </ol>
-
-    <p class="readout rec-note">// 静态快照 · 零外部调用 · 更新=运行 scripts/sync_records.py</p>
   </section>
 </template>
 
@@ -121,10 +119,6 @@ import { records } from '../config/records.js'
 
 .rec-row:hover .rec-arrow {
   transform: translate(3px, -3px);
-}
-
-.rec-note {
-  color: var(--text-1);
 }
 
 @media (max-width: 720px) {

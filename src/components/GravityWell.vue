@@ -41,25 +41,22 @@ let downAt = 0
 let downX = 0
 let downY = 0
 
-// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕/低语轮播
-// 低语实例化：固定于按压点缓慢淡出；另一点长按另起一条，互不跳转
+// 满蓄能奖励：逃逸粒子/涟漪/逃逸痕；低语改为环境随机浮现
 const whispersActive = ref([])
 let wid = 0
 let pressX = 0
 let pressY = 0
 const whisperTimers = []
+let whisperLoop = 0
 const fired = ref(false)
 let tapOk = false
 let rippleStart = 0
 const escapers = []
 const traces = []
 
-// 低语定点实例：轻点 1.4s / 长按发射 2.6s；同处（≤48px）新句立即替换旧句，不重叠
-function pushWhisper(text, life) {
-  whispersActive.value = whispersActive.value.filter(
-    (w) => Math.hypot(w.x - pressX, w.y - pressY) > 48
-  )
-  const inst = { id: ++wid, x: pressX, y: pressY, text, life }
+// 低语实例：定点缓慢浮现/消逝
+function pushWhisper(text, life, x, y) {
+  const inst = { id: ++wid, x, y, text, life }
   whispersActive.value.push(inst)
   whisperTimers.push(
     setTimeout(() => {
@@ -68,12 +65,62 @@ function pushWhisper(text, life) {
   )
 }
 
-function nextWhisperText(fallback) {
+// 环境低语：随机落点、与现存句保持间距、文字不重复、屏上最多 4 句
+function spawnWhisper() {
+  if (reduced || !W) return
+  if (whispersActive.value.length >= 4) return
   const list = content.whispers || []
-  if (!list.length) return fallback
-  const i = Number(localStorage.getItem('en-whisper-idx') || 0) % list.length
-  localStorage.setItem('en-whisper-idx', String(i + 1))
-  return list[i]
+  const busy = new Set(whispersActive.value.map((w) => w.text))
+  const pool = list.filter((t) => !busy.has(t))
+  if (!pool.length) return
+  const text = pool[Math.floor(Math.random() * pool.length)]
+  const gap = Math.min(240, Math.max(140, Math.min(W, H) * 0.3))
+  // 低语按文字宽度估算渲染矩形（居中、位于 y 上方），与按键矩形做碰撞检测
+  const halfW = (text.length * 15) / 2
+  const M = 24 // 安全边距
+  const navRects = NAV.map((n) => {
+    const px = ((n.anchor === 'r' ? 100 - n.x : n.x) * W) / 100
+    const py = (n.y * H) / 100
+    const bw = 96 // 按键宽估算：圆点+编号+文字
+    return n.anchor === 'r'
+      ? { l: px - bw, r: px, t: py - 12, b: py + 16 }
+      : { l: px, r: px + bw, t: py - 12, b: py + 16 }
+  })
+  let x = W / 2
+  let y = H / 2
+  for (let i = 0; i < 16; i++) {
+    x = W * (0.2 + Math.random() * 0.6)
+    y = H * (0.18 + Math.random() * 0.62)
+    const wr = { l: x - halfW, r: x + halfW, t: y - 44, b: y - 4 }
+    const farWhisper = whispersActive.value.every((w) => Math.hypot(w.x - x, w.y - y) > gap)
+    const clearNav = navRects.every(
+      (r) => wr.l > r.r + M || wr.r < r.l - M || wr.t > r.b + M || wr.b < r.t - M
+    )
+    if (farWhisper && clearNav) break
+  }
+  pushWhisper(text, 4600, x, y)
+}
+
+function startWhisperLoop() {
+  whisperLoop = setTimeout(() => {
+    spawnWhisper()
+    startWhisperLoop()
+  }, 2000 + Math.random() * 2000)
+}
+
+// 轻点 = 自按压点下方发射一颗流星
+function fireTapMeteor() {
+  if (reduced) return
+  const dir = Math.random() < 0.5 ? -1 : 1
+  escapers.push({
+    x: Math.max(20, Math.min(W - 20, pressX + (Math.random() - 0.5) * 60)),
+    y: H - 10 - Math.random() * 20,
+    v: 1.2 + Math.random() * 0.6,
+    acc: 1.01 + Math.random() * 0.008,
+    vx: dir * (0.3 + Math.random() * 0.4),
+    r: 1.6 + Math.random() * 1.2,
+    trail: [],
+  })
 }
 
 function fireEscape() {
@@ -83,7 +130,11 @@ function fireEscape() {
     const xs = []
     let spawned = 0
     const tick = () => {
-      if (++spawned > 7) return
+      if (++spawned > 7) {
+        // 主粒发射完毕后，叠加一轮共振式慢速流星雨，层次更丰富
+        burstTimers.push(setTimeout(resonanceShower, 0))
+        return
+      }
       let x = pressX
       for (let tries = 0; tries < 8; tries++) {
         x = Math.max(20, Math.min(W - 20, pressX + (Math.random() - 0.5) * W * 0.5))
@@ -142,7 +193,7 @@ function onUp() {
   // 轻点（<800ms 且未位移、未点链接）= 一句低语，与长按发射分层
   if (tapOk && !fired.value && held < 800) {
     navigator.vibrate?.(10)
-    pushWhisper(nextWhisperText('……'), 1600)
+    fireTapMeteor()
   }
   tapOk = false
   pressing = false // 松手后由 frame() 逐帧 10s 平滑回落
@@ -216,6 +267,11 @@ function onNavClick(e) {
 // 共振：三连点 logo → 2s 内持续发射流星（不快于主粒、彼此不靠近）
 const burstTimers = []
 function onResonance() {
+  resonanceShower()
+}
+
+// 慢速平行阵雨：共振三连点与逃逸达成后的叠加层共用
+function resonanceShower() {
   if (reduced) return
   rippleStart = performance.now()
   const xs = []
@@ -274,10 +330,12 @@ function readColors() {
   colors = {
     line: cs.getPropertyValue('--line').trim() || colors.line,
     dim: cs.getPropertyValue('--text-1').trim() || colors.dim,
-    signal: cs.getPropertyValue('--signal').trim() || colors.signal,
+    signal: cs.getPropertyValue('--signal-canvas').trim() || colors.signal,
   }
   colors.dimRGB = rgbOf(colors.dim)
   colors.sigRGB = rgbOf(colors.signal)
+  // 井外纸面：点亮粒子更实更大，补偿浅色背景对比
+  colors.boost = document.documentElement.getAttribute('data-theme') === 'out' ? 1 : 0
   if (reduced) draw(0)
 }
 
@@ -411,7 +469,7 @@ function draw(t, step = 1) {
       py -= (dy / d) * f * 26
     }
     if (ripple) px += Math.sin(t * 0.02 + pt.seed) * 3 * ripple
-    ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * 0.5 + charge.value * 0.3)
+    ctx.globalAlpha = Math.min(1, 0.25 + 0.5 * pt.z + f * (0.5 + 0.5 * colors.boost) + charge.value * 0.3)
     // 颜色随引力强度 steep-smoothstep 过渡（灰→琥珀）：连续不闪烁，但快速点满琥珀
     const kr = Math.min(1, Math.max(0, (f - 0.1) / 0.22))
     const k = kr * kr * (3 - 2 * kr)
@@ -421,7 +479,7 @@ function draw(t, step = 1) {
       dC[1] + (sC[1] - dC[1]) * k
     )},${Math.round(dC[2] + (sC[2] - dC[2]) * k)})`
     ctx.beginPath()
-    ctx.arc(px, py, 0.8 + 1.5 * pt.z + f * 1.3, 0, Math.PI * 2)
+    ctx.arc(px, py, 0.8 + 1.5 * pt.z + f * (1.3 + 0.9 * colors.boost), 0, Math.PI * 2)
     ctx.fill()
   }
 
@@ -579,12 +637,19 @@ onMounted(() => {
   tick()
   clockTimer = setInterval(tick, 1000)
 
-  if (!reduced) raf = requestAnimationFrame(frame)
+  if (!reduced) {
+    raf = requestAnimationFrame(frame)
+    spawnWhisper()
+    // 开场第二句错时落点，形成错落感
+    whisperTimers.push(setTimeout(spawnWhisper, 1400))
+    startWhisperLoop()
+  }
 })
 
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   clearInterval(clockTimer)
+  clearTimeout(whisperLoop)
   whisperTimers.forEach(clearTimeout)
   burstTimers.forEach(clearTimeout)
   if (observer) observer.disconnect()
@@ -714,7 +779,7 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* 低语浮现在按压位置，略高于指尖避免被遮挡；定点缓慢淡出 */
+/* 低语环境化：随机落点浮现，缓慢淡入淡出 */
 .charge-panel {
   position: absolute;
   transform: translate(-50%, -130%);
@@ -737,6 +802,12 @@ onUnmounted(() => {
     animation: none;
     opacity: 1;
   }
+}
+
+/* 井外纸面：去掉浅色光晕，避免琥珀被亮晕冲淡发虚 */
+:root[data-theme='out'] .charge-line,
+:root[data-theme='out'] .esc-msg {
+  text-shadow: none;
 }
 
 .charge-line {
