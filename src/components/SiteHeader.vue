@@ -24,7 +24,7 @@ const nav = [
   { to: '/', label: '首页', code: '00' },
   { to: '/blog', label: '文章', code: '01' },
   { to: '/updates', label: '动态', code: '02' },
-  { to: '/links', label: '收藏', code: '03' },
+  { to: '/records', label: '歌单', code: '03' },
   { to: '/projects', label: '项目', code: '04' },
   { to: '/wall', label: '留言', code: '05' },
   { to: '/about', label: '关于', code: '06' },
@@ -140,6 +140,14 @@ const nav = [
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* 主题开关与登录/注册同款框线按钮：统一行高保证两框等大 */
+.theme-toggle,
+.auth-toggle {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.5;
 }
 
 .theme-toggle {

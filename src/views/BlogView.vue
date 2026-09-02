@@ -150,6 +150,12 @@ const filtered = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+}
+
+/* 元信息行（字数/时长/标签）钉在卡片底部，同行卡片对齐 */
+.post-meta {
+  margin-top: auto;
 }
 
 .post-title {

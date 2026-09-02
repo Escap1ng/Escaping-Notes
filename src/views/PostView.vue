@@ -15,6 +15,15 @@ const views = ref(null)
 const viewsLocal = ref(false)
 const copied = ref(false)
 const altPct = ref(0)
+const lightbox = ref('')
+
+// 灯箱：点击正文图片放大，Esc/点击关闭
+function onProseClick(e) {
+  if (e.target.tagName === 'IMG') lightbox.value = e.target.currentSrc || e.target.src
+}
+function onKey(e) {
+  if (e.key === 'Escape') lightbox.value = ''
+}
 
 // all 按日期降序：prev=更旧(i+1)，next=更新(i-1)
 const neighbors = computed(() => {
@@ -107,7 +116,7 @@ onUnmounted(() => {
         </p>
       </header>
 
-      <div class="prose" v-html="htmlBody"></div>
+      <div class="prose" v-html="htmlBody" @click="onProseClick"></div>
 
       <nav class="post-nav readout" aria-label="上下篇">
         <RouterLink v-if="neighbors.prev" :to="`/blog/${neighbors.prev.slug}`">
@@ -129,6 +138,17 @@ onUnmounted(() => {
       </aside>
       <div class="alt-bar" aria-hidden="true"><i :style="{ height: altPct + '%' }"></i></div>
     </template>
+
+    <div
+      v-if="lightbox"
+      class="lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label="图片预览"
+      @click="lightbox = ''"
+    >
+      <img :src="lightbox" alt="" />
+    </div>
   </section>
 </template>
 
@@ -162,6 +182,27 @@ onUnmounted(() => {
 
 .post-tags {
   color: var(--signal);
+}
+
+.prose :deep(img) {
+  cursor: zoom-in;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: color-mix(in srgb, var(--ink-0) 94%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border: 1px solid var(--line);
 }
 
 .post-nav {

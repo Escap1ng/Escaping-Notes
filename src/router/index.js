@@ -14,7 +14,9 @@ const router = createRouter({
     // 文章页 title 由 PostView 按文章标题设置
     { path: '/blog/:slug', component: () => import('../views/PostView.vue') },
     { path: '/updates', component: () => import('../views/UpdatesView.vue'), meta: { t: `动态 · ${T}` } },
-    { path: '/links', component: () => import('../views/LinksView.vue'), meta: { t: `收藏 · ${T}` } },
+    { path: '/records', component: () => import('../views/RecordsView.vue'), meta: { t: `歌单 · ${T}` } },
+    // 碎片页代码保留，暂不占用导航位（可 /fragments 直达）
+    { path: '/fragments', component: () => import('../views/FragmentsView.vue'), meta: { t: `碎片 · ${T}` } },
     { path: '/projects', component: () => import('../views/ProjectsView.vue'), meta: { t: `载荷舱 · ${T}` } },
     { path: '/wall', component: () => import('../views/WallView.vue'), meta: { t: `留言墙 · ${T}` } },
     { path: '/about', component: () => import('../views/AboutView.vue'), meta: { t: `关于 · ${T}` } },

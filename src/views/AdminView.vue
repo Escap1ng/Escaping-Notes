@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api, getToken } from '../lib/api.js'
 import { auth, isOwner } from '../lib/auth.js'
@@ -15,10 +15,12 @@ const notice = ref('')
 
 // 文章编辑器
 const ed = ref({ slug: '', title: '', date: '', tags: '', summary: '', body: '' })
+const bodyRef = ref(null)
+const imgInputRef = ref(null)
+const images = ref([])
 
 // 设置页签（行式编辑，格式见各占位提示）
 const updatesForm = ref('')
-const linksForm = ref('')
 const projectsForm = ref('')
 const gearForm = ref('')
 const playlistForm = ref('')
@@ -41,9 +43,6 @@ function flash(s) {
 
 function fillForms() {
   updatesForm.value = content.updates.map((u) => `${u.date} | ${u.text}`).join('\n')
-  linksForm.value = content.linkGroups
-    .map((g) => g.items.map((i) => `${g.group}|${g.label}|${i.name}|${i.url}`).join('\n'))
-    .join('\n')
   projectsForm.value = content.projects.map((p) => `${p.name}|${p.desc}|${p.year}|${p.url}`).join('\n')
   gearForm.value = content.gear.join('\n')
   playlistForm.value = content.playlist.map((p) => `${p.title}|${p.artist}|${p.file}`).join('\n')
@@ -55,6 +54,7 @@ async function refresh() {
   msgs.value = ((await api('/api/messages')) || []).slice().reverse()
   posts.value = await loadPosts()
   fillForms()
+  if (isOwner()) loadImages()
 }
 
 onMounted(async () => {
@@ -142,20 +142,57 @@ async function saveUpdates() {
     await loadContent(); fillForms(); flash('动态已保存')
   }
 }
-async function saveLinks() {
-  const groups = []
-  for (const l of lines(linksForm.value)) {
-    const [group, label, name, url] = l.split('|')
-    let g = groups.find((x) => x.group === group)
-    if (!g) {
-      g = { group, label: label || group, items: [] }
-      groups.push(g)
-    }
-    g.items.push({ name: name || '', url: url || '#' })
+// ---------- 图片管理 ----------
+const imgName = (x) => x.name.replace(/\.[a-z0-9]+$/i, '')
+
+function insertAtCursor(md) {
+  const el = bodyRef.value
+  const s = el?.selectionStart ?? ed.value.body.length
+  const e = el?.selectionEnd ?? s
+  ed.value.body = ed.value.body.slice(0, s) + md + ed.value.body.slice(e)
+  nextTick(() => {
+    if (!el) return
+    el.focus()
+    el.selectionStart = el.selectionEnd = s + md.length
+  })
+}
+
+function insertImage(x) {
+  insertAtCursor(`![${imgName(x)}](${x.url})`)
+  flash('已插入正文光标处')
+}
+
+async function loadImages() {
+  const list = (await api('/api/uploads')) || []
+  images.value = list.filter((x) => x.kind === 'image')
+}
+
+async function onImgFile(e) {
+  const f = e.target.files[0]
+  if (!f) return
+  const fd = new FormData()
+  fd.append('file', f)
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: fd,
+    })
+    const j = await res.json()
+    if (j.url) {
+      insertAtCursor(`![${f.name.replace(/\.[a-z0-9]+$/i, '')}](${j.url})`)
+      flash('图片已上传并插入')
+      loadImages()
+    } else flash(j.error === 'type not allowed' ? '仅支持图片/音乐文件' : '上传失败')
+  } catch {
+    flash('上传失败')
   }
-  if (await api('/api/content/links', { method: 'PUT', body: groups })) {
-    await loadContent(); fillForms(); flash('链接已保存')
-  }
+  e.target.value = ''
+}
+
+async function delImage(x) {
+  await api(`/api/uploads/${x.name}`, { method: 'DELETE' })
+  loadImages()
 }
 async function saveProjects() {
   const arr = lines(projectsForm.value).map((l) => {
@@ -292,9 +329,26 @@ async function onFile(e) {
           <input v-model="ed.tags" class="field" placeholder="标签, 逗号分隔" />
         </div>
         <input v-model="ed.summary" class="field" placeholder="摘要（列表与分享卡用）" />
-        <textarea v-model="ed.body" class="field mono" rows="14" placeholder="Markdown 正文 *" required></textarea>
+        <textarea ref="bodyRef" v-model="ed.body" class="field mono" rows="14" placeholder="Markdown 正文 *" required></textarea>
+        <div class="ed-row">
+          <input ref="imgInputRef" type="file" accept="image/*" hidden @change="onImgFile" />
+          <button class="act readout" type="button" @click="imgInputRef?.click()">上传图片并插入</button>
+        </div>
         <button class="submit readout" type="submit">保存文章</button>
       </form>
+
+      <h3 class="readout ed-head">// IMAGES · 已上传图片</h3>
+      <ul v-if="images.length" class="img-grid">
+        <li v-for="x in images" :key="x.name" class="img-cell">
+          <img :src="x.url" :alt="x.name" loading="lazy" />
+          <span class="readout img-name">{{ x.name }}</span>
+          <span class="acts">
+            <button class="act readout" type="button" @click="insertImage(x)">插入</button>
+            <button class="act readout" type="button" @click="delImage(x)">删除</button>
+          </span>
+        </li>
+      </ul>
+      <p v-else class="readout">// 暂无图片</p>
     </div>
 
     <!-- 设置（站长） -->
@@ -303,11 +357,6 @@ async function onFile(e) {
         <h3 class="readout">// UPDATES · 每行 date | text</h3>
         <textarea v-model="updatesForm" class="field mono" rows="6"></textarea>
         <button class="submit readout" @click="saveUpdates">保存动态</button>
-      </div>
-      <div class="set-block">
-        <h3 class="readout">// LINKS · 每行 group|label|name|url</h3>
-        <textarea v-model="linksForm" class="field mono" rows="8"></textarea>
-        <button class="submit readout" @click="saveLinks">保存链接</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// PROJECTS · 每行 name|desc|year|url</h3>
@@ -446,6 +495,37 @@ async function onFile(e) {
 .ed-row .field:first-child {
   flex: 2;
   min-width: 200px;
+}
+
+.img-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-2);
+}
+
+.img-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--line);
+  padding: 6px;
+}
+
+.img-cell img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+}
+
+.img-name {
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 

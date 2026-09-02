@@ -34,11 +34,15 @@ SESS_F = DATA / 'sessions.json'
 MSG_F = DATA / 'messages.json'
 VIEW_F = DATA / 'views.json'
 CONTENT_F = DATA / 'content.json'
+FRAG_F = DATA / 'fragments.json'
 UPLOADS = DATA / 'uploads'
 UPLOADS.mkdir(exist_ok=True)
 CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist', 'whispers'}
 CTYPES = {'.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
           '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
+# 上传白名单：仅图片与 mp3，其余类型一律拒绝
+UPLOAD_EXTS = set(CTYPES)
+IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'}
 
 LOCK = threading.RLock()  # 可重入：setup/register 外层持锁时 new_session 需再入
 RATE = {}
@@ -273,6 +277,21 @@ class Handler(BaseHTTPRequestHandler):
         elif path == '/api/content':
             with LOCK:
                 self._json(200, load(CONTENT_F, {}))
+        elif path == '/api/fragments':
+            with LOCK:
+                self._json(200, load(FRAG_F, [])[-200:])
+        elif path == '/api/uploads':
+            u = self._user()
+            if not u or u['role'] != 'owner':
+                self._json(403, {'error': 'owner only'})
+            else:
+                files = sorted((f for f in UPLOADS.iterdir() if f.is_file()),
+                               key=lambda f: f.stat().st_mtime, reverse=True)
+                self._json(200, [{
+                    'name': f.name, 'url': f'/uploads/{f.name}', 'size': f.stat().st_size,
+                    'mtime': int(f.stat().st_mtime),
+                    'kind': 'image' if f.suffix in IMAGE_EXTS else ('audio' if f.suffix == '.mp3' else 'other'),
+                } for f in files[:100]])
         elif (m := re.match(r'^/uploads/([a-z0-9._-]+)$', path)):
             f = UPLOADS / m.group(1)
             if f.exists():
@@ -306,6 +325,9 @@ class Handler(BaseHTTPRequestHandler):
                 return
             name, filedata = up
             safe = re.sub(r'[^a-z0-9._-]', '', name.lower()) or 'file'
+            if Path(safe).suffix not in UPLOAD_EXTS:
+                self._json(415, {'error': 'type not allowed'})
+                return
             dest = f'{int(time.time())}-{safe}'
             (UPLOADS / dest).write_bytes(filedata)
             self._json(200, {'ok': True, 'url': f'/uploads/{dest}'})
@@ -367,6 +389,23 @@ class Handler(BaseHTTPRequestHandler):
                 views[slug] = views.get(slug, 0) + 1
                 save(VIEW_F, views)
             self._json(200, {'ok': True, 'count': views[slug]})
+        elif path == '/api/fragments':
+            if not u or u['role'] != 'owner':
+                self._json(403, {'error': 'owner only'})
+                return
+            text = str(data.get('text', ''))[:500].strip()
+            if not text:
+                self._json(400, {'error': 'empty'})
+                return
+            image = str(data.get('image') or '').strip()
+            if image and not re.match(r'^/uploads/[a-z0-9._-]+$', image):
+                self._json(400, {'error': 'bad image'})
+                return
+            with LOCK:
+                frags = load(FRAG_F, [])
+                frags.append({'ts': int(time.time()), 'text': text, 'image': image})
+                save(FRAG_F, frags[-200:])
+            self._json(200, {'ok': True})
         elif path == '/api/posts':
             self._post_write(u, data, None)
         elif (m := re.match(r'^/api/posts/([a-z0-9-]+)$', path)):
@@ -444,6 +483,23 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, {'ok': True})
         elif (m := re.match(r'^/api/users/([a-z0-9]+)$', path)):
             self._user_delete(u, m.group(1))
+        elif (m := re.match(r'^/api/fragments/(\d+)$', path)):
+            if not u or u['role'] != 'owner':
+                self._json(403, {'error': 'owner only'})
+            else:
+                ts = int(m.group(1))
+                with LOCK:
+                    frags = load(FRAG_F, [])
+                    save(FRAG_F, [x for x in frags if x.get('ts') != ts])
+                self._json(200, {'ok': True})
+        elif (m := re.match(r'^/api/uploads/([a-z0-9._-]+)$', path)):
+            if not u or u['role'] != 'owner':
+                self._json(403, {'error': 'owner only'})
+            else:
+                f = UPLOADS / m.group(1)
+                if f.exists():
+                    f.unlink()
+                self._json(200, {'ok': True})
         else:
             self._json(404, {'error': 'not found'})
 

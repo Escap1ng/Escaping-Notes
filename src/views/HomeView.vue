@@ -5,7 +5,7 @@ import GravityWell from '../components/GravityWell.vue'
 const index = [
   { code: '01', name: '文章', desc: '已入轨的逃逸粒子', to: '/blog' },
   { code: '02', name: '动态', desc: '井边近况', to: '/updates' },
-  { code: '03', name: '收藏', desc: '补给与友链坐标', to: '/links' },
+  { code: '03', name: '歌单', desc: '井外回响 · QQ 音乐快照', to: '/records' },
   { code: '04', name: '项目', desc: '已部署的载荷', to: '/projects' },
   { code: '05', name: '留言', desc: '访客投进井里的信号', to: '/wall' },
   { code: '06', name: '关于', desc: '逃逸者档案', to: '/about' },

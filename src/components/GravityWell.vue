@@ -9,7 +9,7 @@ const router = useRouter()
 const NAV = [
   { to: '/blog', label: '文章', code: '01', x: 12, y: 38, at: 0.1 },
   { to: '/updates', label: '动态', code: '02', x: 27, y: 24, at: 0.24 },
-  { to: '/links', label: '收藏', code: '03', x: 42, y: 36, at: 0.38 },
+  { to: '/records', label: '歌单', code: '03', x: 42, y: 36, at: 0.38 },
   { to: '/projects', label: '项目', code: '04', x: 57, y: 22, at: 0.52 },
   // anchor:'r' = 右锚定位，避免移动端左定位剩余宽度不足导致换行/圆点压缩
   { to: '/wall', label: '留言', code: '05', x: 72, y: 34, at: 0.66, anchor: 'r' },
