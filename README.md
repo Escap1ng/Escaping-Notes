@@ -14,7 +14,7 @@
 
 **[在线体验](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
 
-**中文** · [English →](README.en.md)
+**中文** · [English](README.en.md)
 
 </div>
 
