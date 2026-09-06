@@ -1,30 +1,44 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+import NeoSiteHeader from './components/neo/NeoSiteHeader.vue'
+import NeoSiteFooter from './components/neo/NeoSiteFooter.vue'
+import BlackHole from './components/neo/BlackHole.vue'
+import DepthRail from './components/neo/DepthRail.vue'
+import { skin, applySkin } from './lib/skin.js'
 import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
 
+// 双皮肤壳层：neo/legacy 各自一套头尾，页面级切换见 router/index.js 的 skinned()
+const isNeo = computed(() => skin.mode === 'neo')
+const Header = computed(() => (isNeo.value ? NeoSiteHeader : SiteHeader))
+const Footer = computed(() => (isNeo.value ? NeoSiteFooter : SiteFooter))
+
 onMounted(() => {
+  applySkin(skin.mode)
   loadContent()
   loadMe()
 })
 </script>
 
 <template>
-  <SiteHeader />
+  <BlackHole v-if="isNeo" />
+  <div v-if="isNeo" class="neo-vignette" aria-hidden="true"></div>
+  <component :is="Header" />
   <main id="main">
     <RouterView v-slot="{ Component, route }">
       <!-- 不用 out-in：Vue 3.5 下离开方在 leave 期间重渲染（如 RouterLink active 翻转）
            会丢失挂起的 enter；并行模式 + leave 绝对定位叠层规避 -->
-      <Transition name="orbit">
+      <Transition :name="isNeo ? 'fall' : 'orbit'">
         <component :is="Component" :key="route.path" />
       </Transition>
     </RouterView>
   </main>
-  <SiteFooter />
+  <component :is="Footer" />
   <MusicPlayer />
+  <DepthRail v-if="isNeo" />
 </template>
 
 <style>

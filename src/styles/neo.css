@@ -1,0 +1,770 @@
+/* ==========================================================================
+   Escaping Notes · neo 皮肤「多普勒坠入 DOPPLER DESCENT」
+   概念：首页是可交互黑洞；滚动 = 向事件视界下潜并持续红移。
+   色彩系统取自多普勒效应，语义严格分工：
+     --cold  蓝移 = 交互（hover / 链接 / 焦点 / 轨道节点）
+     --hot   红移 = 深度（进度 / 深度轨 / 强调 / 当前项）
+     --white 白热 = 仅光子环与 ≤2px 高光
+   仅当 <html data-skin="neo"> 生效；legacy 时本文件全部失配。
+   特异性：html[data-skin='neo'] (0,1,1) > :root (0,1,0)
+           html[data-skin='neo']:not([data-theme='out']) / [data-theme='out'] (0,2,1)
+   必须在 tokens.css 之后导入（见 src/main.js）。
+   ========================================================================== */
+
+/* ---------- 1. 非颜色令牌 ---------- */
+html[data-skin='neo'] {
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* 标题用衬线：黑洞叙事需要碑刻感 */
+  --font-display: var(--font-serif);
+
+  --measure: 68ch;
+  --space-5: 96px;
+
+  /* 运行时由 DepthRail 写入：滚动深度 0..1 */
+  --shift: 0;
+}
+
+/* ---------- 2. 深空（默认） ---------- */
+html[data-skin='neo']:not([data-theme='out']) {
+  --ink-0: #020204;
+  --ink-1: #0a0a10;
+  --ink-2: #15151d;
+
+  --text-0: #f4f1ea;
+  --text-1: #8f8c96;
+  --line: rgba(244, 241, 234, 0.13);
+
+  /* 多普勒双色 */
+  --cold: #8ec9ff;
+  --hot: #ff5c39;
+  --white: #fff7ed;
+
+  /* 共享旧组件的强调色：neo 下交给蓝移 */
+  --signal: #8ec9ff;
+  --signal-dim: rgba(142, 201, 255, 0.36);
+  --signal-canvas: #bcd9ff;
+
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-brd: rgba(255, 255, 255, 0.12);
+  --glass-blur: 16px;
+
+  --hole: #020204; /* 阴影=页面底色：镂空感且不吃文字对比 */
+  --void-a: rgba(2, 2, 4, 0.34); /* 运动模糊覆盖色 */
+  --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬：左下渐隐，保证压在盘面上可读 */
+}
+
+/* ---------- 3. 白矮纸面（浅色） ---------- */
+html[data-skin='neo'][data-theme='out'] {
+  --ink-0: #f5f2ea;
+  --ink-1: #efeadd;
+  --ink-2: #e4dcc9;
+
+  --text-0: #17150f;
+  --text-1: #6b675e;
+  --line: rgba(23, 21, 15, 0.16);
+
+  --cold: #2563eb;
+  --hot: #c2410c;
+  --white: #7c2d12;
+
+  --signal: #2563eb;
+  --signal-dim: rgba(37, 99, 235, 0.3);
+  --signal-canvas: #1d4ed8;
+
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-brd: rgba(255, 255, 255, 0.9);
+  --glass-blur: 16px;
+
+  --hole: #f5f2ea; /* 纸面上的洞=纸色：日食式镂空，深色文字仍可读 */
+  --void-a: rgba(245, 242, 234, 0.34);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-skin='neo']:not([data-theme='out']) {
+    --glass-bg: rgba(6, 6, 10, 0.94);
+  }
+  html[data-skin='neo'][data-theme='out'] {
+    --glass-bg: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* ---------- 4. 基线 ---------- */
+html[data-skin='neo'] body {
+  background: var(--ink-0);
+  color: var(--text-0);
+  font-family: var(--font-sans);
+}
+
+html[data-skin='neo'] main {
+  z-index: 2;
+}
+
+html[data-skin='neo'] ::selection {
+  background: var(--hot);
+  color: var(--ink-0);
+}
+
+html[data-skin='neo'] :focus-visible {
+  outline: 2px solid var(--cold);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------
+    统一光标系统（neo）：
+    1) 正文/标题等任何点击都不出现 I 形文本竖线（cursor: default, caret 透明）
+    2) 可交互元素（链接/按钮/标签）→ 手型
+    3) 仅真正的输入框保留 I 形光标与插入竖线（caret）
+    用 :where() 把基础规则特异性归零，让 pointer/text 规则能覆盖它。
+    ------------------------------------------------------------------ */
+html[data-skin='neo'] :where(:not(input):not(textarea):not([contenteditable='true'])) {
+  cursor: default;
+  caret-color: transparent;
+}
+
+html[data-skin='neo'] a[href],
+html[data-skin='neo'] button,
+html[data-skin='neo'] label,
+html[data-skin='neo'] summary {
+  cursor: pointer;
+}
+
+html[data-skin='neo'] input,
+html[data-skin='neo'] textarea,
+html[data-skin='neo'] [contenteditable='true'] {
+  cursor: text;
+  caret-color: var(--cold);
+}
+
+html[data-skin='neo'] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html[data-skin='neo'] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html[data-skin='neo'] ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--hot) 40%, transparent);
+  border-radius: var(--r-pill);
+}
+
+/* ---------- 5. 骨架与文字层级 ---------- */
+.neo-shell {
+  position: relative;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-3);
+}
+
+@media (max-width: 720px) {
+  .neo-shell {
+    padding: var(--space-4) var(--space-2);
+  }
+}
+
+/* 幽灵汉字：每页一枚个人签名 */
+.neo-glyph {
+  position: absolute;
+  z-index: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(200px, 34vw, 520px);
+  line-height: 0.9;
+  font-weight: 700;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--text-1);
+  opacity: 0.07;
+  pointer-events: none;
+  user-select: none;
+}
+
+.neo-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+
+.neo-eyebrow::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--hot);
+  flex-shrink: 0;
+}
+
+.neo-title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 11vw, 132px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+  margin: var(--space-2) 0;
+}
+
+.neo-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4.6vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.neo-lede {
+  max-width: var(--measure);
+  color: var(--text-1);
+  font-size: 16px;
+  line-height: 1.85;
+  margin: 0 0 var(--space-3);
+}
+
+.neo-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-1);
+  text-transform: uppercase;
+}
+
+/* 观测手记：纸边铅笔字 */
+.neo-note {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-1);
+  transform: rotate(-1.2deg);
+  max-width: 34ch;
+}
+
+.neo-hair {
+  height: 1px;
+  border: 0;
+  margin: var(--space-3) 0;
+  background: var(--line);
+}
+
+/* ---------- 6. 按钮 / 胶囊 / 输入 ---------- */
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.24s ease,
+    border-color 0.24s ease,
+    color 0.24s ease,
+    background-color 0.24s ease;
+}
+
+.neo-btn:hover {
+  transform: translateY(-2px);
+}
+
+.neo-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* 红移实心：仅用于「深度方向」的主动作 */
+.neo-btn-primary {
+  background: var(--hot);
+  color: var(--ink-0);
+}
+
+.neo-btn-primary:hover {
+  box-shadow: 0 0 0 1px var(--hot), 0 8px 26px -10px var(--hot);
+}
+
+.neo-btn-ghost {
+  border-color: var(--line);
+  color: var(--text-0);
+}
+
+.neo-btn-ghost:hover {
+  border-color: var(--cold);
+  color: var(--cold);
+}
+
+.neo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  background: none;
+  transition: color 0.22s, border-color 0.22s;
+}
+
+.neo-chip:hover {
+  color: var(--cold);
+  border-color: var(--cold);
+}
+
+.neo-chip.on {
+  color: var(--cold);
+  border-color: var(--cold);
+}
+
+.neo-tag {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--cold) 14%, transparent);
+  color: var(--cold);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+/* 下划线式输入（非盒子） */
+.neo-field {
+  width: 100%;
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--text-0);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  transition: border-color 0.24s;
+}
+
+.neo-field::placeholder {
+  color: var(--text-1);
+  opacity: 0.7;
+}
+
+.neo-field:hover {
+  border-color: color-mix(in srgb, var(--cold) 50%, var(--line));
+}
+
+.neo-field:focus,
+.neo-field:focus-visible {
+  outline: none;
+  border-color: var(--cold);
+}
+
+textarea.neo-field {
+  resize: vertical;
+  min-height: 88px;
+}
+
+/* ---------- 6b. 引力响应微交互基元 ----------
+   全站 hover 语言：指针透镜光斑 + 左缘标记垂直生长 + 文字弹簧位移 + 高光扫过。
+   全部源自「引力」概念：靠近即被吸引、被点亮。 */
+
+/* 指针透镜光斑（配合 src/lib/lens.js 写入的 --lx/--ly） */
+.neo-lens {
+  position: relative;
+}
+
+.neo-lens::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    260px circle at var(--lx, 50%) var(--ly, 50%),
+    color-mix(in srgb, var(--cold) 13%, transparent),
+    transparent 72%
+  );
+  transition: opacity 0.35s ease;
+}
+
+.neo-lens:hover::after {
+  opacity: 1;
+}
+
+/* 左缘引力标记：垂直生长 */
+.neo-lens .bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--cold);
+  transform: scaleY(0);
+  transition: transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.neo-lens:hover .bar {
+  transform: scaleY(1);
+}
+
+/* 按钮高光扫过 */
+.neo-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.neo-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in srgb, var(--white) 45%, transparent),
+    transparent
+  );
+  transform: translateX(-140%);
+  opacity: 0;
+}
+
+.neo-btn:hover::before {
+  opacity: 1;
+  animation: neo-sheen 0.65s cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+
+@keyframes neo-sheen {
+  from { transform: translateX(-140%); }
+  to { transform: translateX(360%); }
+}
+
+/* 胶囊填充扫入 */
+.neo-chip {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.neo-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--cold) 16%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.neo-chip:hover::before,
+.neo-chip.on::before {
+  transform: scaleX(1);
+}
+
+/* ---------- 7. 晕影与深度 ---------- */
+.neo-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 120% 92% at 50% 50%,
+    transparent 42%,
+    color-mix(in srgb, var(--ink-0) 94%, transparent) 100%
+  );
+  opacity: calc(var(--shift, 0) * 0.55);
+}
+
+/* ---------- 8. fall 转场：坍缩与重生 ---------- */
+.fall-enter-active {
+  animation: fall-in 0.42s cubic-bezier(0.16, 0.84, 0.28, 1);
+}
+
+.fall-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  animation: fall-out 0.22s ease-in;
+}
+
+@keyframes fall-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: blur(12px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes fall-out {
+  from {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.84);
+    filter: blur(10px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
+  }
+}
+
+/* ---------- 9. 正文排版（命中 v-html，放全局） ---------- */
+html[data-skin='neo'] .neo-prose {
+  max-width: var(--measure);
+  margin: var(--space-3) auto 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.95;
+  color: var(--text-0);
+}
+
+html[data-skin='neo'] .neo-prose h2,
+html[data-skin='neo'] .neo-prose h3,
+html[data-skin='neo'] .neo-prose h4 {
+  font-family: var(--font-display);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+html[data-skin='neo'] .neo-prose h2 {
+  position: relative;
+  font-size: 27px;
+  font-weight: 700;
+  margin: var(--space-4) 0 var(--space-2);
+  padding-left: 16px;
+}
+
+html[data-skin='neo'] .neo-prose h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  bottom: 0.3em;
+  width: 2px;
+  background: var(--hot);
+}
+
+html[data-skin='neo'] .neo-prose h3 {
+  font-size: 21px;
+  font-weight: 700;
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+html[data-skin='neo'] .neo-prose h4 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+html[data-skin='neo'] .neo-prose p {
+  margin: var(--space-2) 0;
+}
+
+html[data-skin='neo'] .neo-prose a {
+  color: var(--cold);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--cold) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+
+html[data-skin='neo'] .neo-prose a:hover {
+  text-decoration-color: currentColor;
+}
+
+html[data-skin='neo'] .neo-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--ink-1);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+html[data-skin='neo'] .neo-prose pre {
+  position: relative;
+  background: var(--ink-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--space-2) var(--space-2) var(--space-2) 20px;
+  overflow: auto;
+}
+
+html[data-skin='neo'] .neo-prose pre::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--cold);
+}
+
+html[data-skin='neo'] .neo-prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+html[data-skin='neo'] .neo-prose blockquote {
+  margin: var(--space-2) 0;
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid var(--hot);
+  color: var(--text-1);
+  font-style: italic;
+}
+
+html[data-skin='neo'] .neo-prose img {
+  width: 100%;
+  border: 1px solid var(--line);
+  cursor: zoom-in;
+}
+
+html[data-skin='neo'] .neo-prose ul,
+html[data-skin='neo'] .neo-prose ol {
+  padding-left: 1.4em;
+  margin: var(--space-2) 0;
+}
+
+html[data-skin='neo'] .neo-prose li::marker {
+  color: var(--hot);
+}
+
+html[data-skin='neo'] .neo-prose hr {
+  height: 1px;
+  border: 0;
+  margin: var(--space-3) 0;
+  background: var(--line);
+}
+
+html[data-skin='neo'] .neo-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-2) 0;
+  font-size: 15px;
+}
+
+html[data-skin='neo'] .neo-prose th,
+html[data-skin='neo'] .neo-prose td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+html[data-skin='neo'] .neo-prose th {
+  background: var(--ink-1);
+}
+
+/* ---------- 10. 沿用旧组件页面的协调化 ---------- */
+html[data-skin='neo'] .page {
+  max-width: 1120px;
+  padding: var(--space-4) var(--space-3);
+}
+
+html[data-skin='neo'] .page-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+html[data-skin='neo'] .field {
+  border-radius: var(--r-sm);
+  border-color: var(--line);
+  background: var(--ink-1);
+  transition: border-color 0.22s;
+}
+
+html[data-skin='neo'] .field:hover {
+  border-color: color-mix(in srgb, var(--cold) 45%, var(--line));
+}
+
+html[data-skin='neo'] .field:focus,
+html[data-skin='neo'] .field:focus-visible {
+  outline: none;
+  border-color: var(--cold);
+}
+
+html[data-skin='neo'] .submit {
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--hot);
+  color: var(--ink-0);
+  font-weight: 600;
+  padding: 10px 22px;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s;
+}
+
+html[data-skin='neo'] .submit:hover {
+  color: var(--ink-0);
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--hot), 0 8px 26px -10px var(--hot);
+}
+
+html[data-skin='neo'] .link-item {
+  border-radius: var(--r-pill);
+  border-color: var(--line);
+  transition: color 0.22s, border-color 0.22s, transform 0.22s;
+}
+
+html[data-skin='neo'] .link-item:hover {
+  border-color: var(--cold);
+  color: var(--cold);
+  transform: translateY(-2px);
+}
+
+html[data-skin='neo'] .player {
+  border-radius: var(--r-pill);
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--ink-0) 82%, transparent);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  padding: 8px 16px;
+}
+
+/* ---------- 11. 减弱动效 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .fall-enter-active,
+  .fall-leave-active {
+    animation: none;
+  }
+
+  html[data-skin='neo'] .neo-btn:hover,
+  html[data-skin='neo'] .link-item:hover,
+  html[data-skin='neo'] .submit:hover {
+    transform: none;
+  }
+
+  .neo-btn:hover::before {
+    animation: none;
+    opacity: 0;
+  }
+
+  html[data-skin='neo'] .neo-vignette {
+    opacity: 0;
+  }
+}

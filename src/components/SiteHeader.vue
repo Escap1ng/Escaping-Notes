@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { content } from '../lib/content.js'
 import { auth, logout } from '../lib/auth.js'
 import { theme, applyTheme, toggleTheme } from '../lib/theme.js'
+import { skin, toggleSkin } from '../lib/skin.js'
 
 // 井底/井外双主题：切换是叙事行为（逃逸/档案），见 docs/design.md §3
 onMounted(() => applyTheme(theme.mode))
@@ -53,6 +54,18 @@ const nav = [
         @click="toggleTheme"
       >
         {{ theme.mode === 'well' ? '深色:井底' : '浅色:井外' }}
+      </button>
+      <!-- 皮肤切换：与主题开关同款框线，保证两框等大 -->
+      <button
+        class="skin-toggle readout"
+        type="button"
+        :aria-pressed="skin.mode === 'neo'"
+        aria-label="显示新版界面"
+        title="显示新版界面"
+        @click="toggleSkin"
+      >
+        <span class="skin-full">显示新版界面</span>
+        <span class="skin-mini">新版</span>
       </button>
       <div class="auth readout">
         <template v-if="auth.user">
@@ -142,15 +155,17 @@ const nav = [
   gap: var(--space-2);
 }
 
-/* 主题开关与登录/注册同款框线按钮：统一行高保证两框等大 */
+/* 主题开关、皮肤开关与登录/注册同款框线按钮：统一行高保证各框等大 */
 .theme-toggle,
+.skin-toggle,
 .auth-toggle {
   display: inline-flex;
   align-items: center;
   line-height: 1.5;
 }
 
-.theme-toggle {
+.theme-toggle,
+.skin-toggle {
   border: 1px solid var(--line);
   background: none;
   color: var(--text-1);
@@ -159,9 +174,15 @@ const nav = [
   transition: border-color 0.2s, color 0.2s;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.skin-toggle:hover {
   border-color: var(--signal);
   color: var(--signal);
+}
+
+/* 皮肤开关文案：宽屏全称，窄屏缩为「新版」 */
+.skin-mini {
+  display: none;
 }
 
 .auth {
@@ -214,6 +235,14 @@ const nav = [
 
   .nav-code {
     display: none;
+  }
+
+  .skin-full {
+    display: none;
+  }
+
+  .skin-mini {
+    display: inline;
   }
 }
 </style>
