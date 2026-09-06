@@ -1,31 +1,108 @@
+<div align="center">
+
 # Escaping Notes · 逃逸笔记
+
+**观星笔记 · DOPPLER DESCENT**
 
 > 掷墨入渊，星惊不复；藏光于页，潮退犹闻。
 
-**在线体验（GitHub Pages）：https://escap1ng.github.io/Escaping-Notes/**
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff?style=for-the-badge)](src/components/neo/StarTrails.vue)
+[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?style=for-the-badge&logo=python&logoColor=white)](server/api.py)
+[![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b?style=for-the-badge)](#许可与使用声明)
 
-生产域名：https://escaping.top （服务器配置后启用）
+**[在线体验](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)** · **[English README](README.en.md)**
 
-## 项目简介
+</div>
 
-Escaping Notes 是一个手工建造的个人博客，以「多普勒坠入 DOPPLER DESCENT」为核心画面：
-首页是一枚真实可交互的黑洞——文章是绕它公转的天体，点中即坠入；全站色彩取自多普勒效应，
-迎面而来者蓝移（交互），背离而去者红移（深度）；滚动即向事件视界下潜，转场是向奇点坍缩后重生。
-每一页背景沉着一枚巨型幽灵汉字，是创作者的签名。把写下的每一行，都推过事件视界。
+---
 
-- **双皮肤**：新版「多普勒坠入」为默认，头部一键可切回旧版「引力井」界面并记忆偏好——黑洞之下，那口旧井还在原地
-- **黑洞装置**：Canvas 2D 逐帧手绘——三层差旋吸积盘（`ω∝1/r^1.5`）、引力透镜星场、白热光子环、屏幕空间多普勒染色；滚轮开合盘面倾角
-- **前端**：Vue 3 + Vite + Vue Router，零 webfont、零第三方 UI 依赖，API 不可达时自动降级为打包种子
-- **后端**：Python 3 标准库单文件（`server/api.py`），零依赖，支持注册/登录、三角色权限、留言墙、文章与站点内容的网页端编辑（`/admin`）
-- **文档**：`docs/design-neo.md` 新版设计依据 · `docs/design.md` 旧版设计依据 · `docs/manual.md` 使用手册（编辑 / 适配 / 上传）
+## 关于项目
+
+Escaping Notes 是一座手工建造的个人观星站。首页是一台架在三脚架上的相机正在长曝光——数千条同心星轨弧绕一枚偏心天极刚体旋转、累积、衰减，正如你在北半球用一个夜晚写下的一行行笔记。
+
+- **文章即变星**：每篇博文是一枚定点脉动的亮星，驻目绽开锥形衍射十字芒，点击即坠入正文
+- **滚动即时间**：下潜越深，曝光窗口越长、天空转得越快；页首到页尾是一整次夜拍
+- **指针即引力**：光标半径内星轨局部加速卷曲，如光绘 torch 划过夜空
+- **彩蛋即叙事**：三连点签名召来流星雨；点击变星坠入文章；每页沉着一枚巨型幽灵汉字签名
+
+## 特性
+
+- 🎨 **双主题**：深空（冷白/暖白/琥珀星轨）与纸面（天文干版底片：墨色轨迹 + 朱砂点睛），头部一键切换并记忆偏好
+- 🧮 **零依赖美学**：零 webfont、零第三方 UI 库、零图表库——所有画面由 Canvas 2D 逐帧手绘
+- 🛰 **优雅降级**：API 不可达时自动切换本地种子数据，站点仍是完整的离线底片
+- ♿ **无障碍与性能**：`prefers-reduced-motion` 下渲染静态快进底片；像素预算封顶自动降 DPR；rAF 单循环与页面可见性暂停
+- ✍️ **全功能后台**：`/admin` 网页端编辑文章、动态、歌单、站点信息；三角色权限；留言墙与 RSS
+
+## 技术栈
+
+| 层 | 选型 |
+| --- | --- |
+| 前端 | Vue 3（Composition API）+ Vite + Vue Router |
+| 渲染 | Canvas 2D 离屏累积缓冲（长曝光底片模拟） |
+| 后端 | Python 3 标准库单文件（`server/api.py`），零依赖 |
+| 部署 | GitHub Pages / Vercel / nginx + systemd |
+
+## 快速开始
+
+```bash
+# 克隆并安装
+git clone https://github.com/Escap1ng/Escaping-Notes.git
+cd Escaping-Notes
+npm install
+
+# 启动前端（开发）
+npm run dev
+
+# 启动后端（另开终端，零依赖）
+python server/api.py
+
+# 生产构建
+npm run build          # 自有域名（history 路由）
+npm run build:pages    # GitHub Pages 镜像（hash 路由）
+```
+
+## 页面地图
+
+| 路由 | 页面 | 隐喻 |
+| --- | --- | --- |
+| `/` | 首页 · 长曝光星轨 | 相机正在夜拍 |
+| `/blog` | 归档 | 底片柜 |
+| `/blog/:slug` | 正文 | 坠入一颗变星 |
+| `/updates` | 动态 | 脉冲记录 |
+| `/records` | 歌单 | 曲目弦表 |
+| `/projects` | 项目 | 载荷舱 |
+| `/wall` | 留言 | 回声墙 |
+| `/about` | 关于 | 视界之外写「我」 |
+| `/admin` | 管理 | 观测台后场 |
+
+## 项目结构
+
+```text
+├── server/api.py          # 零依赖后端：内容 / 鉴权 / 留言 / RSS / OG 注入
+├── content/posts/         # Markdown 文章（frontmatter）
+├── docs/                  # design-neo.md 设计依据 · manual.md 使用手册
+└── src/
+    ├── components/neo/    # StarTrails 星轨装置 · HorizonHero · NeoCursor 等
+    ├── config/            # narrative.js 文案层 · site.js 站点信息
+    ├── lib/               # api / auth / content / posts / theme / music ...
+    ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
+    └── views/neo/         # 全部页面视图
+```
+
+## 文档
+
+- [docs/design-neo.md](docs/design-neo.md) —— 界面设计唯一依据（概念、色彩系统、页面要点）
+- [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 上传）
 
 ## 许可与使用声明
 
-1. **性质界定**：本项目（Escaping Notes，含源代码、设计文档、视觉与交互设计、文案内容等全部组成部分）系作者个人学习与实践性质的作品，仅供个人学习、研究及非商业性交流使用。
-2. **禁止商用**：未经作者事先书面许可，任何个人或组织不得将本项目全部或部分用于商业用途，包括但不限于商业产品销售、有偿服务、商业运营、广告营利及任何直接或间接的营利行为。
-3. **原创保护**：未经作者事先书面许可，不得对本项目的核心原创设计（包括但不限于「多普勒坠入」与「引力井与逃逸轨迹」核心隐喻、视觉语言、交互装置设计）进行整体复制、仿冒、二次包装后以他人名义发布或转让。
-4. **学习引用**：出于学习目的引用或参考本项目时，须显著注明项目来源与作者信息，并保留本声明。
-5. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用本项目而产生的任何损失或纠纷，作者不承担责任。
+1. **性质界定**：本项目（含源代码、设计文档、视觉与交互设计、文案等全部组成部分）系作者个人学习与实践性质的作品，仅供个人学习、研究及非商业性交流使用。
+2. **禁止商用**：未经作者事先书面许可，不得将本项目全部或部分用于任何商业用途或以任何方式营利。
+3. **原创保护**：未经许可，不得对核心原创设计（「多普勒坠入」隐喻、视觉语言、星轨交互装置）整体复制、仿冒或二次包装发布。
+4. **学习引用**：学习性引用须显著注明项目来源与作者信息，并保留本声明。
+5. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用产生的任何损失或纠纷，作者不承担责任。
 6. **授权联系**：商业授权或其他授权事宜，请联系 chunqi-yu@outlook.com。
 
 © 2026 Escap1ng · 保留所有权利

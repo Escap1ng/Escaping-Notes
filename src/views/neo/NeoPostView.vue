@@ -1,6 +1,6 @@
 <script setup>
 // 新版坠入阅读：顶部进度线 + 单栏衬线正文
-// 功能与旧版 PostView 完全等价：上报/降级/灯箱/Esc 成对监听/复制/上下篇
+// 文章页：上报/降级/灯箱/Esc 成对监听/复制/上下篇
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { loadPost, loadPosts } from '../../lib/posts.js'

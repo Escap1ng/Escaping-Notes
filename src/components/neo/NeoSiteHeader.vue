@@ -5,7 +5,6 @@ import { useRoute } from 'vue-router'
 import { content } from '../../lib/content.js'
 import { auth, logout } from '../../lib/auth.js'
 import { theme, applyTheme, toggleTheme } from '../../lib/theme.js'
-import { skin, toggleSkin } from '../../lib/skin.js'
 import { music, requestMusicToggle } from '../../lib/music.js'
 import { N } from '../../config/narrative.js'
 
@@ -64,7 +63,6 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
-const skinLabel = computed(() => (skin.mode === 'neo' ? N.skin.toLegacy : N.skin.toNeo))
 const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.theme.light))
 </script>
 
@@ -114,18 +112,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
       >
         <span aria-hidden="true">{{ theme.mode === 'well' ? '☾' : '☀' }}</span>
         <span class="txt">{{ themeLabel }}</span>
-      </button>
-
-      <button
-        class="skin-btn"
-        type="button"
-        :aria-pressed="skin.mode === 'legacy'"
-        :aria-label="skinLabel"
-        :title="skinLabel"
-        @click="toggleSkin"
-      >
-        <span class="ico" aria-hidden="true">◧</span>
-        <span class="txt">{{ skinLabel }}</span>
       </button>
 
       <div class="auth neo-mono">
@@ -304,9 +290,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   flex-shrink: 0;
 }
 
-/* 右侧三钮统一：同高 32px 发丝胶囊框线 */
+/* 右侧按钮统一：同高 32px 发丝胶囊框线 */
 .ico-btn,
-.skin-btn,
 .auth-link {
   display: inline-flex;
   align-items: center;
@@ -326,7 +311,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 .ico-btn:hover,
-.skin-btn:hover,
 .auth-link:hover {
   color: var(--cold);
   border-color: var(--cold);
@@ -487,11 +471,9 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 
 /* ---- 响应式 ---- */
 @media (max-width: 1024px) {
-  .skin-btn .txt,
   .ico-btn .txt {
     display: none;
   }
-  .skin-btn,
   .ico-btn {
     padding: 6px 10px;
   }
@@ -526,7 +508,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     animation: none;
   }
   .ico-btn:hover,
-  .skin-btn:hover,
   .auth-link:hover {
     transform: none;
   }

@@ -1,6 +1,6 @@
 # Escaping Notes · 新版设计文档（neo · 多普勒坠入 DOPPLER DESCENT）
 
-> 2026-09 起生效，取代 Aurora Glass 方案。本文是新版皮肤（`data-skin='neo'`，默认皮肤）的唯一设计依据；旧版（legacy 皮肤）设计见 [design.md](./design.md)，两者互不覆盖。
+> 2026-09 起生效，取代 Aurora Glass 方案。本文是本站界面（`data-skin='neo'` 样式网关）的唯一设计依据。
 
 ## 1. 核心概念（≤200 字）
 
@@ -42,15 +42,14 @@
 
 ## 4. 文案层（`src/config/narrative.js`）
 
-新版所有界面文案唯一来源；旧版与 `site.js` 不受影响，新版界面不出现「井」隐喻。文风：简易两字词为骨、对偶联为魂（首页宣言"掷墨入渊，星惊不复；藏光于页，潮退犹闻"）。署名统一 **Escap1ng**（观星手记 / 仍在坠入）。
+全站界面文案唯一来源；站点信息配置在 `site.js`。文风：简易两字词为骨、对偶联为魂（首页宣言"掷墨入渊，星惊不复；藏光于页，潮退犹闻"）。署名统一 **Escap1ng**（观星笔记 / 仍在坠入）。
 
-## 5. 双皮肤架构（neo / legacy）
+## 5. 壳层与样式分层（单一界面世代）
 
-- 状态：`src/lib/skin.js`（`reactive({mode})` + `applySkin/toggleSkin`），键 `localStorage['en-skin']`，默认 `neo`；`index.html` 首帧内联脚本写 `<html data-skin>` 防闪烁。
-- 路由：`src/router/index.js` 的 `skinned(legacy, neo)` 包装器（`defineAsyncComponent` ×2 + 渲染函数按 `skin.mode` 选择），九条访客路由双皮肤；`/fragments /login /register /admin` 仅旧版组件。切换无需刷新。
-- 壳层：`App.vue` 按皮肤选择 Header/Footer，并条件渲染 neo 专属层（`BlackHole` 固定星场、`.neo-vignette`、`DepthRail`）；转场名 `fall`(neo) / `orbit`(legacy)。
-- 样式分层：`src/styles/neo.css` 全部规则以 `html[data-skin='neo']` 网关（特异性压过 tokens.css），并重定义旧变量名使沿用旧组件的页面自动协调；`data-skin='legacy'` 时本文件全部失配，旧版零回归。
-- 闭环按钮：neo 头部「显示旧版界面」、legacy 头部「显示新版界面」。
+- 路由：`src/router/index.js` 直接懒加载 `src/views/neo/` 视图；`/login /register /admin` 为共用功能页。
+- 壳层：`App.vue` 固定渲染 `NeoSiteHeader / NeoSiteFooter`，并叠加次级页 `StarTrails` 活背景、`.neo-vignette` 晕影与 `NeoCursor`；路由转场名 `fall`。
+- 样式分层：`src/styles/neo.css` 全部规则以 `html[data-skin='neo']` 网关（特异性压过 tokens.css），并重定义旧变量名使沿用旧样式类的功能页自动协调；`data-skin` 由 `index.html` 的 `<html>` 标签硬编码。
+- 主题：`data-theme`（well 深空 / out 纸面）由 `src/lib/theme.js` 驱动，头部按钮切换，`index.html` 首帧内联脚本应用防闪烁。
 
 ## 6. 页面要点
 
@@ -63,6 +62,6 @@
 
 ## 7. 与初版方案的差异备忘
 
-- Aurora Glass（星云玻璃/Bento/视差装置）整体废弃，仅保留双皮肤机制。
+- Aurora Glass（星云玻璃/Bento/视差装置）整体废弃；双皮肤机制亦已退役，neo 为唯一界面世代。
 - 长按投喂、首屏轨道读数条、深度轨玻璃读数面板：实施后按反馈移除。
 - 环倾角只随滚动开合，不随鼠标（初版曾做指针倾角）。

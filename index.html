@@ -1,23 +1,21 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-skin="neo">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Escaping Notes —— 日常是引力，把我拉回井底；笔记是逃逸，送我抵达井外。记录技术思考、设计实践与生活片段。" />
-    <!-- OG 占位：文章路由由后端 meta 注入改写（阶段二），见 docs/design.md §7 -->
+    <meta name="description" content="Escaping Notes —— 一座手工建造的观星笔记：长曝光星轨即导航，文章是定点脉动的变星，滚动即向深渊下潜。记录技术思考、设计实践与生活片段。" />
+    <!-- OG 占位：文章路由由后端 meta 注入改写（阶段二） -->
     <meta property="og:site_name" content="Escaping Notes" />
     <meta property="og:title" content="Escaping Notes · 逃逸笔记" />
-    <meta property="og:description" content="日常是引力，把我拉回井底；笔记是逃逸，送我抵达井外。" />
+    <meta property="og:description" content="掷墨入渊，星惊不复；藏光于页，潮退犹闻。" />
     <meta property="og:type" content="website" />
     <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Escaping Notes" />
     <title>Escaping Notes · 逃逸笔记</title>
     <script>
-      // 首帧前应用主题与皮肤，避免井外主题闪一下井底 / 新版闪一下旧版
+      // 首帧前应用主题，避免纸面主题闪一下深空
       document.documentElement.dataset.theme =
         localStorage.getItem('en-theme') === 'out' ? 'out' : 'well'
-      document.documentElement.dataset.skin =
-        localStorage.getItem('en-skin') === 'legacy' ? 'legacy' : 'neo'
     </script>
   </head>
   <body>

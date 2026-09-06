@@ -1,5 +1,5 @@
 <script setup>
-// 新版归档：大框体卡片列表，窗口足够时两列、不够时一列（搜索/标签逻辑与旧版一致）
+// 归档页：大框体卡片列表，窗口足够时两列、不够时一列，带搜索与标签筛选
 import { computed, onMounted, ref } from 'vue'
 import { loadPosts } from '../../lib/posts.js'
 import { onLens } from '../../lib/lens.js'

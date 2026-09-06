@@ -1,4 +1,4 @@
-// 新版（neo · 多普勒坠入）全部界面文案：旧版与 src/config/site.js 不受影响
+// 新版（neo · 多普勒坠入）全部界面文案（站点信息配置见 src/config/site.js）
 // 文风取向：古诗词气韵 + 对偶句式；改新版文案 → 只改这个文件
 export const N = {
   // 每页一枚幽灵汉字（个人签名）：渊→藏→坠→息→弦→掷→响→我→无
@@ -27,7 +27,7 @@ export const N = {
   // 首屏宣言：对偶联
   manifesto: ['掷墨入渊，星惊不复；', '藏光于页，潮退犹闻。'],
   manifestoSub: '把写下的每一行，都推过事件视界。',
-  heroEyebrow: '// 观星手记 · Escap1ng',
+  heroEyebrow: '// 观星笔记 · Escap1ng',
   orbitIdle: (n) => `${n} 体在轨 · 驻目可辨其名`,
   orbitReadout: (i, p) => `在轨 ${String(i + 1).padStart(2, '0')} · ${p.title} · ${p.date}`,
 
@@ -75,7 +75,6 @@ export const N = {
 
   footer: { line: '// Escap1ng · BLOG', thanks: '光年之外，谢你下潜至此。', top: '回到顶部 ↑' },
   theme: { dark: '深空', light: '纸面' },
-  skin: { toLegacy: '显示旧版界面', toNeo: '显示新版界面' },
 
   empty: { posts: '// 盘空无光', updates: '// 暂无脉冲', wall: '// 尚无回声落于此', projects: '// 载荷舱空' },
 }

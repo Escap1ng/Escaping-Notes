@@ -5,7 +5,7 @@
      --cold  蓝移 = 交互（hover / 链接 / 焦点 / 轨道节点）
      --hot   红移 = 深度（进度 / 强调 / 当前项）
      --white 白热 = 仅光子环与 ≤2px 高光
-   仅当 <html data-skin="neo"> 生效；legacy 时本文件全部失配。
+   仅当 <html data-skin="neo"> 生效（由 index.html 硬编码，本站唯一样式网关）。
    特异性：html[data-skin='neo'] (0,1,1) > :root (0,1,0)
            html[data-skin='neo']:not([data-theme='out']) / [data-theme='out'] (0,2,1)
    必须在 tokens.css 之后导入（见 src/main.js）。

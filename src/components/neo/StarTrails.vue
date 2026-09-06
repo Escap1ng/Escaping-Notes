@@ -3,12 +3,11 @@
 // 概念：首屏是一台架在三脚架上的相机正在长曝光——
 //   数千条同心星轨弧绕一枚偏心天极刚体旋转累积（恒星周日视运动 = 全场一致 ω）；
 //   滚动 = 时间流速（下潜越深，曝光窗口越长、天空转得越快）；
-//   文章 = 变星（定点脉动亮星，hover 绽十字衍射芒，点击坠入）；
+//   文章 = 变星（定点脉动亮星，hover 缓绽锥形衍射十字芒·沿芒长渐隐，点击坠入）；
 //   流星 = 环境叙事（三连点签名 → 流星雨）；
-//   指针 = 引力时间膨胀（半径内轨迹局部加速卷曲，光绘 torch 感）；
-//   点击空处 = 快门脉冲（曝光波环扫过，短暂提亮沿途星轨）。
+//   指针 = 引力时间膨胀（半径内轨迹局部加速卷曲，光绘 torch 感）。
 // 管线：ACC 累积离屏缓冲（destination-out 衰减 pass + 每星短弧增量 pass，尾迹自然累积）
-//       → 主画布每帧：底 → drawImage(ACC) → 变星/流星/波环/指针光晕（当帧层，不累积，保持锐利）。
+//       → 主画布每帧：底 → drawImage(ACC) → 变星/流星（当帧层，不累积，保持锐利）。
 // 主题：深空=冷白/暖白/琥珀星轨（lighter 发光）；纸面=天文干版底片（墨/sepia 轨迹 + 朱砂点睛）。
 // 工程约定：像素预算封顶、rAF 单循环、visibilitychange 暂停、reduced-motion 静态快进底片、颜色读 CSS 变量。
 import { onMounted, onUnmounted, ref, watch } from 'vue'
@@ -366,7 +365,6 @@ function update(dt, now) {
       nextMeteor = now + METEOR_MIN + Math.random() * (METEOR_MAX - METEOR_MIN)
     }
     for (let i = meteors.length - 1; i >= 0; i--) if ((now - meteors[i].t0) / 900 > 1) meteors.splice(i, 1)
-    for (let i = pulses.length - 1; i >= 0; i--) if ((now - pulses[i].t0) / pulses[i].life > 1) pulses.splice(i, 1)
   }
 }
 
@@ -431,14 +429,17 @@ function draw(now) {
     const [x, y] = varXY(v)
     const pu = 0.6 + 0.4 * Math.sin(t * v.pulse + v.ph)
     const bl = reduced ? (i === hoverIdx ? 1 : 0) : v.bl // 绽放系数（reduced 下二值直开）
-    const R = (2.7 + 1.7 * bl) * (0.82 + 0.36 * pu)
-    const g = ctx.createRadialGradient(x, y, 0, x, y, R * 5)
-    g.addColorStop(0, rgba(halo, (0.4 + 0.25 * pu + 0.45 * bl) * (C.boost ? 0.75 : 1)))
-    g.addColorStop(1, rgba(halo, 0))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(x, y, R * 5, 0, TAU)
-    ctx.fill()
+    if (!C.boost) {
+      // 光晕仅深空主题：纸面干版忌糊，静置与 hover 绽出都不带光晕，只留锐利星核与衍射芒
+      const R = (2.7 + 1.7 * bl) * (0.82 + 0.36 * pu)
+      const g = ctx.createRadialGradient(x, y, 0, x, y, R * 5)
+      g.addColorStop(0, rgba(halo, 0.4 + 0.25 * pu + 0.45 * bl))
+      g.addColorStop(1, rgba(halo, 0))
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.arc(x, y, R * 5, 0, TAU)
+      ctx.fill()
+    }
     if (bl > 0.02) {
       // 锥形衍射芒：每支沿芒长线性渐隐（根亮尖透），主/副 = 1:0.45，±6% 慢呼吸
       const L = 30 * (0.6 + 0.4 * bl) * (1 + 0.06 * Math.sin(t * 2.9 + v.ph))
@@ -535,14 +536,7 @@ function onUp(e) {
   const x = e.clientX - r.left
   const y = e.clientY - r.top
   const hit = varAt(x, y)
-  if (hit >= 0) {
-    emit('select', props.posts[hit])
-    return
-  }
-  // 快门脉冲
-  pulses.push({ x, y, t0: performance.now(), life: 900, reach: Math.hypot(W, H) * 0.72 })
-  if (pulses.length > 3) pulses.shift()
-  if (reduced) draw(performance.now())
+  if (hit >= 0) emit('select', props.posts[hit])
 }
 
 // 三连点签名：流星雨
