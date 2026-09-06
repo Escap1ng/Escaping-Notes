@@ -1,15 +1,15 @@
 // 新版（neo · 多普勒坠入）全部界面文案：旧版与 src/config/site.js 不受影响
 // 文风取向：古诗词气韵 + 对偶句式；改新版文案 → 只改这个文件
 export const N = {
-  // 每页一枚幽灵汉字（个人签名）
+  // 每页一枚幽灵汉字（个人签名）：渊→藏→坠→息→弦→掷→响→我→无
   glyph: {
-    home: '坠',
-    blog: '盘',
+    home: '渊',
+    blog: '藏',
     post: '坠',
-    updates: '脉',
-    records: '振',
-    projects: '抛',
-    wall: '回',
+    updates: '息',
+    records: '弦',
+    projects: '掷',
+    wall: '响',
     about: '我',
     nf: '无',
   },
@@ -59,10 +59,10 @@ export const N = {
   },
 
   aboutBio:
-    'Escap1ng。写代码，也写杂记。此站即我的观测手记：把每天吸进来的东西压缩、点亮，再抛还视界之外。',
+    'Escap1ng。写代码，也写杂记。此站是一次漫长的下潜：把日子投进渊里，在盘上聚成光，在视界上留下回声——最后在这一切的底端，写一个「我」。',
   dilation: '你在此处停留的光阴，比人间慢一拍。',
 
-  postEnd: { escape: '逃逸 · 回归归档', deeper: '继续下潜' },
+  postEnd: { escape: '上浮 · 回归归档', deeper: '继续下潜' },
   postPrev: '← 更浅处',
   postNext: '更深处 →',
 

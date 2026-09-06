@@ -6,6 +6,7 @@ import SiteFooter from './components/SiteFooter.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
 import NeoSiteHeader from './components/neo/NeoSiteHeader.vue'
 import NeoSiteFooter from './components/neo/NeoSiteFooter.vue'
+import NeoCursor from './components/neo/NeoCursor.vue'
 import BlackHole from './components/neo/BlackHole.vue'
 import DepthRail from './components/neo/DepthRail.vue'
 import { skin, applySkin } from './lib/skin.js'
@@ -43,6 +44,7 @@ onMounted(() => {
   <component :is="Footer" />
   <MusicPlayer />
   <DepthRail v-if="isNeo" />
+  <NeoCursor v-if="isNeo" />
 </template>
 
 <style>

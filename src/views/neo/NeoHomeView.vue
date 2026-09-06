@@ -133,7 +133,6 @@ onMounted(async () => {
     grid-template-columns: 4ch 1fr auto;
     gap: 10px;
   }
-  .depth,
   .desc {
     display: none;
   }

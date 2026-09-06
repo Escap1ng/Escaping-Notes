@@ -138,6 +138,7 @@ const filtered = computed(() =>
   min-height: 210px;
   padding: var(--space-3) var(--space-3) var(--space-2);
   border: 1px solid var(--line);
+  border-radius: var(--r-md);
   background: color-mix(in srgb, var(--ink-1) 52%, transparent);
   overflow: hidden;
   text-decoration: none;

@@ -28,9 +28,7 @@ const facts = [
       </div>
       <div class="fact">
         <dt class="neo-mono">MAIL</dt>
-        <dd>
-          <a class="mail" :href="`mailto:${content.site.email}`">{{ content.site.email }}</a>
-        </dd>
+        <dd>{{ content.site.email }}</dd>
       </div>
     </dl>
 
@@ -107,17 +105,6 @@ const facts = [
   margin: 0;
   font-size: 15px;
   overflow-wrap: anywhere;
-}
-
-.mail {
-  color: var(--cold);
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--cold) 40%, transparent);
-  transition: border-color 0.2s;
-}
-
-.mail:hover {
-  border-color: currentColor;
 }
 
 .block {

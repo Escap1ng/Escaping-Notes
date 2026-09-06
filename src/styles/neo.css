@@ -140,6 +140,17 @@ html[data-skin='neo'] [contenteditable='true'] {
   caret-color: var(--cold);
 }
 
+/* 沉浸光标启用时（NeoCursor 挂载 data-cursor）：隐藏原生指针，输入区保留文本光标 */
+html[data-skin='neo'][data-cursor='on'] :where(:not(input):not(textarea):not([contenteditable='true'])) {
+  cursor: none;
+}
+html[data-skin='neo'][data-cursor='on'] a[href],
+html[data-skin='neo'][data-cursor='on'] button,
+html[data-skin='neo'][data-cursor='on'] label,
+html[data-skin='neo'][data-cursor='on'] summary {
+  cursor: none;
+}
+
 html[data-skin='neo'] ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -381,6 +392,13 @@ html[data-skin='neo'] main.neo-sub {
 textarea.neo-field {
   resize: vertical;
   min-height: 88px;
+}
+
+/* 移动端：输入框 ≥16px，防 iOS 聚焦自动放大 */
+@media (max-width: 720px) {
+  html[data-skin='neo'] .neo-field {
+    font-size: 16px;
+  }
 }
 
 /* ---------- 6b. 引力响应微交互基元 ----------
@@ -716,20 +734,22 @@ html[data-skin='neo'] .field:focus-visible {
   border-color: var(--cold);
 }
 
+/* 橙框透明心，与 .neo-btn-primary 同语言 */
 html[data-skin='neo'] .submit {
-  border: 0;
+  border: 1px solid var(--hot);
   border-radius: var(--r-pill);
-  background: var(--hot);
-  color: var(--ink-0);
+  background: transparent;
+  color: var(--hot);
   font-weight: 600;
   padding: 10px 22px;
-  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s, background-color 0.22s;
 }
 
 html[data-skin='neo'] .submit:hover {
-  color: var(--ink-0);
+  color: var(--hot);
+  background: color-mix(in srgb, var(--hot) 12%, transparent);
   transform: translateY(-2px);
-  box-shadow: 0 0 0 1px var(--hot), 0 8px 26px -10px var(--hot);
+  box-shadow: 0 0 18px -6px color-mix(in srgb, var(--hot) 70%, transparent);
 }
 
 html[data-skin='neo'] .link-item {

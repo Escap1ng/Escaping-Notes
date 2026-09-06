@@ -1,5 +1,5 @@
 <script setup>
-// 新版坠入阅读：进度线 + 时间膨胀读数 τ/t + 单栏衬线正文
+// 新版坠入阅读：顶部进度线 + 单栏衬线正文
 // 功能与旧版 PostView 完全等价：上报/降级/灯箱/Esc 成对监听/复制/上下篇
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -18,7 +18,6 @@ const viewsLocal = ref(false)
 const copied = ref(false)
 const altPct = ref(0)
 const lightbox = ref('')
-const rate = ref(1)
 
 const neighbors = computed(() => {
   const i = all.value.findIndex((p) => p.slug === route.params.slug)
@@ -34,13 +33,11 @@ function onKey(e) {
   if (e.key === 'Escape') lightbox.value = ''
 }
 
-/* 滚动 = 下潜：进度 + 时间膨胀速率 √(1-1/r) */
+/* 滚动 = 下潜：顶部进度线 */
 function onScroll() {
   const max = document.documentElement.scrollHeight - innerHeight
   const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0
   altPct.value = Math.round(p * 100)
-  const r = 1 + Math.pow(1 - p, 2) * 40
-  rate.value = Math.sqrt(Math.max(0, 1 - 1 / r))
 }
 
 async function copyLink() {
@@ -138,8 +135,6 @@ onUnmounted(() => {
         <RouterLink class="neo-btn neo-btn-primary" to="/blog">{{ N.postEnd.escape }}</RouterLink>
       </div>
     </template>
-
-    <div class="dilate neo-mono" aria-hidden="true">τ/t {{ rate.toFixed(3) }}</div>
 
     <div
       v-if="lightbox"
@@ -282,16 +277,6 @@ onUnmounted(() => {
   margin: var(--space-4) 0 var(--space-2);
 }
 
-/* 时间膨胀读数 */
-.dilate {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 55;
-  color: var(--hot);
-  font-variant-numeric: tabular-nums;
-}
-
 .lightbox {
   position: fixed;
   inset: 0;
@@ -307,13 +292,6 @@ onUnmounted(() => {
   max-width: 92vw;
   max-height: 92vh;
   border: 1px solid var(--line);
-}
-
-@media (max-width: 900px) {
-  .dilate {
-    right: 12px;
-    bottom: 12px;
-  }
 }
 
 @media (max-width: 720px) {

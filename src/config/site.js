@@ -10,6 +10,7 @@ export const site = {
   url: 'https://escaping.top', // 站点公开地址（RSS/OG/canonical 用）
   socials: [
     { label: 'GitHub · Escap1ng', url: 'https://github.com/Escap1ng' },
+    { label: 'Steam · Escap1ng', url: 'https://steamcommunity.com/id/escap1ng/' },
   ],
   gear: ['Vue 3', 'Vite', 'Python', 'nginx', 'Canvas 2D'], // 逃逸装备（关于页）
 }

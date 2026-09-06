@@ -36,7 +36,7 @@ async function submit() {
     refresh()
   } else {
     const arr = JSON.parse(localStorage.getItem('en-wall') || '[]')
-    arr.push({ name: name.value || '匿名逃逸者', text: t, ts: Math.floor(Date.now() / 1000) })
+    arr.push({ name: name.value || '匿名观测者', text: t, ts: Math.floor(Date.now() / 1000) })
     localStorage.setItem('en-wall', JSON.stringify(arr))
     text.value = ''
     refresh()
@@ -70,7 +70,8 @@ onMounted(refresh)
       <li v-for="m in msgs" :key="m.ts" class="echo neo-lens" @pointermove="onLens">
         <span class="bar" aria-hidden="true"></span>
         <p class="who neo-mono">
-          {{ m.name || '匿名逃逸者' }} · {{ day(m.ts) }}
+          <span class="name">{{ m.name || '匿名观测者' }}</span>
+          <span class="day">{{ day(m.ts) }}</span>
           <button v-if="canManage" class="del" type="button" @click="del(m.ts)">删除</button>
         </p>
         <p class="say">{{ m.text }}</p>
@@ -123,27 +124,61 @@ onMounted(refresh)
   margin: 0 0 var(--space-2);
 }
 
+/* 回声卡片：与归档卡片同语言（宽屏两列、圆角发丝框） */
 .echoes {
   list-style: none;
   margin: 0 0 var(--space-4);
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+@media (max-width: 880px) {
+  .echoes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.echoes > li {
+  display: flex;
 }
 
 .echo {
-  padding: var(--space-2) 0;
-  border-top: 1px solid var(--line);
+  position: relative;
+  z-index: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--ink-1) 52%, transparent);
+  overflow: hidden;
+  transition: border-color 0.28s, background 0.28s;
 }
 
-.echo:last-child {
-  border-bottom: 1px solid var(--line);
+.echo:hover {
+  border-color: color-mix(in srgb, var(--cold) 55%, transparent);
+  background: color-mix(in srgb, var(--ink-1) 78%, transparent);
 }
 
 .who {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: baseline;
   gap: 10px;
-  color: var(--cold);
   font-size: 11.5px;
+}
+
+.who .name {
+  color: var(--cold);
+}
+
+.who .day {
+  color: var(--hot);
 }
 
 .del {
@@ -164,29 +199,37 @@ onMounted(refresh)
 }
 
 .say {
-  margin: 6px 0 0;
-  max-width: var(--measure);
+  position: relative;
+  z-index: 1;
+  margin: 0;
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: 15.5px;
   line-height: 1.9;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .echo:hover .say {
-  transform: translateX(6px);
+  transform: translateX(5px);
 }
 
 .empty {
+  grid-column: 1 / -1;
   padding: var(--space-3) 0;
   border-top: 1px solid var(--line);
 }
 
+/* 留言面板：发丝框体，与卡片同语言 */
 .form {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-width: 560px;
+  max-width: 640px;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--ink-1) 40%, transparent);
 }
 
 .foot {

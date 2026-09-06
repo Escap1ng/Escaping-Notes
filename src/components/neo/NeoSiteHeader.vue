@@ -166,7 +166,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
             <span class="d-arrow" aria-hidden="true">→</span>
           </RouterLink>
         </nav>
-        <p class="drawer-foot neo-mono">// yu · 仍在坠入</p>
+        <p class="drawer-foot neo-mono">// Escap1ng · 仍在坠入</p>
       </div>
     </Transition>
   </header>
@@ -428,6 +428,36 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 .drawer-link:hover .d-arrow {
   transform: translateX(6px);
   color: var(--cold);
+}
+
+/* 抽屉内的登录入口（移动端顶栏隐藏 auth 时的兜底） */
+.drawer-auth {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.drawer-auth-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-1);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.22s;
+}
+
+.drawer-auth-link:hover {
+  color: var(--cold);
+}
+
+.drawer-name {
+  color: var(--hot);
 }
 
 .drawer-foot {
