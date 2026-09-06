@@ -149,14 +149,13 @@ onUnmounted(() => {
   transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.24s;
 }
 
-/* 悬停整条轨 → 展开所有名称；悬停单刻度 → 高亮该名称 */
+/* 名称平时隐藏：鼠标接近整条轨 → 展开所有名称；悬停单刻度 → 高亮该名称 */
 .rail:hover .t-label {
   opacity: 0.85;
   transform: none;
 }
 
-.tick:hover .t-label,
-.tick.on .t-label {
+.tick:hover .t-label {
   opacity: 1;
   transform: none;
 }

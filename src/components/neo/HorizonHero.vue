@@ -184,7 +184,7 @@ onUnmounted(() => {
   }
 }
 
-/* 「现在」三栏 */
+/* 「现在」三栏：竖排读数条，长文列占宽 */
 .now {
   position: absolute;
   left: 0;
@@ -192,16 +192,20 @@ onUnmounted(() => {
   bottom: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
   border-top: 1px solid var(--line);
-  background: color-mix(in srgb, var(--ink-0) 55%, transparent);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ink-0) 92%, transparent),
+    color-mix(in srgb, var(--ink-0) 42%, transparent)
+  );
 }
 
 .now-cell {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 12px var(--space-3);
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px var(--space-3) 15px;
   border-left: 1px solid var(--line);
   min-width: 0;
 }
@@ -211,15 +215,41 @@ onUnmounted(() => {
 }
 
 .now-cell .k {
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 10.5px;
+  color: var(--text-1);
+  letter-spacing: 0.14em;
+}
+
+/* 红移信号点：此栏为「正在发生」 */
+.now-cell .k::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--hot);
+  box-shadow: 0 0 9px var(--hot);
+  animation: now-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes now-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .now-cell .v {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
+  font-family: var(--font-serif);
+  font-size: 15.5px;
   color: var(--text-0);
   text-decoration: none;
   transition: color 0.22s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -272,6 +302,9 @@ onUnmounted(() => {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  .now-cell .k::before {
+    animation: none;
   }
 }
 </style>

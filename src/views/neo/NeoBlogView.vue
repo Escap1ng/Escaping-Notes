@@ -1,5 +1,5 @@
 <script setup>
-// 新版归档：吸积盘式垂直长行列表（搜索/标签逻辑与旧版一致）
+// 新版归档：大框体卡片列表，窗口足够时两列、不够时一列（搜索/标签逻辑与旧版一致）
 import { computed, onMounted, ref } from 'vue'
 import { loadPosts } from '../../lib/posts.js'
 import { onLens } from '../../lib/lens.js'
@@ -60,14 +60,17 @@ const filtered = computed(() =>
       </div>
     </div>
 
-    <ul class="rows">
+    <ul class="cards">
       <li v-for="p in filtered" :key="p.slug">
-        <RouterLink :to="`/blog/${p.slug}`" class="row neo-lens" @pointermove="onLens">
+        <RouterLink :to="`/blog/${p.slug}`" class="card neo-lens" @pointermove="onLens">
           <span class="bar" aria-hidden="true"></span>
           <span class="date neo-mono">{{ p.date }}</span>
-          <span class="title">{{ p.title }}</span>
-          <span class="meta neo-mono">{{ p.words }} 字 · {{ p.minutes }} 分钟</span>
-          <span v-if="p.tags && p.tags.length" class="tags neo-mono">{{ p.tags.join('/') }}</span>
+          <h3 class="title">{{ p.title }}</h3>
+          <p v-if="p.summary" class="summary">{{ p.summary }}</p>
+          <span class="foot">
+            <span class="meta neo-mono">{{ p.words }} 字 · {{ p.minutes }} 分钟</span>
+            <span v-if="p.tags && p.tags.length" class="tags neo-mono">{{ p.tags.join('/') }}</span>
+          </span>
         </RouterLink>
       </li>
       <li v-if="!filtered.length" class="empty neo-mono">{{ N.empty.posts }}</li>
@@ -104,50 +107,97 @@ const filtered = computed(() =>
   padding-bottom: 6px;
 }
 
-.rows {
+/* 大框体卡片：窗口足够时两列，不够时一列 */
+.cards {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
-.row {
+@media (max-width: 880px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* li 为栅格项：撑满行高，卡片随之等高 */
+.cards > li {
+  display: flex;
+}
+
+.card {
+  flex: 1;
   position: relative;
-  display: grid;
-  grid-template-columns: 11ch minmax(0, 1fr) auto auto;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-1);
-  border-top: 1px solid var(--line);
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 210px;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink-1) 52%, transparent);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
+  transition: border-color 0.28s, background 0.28s;
 }
 
-.rows li:last-child .row {
-  border-bottom: 1px solid var(--line);
+.card:hover {
+  border-color: color-mix(in srgb, var(--cold) 55%, transparent);
+  background: color-mix(in srgb, var(--ink-1) 78%, transparent);
 }
 
 .date {
+  position: relative;
+  z-index: 1;
   color: var(--hot);
-  font-size: 11px;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.row:hover .date {
-  transform: scale(1.08);
+  font-size: 11.5px;
 }
 
 .title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(18px, 2.4vw, 24px);
+  font-size: clamp(19px, 2.2vw, 25px);
   font-weight: 700;
+  line-height: 1.35;
   letter-spacing: -0.01em;
   transition: color 0.24s, transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.row:hover .title {
+.card:hover .title {
   color: var(--cold);
-  transform: translateX(7px);
+  transform: translateX(5px);
+}
+
+.summary {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
 }
 
 .meta {
@@ -160,20 +210,8 @@ const filtered = computed(() =>
 }
 
 .empty {
+  grid-column: 1 / -1;
   padding: var(--space-3) 0;
   border-top: 1px solid var(--line);
-}
-
-@media (max-width: 720px) {
-  .row {
-    grid-template-columns: 1fr auto;
-    gap: 4px var(--space-2);
-  }
-  .date {
-    grid-column: 1 / -1;
-  }
-  .tags {
-    display: none;
-  }
 }
 </style>

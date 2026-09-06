@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
@@ -12,7 +13,10 @@ import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
 
 // 双皮肤壳层：neo/legacy 各自一套头尾，页面级切换见 router/index.js 的 skinned()
+const route = useRoute()
 const isNeo = computed(() => skin.mode === 'neo')
+// 次级页（neo 非首页）：main 加空白滚动余量，把页脚压出首屏
+const isSub = computed(() => isNeo.value && route.path !== '/')
 const Header = computed(() => (isNeo.value ? NeoSiteHeader : SiteHeader))
 const Footer = computed(() => (isNeo.value ? NeoSiteFooter : SiteFooter))
 
@@ -27,7 +31,7 @@ onMounted(() => {
   <BlackHole v-if="isNeo" />
   <div v-if="isNeo" class="neo-vignette" aria-hidden="true"></div>
   <component :is="Header" />
-  <main id="main">
+  <main id="main" :class="{ 'neo-sub': isSub }">
     <RouterView v-slot="{ Component, route }">
       <!-- 不用 out-in：Vue 3.5 下离开方在 leave 期间重渲染（如 RouterLink active 翻转）
            会丢失挂起的 enter；并行模式 + leave 绝对定位叠层规避 -->

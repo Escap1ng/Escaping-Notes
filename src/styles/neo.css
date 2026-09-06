@@ -153,6 +153,13 @@ html[data-skin='neo'] ::-webkit-scrollbar-thumb {
 }
 
 /* ---------- 5. 骨架与文字层级 ---------- */
+/* 次级页空白滚动余量：页脚压出首屏，且内容末尾与页脚之间恒留空白（类由 App.vue 挂载，首页除外） */
+html[data-skin='neo'] main.neo-sub {
+  min-height: calc(100vh + 140px);
+  min-height: calc(100svh + 140px);
+  padding-bottom: 140px;
+}
+
 .neo-shell {
   position: relative;
   max-width: 1120px;

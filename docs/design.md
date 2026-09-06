@@ -1,7 +1,7 @@
 # Escaping Notes · 设计文档
 
 > 版本 v0.5（2026-09-01，改名 Escaping Notes；隐喻转向“引力井与逃逸轨迹”；井底/井外双主题；登录与访客/管理员/站长三角色；公开化审查：域名/备案/HTTPS 主方案、meta 注入、RSS）
-> 本文是全站唯一设计依据：编码、自审、重构都对照本文执行。
+> 本文是**旧版（legacy 皮肤）**的设计依据：编码、自审、重构都对照本文执行。新版（neo 皮肤「多普勒坠入」）设计已拆分至 [design-neo.md](./design-neo.md)，两文档互不覆盖。
 
 ---
 
@@ -150,19 +150,6 @@
 
 **修订轮（2026-09 进行中）**：图片发布增强（编辑器光标插入/IMAGES 管理列表/阅读页灯箱/上传白名单）；03 位先由收藏改碎片、再定稿为歌单快照 `/records`（`scripts/sync_records.py` 手动同步、运行时零外部调用、逐行跳转 QQ 音乐；碎片代码保留不占导航位）；收藏页（`/links`）退役；友链移至关于页 FRIENDS 区；管理界面移除 SITE 编辑块。
 
-## 12. 双皮肤架构（neo / legacy）
+## 12. 新版设计（已拆分）
 
-- 状态：`src/lib/skin.js`（`reactive({mode})` + `applySkin/toggleSkin`），键 `localStorage['en-skin']`，默认 `neo`；`index.html` 首帧内联脚本写 `<html data-skin>` 防闪烁。
-- 路由：`src/router/index.js` 的 `skinned(legacy, neo)` 包装器（`defineAsyncComponent` ×2 + 渲染函数按 `skin.mode` 选择），九条访客路由双皮肤；`/fragments /login /register /admin` 仅旧版组件。切换无需刷新。
-- 壳层：`App.vue` 按皮肤选择 Header/Footer，并条件渲染 neo 专属层（`BlackHole` 固定星场、`.neo-vignette`、`DepthRail`）；转场名 `fall`(neo) / `orbit`(legacy)。
-- 样式分层：`src/styles/neo.css` 全部规则以 `html[data-skin='neo']` 网关（特异性 (0,1,1)/(0,2,1) 压过 tokens.css），并重定义旧变量名使沿用旧组件的页面自动协调；`data-skin='legacy'` 时本文件全部失配，旧版零回归。
-- 闭环按钮：neo 头部「显示旧版界面」、legacy 头部「显示新版界面」。
-
-## 13. neo 皮肤「多普勒坠入 DOPPLER DESCENT」（2026-09）
-
-取代此前 Aurora Glass 方案。两个核心概念：
-
-1. **首页 = 可交互黑洞**（`components/neo/BlackHole.vue`，interactive 模式）：2D canvas 绘制吸积盘（开普勒剪切 `ω∝r^-1.5`）+ 多普勒双色（朝向侧蓝移 `--cold`、背离侧红移 `--hot`）+ 引力透镜（星场 `∝1/d` 径向偏折、盘后半弯折为绕过阴影的光子环弧）+ 阴影与白热光子环；最新文章作为轨道节点公转，悬停辨认（`ORBIT 0n · 标题 · 日期`）、点击坠入；长按 ≥700ms = 投喂（盘速×3 + 吸积条纹）；三连点签名派发 `en-resonance` = 引力波涟漪。非交互模式为全站固定星场。
-2. **红移坠入**：滚动 = 下潜，`r/rs = 1+(1-p)²·40`；`DepthRail.vue` 右侧深度轨（全站仅两处玻璃之一，另一处为移动抽屉）并把 `p` 写为 `--shift` 驱动晕影与首页宣言字距拉伸；文章页另有时间膨胀读数 `τ/t = √(1−1/r)`。路由转场 `fall` = 向奇点坍缩/重生。
-
-视觉语言：近纯黑深空 + 多普勒双色严格分工（cold=交互、hot=深度、white=仅光子环）；衬线碑刻标题；每页一枚幽灵汉字签名（`--neo-glyph`：坠/盘/脉/振/抛/回/我/无）；第一人称观测手记斜体旁注。文案集中于 `src/config/narrative.js`（旧版与 `site.js` 不受影响，新版界面不出现「井」隐喻）。浅色主题为「白矮纸面」。
+双皮肤架构（neo / legacy）与 neo 皮肤「多普勒坠入 DOPPLER DESCENT」（2026-09）的全部内容已拆分至 [design-neo.md](./design-neo.md)，并随实施迭代同步更新（长按投喂、首屏轨道读数条、深度轨玻璃读数面板等已按反馈移除）。本文此后只维护旧版设计。

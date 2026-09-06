@@ -6,6 +6,7 @@ import { content } from '../../lib/content.js'
 import { auth, logout } from '../../lib/auth.js'
 import { theme, applyTheme, toggleTheme } from '../../lib/theme.js'
 import { skin, toggleSkin } from '../../lib/skin.js'
+import { music, requestMusicToggle } from '../../lib/music.js'
 import { N } from '../../config/narrative.js'
 
 const route = useRoute()
@@ -89,6 +90,20 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     </nav>
 
     <div class="right">
+      <button
+        class="ico-btn music-btn"
+        :class="{ on: music.playing }"
+        type="button"
+        :disabled="!music.available"
+        :aria-pressed="music.playing"
+        :aria-label="music.available ? (music.playing ? '音乐：暂停' : '音乐：播放') : '音乐：歌单为空'"
+        :title="music.available ? (music.playing ? '音乐：暂停' : '音乐：播放') : '音乐：歌单为空'"
+        @click="requestMusicToggle"
+      >
+        <span aria-hidden="true">{{ music.playing ? '❚' : '♪' }}</span>
+        <span class="txt">音乐</span>
+      </button>
+
       <button
         class="ico-btn"
         type="button"
@@ -289,104 +304,56 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   flex-shrink: 0;
 }
 
-.ico-btn {
+/* 右侧三钮统一：同高 32px 发丝胶囊框线 */
+.ico-btn,
+.skin-btn,
+.auth-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  height: 32px;
+  padding: 0 12px;
   border-radius: var(--r-pill);
   border: 1px solid var(--line);
   background: none;
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.06em;
   cursor: pointer;
+  text-decoration: none;
   transition: color 0.22s, border-color 0.22s, transform 0.22s;
 }
 
-.ico-btn:hover {
+.ico-btn:hover,
+.skin-btn:hover,
+.auth-link:hover {
   color: var(--cold);
   border-color: var(--cold);
   transform: translateY(-1px);
 }
 
-/* 皮肤切换：发丝胶囊 + 常态微弱红移光晕（突出但不喧哗） */
-.skin-btn {
-  position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  border: 1px solid color-mix(in srgb, var(--hot) 45%, transparent);
-  background: none;
-  color: var(--text-0);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 0 14px -4px color-mix(in srgb, var(--hot) 55%, transparent);
-  transition: box-shadow 0.24s, border-color 0.24s, transform 0.24s, color 0.24s;
-}
-
-.skin-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 45%;
-  pointer-events: none;
-  background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--hot) 40%, transparent), transparent);
-  transform: translateX(-140%);
-  opacity: 0;
-}
-
-.skin-btn:hover::before {
-  opacity: 1;
-  animation: skin-sheen 0.6s cubic-bezier(0.3, 0.6, 0.3, 1);
-}
-
-@keyframes skin-sheen {
-  from { transform: translateX(-140%); }
-  to { transform: translateX(360%); }
-}
-
-.skin-btn:hover {
-  border-color: var(--hot);
+/* 播放中：红移标示；歌单为空：置灰 */
+.music-btn.on {
   color: var(--hot);
-  transform: translateY(-1px);
-  box-shadow: 0 0 20px -2px color-mix(in srgb, var(--hot) 70%, transparent);
+  border-color: color-mix(in srgb, var(--hot) 45%, transparent);
 }
 
-.skin-btn .ico {
-  color: var(--hot);
-  line-height: 1;
+.music-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.music-btn:disabled:hover {
+  color: var(--text-1);
+  border-color: var(--line);
+  transform: none;
 }
 
 .auth {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.auth-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 0.22s;
-}
-
-.auth-link:hover {
-  color: var(--cold);
+  gap: 8px;
 }
 
 .auth-name {
@@ -529,7 +496,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     animation: none;
   }
   .ico-btn:hover,
-  .skin-btn:hover {
+  .skin-btn:hover,
+  .auth-link:hover {
     transform: none;
   }
   .drawer-link,

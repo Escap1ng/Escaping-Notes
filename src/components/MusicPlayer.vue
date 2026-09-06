@@ -1,7 +1,8 @@
 <script setup>
 // 读数式播放器：播放 content.playlist（/uploads/ 或 /audio/ 文件），不自动播放
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { content } from '../lib/content.js'
+import { music } from '../lib/music.js'
 
 const audio = ref(null)
 const idx = ref(0)
@@ -29,9 +30,24 @@ function onVol(e) {
   if (audio.value) audio.value.volume = vol.value
 }
 
+/* 与顶栏「音乐」按钮同步：接收外部开关请求，回播状态 */
+function onExternalToggle() {
+  toggle()
+}
+
 onMounted(() => {
   if (audio.value) audio.value.volume = vol.value
+  addEventListener('en-music-toggle', onExternalToggle)
 })
+onUnmounted(() => {
+  removeEventListener('en-music-toggle', onExternalToggle)
+})
+watch(playing, (v) => {
+  music.playing = v
+})
+watch(list, (v) => {
+  music.available = v.length > 0
+}, { immediate: true })
 watch(idx, () => {
   if (audio.value) audio.value.volume = vol.value
 })

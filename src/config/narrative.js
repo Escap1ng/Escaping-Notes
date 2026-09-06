@@ -31,7 +31,7 @@ export const N = {
   orbitIdle: (n) => `${n} 体在轨 · 驻目可辨其名`,
   orbitReadout: (i, p) => `在轨 ${String(i + 1).padStart(2, '0')} · ${p.title} · ${p.date}`,
 
-  now: { writing: '著文', listening: '听弦', building: '铸器' },
+  now: { writing: '在写', listening: '在听', building: '在做' },
   descentHead: '下潜目录 · 由浅及深',
 
   notes: {
@@ -73,7 +73,7 @@ export const N = {
     blog: '去归档',
   },
 
-  footer: { line: '// Escap1ng · 仍在坠入', thanks: '光年之外，谢你下潜至此。', top: '逃逸 ↑' },
+  footer: { line: '// Escap1ng · BLOG', thanks: '光年之外，谢你下潜至此。', top: '回到顶部 ↑' },
   theme: { dark: '深空', light: '纸面' },
   skin: { toLegacy: '显示旧版界面', toNeo: '显示新版界面' },
 
