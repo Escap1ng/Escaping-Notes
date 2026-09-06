@@ -2,17 +2,19 @@
 
 # Escaping Notes
 
-**A Stargazing Journal · DOPPLER DESCENT**
+**An Escaping Notebook · DOPPLER DESCENT**
 
 > Ink cast into the abyss, the stars startle and never return; light hoarded in these pages, the tide recedes yet the echo remains.
 
-[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff?style=for-the-badge)](src/components/neo/StarTrails.vue)
-[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?style=for-the-badge&logo=python&logoColor=white)](server/api.py)
-[![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b?style=for-the-badge)](#license--usage-terms)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
+[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?logo=python&logoColor=white)](server/api.py)
+[![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#license--usage-terms)
 
-**[Live Demo](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)** · **[中文 README](README.md)**
+**[Live Demo](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
+
+[← 中文](README.md) · **English**
 
 </div>
 
@@ -25,7 +27,7 @@ Escaping Notes is a hand-built personal stargazing journal. The landing screen i
 - **Posts as variable stars** — every article is a pulsing fixed star; hover blooms a conical diffraction cross, click to fall into the prose
 - **Scroll as time** — the deeper you dive, the longer the exposure window and the faster the sky turns; header to footer is one full night shoot
 - **Pointer as gravity** — star trails inside the cursor radius locally accelerate and curl, like a light-painting torch sweeping the sky
-- **Easter eggs as narrative** — triple-click the signature to summon a meteor shower; every page submerges one giant ghost glyph as the author's mark
+- **Easter eggs as narrative** — meteors occasionally cross the exposed plate; click a variable star to fall into an article; every page submerges one giant ghost glyph as the author's mark
 
 ## Features
 

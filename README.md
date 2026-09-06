@@ -2,17 +2,19 @@
 
 # Escaping Notes · 逃逸笔记
 
-**观星笔记 · DOPPLER DESCENT**
+**逃逸笔记 · DOPPLER DESCENT**
 
 > 掷墨入渊，星惊不复；藏光于页，潮退犹闻。
 
-[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff?style=for-the-badge)](src/components/neo/StarTrails.vue)
-[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?style=for-the-badge&logo=python&logoColor=white)](server/api.py)
-[![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b?style=for-the-badge)](#许可与使用声明)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
+[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?logo=python&logoColor=white)](server/api.py)
+[![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#许可与使用声明)
 
-**[在线体验](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)** · **[English README](README.en.md)**
+**[在线体验](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
+
+**中文** · [English →](README.en.md)
 
 </div>
 
@@ -25,7 +27,7 @@ Escaping Notes 是一座手工建造的个人观星站。首页是一台架在�
 - **文章即变星**：每篇博文是一枚定点脉动的亮星，驻目绽开锥形衍射十字芒，点击即坠入正文
 - **滚动即时间**：下潜越深，曝光窗口越长、天空转得越快；页首到页尾是一整次夜拍
 - **指针即引力**：光标半径内星轨局部加速卷曲，如光绘 torch 划过夜空
-- **彩蛋即叙事**：三连点签名召来流星雨；点击变星坠入文章；每页沉着一枚巨型幽灵汉字签名
+- **彩蛋即叙事**：偶有流星划过曝光底片；点击变星坠入文章；每页沉着一枚巨型幽灵汉字签名
 
 ## 特性
 

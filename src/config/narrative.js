@@ -27,7 +27,7 @@ export const N = {
   // 首屏宣言：对偶联
   manifesto: ['掷墨入渊，星惊不复；', '藏光于页，潮退犹闻。'],
   manifestoSub: '把写下的每一行，都推过事件视界。',
-  heroEyebrow: '// 观星笔记 · Escap1ng',
+  heroEyebrow: '// 逃逸笔记 · Escap1ng',
   orbitIdle: (n) => `${n} 体在轨 · 驻目可辨其名`,
   orbitReadout: (i, p) => `在轨 ${String(i + 1).padStart(2, '0')} · ${p.title} · ${p.date}`,
 

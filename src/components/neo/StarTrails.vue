@@ -4,7 +4,7 @@
 //   数千条同心星轨弧绕一枚偏心天极刚体旋转累积（恒星周日视运动 = 全场一致 ω）；
 //   滚动 = 时间流速（下潜越深，曝光窗口越长、天空转得越快）；
 //   文章 = 变星（定点脉动亮星，hover 缓绽锥形衍射十字芒·沿芒长渐隐，点击坠入）；
-//   流星 = 环境叙事（三连点签名 → 流星雨）；
+//   流星 = 环境叙事（偶掠夜空的瞬时光迹）；
 //   指针 = 引力时间膨胀（半径内轨迹局部加速卷曲，光绘 torch 感）。
 // 管线：ACC 累积离屏缓冲（destination-out 衰减 pass + 每星短弧增量 pass，尾迹自然累积）
 //       → 主画布每帧：底 → drawImage(ACC) → 变星/流星（当帧层，不累积，保持锐利）。
@@ -539,13 +539,6 @@ function onUp(e) {
   if (hit >= 0) emit('select', props.posts[hit])
 }
 
-// 三连点签名：流星雨
-function onResonance() {
-  if (!props.interactive) return
-  for (let i = 0; i < 6; i++) spawnMeteor(i * 130)
-  if (reduced) draw(performance.now())
-}
-
 function onVisibility() {
   visible = !document.hidden
   if (visible) kick()
@@ -576,7 +569,6 @@ onMounted(() => {
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
   document.addEventListener('visibilitychange', onVisibility)
   if (props.interactive) {
-    window.addEventListener('en-resonance', onResonance)
     addEventListener('scroll', onFlowScroll, { passive: true })
   }
   addEventListener('resize', onResize)
@@ -590,7 +582,6 @@ onUnmounted(() => {
   if (raf) cancelAnimationFrame(raf)
   observer?.disconnect()
   document.removeEventListener('visibilitychange', onVisibility)
-  window.removeEventListener('en-resonance', onResonance)
   removeEventListener('scroll', onFlowScroll)
   removeEventListener('resize', onResize)
   acc = null

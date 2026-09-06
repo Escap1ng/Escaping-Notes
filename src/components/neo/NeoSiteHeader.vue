@@ -20,19 +20,6 @@ function onScroll() {
   stuck.value = scrollY > 40
 }
 
-/* 共振彩蛋：600ms 内连点签名三次 */
-let clicks = 0
-let clickT = 0
-function onBrand() {
-  const now = Date.now()
-  clicks = now - clickT < 600 ? clicks + 1 : 1
-  clickT = now
-  if (clicks >= 3) {
-    clicks = 0
-    window.dispatchEvent(new Event('en-resonance'))
-  }
-}
-
 /* 抽屉 */
 const drawer = ref(false)
 function closeDrawer() {
@@ -70,7 +57,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   <header class="neo-header" :class="{ stuck }">
     <a class="skip-link" href="#main">跳到内容</a>
 
-    <RouterLink to="/" class="brand" aria-label="返回首页" @click="onBrand">
+    <RouterLink to="/" class="brand" aria-label="返回首页">
       <span class="mark" aria-hidden="true"></span>
       <span class="brand-name neo-mono">{{ content.site.name }}</span>
     </RouterLink>
