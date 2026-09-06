@@ -83,6 +83,8 @@ onUnmounted(() => {
   height: 100vh;
   height: 100svh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 @supports not (height: 100svh) {
@@ -116,12 +118,13 @@ onUnmounted(() => {
 .hero-text {
   position: relative;
   z-index: 2;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   gap: 10px;
-  padding: 0 var(--space-3) 132px;
+  padding: 0 var(--space-3) 40px;
   pointer-events: none;
   will-change: transform, opacity;
 }
@@ -184,12 +187,9 @@ onUnmounted(() => {
   }
 }
 
-/* 「现在」三栏：竖排读数条，长文列占宽 */
+/* 「现在」三栏：竖排读数条，长文列占宽（流内贴底，任何比例下都不与宣言重叠） */
 .now {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
   z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
@@ -269,7 +269,7 @@ onUnmounted(() => {
 
 @media (max-width: 720px) {
   .hero-text {
-    padding: 0 var(--space-2) 168px;
+    padding: 0 var(--space-2) 32px;
   }
   .hero::after {
     width: 100%;
