@@ -1,8 +1,8 @@
 <script setup>
-// HorizonHero · 首页首屏排版层：幽灵汉字 + 宣言 + 轨道读数 + 「现在」三栏
-// 黑洞装置由 BlackHole(interactive) 提供，本组件只负责叙事排版与读数
+// HorizonHero · 首页首屏排版层：幽灵汉字 + 宣言 + 「现在」三栏
+// 长曝光星轨装置由 StarTrails(interactive) 提供，本组件只负责叙事排版与读数
 import { onMounted, onUnmounted, ref } from 'vue'
-import BlackHole from './BlackHole.vue'
+import StarTrails from './StarTrails.vue'
 import { onLens } from '../../lib/lens.js'
 import { N } from '../../config/narrative.js'
 
@@ -40,7 +40,7 @@ onUnmounted(() => {
   <section class="hero">
     <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.home }}</span>
 
-    <BlackHole interactive :posts="posts" @hover="hov = $event" @select="emit('select', $event)" />
+    <StarTrails interactive :posts="posts" @hover="hov = $event" @select="emit('select', $event)" />
 
     <div ref="textEl" class="hero-text">
       <p class="neo-eyebrow">{{ N.heroEyebrow }}</p>
@@ -91,7 +91,7 @@ onUnmounted(() => {
   }
 }
 
-/* 幽灵汉字置于黑洞正后方：被阴影吞没中段 */
+/* 幽灵汉字置于天极附近：中段被星轨掩过 */
 .glyph {
   top: 42%;
   left: 68%;

@@ -40,6 +40,7 @@ import { N } from '../../config/narrative.js'
 }
 
 .pulse {
+  --lh: 24px; /* 日期行盒：圆点按此行盒垂直居中 */
   position: relative;
   display: grid;
   grid-template-columns: 12ch 1fr;
@@ -55,7 +56,7 @@ import { N } from '../../config/narrative.js'
 .dot {
   position: absolute;
   left: 0;
-  top: calc(var(--space-2) + 7px);
+  top: calc(var(--space-2) + var(--lh) / 2 - 5px); /* 行盒中心 − 半径 − 2px 光学补偿（数字无降部） */
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -78,8 +79,8 @@ import { N } from '../../config/narrative.js'
 
 .when {
   color: var(--text-1);
-  font-size: 11.5px;
-  padding-top: 4px;
+  font-size: 14px;
+  line-height: var(--lh);
   transition: color 0.24s;
 }
 

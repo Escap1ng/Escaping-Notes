@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
@@ -7,8 +7,7 @@ import MusicPlayer from './components/MusicPlayer.vue'
 import NeoSiteHeader from './components/neo/NeoSiteHeader.vue'
 import NeoSiteFooter from './components/neo/NeoSiteFooter.vue'
 import NeoCursor from './components/neo/NeoCursor.vue'
-import BlackHole from './components/neo/BlackHole.vue'
-import DepthRail from './components/neo/DepthRail.vue'
+import StarTrails from './components/neo/StarTrails.vue'
 import { skin, applySkin } from './lib/skin.js'
 import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
@@ -21,15 +20,37 @@ const isSub = computed(() => isNeo.value && route.path !== '/')
 const Header = computed(() => (isNeo.value ? NeoSiteHeader : SiteHeader))
 const Footer = computed(() => (isNeo.value ? NeoSiteFooter : SiteFooter))
 
+// 滚动深度：写入 --shift（0..1），驱动首页标题字距与全站晕影随下潜加深
+let shiftRaf = 0
+function applyShift() {
+  shiftRaf = 0
+  const max = document.documentElement.scrollHeight - innerHeight
+  const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0
+  document.documentElement.style.setProperty('--shift', p.toFixed(4))
+}
+function onScroll() {
+  if (!shiftRaf) shiftRaf = requestAnimationFrame(applyShift)
+}
+
 onMounted(() => {
   applySkin(skin.mode)
   loadContent()
   loadMe()
+  addEventListener('scroll', onScroll, { passive: true })
+  addEventListener('resize', onScroll)
+  applyShift()
+})
+
+onUnmounted(() => {
+  if (shiftRaf) cancelAnimationFrame(shiftRaf)
+  removeEventListener('scroll', onScroll)
+  removeEventListener('resize', onScroll)
+  document.documentElement.style.removeProperty('--shift')
 })
 </script>
 
 <template>
-  <BlackHole v-if="isNeo" />
+  <StarTrails v-if="isSub" />
   <div v-if="isNeo" class="neo-vignette" aria-hidden="true"></div>
   <component :is="Header" />
   <main id="main" :class="{ 'neo-sub': isSub }">
@@ -43,7 +64,6 @@ onMounted(() => {
   </main>
   <component :is="Footer" />
   <MusicPlayer />
-  <DepthRail v-if="isNeo" />
   <NeoCursor v-if="isNeo" />
 </template>
 

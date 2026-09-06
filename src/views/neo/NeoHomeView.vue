@@ -48,7 +48,6 @@ onMounted(async () => {
       <nav class="list" aria-label="下潜目录">
         <RouterLink v-for="item in descent" :key="item.to" :to="item.to" class="row neo-lens" @pointermove="onLens">
           <span class="bar" aria-hidden="true"></span>
-          <span class="depth neo-mono" aria-hidden="true">r/rs {{ item.depth }}</span>
           <span class="code neo-mono" aria-hidden="true">{{ item.code }}</span>
           <span class="label">{{ item.label }}</span>
           <span class="desc">{{ item.desc }}</span>
@@ -77,7 +76,7 @@ onMounted(async () => {
 
 .row {
   display: grid;
-  grid-template-columns: 9ch 4ch minmax(0, auto) 1fr auto;
+  grid-template-columns: 4ch minmax(0, auto) 1fr auto;
   align-items: baseline;
   gap: var(--space-2);
   padding: var(--space-2) 0;
@@ -88,11 +87,6 @@ onMounted(async () => {
 
 .row:last-child {
   border-bottom: 1px solid var(--line);
-}
-
-.depth {
-  color: var(--hot);
-  font-size: 11px;
 }
 
 .code {
