@@ -2,7 +2,7 @@
 
 # Escaping Notes
 
-**An Escaping Notebook · DOPPLER DESCENT**
+**DOPPLER DESCENT · A Long-Exposure Notebook under Star Trails**
 
 > Ink cast into the abyss, the stars startle and never return; light hoarded in these pages, the tide recedes yet the echo remains.
 
@@ -14,7 +14,7 @@
 
 **[Live Demo](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
 
-[← 中文](README.md) · **English**
+[中文](README.md) · **English**
 
 </div>
 

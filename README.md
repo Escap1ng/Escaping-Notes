@@ -2,7 +2,7 @@
 
 # Escaping Notes · 逃逸笔记
 
-**逃逸笔记 · DOPPLER DESCENT**
+**DOPPLER DESCENT · A Long-Exposure Notebook under Star Trails**
 
 > 掷墨入渊，星惊不复；藏光于页，潮退犹闻。
 
