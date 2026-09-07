@@ -102,7 +102,7 @@ npm run build:pages    # GitHub Pages mirror (hash router)
 
 1. **Nature** — This project (source code, design documents, visual and interaction design, and copy included) is the author's personal work for learning and practice, intended solely for individual study, research and non-commercial exchange.
 2. **No commercial use** — Without prior written permission, no part of this project may be used commercially or monetized in any way.
-3. **Originality protection** — The core original designs (the "Doppler Descent" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission.
+3. **Originality protection** — The core original designs (the "Long-Exposure Star Trails" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission.
 4. **Citation** — Learning-purpose references must clearly credit the project and the author, and keep this notice.
 5. **Disclaimer** — The project is provided "as is", without warranty of any kind; the author is not liable for any loss arising from its use.
 6. **Licensing contact** — chunqi-yu@outlook.com.

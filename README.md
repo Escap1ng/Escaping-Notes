@@ -76,7 +76,7 @@ npm run build:pages    # GitHub Pages 镜像（hash 路由）
 | `/records` | 歌单 | 曲目弦表 |
 | `/projects` | 项目 | 载荷舱 |
 | `/wall` | 留言 | 回声墙 |
-| `/about` | 关于 | 视界之外写「我」 |
+| `/about` | 关于 | 夜幕尽头写「我」 |
 | `/admin` | 管理 | 观测台后场 |
 
 ## 项目结构

@@ -1,8 +1,8 @@
-// 井底/井外双主题 store：切换是叙事行为（一次逃逸/一次下井）
+// 深空/纸面双主题 store：切换是叙事行为（一次夜拍/一次显影）
 import { reactive } from 'vue'
 
 export const theme = reactive({
-  mode: localStorage.getItem('en-theme') === 'out' ? 'out' : 'well',
+  mode: localStorage.getItem('en-theme') === 'well' ? 'well' : 'out',
 })
 
 export function applyTheme(t) {
