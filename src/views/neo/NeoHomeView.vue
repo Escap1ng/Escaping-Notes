@@ -79,7 +79,7 @@ onMounted(async () => {
   grid-template-columns: 4ch minmax(0, auto) 1fr auto;
   align-items: baseline;
   gap: var(--space-2);
-  padding: var(--space-2) 0;
+  padding: var(--space-2) 0 var(--space-2) 12px;
   border-top: 1px solid var(--line);
   text-decoration: none;
   color: inherit;

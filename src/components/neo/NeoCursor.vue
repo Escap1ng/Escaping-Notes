@@ -104,6 +104,28 @@ function resize() {
   ctx.lineJoin = 'round'
 }
 
+// 三星：拖尾沿轨道圆弧（与半径 R 一致）渐隐 + 实心星核
+function drawComet(sx, sy, col, ang, k, cx, cy, R) {
+  // 拖尾：跟随轨道圆弧，头亮尾淡（在星体经过的角度后方）
+  const tailAng = ((13 + hoverK * 3) * k) / R
+  const segs = 10
+  for (let s = 0; s < segs; s++) {
+    const a0 = ang - (tailAng * (s + 1)) / segs
+    const a1 = ang - (tailAng * s) / segs
+    const fade = Math.pow(1 - s / segs, 2)
+    ctx.strokeStyle = rgba(col, 0.55 * fade)
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.arc(cx, cy, R, a0, a1)
+    ctx.stroke()
+  }
+  // 星核
+  ctx.fillStyle = rgba(mix(col, C.white, 0.5), 0.95)
+  ctx.beginPath()
+  ctx.arc(sx, sy, (1.5 + hoverK * 0.5) * k, 0, TAU)
+  ctx.fill()
+}
+
 function frame(now) {
   raf = 0
   const dt = Math.min(48, now - lastT) / 16.7
@@ -146,19 +168,7 @@ function draw(now) {
     const c0 = P.orbit[Math.floor(u)]
     const c1 = P.orbit[(Math.floor(u) + 1) % 3]
     const col = mix(mix(c0, c1, u % 1), C.hot, downK * 0.8)
-    const gr = 6 + hoverK * 2.5
-    const sa = P.starA + hoverK * P.starK
-    if (sa > 0.004) {
-      const g3 = ctx.createRadialGradient(sx, sy, 0, sx, sy, gr)
-      g3.addColorStop(0, rgba(col, sa))
-      g3.addColorStop(1, rgba(col, 0))
-      ctx.fillStyle = g3
-      ctx.fillRect(sx - gr, sy - gr, gr * 2, gr * 2)
-    }
-    ctx.fillStyle = rgba(mix(col, C.white, 0.5), 0.95)
-    ctx.beginPath()
-    ctx.arc(sx, sy, 1.5 + hoverK * 0.5, 0, TAU)
-    ctx.fill()
+    drawComet(sx, sy, col, a, 1 + hoverK * 0.5, x, y, R)
   }
 
   /* --- 悬停：锥形衍射十字芒（沿芒长渐隐＋慢呼吸） --- */
@@ -196,7 +206,7 @@ function draw(now) {
   }
   ctx.fillStyle = rgba(mix(mix(P.core, P.glow, hoverK * 0.7), C.hot, downK * 0.8), 1)
   ctx.beginPath()
-  ctx.arc(x, y, 2.1 + hoverK * 0.7 - downK * 0.5, 0, TAU)
+  ctx.arc(x, y, 2.6 + hoverK * 0.8 - downK * 0.5, 0, TAU)
   ctx.fill()
 }
 

@@ -134,7 +134,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
             :style="{ transitionDelay: `${60 + i * 45}ms` }"
             @click="closeDrawer"
           >
-            <span class="d-code neo-mono" aria-hidden="true">{{ item.code }} · r/rs {{ item.depth }}</span>
+            <span class="d-code neo-mono" aria-hidden="true">{{ item.code }}</span>
             <span class="d-label">{{ item.label }}</span>
             <span class="d-arrow" aria-hidden="true">→</span>
           </RouterLink>
@@ -200,7 +200,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: conic-gradient(from 210deg, var(--hot), var(--white) 20%, var(--cold) 46%, var(--hot) 82%, var(--hot));
+  /* 光子环：深浅主题统一沿用深空配色，避免纸面主题下发色黯淡 */
+  background: conic-gradient(from 210deg, #ff5c39, #fff7ed 20%, #8ec9ff 46%, #ff5c39 82%, #ff5c39);
   -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 53%);
   mask: radial-gradient(closest-side, transparent 50%, #000 53%);
   filter: saturate(1.35) brightness(1.15);
@@ -295,6 +296,21 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   cursor: pointer;
   text-decoration: none;
   transition: color 0.22s, border-color 0.22s, transform 0.22s;
+}
+
+/* 主题/音乐等图标按钮：固定最小宽并居中，防止☾/☀等字形宽度差异导致切换时按钮大小跳动 */
+.ico-btn {
+  min-width: 80px;
+  justify-content: center;
+}
+
+/* 图标位固定盒：不同字形（☾/☀、♪/❚）占同宽，布局不随字形变化 */
+.ico-btn > span:first-child {
+  display: inline-block;
+  width: 1.15em;
+  text-align: center;
+  line-height: 1;
+  flex: none;
 }
 
 .ico-btn:hover,
@@ -462,7 +478,11 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     display: none;
   }
   .ico-btn {
-    padding: 6px 10px;
+    /* 移动端图标按钮：固定正方形（圆形），三枚严格等大 */
+    padding: 0;
+    width: 32px;
+    min-width: 32px;
+    justify-content: center;
   }
   .auth-name {
     display: none;

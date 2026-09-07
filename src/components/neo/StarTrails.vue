@@ -368,6 +368,80 @@ function update(dt, now) {
   }
 }
 
+// 衍射星芒绘制（变星 / 流星共用）：柔晕 + 锥形芒，随脉动/绽放呼吸；rot 可让芒随方向旋转
+function drawStar(x, y, o) {
+  const halo = o.halo
+  const core = o.core
+  const pu = o.pu
+  const bl = o.bl
+  const alpha = o.alpha ?? 1
+  const rot = o.rot || 0
+  const boost = C.boost
+  const co = Math.cos(rot)
+  const si = Math.sin(rot)
+  // 锥形衍射芒：宽柔晕 + 亮锐芯；主/副 = 1:0.45，呼吸由 pu 驱动
+  const ray = (0.26 + 0.32 * pu) * (1 + 0.55 * bl)
+  const L = (boost ? 22 : 27) * (0.5 + 0.4 * pu + 0.5 * bl)
+  const a0 = (boost ? 0.5 : 0.62) * ray * alpha
+  for (const [dx, dy, k] of [
+    [1, 0, 1],
+    [0, 1, 1],
+    [-1, 0, 1],
+    [0, -1, 1],
+    [0.7071, 0.7071, 0.45],
+    [-0.7071, 0.7071, 0.45],
+    [0.7071, -0.7071, 0.45],
+    [-0.7071, -0.7071, 0.45],
+  ]) {
+    const rx = (dx * co - dy * si) * k
+    const ry = (dx * si + dy * co) * k
+    const g2 = ctx.createLinearGradient(x, y, x + rx * L, y + ry * L)
+    g2.addColorStop(0, rgba(core, a0 * 0.42))
+    g2.addColorStop(0.6, rgba(core, a0 * 0.12))
+    g2.addColorStop(1, rgba(core, 0))
+    ctx.strokeStyle = g2
+    ctx.globalAlpha = 1
+    ctx.lineWidth = 2.6
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + rx * L, y + ry * L)
+    ctx.stroke()
+    // 亮锐芯：略短，增强中心通透感
+    const g3 = ctx.createLinearGradient(x, y, x + rx * L * 0.7, y + ry * L * 0.7)
+    g3.addColorStop(0, rgba(core, a0))
+    g3.addColorStop(1, rgba(core, 0))
+    ctx.strokeStyle = g3
+    ctx.lineWidth = 0.85
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + rx * L * 0.7, y + ry * L * 0.7)
+    ctx.stroke()
+  }
+  // 光晕：深空主题两层辉光（近芯亮、外缘渐隐）；纸面干版忌糊不带光晕
+  if (!boost) {
+    const R = (2.6 + 1.6 * bl) * (0.82 + 0.36 * pu)
+    const g = ctx.createRadialGradient(x, y, 0, x, y, R * 5)
+    g.addColorStop(0, rgba(halo, (0.36 + 0.24 * pu + 0.4 * bl) * alpha))
+    g.addColorStop(0.35, rgba(halo, (0.16 + 0.12 * pu + 0.18 * bl) * alpha))
+    g.addColorStop(1, rgba(halo, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(x, y, R * 5, 0, TAU)
+    ctx.fill()
+  }
+  // 星核 + 内芯高光（深空主题加点白芯提亮）
+  ctx.fillStyle = rgba(core, alpha * (0.9 + 0.1 * bl))
+  ctx.beginPath()
+  ctx.arc(x, y, 1.7 + 0.7 * bl, 0, TAU)
+  ctx.fill()
+  if (!boost) {
+    ctx.fillStyle = rgba([255, 255, 255], alpha * 0.92)
+    ctx.beginPath()
+    ctx.arc(x, y, 0.85 + 0.3 * bl, 0, TAU)
+    ctx.fill()
+  }
+}
+
 function draw(now) {
   if (!ctx || !W || !acc) return
   const t = (now - t0) / 1000
@@ -413,12 +487,9 @@ function draw(now) {
     ctx.moveTo(tx, ty)
     ctx.lineTo(x, y)
     ctx.stroke()
-    // 亮头
-    const hg = ctx.createRadialGradient(x, y, 0, x, y, 7)
-    hg.addColorStop(0, rgba(head, 0.9 * env))
-    hg.addColorStop(1, rgba(head, 0))
-    ctx.fillStyle = hg
-    ctx.fillRect(x - 7, y - 7, 14, 14)
+    // 亮头：与变星同款的衍射星芒，随飞行方向旋转
+    const rot = Math.atan2(m.vy, m.vx)
+    drawStar(x, y, { halo: C.boost ? C.hot : C.cold, core: head, pu: 0.9, bl: 0.4, alpha: env, rot })
   }
 
   /* --- 变星（文章节点） --- */
@@ -427,59 +498,10 @@ function draw(now) {
   for (let i = 0; i < vars.length; i++) {
     const v = vars[i]
     const [x, y] = varXY(v)
-    const pu = 0.6 + 0.4 * Math.sin(t * v.pulse + v.ph)
+    const pu = 0.62 + 0.38 * Math.sin(t * v.pulse + v.ph) // 温和呼吸
     const bl = reduced ? (i === hoverIdx ? 1 : 0) : v.bl // 绽放系数（reduced 下二值直开）
-    if (!C.boost) {
-      // 光晕仅深空主题：纸面干版忌糊，静置与 hover 绽出都不带光晕，只留锐利星核与衍射芒
-      const R = (2.7 + 1.7 * bl) * (0.82 + 0.36 * pu)
-      const g = ctx.createRadialGradient(x, y, 0, x, y, R * 5)
-      g.addColorStop(0, rgba(halo, 0.4 + 0.25 * pu + 0.45 * bl))
-      g.addColorStop(1, rgba(halo, 0))
-      ctx.fillStyle = g
-      ctx.beginPath()
-      ctx.arc(x, y, R * 5, 0, TAU)
-      ctx.fill()
-    }
-    if (bl > 0.02) {
-      // 锥形衍射芒：每支沿芒长线性渐隐（根亮尖透），主/副 = 1:0.45，±6% 慢呼吸
-      const L = 30 * (0.6 + 0.4 * bl) * (1 + 0.06 * Math.sin(t * 2.9 + v.ph))
-      const a0 = (C.boost ? 0.5 : 0.6) * bl
-      for (const [dx, dy, k] of [
-        [1, 0, 1],
-        [0, 1, 1],
-        [-1, 0, 1],
-        [0, -1, 1],
-        [0.7071, 0.7071, 0.45],
-        [-0.7071, 0.7071, 0.45],
-        [0.7071, -0.7071, 0.45],
-        [-0.7071, -0.7071, 0.45],
-      ]) {
-        const ex = x + dx * L * k
-        const ey = y + dy * L * k
-        const g2 = ctx.createLinearGradient(x, y, ex, ey)
-        g2.addColorStop(0, rgba(core, a0))
-        g2.addColorStop(1, rgba(core, 0))
-        ctx.strokeStyle = g2
-        ctx.beginPath()
-        ctx.moveTo(x, y)
-        ctx.lineTo(ex, ey)
-        ctx.lineWidth = 2.8 // 宽柔锥（辉光）
-        ctx.globalAlpha = 0.3
-        ctx.stroke()
-        ctx.globalAlpha = 1
-        ctx.lineWidth = 1 // 亮窄锥（轴芯）
-        ctx.stroke()
-      }
-      ctx.beginPath()
-      ctx.arc(x, y, 10 + Math.sin(t * 6) * 2, 0, TAU)
-      ctx.strokeStyle = rgba(halo, 0.5 * bl)
-      ctx.lineWidth = 1
-      ctx.stroke()
-    }
-    ctx.fillStyle = rgba(core, 0.88 + 0.12 * bl)
-    ctx.beginPath()
-    ctx.arc(x, y, 1.7 + 0.7 * bl, 0, TAU)
-    ctx.fill()
+    const rot = t * 0.22 + v.ph // 衍射芒缓慢自转
+    drawStar(x, y, { halo, core, pu, bl, rot, alpha: 1 })
   }
   if (cvs.value) cvs.value.style.cursor = hoverIdx >= 0 ? 'pointer' : ''
 

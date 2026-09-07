@@ -69,12 +69,10 @@ import { N } from '../../config/narrative.js'
 
 .dot.cold {
   background: var(--cold);
-  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--cold) 55%, transparent);
 }
 
 .dot.hot {
   background: var(--hot);
-  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--hot) 55%, transparent);
 }
 
 .when {
