@@ -1,5 +1,5 @@
 <script setup>
-// 新版首页：黑洞首屏 + 「下潜」深度列表
+// 首页：星轨首屏 + 「星图」目录
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import HorizonHero from '../../components/neo/HorizonHero.vue'
@@ -45,7 +45,7 @@ onMounted(async () => {
     <section class="neo-shell descent">
       <p class="neo-eyebrow head">{{ N.descentHead }}</p>
 
-      <nav class="list" aria-label="下潜目录">
+      <nav class="list" aria-label="星图目录">
         <RouterLink v-for="item in descent" :key="item.to" :to="item.to" class="row neo-lens" @pointermove="onLens">
           <span class="bar" aria-hidden="true"></span>
           <span class="code neo-mono" aria-hidden="true">{{ item.code }}</span>

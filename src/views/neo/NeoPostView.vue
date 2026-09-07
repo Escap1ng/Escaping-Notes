@@ -33,7 +33,7 @@ function onKey(e) {
   if (e.key === 'Escape') lightbox.value = ''
 }
 
-/* 滚动 = 下潜：顶部进度线 */
+/* 滚动 = 曝光进度：顶部进度线 */
 function onScroll() {
   const max = document.documentElement.scrollHeight - innerHeight
   const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0

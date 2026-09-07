@@ -67,14 +67,14 @@ export const N = {
   postNext: '更深处 →',
 
   nf: {
-    title: '已越事件视界',
-    text: '此轨之光已坠渊底，请回身另寻他径。',
-    home: '回到视界之外',
+    title: '此星不在天区',
+    text: '你循着的那道弧，并未落入这一夜的取景框。夜色仍长，请回身另寻他径。',
+    home: '回到首页天区',
     blog: '去归档',
   },
 
-  footer: { line: '// Escap1ng · BLOG', thanks: '光年之外，谢你下潜至此。', top: '回到顶部 ↑' },
+  footer: { line: '// Escap1ng · BLOG', thanks: '曝光将尽，谢你停驻至此。', top: '回到顶部 ↑' },
   theme: { dark: '深空', light: '纸面' },
 
-  empty: { posts: '// 盘空无光', updates: '// 暂无脉冲', wall: '// 尚无回声落于此', projects: '// 载荷舱空' },
+  empty: { posts: '// 底片无光', updates: '// 暂无脉冲', wall: '// 尚无回声落于此', projects: '// 载荷舱空' },
 }
