@@ -34,9 +34,21 @@ import { N } from '../../config/narrative.js'
 }
 
 .pulses {
+  position: relative;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* 时间线导轨：贯通各脉冲点的垂直线 */
+.pulses::before {
+  content: '';
+  position: absolute;
+  left: 2.5px;
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
 }
 
 .pulse {
@@ -47,6 +59,11 @@ import { N } from '../../config/narrative.js'
   gap: var(--space-2);
   padding: var(--space-2) 0 var(--space-2) 22px;
   border-top: 1px solid var(--line);
+  transition: background-color 0.25s ease;
+}
+
+.pulse:hover {
+  background: color-mix(in srgb, var(--cold) 5%, transparent);
 }
 
 .pulse:last-child {
@@ -89,6 +106,7 @@ import { N } from '../../config/narrative.js'
 .what {
   margin: 0;
   max-width: var(--measure);
+  font-family: var(--font-serif);
   font-size: 15.5px;
   line-height: 1.85;
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);

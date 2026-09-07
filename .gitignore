@@ -2,5 +2,7 @@ node_modules
 dist
 .DS_Store
 *.local
+.trae/
 server/data/
 __pycache__/
+*.pyc

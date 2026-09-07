@@ -84,7 +84,7 @@ onMounted(refresh)
         v-if="!auth.user"
         v-model="name"
         class="neo-field"
-        placeholder="昵称（可留空 = 匿名）"
+        placeholder="昵称（留空则匿名）"
         maxlength="24"
         aria-label="昵称"
       />
@@ -93,7 +93,7 @@ onMounted(refresh)
         class="neo-field"
         rows="3"
         maxlength="200"
-        placeholder="留一句回声…"
+        placeholder="写一句回声…"
         aria-label="留言内容"
         required
       ></textarea>
@@ -151,17 +151,17 @@ onMounted(refresh)
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: var(--space-3);
+  padding: var(--space-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--ink-1) 52%, transparent);
+  background: color-mix(in srgb, var(--ink-1) 22%, transparent);
   overflow: hidden;
   transition: border-color 0.28s, background 0.28s;
 }
 
 .echo:hover {
   border-color: color-mix(in srgb, var(--cold) 55%, transparent);
-  background: color-mix(in srgb, var(--ink-1) 78%, transparent);
+  background: color-mix(in srgb, var(--ink-1) 34%, transparent);
 }
 
 .who {
@@ -220,16 +220,16 @@ onMounted(refresh)
   border-top: 1px solid var(--line);
 }
 
-/* 留言面板：发丝框体，与卡片同语言 */
+/* 留言面板：轻量发丝框体，与卡片同语言 */
 .form {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   max-width: 640px;
-  padding: var(--space-3);
+  padding: var(--space-2);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--ink-1) 40%, transparent);
+  background: color-mix(in srgb, var(--ink-1) 20%, transparent);
 }
 
 .foot {

@@ -196,22 +196,38 @@ onUnmounted(() => {
   border-top: 1px solid var(--line);
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--ink-0) 92%, transparent),
-    color-mix(in srgb, var(--ink-0) 42%, transparent)
+    color-mix(in srgb, var(--ink-0) 94%, transparent),
+    color-mix(in srgb, var(--ink-0) 40%, transparent)
   );
+}
+
+/* 顶端热区标线：细红移线分隔首屏与「现在」读数 */
+.now::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--hot) 55%, transparent), transparent);
 }
 
 .now-cell {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 13px var(--space-3) 15px;
+  gap: 9px;
+  padding: 15px var(--space-3) 17px;
   border-left: 1px solid var(--line);
   min-width: 0;
+  transition: background-color 0.3s ease;
 }
 
 .now-cell:first-child {
   border-left: 0;
+}
+
+.now-cell:hover {
+  background: color-mix(in srgb, var(--ink-1) 40%, transparent);
 }
 
 .now-cell .k {
@@ -220,7 +236,8 @@ onUnmounted(() => {
   gap: 7px;
   font-size: 10.5px;
   color: var(--text-1);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 /* 红移信号点：此栏为「正在发生」 */
@@ -280,15 +297,22 @@ onUnmounted(() => {
     top: 38%;
   }
   .now {
-    grid-template-columns: 1fr;
+    /* 窄屏保持左右三列，三等分对齐 */
+    grid-template-columns: repeat(3, 1fr);
   }
   .now-cell {
-    border-left: 0;
-    border-top: 1px solid var(--line);
-    padding: 9px var(--space-2);
+    border-left: 1px solid var(--line);
+    border-top: 0;
+    gap: 6px;
+    padding: 10px var(--space-1) 12px;
   }
   .now-cell:first-child {
+    border-left: 0;
     border-top: 0;
+  }
+  /* 窄屏只留标签，不显示具体内容 */
+  .now-cell .v {
+    display: none;
   }
 }
 

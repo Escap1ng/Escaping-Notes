@@ -16,6 +16,7 @@ import re
 import secrets
 import threading
 import time
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -35,9 +36,10 @@ MSG_F = DATA / 'messages.json'
 VIEW_F = DATA / 'views.json'
 CONTENT_F = DATA / 'content.json'
 FRAG_F = DATA / 'fragments.json'
+RECORDS_F = DATA / 'records.json'
 UPLOADS = DATA / 'uploads'
 UPLOADS.mkdir(exist_ok=True)
-CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist', 'whispers'}
+CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist'}
 CTYPES = {'.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
           '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
 # 上传白名单：仅图片与 mp3，其余类型一律拒绝
@@ -192,6 +194,43 @@ def rss_xml():
             f'{body}</channel></rss>').encode('utf-8')
 
 
+# ---------- QQ 音乐歌单同步（运行时） ----------
+QQ_DISSTID = os.environ.get('QQ_DISSTID', '9772836439')
+QQ_API = ('https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+          '?type=1&json=1&utf8=1&onlysong=0&disstid={id}&loginUin=0&hostUin=0'
+          '&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0')
+
+
+def _qq_clean(s):
+    """去掉 QQ 音乐返回文本里的 HTML 标签与控制字符"""
+    s = re.sub(r'<[^>]+>', '', str(s or ''))
+    return s.replace('\u0000', '').strip()
+
+
+def fetch_qq_records():
+    """抓取公开歌单 → 返回 records 结构；失败返回 None"""
+    req = urllib.request.Request(
+        QQ_API.format(id=QQ_DISSTID),
+        headers={'Referer': 'https://y.qq.com/', 'User-Agent': 'Mozilla/5.0'})
+    data = json.loads(urllib.request.urlopen(req, timeout=15).read().decode('utf-8'))
+    if data.get('code') != 0 or not data.get('cdlist'):
+        return None
+    cd = data['cdlist'][0]
+    songs = [{
+        'title': _qq_clean(s.get('songname')),
+        'artist': ' / '.join(_qq_clean(x.get('name')) for x in (s.get('singer') or []) if x.get('name')),
+        'url': f"https://y.qq.com/n/ryqq/songDetail/{s.get('songmid', '')}",
+    } for s in (cd.get('songlist') or []) if s.get('songname')]
+    return {
+        'name': _qq_clean(cd.get('dissname')) or 'QQ 音乐歌单',
+        'desc': _qq_clean(cd.get('desc')),
+        'cover': cd.get('logo') or '',
+        'url': f"https://y.qq.com/n/ryqq/playlist/{QQ_DISSTID}",
+        'updated': time.strftime('%Y-%m-%d %H:%M'),
+        'songs': songs,
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'EscapingNotesAPI/2'
 
@@ -274,6 +313,8 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._json(200, [{k: x.get(k) for k in ('id', 'username', 'nickname', 'role', 'ban', 'created')}
                                  for x in load(USERS_F, [])])
+        elif path == '/api/records':
+            self._json(200, load(RECORDS_F, {}))
         elif path == '/api/content':
             with LOCK:
                 self._json(200, load(CONTENT_F, {}))
@@ -407,6 +448,20 @@ class Handler(BaseHTTPRequestHandler):
                 frags.append({'ts': int(time.time()), 'text': text, 'image': image})
                 save(FRAG_F, frags[-200:])
             self._json(200, {'ok': True})
+        elif path == '/api/sync/records':
+            if not u or u['role'] != 'owner':
+                self._json(403, {'error': 'owner only'})
+                return
+            try:
+                rec = fetch_qq_records()
+            except Exception:
+                rec = None
+            if not rec:
+                self._json(502, {'error': 'sync failed'})
+                return
+            with LOCK:
+                save(RECORDS_F, rec)
+            self._json(200, rec)
         elif path == '/api/posts':
             self._post_write(u, data, None)
         elif (m := re.match(r'^/api/posts/([a-z0-9-]+)$', path)):

@@ -1,8 +1,26 @@
 <script setup>
 // 新版共振：歌单快照（运行时零外部请求）+ 谱线扫光曲目行
-import { records } from '../../config/records.js'
+import { onMounted, ref } from 'vue'
+import { records, loadRecords, syncRecords } from '../../lib/records.js'
 import { onLens } from '../../lib/lens.js'
+import { isOwner } from '../../lib/auth.js'
 import { N } from '../../config/narrative.js'
+
+const syncing = ref(false)
+const syncMsg = ref('')
+async function onSync() {
+  syncing.value = true
+  syncMsg.value = ''
+  const r = await syncRecords()
+  if (r && Array.isArray(r.songs)) {
+    Object.assign(records, r)
+    syncMsg.value = `已同步 ${r.songs.length} 首`
+  } else {
+    syncMsg.value = '同步失败'
+  }
+  syncing.value = false
+}
+onMounted(loadRecords)
 </script>
 
 <template>
@@ -19,9 +37,17 @@ import { N } from '../../config/narrative.js'
         <h3 class="name">{{ records.name }}</h3>
         <p v-if="records.desc" class="desc">{{ records.desc }}</p>
         <p class="neo-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
-        <a class="neo-btn neo-btn-ghost open" :href="records.url" target="_blank" rel="noopener noreferrer">
-          在 QQ 音乐打开<span aria-hidden="true">↗</span>
-        </a>
+        <div class="info-actions">
+          <template v-if="isOwner()">
+            <button class="neo-btn neo-btn-ghost open" type="button" :disabled="syncing" @click="onSync">
+              {{ syncing ? '同步中…' : '同步歌单' }}
+            </button>
+          </template>
+          <a class="neo-btn neo-btn-ghost open" :href="records.url" target="_blank" rel="noopener noreferrer">
+            在 QQ 音乐打开<span aria-hidden="true">↗</span>
+          </a>
+          <span v-if="syncMsg" class="neo-mono meta">{{ syncMsg }}</span>
+        </div>
       </div>
     </div>
 
@@ -100,6 +126,19 @@ import { N } from '../../config/narrative.js'
   margin-top: 4px;
 }
 
+/* 头部操作行：同步（左）· 在 QQ 打开（右），同一套按钮语言 */
+.info-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.info-actions .open {
+  margin-top: 0;
+}
+
 .tracks {
   list-style: none;
   margin: 0;
@@ -120,6 +159,28 @@ import { N } from '../../config/narrative.js'
   overflow: hidden;
   text-decoration: none;
   color: inherit;
+  transition: background-color 0.25s ease;
+}
+
+.track:hover {
+  background: color-mix(in srgb, var(--cold) 5%, transparent);
+}
+
+.track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--cold);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.track:hover::before {
+  transform: scaleY(1);
 }
 
 .no {

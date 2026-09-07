@@ -56,6 +56,9 @@ html {
   scroll-behavior: smooth;
   /* 预留滚动条槽位：长短页切换时视口宽度不变，消除横向抽搐 */
   scrollbar-gutter: stable;
+  /* 裁剪装饰性幽灵汉字等越界元素：避免横向滚动导致页面左右抖动/缩放 */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {

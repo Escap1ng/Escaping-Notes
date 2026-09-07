@@ -31,31 +31,31 @@ export const N = {
   orbitIdle: (n) => `${n} 体在轨 · 驻目可辨其名`,
   orbitReadout: (i, p) => `在轨 ${String(i + 1).padStart(2, '0')} · ${p.title} · ${p.date}`,
 
-  now: { writing: '在写', listening: '在听', building: '在做' },
+  now: { writing: 'WRITING', listening: 'LISTENING', building: 'BUILDING' },
   descentHead: '下潜目录 · 由浅及深',
 
   notes: {
     home: '（这一屏只有星星。往下才是我。）',
-    archive: '按时间倒序排列，越往下越早。',
+    archive: '按时间倒序，越往下越早。',
     post: '读到这里，你已经比我当时更靠近它了。',
-    wall: '匿名也可以，话不必署名。',
+    wall: '匿名也可以，无需署名。',
   },
 
   sections: {
-    blog: '// 文章 · 列表',
-    updates: '// 动态 · 时间线',
-    records: '// 歌单 · 曲目',
-    projects: '// 项目 · 作品',
-    wall: '// 留言 · 墙',
-    about: '// 关于 · 我',
-    post: '// 阅读 · 正文',
+    blog: '// 文章 · JOURNAL',
+    updates: '// 动态 · UPDATES',
+    records: '// 歌单 · PLAYLIST',
+    projects: '// 项目 · WORKS',
+    wall: '// 留言 · ECHOES',
+    about: '// 关于 · ABOUT',
+    post: '// 阅读 · READING',
   },
 
   hints: {
-    updates: '随手记下的点滴，也是信号。',
-    records: '一路听过的歌，都在这里。',
-    projects: '做出来、仍在运行的东西。',
-    wall: '留下的留言不会消失，只会沉到更深。',
+    updates: '随手所记，皆成信号。',
+    records: '听过的歌，收藏于此。',
+    projects: '做出的东西，还在转动着。',
+    wall: '留言不会消失，只会沉到更深。',
   },
 
   aboutBio:

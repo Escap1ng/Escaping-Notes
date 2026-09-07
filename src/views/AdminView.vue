@@ -24,7 +24,6 @@ const updatesForm = ref('')
 const projectsForm = ref('')
 const gearForm = ref('')
 const playlistForm = ref('')
-const whispersForm = ref('')
 const uploadUrl = ref('')
 
 const tabs = computed(() => {
@@ -46,7 +45,6 @@ function fillForms() {
   projectsForm.value = content.projects.map((p) => `${p.name}|${p.desc}|${p.year}|${p.url}`).join('\n')
   gearForm.value = content.gear.join('\n')
   playlistForm.value = content.playlist.map((p) => `${p.title}|${p.artist}|${p.file}`).join('\n')
-  whispersForm.value = content.whispers.join('\n')
 }
 
 async function refresh() {
@@ -133,11 +131,24 @@ async function delPost(slug) {
 // ---------- 设置 ----------
 const lines = (s) => s.split('\n').map((l) => l.trim()).filter(Boolean)
 
+function newUpdate() {
+  const d = new Date().toISOString().slice(0, 10)
+  updatesForm.value = `${d} | \n` + updatesForm.value
+}
+
+function newProject() {
+  const y = new Date().getFullYear()
+  projectsForm.value = `新项目 | 项目描述 | ${y} | #\n` + projectsForm.value
+}
+
 async function saveUpdates() {
-  const arr = lines(updatesForm.value).map((l) => {
-    const [date, ...rest] = l.split('|')
-    return { date: (date || '').trim(), text: rest.join('|').trim() }
-  })
+  // 按日期倒序（新→旧），保证时间线有序，便于管理
+  const arr = lines(updatesForm.value)
+    .map((l) => {
+      const [date, ...rest] = l.split('|')
+      return { date: (date || '').trim(), text: rest.join('|').trim() }
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
   if (await api('/api/content/updates', { method: 'PUT', body: arr })) {
     await loadContent(); fillForms(); flash('动态已保存')
   }
@@ -206,13 +217,6 @@ async function saveProjects() {
 async function saveGear() {
   if (await api('/api/content/gear', { method: 'PUT', body: lines(gearForm.value) })) {
     await loadContent(); fillForms(); flash('装备已保存')
-  }
-}
-async function saveWhispers() {
-  if (await api('/api/content/whispers', { method: 'PUT', body: lines(whispersForm.value) })) {
-    await loadContent()
-    fillForms()
-    flash('低语已保存')
   }
 }
 async function savePlaylist() {
@@ -290,7 +294,7 @@ async function onFile(e) {
               <button v-if="u.role !== 'owner'" class="act readout" @click="setBan(u, !u.ban)">
                 {{ u.ban ? '解禁' : '禁用' }}
               </button>
-              <button v-if="u.role !== 'owner'" class="act readout" @click="delUser(u)">删除</button>
+              <button v-if="u.role !== 'owner'" class="act readout danger" @click="delUser(u)">删除</button>
             </td>
           </tr>
         </tbody>
@@ -304,7 +308,7 @@ async function onFile(e) {
         <li v-for="m in msgs" :key="m.ts" class="mini-row">
           <span class="readout">{{ m.name }} · {{ new Date(m.ts * 1000).toLocaleDateString('zh-CN') }}</span>
           <span class="mini-text">{{ m.text }}</span>
-          <button class="act readout" @click="delMsg(m.ts)">删除</button>
+          <button class="act readout danger" @click="delMsg(m.ts)">删除</button>
         </li>
         <li v-if="!msgs.length" class="readout">// 无留言</li>
       </ul>
@@ -317,7 +321,7 @@ async function onFile(e) {
           <span class="readout">{{ p.date }}</span>
           <span class="mini-text">{{ p.title }}</span>
           <button class="act readout" @click="editPost(p)">编辑</button>
-          <button class="act readout" @click="delPost(p.slug)">删除</button>
+          <button class="act readout danger" @click="delPost(p.slug)">删除</button>
         </li>
       </ul>
 
@@ -344,7 +348,7 @@ async function onFile(e) {
           <span class="readout img-name">{{ x.name }}</span>
           <span class="acts">
             <button class="act readout" type="button" @click="insertImage(x)">插入</button>
-            <button class="act readout" type="button" @click="delImage(x)">删除</button>
+            <button class="act readout danger" type="button" @click="delImage(x)">删除</button>
           </span>
         </li>
       </ul>
@@ -356,12 +360,18 @@ async function onFile(e) {
       <div class="set-block">
         <h3 class="readout">// UPDATES · 每行 date | text</h3>
         <textarea v-model="updatesForm" class="field mono" rows="6"></textarea>
-        <button class="submit readout" @click="saveUpdates">保存动态</button>
+        <div class="ed-row">
+          <button class="submit readout" type="button" @click="saveUpdates">保存动态</button>
+          <button class="act readout" type="button" @click="newUpdate">＋ 新增动态</button>
+        </div>
       </div>
       <div class="set-block">
         <h3 class="readout">// PROJECTS · 每行 name|desc|year|url</h3>
         <textarea v-model="projectsForm" class="field mono" rows="6"></textarea>
-        <button class="submit readout" @click="saveProjects">保存项目</button>
+        <div class="ed-row">
+          <button class="submit readout" type="button" @click="saveProjects">保存项目</button>
+          <button class="act readout" type="button" @click="newProject">＋ 新增项目</button>
+        </div>
       </div>
       <div class="set-block">
         <h3 class="readout">// GEAR · 每行一项</h3>
@@ -372,11 +382,6 @@ async function onFile(e) {
         <h3 class="readout">// PLAYLIST · 每行 title|artist|file(/uploads/…)</h3>
         <textarea v-model="playlistForm" class="field mono" rows="4"></textarea>
         <button class="submit readout" @click="savePlaylist">保存歌单</button>
-      </div>
-      <div class="set-block">
-        <h3 class="readout">// WHISPERS · 井外低语，每行一句（满蓄能轮播）</h3>
-        <textarea v-model="whispersForm" class="field mono" rows="6"></textarea>
-        <button class="submit readout" @click="saveWhispers">保存低语</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// UPLOAD · 图片/音乐 ≤8MB</h3>
@@ -391,29 +396,39 @@ async function onFile(e) {
 .tabs {
   display: flex;
   gap: var(--space-2);
-  align-items: baseline;
+  align-items: center;
   margin-bottom: var(--space-3);
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--space-2);
 }
 
 .tab {
   background: none;
   border: 1px solid var(--line);
+  border-radius: var(--r-pill);
   color: var(--text-1);
-  padding: 4px 12px;
+  padding: 5px 16px;
   cursor: pointer;
   font: inherit;
   letter-spacing: inherit;
+  transition: color 0.22s, border-color 0.22s, background-color 0.22s, transform 0.22s;
 }
 
-.tab.on,
 .tab:hover {
-  border-color: var(--signal);
-  color: var(--signal);
+  border-color: var(--cold);
+  color: var(--cold);
+}
+
+.tab.on {
+  border-color: var(--hot);
+  color: var(--hot);
+  background: color-mix(in srgb, var(--hot) 10%, transparent);
 }
 
 .notice {
-  color: var(--signal);
+  margin-left: auto;
+  color: var(--cold);
 }
 
 .table-wrap {
@@ -429,12 +444,23 @@ async function onFile(e) {
 .grid th,
 .grid td {
   text-align: left;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-top: 1px solid var(--line);
 }
 
 .grid th {
   border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-1);
+}
+
+.grid tbody tr {
+  transition: background-color 0.18s ease;
+}
+
+.grid tbody tr:hover {
+  background: color-mix(in srgb, var(--cold) 6%, transparent);
 }
 
 .acts {
@@ -444,16 +470,25 @@ async function onFile(e) {
 
 .act {
   background: none;
-  border: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
   color: var(--text-1);
   cursor: pointer;
   font: inherit;
   letter-spacing: inherit;
-  padding: 0;
+  padding: 4px 12px;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s, transform 0.2s;
 }
 
 .act:hover {
-  color: var(--signal);
+  border-color: var(--cold);
+  color: var(--cold);
+  transform: translateY(-1px);
+}
+
+.act.danger:hover {
+  border-color: var(--hot);
+  color: var(--hot);
 }
 
 .mini-list {
@@ -511,7 +546,14 @@ async function onFile(e) {
   flex-direction: column;
   gap: 4px;
   border: 1px solid var(--line);
+  border-radius: var(--r-sm);
   padding: 6px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.img-cell:hover {
+  border-color: color-mix(in srgb, var(--cold) 45%, var(--line));
+  transform: translateY(-2px);
 }
 
 .img-cell img {

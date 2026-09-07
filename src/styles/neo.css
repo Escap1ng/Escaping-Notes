@@ -280,6 +280,7 @@ html[data-skin='neo'] main.neo-sub {
   padding: 11px 22px;
   border-radius: var(--r-pill);
   border: 1px solid transparent;
+  background-color: transparent;
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;

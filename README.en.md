@@ -8,9 +8,11 @@
 
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
-[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?logo=python&logoColor=white)](server/api.py)
+[![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
+[![Backend](https://img.shields.io/badge/Backend-Python%203-3776ab?logo=python&logoColor=white)](server/api.py)
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#license--usage-terms)
+[![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
 
 **[Live Demo](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
 
@@ -22,20 +24,24 @@
 
 ## About
 
-Escaping Notes is a hand-built personal stargazing journal. The landing screen is a camera on a tripod mid long exposure — thousands of concentric star-trail arcs rotating rigidly around an offset celestial pole, accumulating and decaying, exactly like the lines you write through one northern night.
+Escaping Notes is a personal writing and journal site that frames "writing" as a long exposure of the night sky.
 
-- **Posts as variable stars** — every article is a pulsing fixed star; hover blooms a conical diffraction cross, click to fall into the prose
-- **Scroll as time** — the deeper you dive, the longer the exposure window and the faster the sky turns; header to footer is one full night shoot
-- **Pointer as gravity** — star trails inside the cursor radius locally accelerate and curl, like a light-painting torch sweeping the sky
-- **Easter eggs as narrative** — meteors occasionally cross the exposed plate; click a variable star to fall into an article; every page submerges one giant ghost glyph as the author's mark
+The landing screen is a camera mid long exposure: thousands of concentric star-trail arcs rotate rigidly around an offset celestial pole, accumulating and decaying. The whole site turns "reading" and "scrolling" into a descent with a clear beginning and end — the deeper you read, the longer the exposure and the faster the sky turns, until the page completes one full night shoot. Each article is treated as a pulsing fixed variable star: hover it to unfold a conical diffraction cross, click to fall into the prose.
+
+In this setting the pointer becomes a pocket of time dilation: star trails within the cursor radius accelerate, brighten and curl, like a light-painting torch sweeping the sky. Meteors occasionally cross the exposed plate, and a giant ghost glyph rests on every page as the author's mark.
+
+- **Posts as variable stars** — every article is a pulsing fixed star; hover unfolds a conical diffraction cross, click to fall into the prose
+- **Scroll as time** — the deeper you dive, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
+- **Pointer as time dilation** — star trails inside the cursor radius locally accelerate and curl
+- **Easter eggs as narrative** — meteors occasionally cross the plate; click a variable star to fall into an article; a giant ghost glyph rests on every page
 
 ## Features
 
-- 🎨 **Dual themes** — Deep Space (cold white / warm white / amber trails) and Paper (astronomical dry plate: ink trails + vermilion accents), one click to switch, preference remembered
-- 🧮 **Zero-dependency aesthetics** — no webfonts, no third-party UI kits, no chart libraries; every visual is hand-drawn per frame with Canvas 2D
-- 🛰 **Graceful degradation** — when the API is unreachable the site falls back to bundled seed data: still a complete offline plate
-- ♿ **Accessibility & performance** — static fast-forwarded plate under `prefers-reduced-motion`; pixel-budget-capped DPR, single rAF loop, visibility-aware pausing
-- ✍️ **Full-featured admin** — edit posts, updates, records and site info from `/admin`; three role tiers; guestbook and RSS included
+- **Dual themes** — Deep Space (cold white / warm white / amber trails) and Paper (astronomical dry plate: ink trails + vermilion accents), one click to switch, preference remembered
+- **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits or chart libraries
+- **Graceful degradation** — when the API is unreachable the site falls back to bundled seed data: still a complete offline plate
+- **Accessibility & performance** — static fast-forwarded plate under `prefers-reduced-motion`; pixel-budget-capped DPR, single rAF loop, visibility-aware pausing
+- **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the record can be synced with a public QQ Music playlist in one click; three role tiers; guestbook and RSS included
 
 ## Tech Stack
 
@@ -43,7 +49,7 @@ Escaping Notes is a hand-built personal stargazing journal. The landing screen i
 | --- | --- |
 | Frontend | Vue 3 (Composition API) + Vite + Vue Router |
 | Rendering | Canvas 2D with an offscreen accumulation buffer (long-exposure plate simulation) |
-| Backend | Single-file Python 3 stdlib server (`server/api.py`), zero dependencies |
+| Backend | Single-file Python 3 stdlib server (`server/api.py`), no extra dependencies |
 | Deployment | GitHub Pages / Vercel / nginx + systemd |
 
 ## Quick Start
@@ -57,7 +63,7 @@ npm install
 # Run the frontend (development)
 npm run dev
 
-# Run the backend (another terminal, zero dependencies)
+# Run the backend (another terminal)
 python server/api.py
 
 # Production builds
@@ -82,13 +88,13 @@ npm run build:pages    # GitHub Pages mirror (hash router)
 ## Project Structure
 
 ```text
-├── server/api.py          # Zero-dep backend: content / auth / guestbook / RSS / OG injection
+├── server/api.py          # Backend: content / auth / guestbook / RSS / OG injection / record sync
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── docs/                  # design-neo.md design spec · manual.md handbook
 └── src/
     ├── components/neo/    # StarTrails device · HorizonHero · NeoCursor ...
     ├── config/            # narrative.js copy layer · site.js site info
-    ├── lib/               # api / auth / content / posts / theme / music ...
+    ├── lib/               # api / auth / content / posts / theme / music / records ...
     ├── styles/            # tokens.css token baseline · neo.css the site skin
     └── views/neo/         # All page views
 ```

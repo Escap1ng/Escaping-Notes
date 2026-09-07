@@ -8,9 +8,11 @@
 
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Hand--drawn%20Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
-[![Backend](https://img.shields.io/badge/Backend-Python%203%20Stdlib-3776ab?logo=python&logoColor=white)](server/api.py)
+[![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
+[![Backend](https://img.shields.io/badge/Backend-Python%203-3776ab?logo=python&logoColor=white)](server/api.py)
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#许可与使用声明)
+[![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
 
 **[在线体验](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
 
@@ -22,20 +24,24 @@
 
 ## 关于项目
 
-Escaping Notes 是一座手工建造的个人观星站。首页是一台架在三脚架上的相机正在长曝光——数千条同心星轨弧绕一枚偏心天极刚体旋转、累积、衰减，正如你在北半球用一个夜晚写下的一行行笔记。
+Escaping Notes 是一个个人书写与记录站点，把「写作」抽象为一次对夜空的长时间曝光。
 
-- **文章即变星**：每篇博文是一枚定点脉动的亮星，驻目绽开锥形衍射十字芒，点击即坠入正文
+首页是一台正在长曝光的相机：数千条同心星轨弧绕一枚偏心天极刚体旋转、累积与衰减。整站借此把「阅读」和「滚动」映射成一场有始有终的下潜——越往下读，曝光越久、夜空转得越快，直到页尾完成一整次夜拍。每篇文章被视作一枚定点脉动的变星：悬停其上会绽开锥形衍射十字芒，点击即坠入正文。
+
+在这种设定下，指针成为一处时间膨胀区：光标半径内的星轨会局部加速、发亮、卷曲，像一支光绘 torch 划过夜空。偶有流星掠过曝光底片，页与页之间还沉着一枚巨大的幽灵汉字作为作者签名。
+
+- **文章即变星**：每篇文章是一枚定点脉动的亮星，驻目绽开锥形衍射十字芒，点击坠入正文
 - **滚动即时间**：下潜越深，曝光窗口越长、天空转得越快；页首到页尾是一整次夜拍
-- **指针即引力**：光标半径内星轨局部加速卷曲，如光绘 torch 划过夜空
+- **指针即时间膨胀**：光标半径内星轨局部加速卷曲
 - **彩蛋即叙事**：偶有流星划过曝光底片；点击变星坠入文章；每页沉着一枚巨型幽灵汉字签名
 
 ## 特性
 
-- 🎨 **双主题**：深空（冷白/暖白/琥珀星轨）与纸面（天文干版底片：墨色轨迹 + 朱砂点睛），头部一键切换并记忆偏好
-- 🧮 **零依赖美学**：零 webfont、零第三方 UI 库、零图表库——所有画面由 Canvas 2D 逐帧手绘
-- 🛰 **优雅降级**：API 不可达时自动切换本地种子数据，站点仍是完整的离线底片
-- ♿ **无障碍与性能**：`prefers-reduced-motion` 下渲染静态快进底片；像素预算封顶自动降 DPR；rAF 单循环与页面可见性暂停
-- ✍️ **全功能后台**：`/admin` 网页端编辑文章、动态、歌单、站点信息；三角色权限；留言墙与 RSS
+- **双主题**：深空（冷白/暖白/琥珀星轨）与纸面（天文干版底片：墨色轨迹 + 朱砂点睛），头部一键切换并记忆偏好
+- **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制；无第三方 UI 库或图表库
+- **优雅降级**：API 不可达时自动切换本地种子数据，站点仍是完整的离线底片
+- **无障碍与性能**：`prefers-reduced-motion` 下渲染静态快进底片；像素预算封顶自动降 DPR；rAF 单循环与页面可见性暂停
+- **全功能后台**：`/admin` 网页端编辑文章、动态、歌单、站点信息；歌单可一键同步 QQ 音乐公开歌单；三角色权限；留言墙与 RSS
 
 ## 技术栈
 
@@ -43,7 +49,7 @@ Escaping Notes 是一座手工建造的个人观星站。首页是一台架在�
 | --- | --- |
 | 前端 | Vue 3（Composition API）+ Vite + Vue Router |
 | 渲染 | Canvas 2D 离屏累积缓冲（长曝光底片模拟） |
-| 后端 | Python 3 标准库单文件（`server/api.py`），零依赖 |
+| 后端 | Python 3 标准库单文件（`server/api.py`），无额外依赖 |
 | 部署 | GitHub Pages / Vercel / nginx + systemd |
 
 ## 快速开始
@@ -57,7 +63,7 @@ npm install
 # 启动前端（开发）
 npm run dev
 
-# 启动后端（另开终端，零依赖）
+# 启动后端（另开终端）
 python server/api.py
 
 # 生产构建
@@ -82,13 +88,13 @@ npm run build:pages    # GitHub Pages 镜像（hash 路由）
 ## 项目结构
 
 ```text
-├── server/api.py          # 零依赖后端：内容 / 鉴权 / 留言 / RSS / OG 注入
+├── server/api.py          # 后端：内容 / 鉴权 / 留言 / RSS / OG 注入 / 歌单同步
 ├── content/posts/         # Markdown 文章（frontmatter）
 ├── docs/                  # design-neo.md 设计依据 · manual.md 使用手册
 └── src/
     ├── components/neo/    # StarTrails 星轨装置 · HorizonHero · NeoCursor 等
     ├── config/            # narrative.js 文案层 · site.js 站点信息
-    ├── lib/               # api / auth / content / posts / theme / music ...
+    ├── lib/               # api / auth / content / posts / theme / music / records ...
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
     └── views/neo/         # 全部页面视图
 ```

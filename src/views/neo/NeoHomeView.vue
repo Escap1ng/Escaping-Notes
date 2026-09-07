@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import HorizonHero from '../../components/neo/HorizonHero.vue'
 import { loadPosts } from '../../lib/posts.js'
-import { records } from '../../config/records.js'
+import { loadRecords, records } from '../../lib/records.js'
 import { content } from '../../lib/content.js'
 import { onLens } from '../../lib/lens.js'
 import { N } from '../../config/narrative.js'
@@ -35,6 +35,7 @@ function onSelect(p) {
 
 onMounted(async () => {
   posts.value = await loadPosts()
+  loadRecords()
 })
 </script>
 
