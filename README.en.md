@@ -41,6 +41,7 @@ In this setting the pointer becomes a pocket of time dilation: star trails withi
 - **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits or chart libraries
 - **Graceful degradation** — when the API is unreachable the site falls back to bundled seed data: still a complete offline plate
 - **Accessibility & performance** — static fast-forwarded plate under `prefers-reduced-motion`; pixel-budget-capped DPR, single rAF loop, visibility-aware pausing
+- **Reading readability (1.1.0)** — the article page uses a frosted-glass plate (semi-transparent page colour + backdrop blur) to isolate the star-trail background, feathered on all four edges with no hard seam, and foreground contrast meets WCAG AA; the star trails apply anti-saturation tail easing + longer trails + randomised trail origins so the rings stay continuous without aligned breaks; the reading column is widened
 - **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the record can be synced with a public QQ Music playlist in one click; three role tiers; guestbook and RSS included
 
 ## Tech Stack
@@ -76,7 +77,7 @@ npm run build:pages    # GitHub Pages mirror (hash router)
 | Route | Page | Metaphor |
 | --- | --- | --- |
 | `/` | Home · long-exposure star trails | A camera shooting the night |
-| `/blog` | Archive | Cabinet of plates |
+| `/blog` | Articles | Cabinet of plates |
 | `/blog/:slug` | Article | Falling into a variable star |
 | `/updates` | Activity | Pulse log |
 | `/records` | Records | String table of tracks |

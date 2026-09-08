@@ -62,15 +62,15 @@ export const N = {
     'Escap1ng。写代码，也写杂记。此站是一次漫长的下潜：把日子投进渊里，在盘上聚成光，在视界上留下回声——最后在这一切的底端，写一个「我」。',
   dilation: '你在此处停留的光阴，比人间慢一拍。',
 
-  postEnd: { escape: '上浮 · 回归归档', deeper: '继续下潜' },
+  postEnd: { escape: '上浮 · 回归文章', deeper: '继续下潜' },
   postPrev: '← 更浅处',
   postNext: '更深处 →',
 
   nf: {
-    title: '此星不在天区',
+    title: '此星不在星图',
     text: '你循着的那道弧，并未落入这一夜的取景框。夜色仍长，请回身另寻他径。',
-    home: '回到首页天区',
-    blog: '去归档',
+    home: '回到首页',
+    blog: '查看文章',
   },
 
   footer: { line: '// Escap1ng · BLOG', thanks: '曝光将尽，谢你停驻至此。', top: '回到顶部 ↑' },

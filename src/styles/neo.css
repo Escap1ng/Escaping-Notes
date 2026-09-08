@@ -55,6 +55,10 @@ html[data-skin='neo']:not([data-theme='out']) {
   --hole: #020204; /* 阴影=页面底色：镂空感且不吃文字对比 */
   --void-a: rgba(2, 2, 4, 0.34); /* 运动模糊覆盖色 */
   --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬：左下渐隐，保证压在盘面上可读 */
+
+  /* 阅读玻璃底板（文章页）：半透明页面色 + 背景模糊，隔离星轨、提升前景对比（60–80%） */
+  --panel-bg: rgba(2, 2, 4, 0.55);
+  --panel-frost-bg: rgba(2, 2, 4, 0.78); /* 无 backdrop-filter 时的兜底 */
 }
 
 /* ---------- 3. 白矮纸面（浅色） ---------- */
@@ -81,6 +85,10 @@ html[data-skin='neo'][data-theme='out'] {
 
   --hole: #f5f2ea; /* 纸面上的洞=纸色：日食式镂空，深色文字仍可读 */
   --void-a: rgba(245, 242, 234, 0.34);
+
+  /* 阅读玻璃底板（文章页）：半透明纸色 + 背景模糊，隔离星轨、提升前景对比（60–80%） */
+  --panel-bg: rgba(245, 242, 234, 0.6);
+  --panel-frost-bg: rgba(245, 242, 234, 0.78); /* 无 backdrop-filter 时的兜底 */
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

@@ -25,9 +25,14 @@ const TAU = Math.PI * 2
 const OMEGA = 0.05 // 基础角速度 rad/s（刚体旋转，全场一致）
 const SMEAR = 0.12 // 每帧沉积的快门拖尾角长 rad
 const DEP = 0.0085 // 沉积基准 alpha（深空）
-const FADE_0 = 0.0125 // 页顶衰减/帧（尾迹短）
-const FADE_1 = 0.005 // 最深衰减/帧（尾迹长）
+const FADE_0 = 0.008 // 页顶衰减/帧（拉长尾迹，弧段衔接成连续圆环）
+const FADE_1 = 0.0032 // 最深衰减/帧（尾迹更长）
 const FLOW_MAX = 2.2 // 下潜最深处的时间流速加成
+const SETTLE_START = 0.8 // 转满前 20% 开始尾部渐隐（cycle∈[0.8,1] 平滑过渡）
+const SETTLE_DEPTH = 0.55 // 临近转满仅柔和暗化，不整星熄灭（圆环保持连续、无撕口）
+const FEAT_MIN = 9000 // 独立尾部消失的最小间隔 ms
+const FEAT_MAX = 19000 // 最大间隔 ms
+const FEAT_DUR = 4.2 // 独立尾部消失时长 s（量级与整体旋转周期协调，避免突兀）
 const LENS_R = 180 // 指针时间膨胀半径 px
 const N_BIG = 220 // 星数（宽屏 · 首页）
 const N_SMALL = 110 // 星数（窄屏 · 首页）
@@ -72,6 +77,8 @@ let stars = []
 let vars = [] // 变星=文章节点
 let meteors = []
 let nextMeteor = 0
+let feat = [] // 独立尾部消失的星轨：[{ i, t0 }]，t0 为秒（对齐 tAbs 时钟）
+let featNext = 0
 let hoverIdx = -1
 let lastHover = -2
 let px = 0
@@ -104,6 +111,11 @@ const mix = (a, b, t) => [
   Math.round(a[2] + (b[2] - a[2]) * t),
 ]
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v)
+// smoothstep：0→1 双向平滑（用于尾部渐隐的 20% 窗口，避免突变）
+const smooth01 = (v) => {
+  const x = clamp01(v)
+  return x * x * (3 - 2 * x)
+}
 
 function readColors() {
   const cs = getComputedStyle(document.documentElement)
@@ -184,6 +196,8 @@ function mkStar() {
     lw: 0.7 + z * 0.9,
     tw: 0.3 + Math.random() * 1.1,
     ph: Math.random() * TAU,
+    // 尾迹起点偏移（rad）：每颗星从不同角度开始沉积，使弧段截端错落，避免对齐成断口
+    shear: 0.04 + Math.random() * 0.22,
   }
 }
 
@@ -196,6 +210,20 @@ function seedStars() {
   }
   stars = Array.from({ length: n }, mkStar)
   for (const s of stars) s.r = s.rn * maxR
+  feat = [] // 星群重建：清空独立消失标记，索引已失效
+  featNext = 0
+}
+
+/* ---------------- 独立尾部消失（随机 1-2 根星轨，周期性换角） ---------------- */
+function pickFeat(tSec) {
+  feat = []
+  const count = 1 + (Math.random() < 0.5 ? 0 : 1) // 1 或 2 根
+  const set = new Set()
+  let guard = 0
+  while (set.size < count && guard++ < 60 && set.size < stars.length) {
+    set.add((Math.random() * stars.length) | 0)
+  }
+  for (const i of set) feat.push({ i, t0: tSec + 0.4 + Math.random() * 1.8 })
 }
 
 /* ---------------- 变星（文章节点） ---------------- */
@@ -281,7 +309,8 @@ function accPass(om, fd, dtS, tAbs, dep) {
   // 增量 pass：每颗星画本帧的短弧 → 长曝光自然累积
   for (let tier = 0; tier < 3; tier++) {
     accCtx.strokeStyle = rgba(C.trail[tier], 1)
-    for (const s of stars) {
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i]
       if (s.tier !== tier) continue
       const x = pole.x + Math.cos(s.th) * s.r
       const y = pole.y + Math.sin(s.th) * s.r
@@ -297,12 +326,21 @@ function accPass(om, fd, dtS, tAbs, dep) {
         }
       }
       const dth = om * boost * dtS
+      // 尾部消失：① 转满前 20% 平滑收尾（cycle∈[0.8,1]）；② 随机 1-2 根的独立尾部渐隐。
+      // 通过削减本帧沉积 alpha → 该星轨迹因全局衰减自然从尾部融化，接近"转满"时不形成致密闭合环。
+      const cyc = (((s.th % TAU) + TAU) % TAU) / TAU
+      let vk = smooth01((cyc - SETTLE_START) / (1 - SETTLE_START))
+      for (let f = 0; f < feat.length; f++) {
+        if (feat[f].i !== i) continue
+        const p = clamp01((tAbs - feat[f].t0) / FEAT_DUR)
+        vk = Math.max(vk, (0.5 - 0.5 * Math.cos(TAU * p)) * 0.6) // 0→0.6→0 的柔和独立渐隐（不整星熄灭，避免环口）
+      }
       s.th += dth
       const tw = 0.86 + 0.14 * Math.sin(tAbs * s.tw + s.ph)
-      accCtx.globalAlpha = Math.min(1, dep * s.z * ab * tw)
+      accCtx.globalAlpha = Math.min(1, dep * s.z * ab * tw * (1 - vk * SETTLE_DEPTH))
       accCtx.lineWidth = s.lw
       accCtx.beginPath()
-      accCtx.arc(pole.x, pole.y, s.r, s.th - (SMEAR * boost + dth), s.th)
+      accCtx.arc(pole.x, pole.y, s.r, s.th - (s.shear * boost + dth), s.th)
       accCtx.stroke()
     }
   }
@@ -352,8 +390,15 @@ function update(dt, now) {
     px += (pxT - px) * sp
     py += (pyT - py) * sp
   }
+  const tSec = (now - t0) / 1000
+  // 独立尾部消失：定时随机挑 1-2 根，周期独立、与整体旋转周期量级协调
+  if (now > featNext && stars.length) {
+    pickFeat(tSec)
+    featNext = now + FEAT_MIN + Math.random() * (FEAT_MAX - FEAT_MIN)
+  }
+  if (feat.length) feat = feat.filter((f) => tSec - f.t0 < FEAT_DUR + 0.6)
   const dep = DEP * (C.boost ? 1.5 : 1) * (props.interactive ? 1 : 0.75)
-  accPass(OMEGA * flow, fade * (C.boost ? 1.4 : 1) * step, dt / 1000, (now - t0) / 1000, dep)
+  accPass(OMEGA * flow, fade * (C.boost ? 1.4 : 1) * step, dt / 1000, tSec, dep)
   if (props.interactive) {
     const bk = 1 - Math.pow(0.93, step) // 绽放缓动（约 0.2s 半程）
     for (let i = 0; i < vars.length; i++) {
@@ -585,6 +630,7 @@ onMounted(() => {
   reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
   t0 = performance.now()
   nextMeteor = t0 + 2600
+  featNext = t0 + 3200 // 首根独立尾部消失约在 3.2s 后出现
   readColors()
   resize()
   observer = new MutationObserver(readColors)

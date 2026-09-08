@@ -101,39 +101,41 @@ onUnmounted(() => {
     </div>
 
     <template v-else-if="post">
-      <header class="head">
-        <p class="neo-eyebrow">{{ N.sections.post }} · {{ post.date }}</p>
-        <h1 class="title">{{ post.title }}</h1>
-        <p class="meta neo-mono">
-          {{ post.words }} 字 · {{ post.minutes }} 分钟 ·
-          <i v-if="viewsLocal" class="warn">本地读数</i>
-          VIEWS {{ views ?? '--' }}
-          <button class="copy" type="button" @click="copyLink">{{ copied ? '已复制 ✓' : '复制链接' }}</button>
-        </p>
-        <p v-if="post.tags && post.tags.length" class="tags">
-          <span v-for="t in post.tags" :key="t" class="neo-tag">{{ t }}</span>
-        </p>
-      </header>
+      <article class="neo-glass">
+        <header class="head">
+          <p class="neo-eyebrow">{{ N.sections.post }} · {{ post.date }}</p>
+          <h1 class="title">{{ post.title }}</h1>
+          <p class="meta neo-mono">
+            {{ post.words }} 字 · {{ post.minutes }} 分钟 ·
+            <i v-if="viewsLocal" class="warn">本地读数</i>
+            VIEWS {{ views ?? '--' }}
+            <button class="copy" type="button" @click="copyLink">{{ copied ? '已复制 ✓' : '复制链接' }}</button>
+          </p>
+          <p v-if="post.tags && post.tags.length" class="tags">
+            <span v-for="t in post.tags" :key="t" class="neo-tag">{{ t }}</span>
+          </p>
+        </header>
 
-      <div class="neo-prose" v-html="htmlBody" @click="onProseClick"></div>
+        <div class="neo-prose" v-html="htmlBody" @click="onProseClick"></div>
 
-      <p class="neo-note dilation">{{ N.dilation }}</p>
+        <p class="neo-note dilation">{{ N.dilation }}</p>
 
-      <nav class="ends" aria-label="上下篇与出口">
-        <RouterLink v-if="neighbors.prev" :to="`/blog/${neighbors.prev.slug}`" class="end">
-          <span class="neo-mono">{{ N.postPrev }}</span>
-          <span class="end-title">{{ neighbors.prev.title }}</span>
-        </RouterLink>
-        <span v-else></span>
-        <RouterLink v-if="neighbors.next" :to="`/blog/${neighbors.next.slug}`" class="end next">
-          <span class="neo-mono">{{ N.postNext }}</span>
-          <span class="end-title">{{ neighbors.next.title }}</span>
-        </RouterLink>
-      </nav>
+        <nav class="ends" aria-label="上下篇与出口">
+          <RouterLink v-if="neighbors.prev" :to="`/blog/${neighbors.prev.slug}`" class="end">
+            <span class="neo-mono">{{ N.postPrev }}</span>
+            <span class="end-title">{{ neighbors.prev.title }}</span>
+          </RouterLink>
+          <span v-else></span>
+          <RouterLink v-if="neighbors.next" :to="`/blog/${neighbors.next.slug}`" class="end next">
+            <span class="neo-mono">{{ N.postNext }}</span>
+            <span class="end-title">{{ neighbors.next.title }}</span>
+          </RouterLink>
+        </nav>
 
-      <div class="exit">
-        <RouterLink class="neo-btn neo-btn-primary" to="/blog">{{ N.postEnd.escape }}</RouterLink>
-      </div>
+        <div class="exit">
+          <RouterLink class="neo-btn neo-btn-primary" to="/blog">{{ N.postEnd.escape }}</RouterLink>
+        </div>
+      </article>
     </template>
 
     <div
@@ -152,6 +154,70 @@ onUnmounted(() => {
 <style scoped>
 .post {
   padding-top: 120px;
+}
+
+/* 正文玻璃底板：隔离星轨背景 + 提升前景对比（磨砂 Gaussian blur）。
+   背景为 70% 页面底色（`--hole`），落在 60%–80% 区间；配合 blur 弱化星轨纹理。 */
+.neo-glass {
+  position: relative;
+  z-index: 1;
+  --fx: 120px; /* 左右羽化：磨砂/底色向两侧渐隐 */
+  --fy: 40px; /* 上下羽化：与内容留白配合，标题不落在渐隐区（保对比） */
+  --measure: 78ch; /* 放宽文章阅读栏，提高文字占屏比例 */
+  /* 底板贴近屏幕（≤1240px 或 94vw），大屏下占据更多宽度；正文栏居中于 --measure */
+  max-width: min(1240px, 94vw);
+  margin: var(--space-3) auto;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  background: var(--panel-bg, rgba(2, 2, 4, 0.64));
+  -webkit-backdrop-filter: blur(22px) saturate(1.08);
+  backdrop-filter: blur(22px) saturate(1.08);
+  box-shadow: 0 22px 60px -34px color-mix(in srgb, var(--ink-2) 70%, transparent);
+  /* 四边 mask 羽化（水平+垂直 intersect）：让磨砂从边缘平滑褪去，不产生任何硬截断面 */
+  -webkit-mask:
+    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask:
+    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
+  mask-composite: intersect;
+  animation: neo-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
+}
+
+/* 无 backdrop-filter 的旧浏览器：抬高底板不透明度（≤80%），仍能隔离背景与保证对比 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .neo-glass {
+    background: var(--panel-frost-bg, var(--panel-bg, rgba(2, 2, 4, 0.8)));
+  }
+}
+
+@keyframes neo-glass-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .neo-glass {
+    --fx: 24px;
+    --fy: 16px;
+    max-width: 100%;
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--r-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neo-glass {
+    animation: none;
+  }
 }
 
 .glyph {
