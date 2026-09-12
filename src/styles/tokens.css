@@ -17,20 +17,55 @@
   /* 夜视琥珀：全站唯一信号色（天文台夜间红光传统的变体） */
   --signal: #ffb454;
   --signal-dim: rgba(255, 180, 84, 0.4);
-  /* 画布信号色：轨迹场小点/拖尾专用，可按主题单独加深 */
-  --signal-canvas: #ffb454;
 
-  /* 字体：全部系统字体栈，零外部依赖 */
-  --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
-  --font-serif: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
+  /* 字体：全部系统字体栈，零外部依赖。
+     mono 必须含 ui-monospace/SFMono-Regular/Menlo，否则 macOS 上会一路落到 Courier New。
+     serif 的 CJK 候选名尽量列全（Noto Serif CJK SC 为官方 CJK 版名，Source Han Serif CN 为 Adobe 版名）。 */
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'Courier New', monospace;
+  --font-serif: 'Songti SC', 'Noto Serif SC', 'Noto Serif CJK SC', 'Source Han Serif SC',
+    'Source Han Serif CN', STSong, SimSun, serif;
   --font-sans: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
 
-  /* 阅读栏宽与节奏 */
-  --measure: 68ch;
+  /* ---------- 间距刻度（4px 基准，全站唯一来源） ----------
+     0 = 发丝级（图标与文字之间、徽标内边距）
+     1/2/3/4/5 = 8 / 16 / 32 / 64 / 96，用于常规留白与区块节奏
+     组件内不要再写裸 px；确实需要细调时用 calc(var(--space-1) / 2) 并说明原因。 */
+  --space-0: 4px;
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 32px;
   --space-4: 64px;
+
+  /* ---------- 排版刻度（全站唯一来源，组件里禁止写裸字号） ----------
+     共 10 档，覆盖仪表读数 → 页面标题。收敛原则：新需求先找最接近的档，
+     而不是新造一个 14.5px。最小 11.5px 是硬下限（等宽大写 + 宽字距下再小不可读）。 */
+  --fs-3xs: 11.5px; /* 仪器最小读数（标签/角标/脚注） */
+  --fs-2xs: 12px; /* 眉标 / 读数 / 等宽文字 */
+  --fs-xs: 13px; /* 注脚 / 辅助说明 */
+  --fs-sm: 14px; /* 次要正文 / 按钮 / 导航 */
+  --fs-md: 15px; /* 小正文 / 表单输入 / 列表行 */
+  --fs-base: 16px; /* 正文基准（body） */
+  --fs-lg: 17px; /* 长文正文（.neo-prose） */
+  --fs-xl: 20px; /* 卡片标题 / 小标题 */
+  --fs-2xl: 26px; /* 区块标题（小） */
+  --fs-3xl: 30px; /* 区块标题 */
+  --fs-4xl: 34px; /* 页面标题（小） */
+  /* 比 4xl 更大的标题一律用 clamp() 写在 neo.css，不在此列 */
+
+  /* 行高三档：紧=标题、中=界面文字、松=长文。正文之外的文字默认取 snug */
+  --lh-tight: 1.35;
+  --lh-snug: 1.6;
+  --lh-normal: 1.75;
+  --lh-relaxed: 1.9;
+
+  /* 字重三档。规则：400=正文，600=按钮/强调标签，700=标题碑刻（衬线标题专用） */
+  --fw-normal: 400;
+  --fw-medium: 600;
+  --fw-bold: 700;
+
+  /* 阅读栏宽 */
+  --measure: 68ch;
 }
 
 /* 井外主题：逃逸完成后的纸质档案（头部 LOC 开关切换，localStorage 记忆）
@@ -44,8 +79,6 @@
   --text-1: #596273;
   --signal: #b45309;
   --signal-dim: rgba(180, 83, 9, 0.4);
-  /* 纸面上小点/拖尾用深锈红，保证清晰 */
-  --signal-canvas: #8a3403;
 }
 
 * {
@@ -66,8 +99,9 @@ body {
   background: var(--ink-0);
   color: var(--text-0);
   font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+  line-height: var(--lh-normal);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -86,10 +120,11 @@ a {
   outline-offset: 3px;
 }
 
-/* 仪表读数样式：全站所有“仪器文字”共用 */
+/* 仪表读数样式：全站所有“仪器文字”共用（等宽 · 大写 · 宽字距） */
 .readout {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
   letter-spacing: 0.08em;
   color: var(--text-1);
   text-transform: uppercase;
@@ -109,155 +144,74 @@ a {
 .page-title {
   font-family: var(--font-serif);
   font-size: clamp(32px, 6vw, 56px);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
   letter-spacing: 0.02em;
   margin: var(--space-1) 0 var(--space-3);
 }
 
-.page-hint {
-  max-width: var(--measure);
-}
-
-/* 外链胶囊：链接页 / 关于页共用 */
-.link-list {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-}
-
-.link-item {
-  display: inline-flex;
-  gap: 6px;
-  align-items: baseline;
-  border: 1px solid var(--line);
-  padding: 6px 14px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  transition: border-color 0.2s, color 0.2s;
-}
-
-.link-item:hover {
-  border-color: var(--signal);
-  color: var(--signal);
-}
-
-/* 文章正文（纸感阅读栏） */
-.prose {
-  max-width: var(--measure);
-  margin: var(--space-3) auto 0;
-  line-height: 1.9;
-}
-
-.prose h2,
-.prose h3,
-.prose h4 {
-  font-family: var(--font-serif);
-  line-height: 1.4;
-  margin: var(--space-3) 0 var(--space-2);
-}
-
-.prose h2 { font-size: 26px; }
-.prose h3 { font-size: 20px; }
-.prose h4 { font-size: 17px; }
-
-.prose p { margin: var(--space-2) 0; }
-
-.prose a {
-  color: var(--signal);
-  border-bottom: 1px solid var(--signal-dim);
-}
-
-.prose code {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  background: var(--ink-2);
-  padding: 2px 6px;
-}
-
-.prose pre {
-  background: var(--ink-1);
-  border: 1px solid var(--line);
-  padding: var(--space-2);
-  overflow: auto;
-}
-
-.prose pre code {
-  background: none;
-  padding: 0;
-}
-
-.prose blockquote {
-  border-left: 2px solid var(--signal);
-  margin: var(--space-2) 0;
-  padding: var(--space-1) var(--space-2);
-  color: var(--text-1);
-}
-
-.prose img {
-  max-width: 100%;
-  border: 1px solid var(--line);
-}
-
-.prose ul,
-.prose ol {
-  padding-left: 1.4em;
-  margin: var(--space-2) 0;
-}
-
-.prose hr {
-  border: 0;
-  border-top: 1px solid var(--line);
-  margin: var(--space-3) 0;
-}
-
-/* 表单控件：登录/注册/留言墙/管理 共用 */
+/* ---------- 表单控件（登录 / 注册 / 留言墙 / 管理 共用） ----------
+   形态规则（全站唯一）：
+     单行输入 / 搜索 → 下划线式（.field，与 .neo-field 同语言同状态）
+     多行文本域     → 发丝框（textarea.field）——长文编辑需要明确的边界与内边距
+   状态规则：hover 抬亮描边、focus 转为交互色（冷）、disabled 降到 50% 不透明。 */
 .field {
-  background: none;
-  border: 1px solid var(--line);
-  color: var(--text-0);
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: inherit;
   width: 100%;
+  padding: var(--space-1) 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--text-0);
+  /* 必须显式声明：输入框常嵌在 .readout 标签里，inherit 会把等宽字体与大写转换带进来 */
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  text-transform: none;
+  transition: border-color 0.24s;
+}
+
+.field::placeholder {
+  color: var(--text-1);
+  opacity: 0.7;
+}
+
+.field:hover {
+  border-color: color-mix(in srgb, var(--signal) 50%, var(--line));
+}
+
+.field:focus,
+.field:focus-visible {
+  outline: none;
+  border-color: var(--signal);
+}
+
+/* 多行文本域：唯一允许"盒子"形态的输入，因为长文需要边界 */
+textarea.field {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm, 8px);
+  resize: vertical;
+}
+
+textarea.field:hover {
+  border-color: color-mix(in srgb, var(--signal) 45%, var(--line));
+}
+
+textarea.field:focus,
+textarea.field:focus-visible {
+  border-color: var(--signal);
 }
 
 .field.mono {
   font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: 1.7;
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-normal);
 }
 
-.textarea {
-  resize: vertical;
-}
-
-.field:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-
-.submit {
-  align-self: flex-start;
-  background: none;
-  border: 1px solid var(--signal);
-  color: var(--signal);
-  padding: 8px 18px;
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-  transition: background 0.2s, color 0.2s;
-}
-
-.submit:hover {
-  background: var(--signal);
-  color: var(--ink-0);
-}
-
-.err {
-  color: var(--signal);
+.field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 移动端输入框 ≥16px，避免 iOS 聚焦自动缩放 */

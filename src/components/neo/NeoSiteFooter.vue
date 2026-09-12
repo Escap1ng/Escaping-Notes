@@ -14,7 +14,7 @@ function toTop() {
   <footer class="neo-footer">
     <span class="neo-mono line">{{ N.footer.line }}</span>
     <span class="thanks">{{ N.footer.thanks }}</span>
-    <button class="top neo-mono" type="button" @click="toTop">{{ N.footer.top }}</button>
+    <button class="neo-btn neo-btn-sm neo-btn-quiet" type="button" @click="toTop">{{ N.footer.top }}</button>
   </footer>
 </template>
 
@@ -34,24 +34,8 @@ function toTop() {
 .thanks {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 13px;
+  font-size: var(--fs-xs);
   color: var(--text-1);
-}
-
-.top {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--text-1);
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  cursor: pointer;
-  transition: color 0.22s;
-}
-
-.top:hover {
-  color: var(--hot);
 }
 
 @media (max-width: 720px) {

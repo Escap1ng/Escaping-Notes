@@ -66,10 +66,17 @@ watch(idx, () => {
     <span class="p-title" :title="`${cur?.title || ''} ${cur?.artist || ''}`">
       {{ cur?.title || '--' }}<template v-if="cur?.artist"> · {{ cur.artist }}</template>
     </span>
-    <button class="p-btn" type="button" :aria-label="playing ? '暂停' : '播放'" @click="toggle">
-      {{ playing ? '❚' : '▶' }}
+    <button
+      class="neo-btn neo-btn-sm neo-btn-quiet p-btn"
+      type="button"
+      :aria-label="playing ? '暂停' : '播放'"
+      @click="toggle"
+    >
+      <span class="neo-ico" aria-hidden="true">{{ playing ? '❚' : '▶' }}</span>
     </button>
-    <button class="p-btn" type="button" aria-label="下一首" @click="next">»</button>
+    <button class="neo-btn neo-btn-sm neo-btn-quiet p-btn" type="button" aria-label="下一首" @click="next">
+      <span class="neo-ico" aria-hidden="true">»</span>
+    </button>
     <input
       class="p-vol"
       type="range"
@@ -90,8 +97,8 @@ watch(idx, () => {
   bottom: var(--space-2);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--line);
   background: var(--ink-0);
   z-index: 50;
@@ -105,18 +112,16 @@ watch(idx, () => {
   max-width: 180px;
 }
 
-.p-btn {
-  background: none;
-  border: none;
-  color: var(--signal);
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-  padding: 0 2px;
-}
-
 .p-vol {
   width: 64px;
   accent-color: var(--signal);
+}
+
+/* 版面钩子：播放/下一首是单字符按钮，仅触控设备需要加宽点击区；
+   按钮外观（含 44px 高度）全部来自 .neo-btn 与 neo.css 的 coarse 规则 */
+@media (pointer: coarse) {
+  .p-btn {
+    min-width: 44px;
+  }
 }
 </style>

@@ -19,8 +19,12 @@ const router = createRouter({
       component: () => import('../views/neo/NeoBlogView.vue'),
       meta: { t: `文章 · ${T}` },
     },
-    // 文章页 title 由 NeoPostView 按文章标题设置
-    { path: '/blog/:slug', component: () => import('../views/neo/NeoPostView.vue') },
+    {
+      path: '/blog/:slug',
+      component: () => import('../views/neo/NeoPostView.vue'),
+      // 兜底标题：加载完成后由 NeoPostView 换成文章标题；路由播报用 meta.t
+      meta: { t: `阅读 · ${T}` },
+    },
     {
       path: '/updates',
       component: () => import('../views/neo/NeoUpdatesView.vue'),

@@ -8,14 +8,17 @@ import { N } from '../../config/narrative.js'
 
 const syncing = ref(false)
 const syncMsg = ref('')
+const syncErr = ref(false)
 async function onSync() {
   syncing.value = true
   syncMsg.value = ''
   const r = await syncRecords()
   if (r && Array.isArray(r.songs)) {
     Object.assign(records, r)
+    syncErr.value = false
     syncMsg.value = `已同步 ${r.songs.length} 首`
   } else {
+    syncErr.value = true
     syncMsg.value = '同步失败'
   }
   syncing.value = false
@@ -32,7 +35,16 @@ onMounted(loadRecords)
     <p class="neo-lede">{{ N.hints.records }}</p>
 
     <div class="head">
-      <img v-if="records.cover" class="cover" :src="records.cover" :alt="records.name" loading="lazy" />
+      <!-- 封面是外链：显式声明宽高，浏览器在图片到达前就留好位置，避免加载时撑动布局 -->
+      <img
+        v-if="records.cover"
+        class="cover"
+        :src="records.cover"
+        :alt="records.name"
+        width="132"
+        height="132"
+        loading="lazy"
+      />
       <div class="info">
         <h3 class="name">{{ records.name }}</h3>
         <p v-if="records.desc" class="desc">{{ records.desc }}</p>
@@ -46,7 +58,7 @@ onMounted(loadRecords)
           <a class="neo-btn neo-btn-ghost open" :href="records.url" target="_blank" rel="noopener noreferrer">
             在 QQ 音乐打开<span aria-hidden="true">↗</span>
           </a>
-          <span v-if="syncMsg" class="neo-mono meta">{{ syncMsg }}</span>
+          <span v-if="syncMsg" :class="syncErr ? 'neo-note-err' : 'neo-note-ok'">{{ syncMsg }}</span>
         </div>
       </div>
     </div>
@@ -86,6 +98,7 @@ onMounted(loadRecords)
 .cover {
   width: 132px;
   height: 132px;
+  aspect-ratio: 1; /* 与 HTML 的 width/height 一致：任何取值下都保持正方形 */
   flex-shrink: 0;
   object-fit: cover;
   border: 1px solid var(--line);
@@ -100,7 +113,7 @@ onMounted(loadRecords)
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -108,14 +121,14 @@ onMounted(loadRecords)
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(24px, 3.4vw, 34px);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: -0.015em;
 }
 
 .desc {
   margin: 0;
   color: var(--text-1);
-  font-size: 14.5px;
+  font-size: var(--fs-sm);
 }
 
 .meta {
@@ -123,7 +136,7 @@ onMounted(loadRecords)
 }
 
 .open {
-  margin-top: 4px;
+  margin-top: var(--space-0);
 }
 
 /* 头部操作行：同步（左）· 在 QQ 打开（右），同一套按钮语言 */
@@ -132,7 +145,7 @@ onMounted(loadRecords)
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: var(--space-0);
 }
 
 .info-actions .open {
@@ -145,7 +158,7 @@ onMounted(loadRecords)
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2px var(--space-3);
+  gap: var(--space-0) var(--space-3);
 }
 
 .track {
@@ -153,8 +166,8 @@ onMounted(loadRecords)
   display: grid;
   grid-template-columns: 3ch 1fr auto;
   align-items: baseline;
-  gap: 12px;
-  padding: 11px 6px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-0);
   border-top: 1px solid var(--line);
   overflow: hidden;
   text-decoration: none;
@@ -185,7 +198,7 @@ onMounted(loadRecords)
 
 .no {
   color: var(--hot);
-  font-size: 11px;
+  font-size: var(--fs-3xs);
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -195,8 +208,8 @@ onMounted(loadRecords)
 
 .tt {
   font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -205,11 +218,11 @@ onMounted(loadRecords)
 
 .track:hover .tt {
   color: var(--cold);
-  transform: translateX(6px);
+  transform: translateX(var(--space-0));
 }
 
 .ar {
-  font-size: 11px;
+  font-size: var(--fs-3xs);
 }
 
 @media (max-width: 900px) {

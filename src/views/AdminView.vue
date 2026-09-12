@@ -12,6 +12,7 @@ const users = ref([])
 const msgs = ref([])
 const posts = ref([])
 const notice = ref('')
+const noticeErr = ref(false)
 
 // 文章编辑器
 const ed = ref({ slug: '', title: '', date: '', tags: '', summary: '', body: '' })
@@ -35,8 +36,9 @@ const tabs = computed(() => {
   return t
 })
 
-function flash(s) {
+function flash(s, err = false) {
   notice.value = s
+  noticeErr.value = err
   setTimeout(() => (notice.value = ''), 1800)
 }
 
@@ -121,7 +123,7 @@ async function savePost() {
     flash('文章已保存')
     newPost()
     refresh()
-  } else flash('保存失败')
+  } else flash('保存失败', true)
 }
 async function delPost(slug) {
   await api(`/api/posts/${slug}`, { method: 'DELETE' })
@@ -194,9 +196,9 @@ async function onImgFile(e) {
       insertAtCursor(`![${f.name.replace(/\.[a-z0-9]+$/i, '')}](${j.url})`)
       flash('图片已上传并插入')
       loadImages()
-    } else flash(j.error === 'type not allowed' ? '仅支持图片/音乐文件' : '上传失败')
+    } else flash(j.error === 'type not allowed' ? '仅支持图片/音乐文件' : '上传失败', true)
   } catch {
-    flash('上传失败')
+    flash('上传失败', true)
   }
   e.target.value = ''
 }
@@ -245,9 +247,9 @@ async function onFile(e) {
     if (j.url) {
       uploadUrl.value = j.url
       flash('上传成功，URL 已填出')
-    } else flash('上传失败')
+    } else flash('上传失败', true)
   } catch {
-    flash('上传失败')
+    flash('上传失败', true)
   }
   e.target.value = ''
 }
@@ -258,18 +260,18 @@ async function onFile(e) {
     <p class="readout page-code">// ADMIN · {{ auth.user?.role }}</p>
     <h2 class="page-title">管理界面</h2>
 
-    <nav class="tabs readout" aria-label="管理页签">
+    <nav class="tabs" aria-label="管理页签">
       <button
         v-for="t in tabs"
         :key="t.id"
-        class="tab"
+        class="neo-chip"
         :class="{ on: tab === t.id }"
         :aria-pressed="tab === t.id"
         @click="tab = t.id"
       >
         {{ t.label }}
       </button>
-      <span v-if="notice" class="notice">// {{ notice }}</span>
+      <span v-if="notice" :class="noticeErr ? 'neo-note-err' : 'neo-note-ok'">// {{ notice }}</span>
     </nav>
 
     <!-- 用户 -->
@@ -287,14 +289,14 @@ async function onFile(e) {
             <td class="readout">{{ u.ban ? '已禁用' : '正常' }}</td>
             <td class="acts">
               <template v-if="isOwner() && u.role !== 'owner'">
-                <button class="act readout" @click="setRole(u, u.role === 'admin' ? 'visitor' : 'admin')">
+                <button class="neo-btn neo-btn-sm neo-btn-ghost" @click="setRole(u, u.role === 'admin' ? 'visitor' : 'admin')">
                   {{ u.role === 'admin' ? '降为访客' : '任为管理' }}
                 </button>
               </template>
-              <button v-if="u.role !== 'owner'" class="act readout" @click="setBan(u, !u.ban)">
+              <button v-if="u.role !== 'owner'" class="neo-btn neo-btn-sm neo-btn-ghost" @click="setBan(u, !u.ban)">
                 {{ u.ban ? '解禁' : '禁用' }}
               </button>
-              <button v-if="u.role !== 'owner'" class="act readout danger" @click="delUser(u)">删除</button>
+              <button v-if="u.role !== 'owner'" class="neo-btn neo-btn-sm neo-btn-danger" @click="delUser(u)">删除</button>
             </td>
           </tr>
         </tbody>
@@ -308,7 +310,7 @@ async function onFile(e) {
         <li v-for="m in msgs" :key="m.ts" class="mini-row">
           <span class="readout">{{ m.name }} · {{ new Date(m.ts * 1000).toLocaleDateString('zh-CN') }}</span>
           <span class="mini-text">{{ m.text }}</span>
-          <button class="act readout danger" @click="delMsg(m.ts)">删除</button>
+          <button class="neo-btn neo-btn-sm neo-btn-danger" @click="delMsg(m.ts)">删除</button>
         </li>
         <li v-if="!msgs.length" class="readout">// 无留言</li>
       </ul>
@@ -320,8 +322,8 @@ async function onFile(e) {
         <li v-for="p in posts" :key="p.slug" class="mini-row">
           <span class="readout">{{ p.date }}</span>
           <span class="mini-text">{{ p.title }}</span>
-          <button class="act readout" @click="editPost(p)">编辑</button>
-          <button class="act readout danger" @click="delPost(p.slug)">删除</button>
+          <button class="neo-btn neo-btn-sm neo-btn-ghost" @click="editPost(p)">编辑</button>
+          <button class="neo-btn neo-btn-sm neo-btn-danger" @click="delPost(p.slug)">删除</button>
         </li>
       </ul>
 
@@ -336,9 +338,9 @@ async function onFile(e) {
         <textarea ref="bodyRef" v-model="ed.body" class="field mono" rows="14" placeholder="Markdown 正文 *" required></textarea>
         <div class="ed-row">
           <input ref="imgInputRef" type="file" accept="image/*" hidden @change="onImgFile" />
-          <button class="act readout" type="button" @click="imgInputRef?.click()">上传图片并插入</button>
+          <button class="neo-btn neo-btn-ghost" type="button" @click="imgInputRef?.click()">上传图片并插入</button>
         </div>
-        <button class="submit readout" type="submit">保存文章</button>
+        <button class="neo-btn neo-btn-primary" type="submit">保存文章</button>
       </form>
 
       <h3 class="readout ed-head">// IMAGES · 已上传图片</h3>
@@ -347,8 +349,8 @@ async function onFile(e) {
           <img :src="x.url" :alt="x.name" loading="lazy" />
           <span class="readout img-name">{{ x.name }}</span>
           <span class="acts">
-            <button class="act readout" type="button" @click="insertImage(x)">插入</button>
-            <button class="act readout danger" type="button" @click="delImage(x)">删除</button>
+            <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" @click="insertImage(x)">插入</button>
+            <button class="neo-btn neo-btn-sm neo-btn-danger" type="button" @click="delImage(x)">删除</button>
           </span>
         </li>
       </ul>
@@ -361,27 +363,27 @@ async function onFile(e) {
         <h3 class="readout">// UPDATES · 每行 date | text</h3>
         <textarea v-model="updatesForm" class="field mono" rows="6"></textarea>
         <div class="ed-row">
-          <button class="submit readout" type="button" @click="saveUpdates">保存动态</button>
-          <button class="act readout" type="button" @click="newUpdate">＋ 新增动态</button>
+          <button class="neo-btn neo-btn-primary" type="button" @click="saveUpdates">保存动态</button>
+          <button class="neo-btn neo-btn-ghost" type="button" @click="newUpdate">＋ 新增动态</button>
         </div>
       </div>
       <div class="set-block">
         <h3 class="readout">// PROJECTS · 每行 name|desc|year|url</h3>
         <textarea v-model="projectsForm" class="field mono" rows="6"></textarea>
         <div class="ed-row">
-          <button class="submit readout" type="button" @click="saveProjects">保存项目</button>
-          <button class="act readout" type="button" @click="newProject">＋ 新增项目</button>
+          <button class="neo-btn neo-btn-primary" type="button" @click="saveProjects">保存项目</button>
+          <button class="neo-btn neo-btn-ghost" type="button" @click="newProject">＋ 新增项目</button>
         </div>
       </div>
       <div class="set-block">
         <h3 class="readout">// GEAR · 每行一项</h3>
         <textarea v-model="gearForm" class="field mono" rows="5"></textarea>
-        <button class="submit readout" @click="saveGear">保存装备</button>
+        <button class="neo-btn neo-btn-primary" @click="saveGear">保存装备</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// PLAYLIST · 每行 title|artist|file(/uploads/…)</h3>
         <textarea v-model="playlistForm" class="field mono" rows="4"></textarea>
-        <button class="submit readout" @click="savePlaylist">保存歌单</button>
+        <button class="neo-btn neo-btn-primary" @click="savePlaylist">保存歌单</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// UPLOAD · 图片/音乐 ≤8MB</h3>
@@ -395,7 +397,7 @@ async function onFile(e) {
 <style scoped>
 .tabs {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1);
   align-items: center;
   margin-bottom: var(--space-3);
   flex-wrap: wrap;
@@ -403,32 +405,10 @@ async function onFile(e) {
   padding-bottom: var(--space-2);
 }
 
-.tab {
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: var(--r-pill);
-  color: var(--text-1);
-  padding: 5px 16px;
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-  transition: color 0.22s, border-color 0.22s, background-color 0.22s, transform 0.22s;
-}
-
-.tab:hover {
-  border-color: var(--cold);
-  color: var(--cold);
-}
-
-.tab.on {
-  border-color: var(--hot);
-  color: var(--hot);
-  background: color-mix(in srgb, var(--hot) 10%, transparent);
-}
-
-.notice {
+/* 页签用 .neo-chip（等宽仪器文字）；通知贴右，颜色由 .neo-note-ok/err 承担 */
+.tabs .neo-note-ok,
+.tabs .neo-note-err {
   margin-left: auto;
-  color: var(--cold);
 }
 
 .table-wrap {
@@ -444,13 +424,13 @@ async function onFile(e) {
 .grid th,
 .grid td {
   text-align: left;
-  padding: 10px 12px;
+  padding: var(--space-1) var(--space-2);
   border-top: 1px solid var(--line);
 }
 
 .grid th {
   border-bottom: 1px solid var(--line);
-  font-size: 12px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.1em;
   color: var(--text-1);
 }
@@ -465,30 +445,8 @@ async function onFile(e) {
 
 .acts {
   display: flex;
-  gap: var(--space-2);
-}
-
-.act {
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: var(--r-pill);
-  color: var(--text-1);
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-  padding: 4px 12px;
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s, transform 0.2s;
-}
-
-.act:hover {
-  border-color: var(--cold);
-  color: var(--cold);
-  transform: translateY(-1px);
-}
-
-.act.danger:hover {
-  border-color: var(--hot);
-  color: var(--hot);
+  gap: var(--space-1);
+  align-items: center;
 }
 
 .mini-list {
@@ -500,8 +458,8 @@ async function onFile(e) {
 .mini-row {
   display: flex;
   gap: var(--space-2);
-  align-items: baseline;
-  padding: 8px 0;
+  align-items: center;
+  padding: var(--space-1) 0;
   border-top: 1px solid var(--line);
   flex-wrap: wrap;
 }
@@ -525,6 +483,7 @@ async function onFile(e) {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .ed-row .field:first-child {
@@ -541,18 +500,21 @@ async function onFile(e) {
   gap: var(--space-2);
 }
 
+/* 图片格：卡片规范（--card-*），与文章卡 / 留言卡同一套令牌 */
 .img-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  border: 1px solid var(--line);
+  gap: var(--space-0);
+  padding: var(--space-1);
+  border: 1px solid var(--card-brd);
   border-radius: var(--r-sm);
-  padding: 6px;
-  transition: border-color 0.2s, transform 0.2s;
+  background: var(--card-bg);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
 }
 
 .img-cell:hover {
-  border-color: color-mix(in srgb, var(--cold) 45%, var(--line));
+  border-color: var(--card-brd-hover);
+  background: var(--card-bg-hover);
   transform: translateY(-2px);
 }
 
@@ -564,7 +526,7 @@ async function onFile(e) {
 }
 
 .img-name {
-  font-size: 11px;
+  font-size: var(--fs-3xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

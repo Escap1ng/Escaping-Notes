@@ -5,8 +5,15 @@
 //   移动时留一段短光绘拖尾（冷→暖渐隐）
 //   悬停可交互：锥形衍射十字芒绽出＋三星轨道扩张增亮；按下：收束转红移
 // 纸面主题 = 干版底片：墨/sepia/朱砂三星轻描
-// 仅 neo 皮肤 + 精细指针 + 非 reduced-motion 启用；输入区隐去、交还原生文本光标
-import { onMounted, onUnmounted, ref } from 'vue'
+// 仅 neo 皮肤 + 精细指针 + 非 reduced-motion + **用户在顶栏开启**（默认关闭）时启用，
+// 并且只接管首页：文章/列表页保留系统光标，图片的 zoom-in 等原生语义不被吞掉。
+// 输入区隐去、交还原生文本光标。
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { cursor } from '../../lib/cursor.js'
+import { debounce } from '../../lib/debounce.js'
+
+const route = useRoute()
 
 const cvs = ref(null)
 const TAU = Math.PI * 2
@@ -18,7 +25,8 @@ let ctx = null
 let W = 0
 let H = 0
 let dpr = 1
-let enabled = false
+let capable = false // 精细指针 + 非 reduced-motion（挂载时探测一次）
+let running = false // 当前是否由本组件接管：capable 且开关开启 且 位于首页
 let raf = 0
 let lastT = 0
 let on = false
@@ -30,6 +38,10 @@ let hoverT = 0
 let downK = 0
 let downT = 0
 let hist = [] // 光绘拖尾采样
+let lastMove = 0 // 最近一次指针活动时间
+let idleK = 1 // 空闲收力系数：静止后平滑降到 0，用于安全停帧
+
+const IDLE_MS = 1400 // 指针静止多久后开始收力
 
 const C = {
   cold: [142, 201, 255],
@@ -91,6 +103,7 @@ function readColors() {
 }
 
 function resize() {
+  if (!cvs.value) return
   W = innerWidth
   H = innerHeight
   dpr = Math.min(2, window.devicePixelRatio || 1)
@@ -133,10 +146,16 @@ function frame(now) {
   const sp = 1 - Math.pow(0.86, dt)
   hoverK += (hoverT - hoverK) * sp
   downK += (downT - downK) * sp
-  rot += (0.028 + hoverK * 0.03) * dt
+  // 空闲收力：静止后轨道转速平滑归零（避免"星突然停住"），据此才能安全停帧
+  const idle = now - lastMove > IDLE_MS
+  idleK += ((idle ? 0 : 1) - idleK) * (1 - Math.pow(0.9, dt))
+  rot += (0.028 + hoverK * 0.03) * idleK * dt
   hist.push({ x, y })
   if (hist.length > 9) hist.shift()
   draw(now)
+  // 停帧条件：空闲 + 收力完成 + 悬停/按下缓动均已收敛。
+  // 只停循环，画面与 data-cursor 保持（自定义光标停在最后位置），指针一动即被唤醒。
+  if (idle && idleK < 0.002 && Math.abs(hoverT - hoverK) < 0.002 && Math.abs(downT - downK) < 0.002) return
   raf = requestAnimationFrame(frame)
 }
 
@@ -208,12 +227,69 @@ function draw(now) {
   ctx.beginPath()
   ctx.arc(x, y, 2.6 + hoverK * 0.8 - downK * 0.5, 0, TAU)
   ctx.fill()
+
+  hideNative() // 确认画出了一帧，才隐藏系统光标
+}
+
+/* ---------------- 原生光标的接管与归还 ---------------- */
+// 只有真正画出一帧后才隐藏系统光标：绘制链路异常时原生指针不会"消失"
+let nativeHidden = false
+function hideNative() {
+  if (nativeHidden) return
+  nativeHidden = true
+  document.documentElement.dataset.cursor = 'on'
+}
+function restoreNative() {
+  if (!nativeHidden) return
+  nativeHidden = false
+  delete document.documentElement.dataset.cursor
+}
+
+// 停循环但保留画面与已隐藏的系统光标（自定义光标停在最后位置，指针一动即唤醒）
+function pause() {
+  if (raf) cancelAnimationFrame(raf)
+  raf = 0
+}
+
+// 彻底交还系统光标：停循环 + 清画面 + 恢复原生指针
+function release() {
+  pause()
+  on = false
+  hist.length = 0
+  hoverT = 0
+  downT = 0
+  hoverK = 0
+  downK = 0
+  idleK = 1
+  if (ctx) ctx.clearRect(0, 0, W, H)
+  cvs.value?.classList.remove('is-on', 'is-text')
+  restoreNative()
+}
+
+function kick() {
+  if (raf || !running || !on) return
+  lastT = performance.now()
+  raf = requestAnimationFrame(frame)
+}
+
+// 开关 / 路由变化时重新裁决是否接管
+function sync() {
+  running = capable && cursor.on && route.path === '/'
+  if (running) {
+    lastMove = performance.now()
+    resize()
+    readColors()
+  } else {
+    release()
+  }
 }
 
 /* ---------------- 交互 ---------------- */
 function onMove(e) {
+  if (!running) return
   x = e.clientX
   y = e.clientY
+  lastMove = performance.now()
   if (!on) {
     on = true
     hist.length = 0
@@ -223,66 +299,78 @@ function onMove(e) {
   const f = e.target.closest ? e.target.closest(TEXT_SEL) : null
   hoverT = t ? 1 : 0
   cvs.value.classList.toggle('is-text', !!f)
+  kick()
 }
 
 function onDown() {
+  if (!running) return
+  lastMove = performance.now()
   downT = 1
+  kick()
 }
 function onUp() {
+  if (!running) return
   downT = 0
+  kick()
 }
+// 指针离开窗口（relatedTarget 为空）：归还系统光标
 function onLeave(e) {
   if (e.relatedTarget) return
-  on = false
-  hist.length = 0
-  cvs.value.classList.remove('is-on')
+  release()
+}
+// 窗口失焦：归还系统光标，避免自定义光标停在过时位置又被当真
+function onBlur() {
+  release()
 }
 function onVisibility() {
-  if (document.hidden) {
-    if (raf) cancelAnimationFrame(raf)
-    raf = 0
-  } else if (enabled && !raf) {
-    lastT = performance.now()
-    raf = requestAnimationFrame(frame)
-  }
+  if (document.hidden) pause()
+  else kick()
 }
-function onResize() {
+// 重设画布尺寸在拖拽窗口时会被逐像素触发 → 去抖
+const onResize = debounce(() => {
   resize()
-}
+  if (on) kick() // 重设画布尺寸会清空画面，需按新尺寸重绘
+}, 150)
 
 let observer = null
 
 onMounted(() => {
   const fine = matchMedia('(pointer: fine)').matches
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-  enabled = fine && !reduced
-  if (!enabled) return
-  document.documentElement.dataset.cursor = 'on'
-  readColors()
-  resize()
-  observer = new MutationObserver(readColors)
+  capable = fine && !reduced
+  cursor.capable = capable // 告知顶栏按钮能否生效
+  if (!capable) return
+
+  observer = new MutationObserver(() => {
+    readColors()
+    if (on) kick() // 换主题=换色板，需按新色重绘
+  })
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
   addEventListener('pointermove', onMove, { passive: true })
   addEventListener('pointerdown', onDown, { passive: true })
   addEventListener('pointerup', onUp, { passive: true })
   addEventListener('resize', onResize)
+  addEventListener('blur', onBlur)
   document.addEventListener('pointerout', onLeave, { passive: true })
   document.addEventListener('visibilitychange', onVisibility)
-  lastT = performance.now()
-  raf = requestAnimationFrame(frame)
+  sync()
 })
 
+// 顶栏开关或路由变化 → 重新裁决（离开首页即归还系统光标）
+watch([() => cursor.on, () => route.path], sync)
+
 onUnmounted(() => {
-  if (!enabled) return
+  if (!capable) return
   removeEventListener('pointermove', onMove)
   removeEventListener('pointerdown', onDown)
   removeEventListener('pointerup', onUp)
   removeEventListener('resize', onResize)
+  removeEventListener('blur', onBlur)
   document.removeEventListener('pointerout', onLeave)
   document.removeEventListener('visibilitychange', onVisibility)
+  onResize.cancel()
   observer?.disconnect()
-  if (raf) cancelAnimationFrame(raf)
-  delete document.documentElement.dataset.cursor
+  release()
 })
 </script>
 

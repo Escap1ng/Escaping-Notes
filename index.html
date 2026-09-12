@@ -5,17 +5,38 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Escaping Notes —— 一座手工建造的逃逸笔记：长曝光星轨即导航，文章是定点脉动的变星，滚动即向深渊下潜。记录技术思考、设计实践与生活片段。" />
-    <!-- OG 占位：文章路由由后端 meta 注入改写（阶段二） -->
+    <meta name="theme-color" content="#020204" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
+
+    <!-- 站点域名写死为公开地址：与 server/api.py 的 SITE_URL 默认值、src/config/site.js 的 url 保持同一处事实。
+         换域名时这三处要一起改。文章页的 title / description / og / canonical 由后端 inject() 重写。 -->
+    <link rel="canonical" href="https://escaping.top/" />
+    <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Escaping Notes" />
     <meta property="og:site_name" content="Escaping Notes" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_CN" />
     <meta property="og:title" content="Escaping Notes · 逃逸笔记" />
     <meta property="og:description" content="掷墨入渊，星惊不复；藏光于页，潮退犹闻。" />
-    <meta property="og:type" content="website" />
-    <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Escaping Notes" />
+    <meta property="og:url" content="https://escaping.top/" />
+    <meta property="og:image" content="https://escaping.top/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="深空底片上的同心星轨长曝光" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Escaping Notes · 逃逸笔记" />
+    <meta name="twitter:description" content="掷墨入渊，星惊不复；藏光于页，潮退犹闻。" />
+    <meta name="twitter:image" content="https://escaping.top/og.png" />
     <title>Escaping Notes · 逃逸笔记</title>
     <script>
-      // 首帧前应用主题，避免纸面主题闪一下深空
+      // 首帧前应用主题，避免切换后闪一下。默认深空（well）；首次访问跟随系统偏好。
+      // 这段逻辑是主题默认值的唯一来源，theme.js 直接读已写入的 data-theme，勿在此之外重复实现。
+      const stored = localStorage.getItem('en-theme')
       document.documentElement.dataset.theme =
-        localStorage.getItem('en-theme') === 'well' ? 'well' : 'out'
+        stored === 'well' || stored === 'out'
+          ? stored
+          : matchMedia('(prefers-color-scheme: light)').matches
+            ? 'out'
+            : 'well'
     </script>
   </head>
   <body>

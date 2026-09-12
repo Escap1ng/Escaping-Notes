@@ -37,23 +37,30 @@ Escaping Notes 是一个个人书写与记录站点，把「写作」抽象为�
 
 ## 特性
 
-- **双主题**：深空（冷白/暖白/琥珀星轨）与纸面（天文干版底片：墨色轨迹 + 朱砂点睛），头部一键切换并记忆偏好
-- **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制；无第三方 UI 库或图表库
-- **优雅降级**：API 不可达时自动切换本地种子数据，站点仍是完整的离线底片
-- **无障碍与性能**：`prefers-reduced-motion` 下渲染静态快进底片；像素预算封顶自动降 DPR；rAF 单循环与页面可见性暂停
-- **阅读可读性（1.1.0）**：文章页磨砂玻璃底板以半透明页面色 + 背景模糊隔离星轨，四边羽化无硬边，前景对比度达 WCAG AA；星轨"防饱和尾部渐隐 + 拉长尾迹 + 随机尾迹起点"使圆环连续、弧端错落无断口；阅读栏加宽提升文字占屏比例
+- **双主题**：深空（冷白/暖白/琥珀星轨）与纸面（天文干版底片：墨色轨迹 + 朱砂点睛），头部一键切换并记忆偏好；首次访问跟随系统 `prefers-color-scheme`
+- **统一设计系统**：全部界面由同一套令牌与基元搭成——间距/字号/行高/字重四组刻度、卡片令牌、按钮「2 尺寸 × 4 语义」、输入「单行下划线 / 多行发丝框」、状态提示三态、单字符图标；组件内不写裸字号与裸间距，改刻度即全站同步
+- **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制；无第三方 UI 库、图表库或字体 CDN
+- **优雅降级**：API 不可达（或超时）时自动切换本地种子数据，站点仍是完整的离线底片
+- **沉浸光标（默认关闭）**：顶栏第三枚按钮开启并记忆；仅在首页接管，其余页面保留系统光标（图片 `zoom-in` 等原生语义不被吞掉）；指针静止约 1.4s 后平滑收力并停帧
+- **无障碍**：抽屉与灯箱有焦点陷阱、路由切换向读屏播报、跳转链接与 `#main` 可聚焦、触控目标 ≥44px、`prefers-reduced-motion` 下有完整静态降级
+- **性能**：次级页活背景限帧 30fps、全站 resize 去抖 150ms、`--shift` 缓存不每帧读 `scrollHeight`、常驻表面不用 `backdrop-filter`、透镜光斑走 transform 位移（`fall` 转场的整页模糊按下坠手感保留）
+- **阅读可读性**：文章页磨砂玻璃底板以半透明页面色 + 背景模糊隔离星轨，四边羽化无硬边，前景对比度达 WCAG AA
+- **反馈闭环**：文章列表有骨架屏，「本来没有内容」与「筛选无结果」分文案，搜索/标签筛选状态写入 URL（可分享、刷新不丢）
 - **全功能后台**：`/admin` 网页端编辑文章、动态、歌单、站点信息；歌单可一键同步 QQ 音乐公开歌单；三角色权限；留言墙与 RSS
 
 ## 技术栈
 
 | 层 | 选型 |
 | --- | --- |
-| 前端 | Vue 3（Composition API）+ Vite + Vue Router |
+| 前端 | Vue 3（Composition API）+ Vite 5 + Vue Router 4 |
 | 渲染 | Canvas 2D 离屏累积缓冲（长曝光底片模拟） |
-| 后端 | Python 3 标准库单文件（`server/api.py`），无额外依赖 |
+| 样式 | 原生 CSS + 自定义属性令牌（`tokens.css` 基线 / `neo.css` 皮肤） |
+| 后端 | Python 3 标准库单文件（`server/api.py`），无第三方依赖 |
 | 部署 | GitHub Pages / Vercel / nginx + systemd |
 
 ## 快速开始
+
+要求：Node.js **18+**；可选 Python 3.9+（只读浏览不需要后端）。
 
 ```bash
 # 克隆并安装
@@ -64,13 +71,25 @@ npm install
 # 启动前端（开发）
 npm run dev
 
-# 启动后端（另开终端）
+# 启动后端（另开终端；不启动则站点以只读 + 本地模式运行）
 python server/api.py
 
 # 生产构建
-npm run build          # 自有域名（history 路由）
+npm run build          # 自有域名（history 路由）+ 生成 dist/rss.xml、dist/sitemap.xml
 npm run build:pages    # GitHub Pages 镜像（hash 路由）
+npm run preview        # 本地预览 dist/
 ```
+
+### 常用脚本
+
+| 命令 | 说明 |
+| --- | --- |
+| `npm run dev` | Vite 开发服务器，改文件即时热更 |
+| `npm run build` / `build:pages` | 生产构建；后者自动启用 `/Escaping-Notes/` 前缀与 hash 路由 |
+| `npm run preview` | 本地模拟线上环境预览 `dist/` |
+| `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml`、`dist/sitemap.xml`） |
+| `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 生成，需提交） |
+| `npm run font:build` | 重切展示层子集字体（需要本机装有 Noto Serif SC；产物已提交，日常不用跑） |
 
 ## 页面地图
 
@@ -89,21 +108,35 @@ npm run build:pages    # GitHub Pages 镜像（hash 路由）
 ## 项目结构
 
 ```text
+├── index.html             # 壳层：主题预置脚本、SEO/OG 元信息
 ├── server/api.py          # 后端：内容 / 鉴权 / 留言 / RSS / OG 注入 / 歌单同步
 ├── content/posts/         # Markdown 文章（frontmatter）
+├── public/                # 静态资源：favicon、robots.txt、og.png
+├── scripts/               # 构建期脚本（Node，零依赖）
+│   ├── build_font.mjs     #   展示层子集字体裁切
+│   └── build_seo.mjs      #   rss.xml / sitemap.xml / og.png
 ├── docs/                  # design-neo.md 设计依据 · manual.md 使用手册
 └── src/
-    ├── components/neo/    # StarTrails 星轨装置 · HorizonHero · NeoCursor 等
-    ├── config/            # narrative.js 文案层 · site.js 站点信息
-    ├── lib/               # api / auth / content / posts / theme / music / records ...
+    ├── assets/fonts/      # 自托管子集字体 + OFL 许可
+    ├── components/neo/    # StarTrails 星轨装置 · HorizonHero · NeoSiteHeader · NeoCursor …
+    ├── config/            # narrative.js 文案层 · site.js 站点信息 · 各类内容种子
+    ├── lib/               # api / auth / content / posts / theme / music / records / lens / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
     └── views/neo/         # 全部页面视图
 ```
 
+## 部署
+
+三种方式（Vercel 只读镜像 / GitHub Pages 只读镜像 / 自有服务器 + nginx + systemd）的完整步骤、nginx 配置与备案注意事项见 **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)**。要点：
+
+- 登录、发文、留言墙、全网计数依赖后端，只有自有服务器能跑完整版；两个免费平台是只读镜像
+- 涉及登录务必启用 HTTPS
+- 备份 = 复制服务器 `data/` 目录
+
 ## 文档
 
-- [docs/design-neo.md](docs/design-neo.md) —— 界面设计唯一依据（概念、色彩系统、页面要点）
-- [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 上传）
+- [docs/design-neo.md](docs/design-neo.md) —— 界面设计唯一依据（概念、色彩与令牌、组件契约、开发指南）
+- [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 部署 / 常见问题）
 
 ## 许可与使用声明
 
@@ -113,5 +146,7 @@ npm run build:pages    # GitHub Pages 镜像（hash 路由）
 4. **学习引用**：学习性引用须显著注明项目来源与作者信息，并保留本声明。
 5. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用产生的任何损失或纠纷，作者不承担责任。
 6. **授权联系**：商业授权或其他授权事宜，请联系 chunqi-yu@outlook.com。
+
+字体：展示层子集取自 Noto Serif SC（SIL OFL 1.1），许可全文见 [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt)。
 
 © 2026 Escap1ng · 保留所有权利

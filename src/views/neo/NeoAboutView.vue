@@ -65,11 +65,11 @@ const facts = [
 
 <style scoped>
 .neo-shell {
-  padding-top: 120px;
+  padding-top: var(--page-top);
 }
 
 .glyph {
-  top: 40px;
+  top: var(--space-3);
   left: -8vw;
 }
 
@@ -77,8 +77,8 @@ const facts = [
   max-width: var(--measure);
   margin: 0 0 var(--space-3);
   font-family: var(--font-serif);
-  font-size: 20px;
-  line-height: 1.9;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-relaxed);
 }
 
 .facts {
@@ -89,7 +89,7 @@ const facts = [
   display: grid;
   grid-template-columns: 12ch 1fr;
   gap: var(--space-2);
-  padding: 10px 0;
+  padding: var(--space-1) 0;
   border-top: 1px solid var(--line);
 }
 
@@ -98,12 +98,12 @@ const facts = [
 }
 
 .fact dt {
-  padding-top: 3px;
+  padding-top: var(--space-0);
 }
 
 .fact dd {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-md);
   overflow-wrap: anywhere;
 }
 
@@ -121,7 +121,7 @@ const facts = [
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-1);
 }
 
 .chips .static {
@@ -134,18 +134,18 @@ const facts = [
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-0);
 }
 
 .link {
   position: relative;
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--space-1);
   width: fit-content;
   font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-0);
   text-decoration: none;
   transition: color 0.22s;
@@ -174,7 +174,7 @@ const facts = [
 }
 
 .arrow {
-  font-size: 13px;
+  font-size: var(--fs-xs);
   color: var(--text-1);
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s;
 }
@@ -187,10 +187,10 @@ const facts = [
 @media (max-width: 720px) {
   .fact {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: var(--space-0);
   }
   .bio {
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 }
 

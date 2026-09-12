@@ -15,29 +15,25 @@ export const N = {
   },
 
   nav: [
-    { to: '/', label: '首页', code: '00', depth: '∞' },
-    { to: '/blog', label: '文章', code: '01', depth: '8.4' },
-    { to: '/updates', label: '动态', code: '02', depth: '5.2' },
-    { to: '/records', label: '歌单', code: '03', depth: '3.6' },
-    { to: '/projects', label: '项目', code: '04', depth: '2.4' },
-    { to: '/wall', label: '留言', code: '05', depth: '1.4' },
-    { to: '/about', label: '关于', code: '06', depth: '1.1' },
+    { to: '/', label: '首页', code: '00' },
+    { to: '/blog', label: '文章', code: '01' },
+    { to: '/updates', label: '动态', code: '02' },
+    { to: '/records', label: '歌单', code: '03' },
+    { to: '/projects', label: '项目', code: '04' },
+    { to: '/wall', label: '留言', code: '05' },
+    { to: '/about', label: '关于', code: '06' },
   ],
 
   // 首屏宣言：对偶联
   manifesto: ['掷墨入渊，星惊不复；', '藏光于页，潮退犹闻。'],
   manifestoSub: '把写下的每一行，都推过事件视界。',
   heroEyebrow: '// 逃逸笔记 · Escap1ng',
-  orbitIdle: (n) => `${n} 体在轨 · 驻目可辨其名`,
-  orbitReadout: (i, p) => `在轨 ${String(i + 1).padStart(2, '0')} · ${p.title} · ${p.date}`,
 
   now: { writing: 'WRITING', listening: 'LISTENING', building: 'BUILDING' },
   descentHead: '下潜目录 · 由浅及深',
 
   notes: {
-    home: '（这一屏只有星星。往下才是我。）',
     archive: '按时间倒序，越往下越早。',
-    post: '读到这里，你已经比我当时更靠近它了。',
     wall: '匿名也可以，无需署名。',
   },
 
@@ -62,7 +58,7 @@ export const N = {
     'Escap1ng。写代码，也写杂记。此站是一次漫长的下潜：把日子投进渊里，在盘上聚成光，在视界上留下回声——最后在这一切的底端，写一个「我」。',
   dilation: '你在此处停留的光阴，比人间慢一拍。',
 
-  postEnd: { escape: '上浮 · 回归文章', deeper: '继续下潜' },
+  postEnd: { escape: '上浮 · 回归文章' },
   postPrev: '← 更浅处',
   postNext: '更深处 →',
 
@@ -76,5 +72,11 @@ export const N = {
   footer: { line: '// Escap1ng · BLOG', thanks: '曝光将尽，谢你停驻至此。', top: '回到顶部 ↑' },
   theme: { dark: '深空', light: '纸面' },
 
-  empty: { posts: '// 底片无光', updates: '// 暂无脉冲', wall: '// 尚无回声落于此', projects: '// 载荷舱空' },
+  empty: {
+    posts: '// 底片无光',
+    search: '// 此范围内无星', // 「筛选后为空」≠「本来就没有内容」
+    updates: '// 暂无脉冲',
+    wall: '// 尚无回声落于此',
+    projects: '// 载荷舱空',
+  },
 }

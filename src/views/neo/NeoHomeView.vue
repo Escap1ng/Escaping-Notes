@@ -80,7 +80,7 @@ onMounted(async () => {
   grid-template-columns: 4ch minmax(0, auto) 1fr auto;
   align-items: baseline;
   gap: var(--space-2);
-  padding: var(--space-2) 0 var(--space-2) 12px;
+  padding: var(--space-2) 0 var(--space-2) var(--space-2);
   border-top: 1px solid var(--line);
   text-decoration: none;
   color: inherit;
@@ -91,26 +91,26 @@ onMounted(async () => {
 }
 
 .code {
-  font-size: 11px;
+  font-size: var(--fs-3xs);
   opacity: 0.6;
 }
 
 .label {
   font-family: var(--font-display);
   font-size: clamp(24px, 3.4vw, 34px);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
   transition: color 0.24s, transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .row:hover .label {
   color: var(--cold);
-  transform: translateX(10px);
+  transform: translateX(var(--space-1));
 }
 
 .desc {
   color: var(--text-1);
-  font-size: 14px;
+  font-size: var(--fs-sm);
 }
 
 .arrow {
@@ -119,14 +119,14 @@ onMounted(async () => {
 }
 
 .row:hover .arrow {
-  transform: translateX(6px);
+  transform: translateX(var(--space-0));
   color: var(--cold);
 }
 
 @media (max-width: 720px) {
   .row {
     grid-template-columns: 4ch 1fr auto;
-    gap: 10px;
+    gap: var(--space-1);
   }
   .desc {
     display: none;

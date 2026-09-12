@@ -63,7 +63,7 @@ import { N } from '../../config/narrative.js'
 
 .year {
   color: var(--hot);
-  font-size: 11px;
+  font-size: var(--fs-3xs);
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -74,27 +74,27 @@ import { N } from '../../config/narrative.js'
 .name {
   font-family: var(--font-display);
   font-size: clamp(20px, 2.8vw, 26px);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
   transition: color 0.24s, transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .row:hover .name {
   color: var(--cold);
-  transform: translateX(7px);
+  transform: translateX(var(--space-1));
 }
 
 .desc {
   color: var(--text-1);
-  font-size: 14px;
+  font-size: var(--fs-sm);
 }
 
 .link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-0);
   color: var(--cold);
-  font-size: 11px;
+  font-size: var(--fs-3xs);
 }
 
 .arrow {
@@ -113,7 +113,7 @@ import { N } from '../../config/narrative.js'
 @media (max-width: 720px) {
   .row {
     grid-template-columns: 6ch 1fr auto;
-    gap: 4px var(--space-2);
+    gap: var(--space-0) var(--space-2);
   }
   .desc {
     grid-column: 2 / -1;

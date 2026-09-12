@@ -123,8 +123,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 0 var(--space-3) 40px;
+  gap: var(--space-1);
+  padding: 0 var(--space-3) var(--space-3);
   pointer-events: none;
   will-change: transform, opacity;
 }
@@ -134,11 +134,11 @@ onUnmounted(() => {
 }
 
 .manifesto {
-  margin: 6px 0 0;
+  margin: var(--space-0) 0 0;
   font-family: var(--font-display);
   font-size: clamp(26px, 5.6vw, 80px);
-  font-weight: 700;
-  line-height: 1.18;
+  font-weight: var(--fw-bold);
+  line-height: 1.18; /* 展示级标题：行高刻意脱离四档刻度（同 .neo-title/.neo-h2） */
   /* 字距随下潜被潮汐拉长 */
   letter-spacing: calc(-0.02em + var(--shift, 0) * 0.04em);
   text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);
@@ -166,13 +166,13 @@ onUnmounted(() => {
   margin: 0;
   max-width: 38ch;
   color: var(--text-1);
-  font-size: clamp(13px, 1.6vw, 17px);
-  line-height: 1.8;
+  font-size: clamp(var(--fs-xs), 1.6vw, var(--fs-lg));
+  line-height: var(--lh-normal);
   animation: fade 0.8s 0.5s ease both;
 }
 
 .note {
-  margin-top: 4px;
+  margin-top: var(--space-0);
   animation: fade 0.8s 0.72s ease both;
 }
 
@@ -215,8 +215,8 @@ onUnmounted(() => {
 .now-cell {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  padding: 15px var(--space-3) 17px;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   border-left: 1px solid var(--line);
   min-width: 0;
   transition: background-color 0.3s ease;
@@ -233,8 +233,9 @@ onUnmounted(() => {
 .now-cell .k {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 10.5px;
+  gap: var(--space-0);
+  /* 全站最小字号 = --fs-3xs（11.5px）：再小在大写等宽 + 宽字距下不可读 */
+  font-size: var(--fs-3xs);
   color: var(--text-1);
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -266,14 +267,14 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-serif);
-  font-size: 15.5px;
+  font-size: var(--fs-md);
   color: var(--text-0);
   text-decoration: none;
   transition: color 0.22s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .now-cell:hover .v {
-  transform: translateX(5px);
+  transform: translateX(var(--space-0));
 }
 
 .now-cell a.v:hover {
@@ -286,7 +287,7 @@ onUnmounted(() => {
 
 @media (max-width: 720px) {
   .hero-text {
-    padding: 0 var(--space-2) 32px;
+    padding: 0 var(--space-2) var(--space-3);
   }
   .hero::after {
     width: 100%;
@@ -296,23 +297,30 @@ onUnmounted(() => {
     left: 50%;
     top: 38%;
   }
+  /* 窄屏改为竖排读数（标签左 · 内容右）。
+     旧版三列等分下把内容整条隐藏，只留三个空标签，「现在」栏等于失效。 */
   .now {
-    /* 窄屏保持左右三列，三等分对齐 */
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
   }
   .now-cell {
-    border-left: 1px solid var(--line);
-    border-top: 0;
-    gap: 6px;
-    padding: 10px var(--space-1) 12px;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: var(--space-1) var(--space-2);
   }
   .now-cell:first-child {
-    border-left: 0;
     border-top: 0;
   }
-  /* 窄屏只留标签，不显示具体内容 */
+  .now-cell .k {
+    flex: none;
+  }
   .now-cell .v {
-    display: none;
+    display: block;
+    min-width: 0;
+    font-size: var(--fs-sm);
   }
 }
 

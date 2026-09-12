@@ -49,8 +49,8 @@ async function submit() {
         PASSWORD · 密码
         <input v-model="form.password" class="field" type="password" autocomplete="current-password" required />
       </label>
-      <p v-if="err" class="readout err">// {{ err }}</p>
-      <button class="submit readout" type="submit">
+      <p v-if="err" class="neo-note-err">// {{ err }}</p>
+      <button class="neo-btn neo-btn-primary" type="submit">
         {{ needsSetup ? '点火 · 初始化' : '入轨 · 登录' }}
       </button>
     </form>
@@ -79,7 +79,7 @@ async function submit() {
 .auth-form label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-0);
 }
 
 .alt {

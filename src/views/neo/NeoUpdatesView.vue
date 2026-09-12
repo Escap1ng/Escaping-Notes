@@ -57,7 +57,7 @@ import { N } from '../../config/narrative.js'
   display: grid;
   grid-template-columns: 12ch 1fr;
   gap: var(--space-2);
-  padding: var(--space-2) 0 var(--space-2) 22px;
+  padding: var(--space-2) 0 var(--space-2) var(--space-2);
   border-top: 1px solid var(--line);
   transition: background-color 0.25s ease;
 }
@@ -94,7 +94,7 @@ import { N } from '../../config/narrative.js'
 
 .when {
   color: var(--text-1);
-  font-size: 14px;
+  font-size: var(--fs-sm);
   line-height: var(--lh);
   transition: color 0.24s;
 }
@@ -107,13 +107,13 @@ import { N } from '../../config/narrative.js'
   margin: 0;
   max-width: var(--measure);
   font-family: var(--font-serif);
-  font-size: 15.5px;
-  line-height: 1.85;
+  font-size: var(--fs-md);
+  line-height: var(--lh-relaxed);
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .pulse:hover .what {
-  transform: translateX(6px);
+  transform: translateX(var(--space-0));
 }
 
 .empty {
@@ -124,7 +124,7 @@ import { N } from '../../config/narrative.js'
 @media (max-width: 720px) {
   .pulse {
     grid-template-columns: 1fr;
-    gap: 4px;
+    gap: var(--space-0);
   }
 }
 </style>

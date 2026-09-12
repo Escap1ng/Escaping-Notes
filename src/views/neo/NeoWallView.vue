@@ -64,7 +64,7 @@ onMounted(refresh)
     <p class="neo-lede">{{ N.hints.wall }}</p>
     <p class="neo-note note">{{ N.notes.wall }}</p>
 
-    <p v-if="local" class="warn neo-mono">// 本地模式：后端不可达，回声仅存于本浏览器</p>
+    <p v-if="local" class="neo-note-info">// 本地模式：后端不可达，回声仅存于本浏览器</p>
 
     <ul class="echoes">
       <li v-for="m in msgs" :key="m.ts" class="echo neo-lens" @pointermove="onLens">
@@ -72,7 +72,7 @@ onMounted(refresh)
         <p class="who neo-mono">
           <span class="name">{{ m.name || '匿名观测者' }}</span>
           <span class="day">{{ day(m.ts) }}</span>
-          <button v-if="canManage" class="del" type="button" @click="del(m.ts)">删除</button>
+          <button v-if="canManage" class="neo-btn neo-btn-sm neo-btn-danger" type="button" @click="del(m.ts)">删除</button>
         </p>
         <p class="say">{{ m.text }}</p>
       </li>
@@ -107,11 +107,11 @@ onMounted(refresh)
 
 <style scoped>
 .neo-shell {
-  padding-top: 120px;
+  padding-top: var(--page-top);
 }
 
 .glyph {
-  top: 30px;
+  top: var(--space-3);
   right: -7vw;
 }
 
@@ -119,12 +119,7 @@ onMounted(refresh)
   margin-bottom: var(--space-3);
 }
 
-.warn {
-  color: var(--hot);
-  margin: 0 0 var(--space-2);
-}
-
-/* 回声卡片：与归档卡片同语言（宽屏两列、圆角发丝框） */
+/* 回声卡片：与归档卡片同语言（宽屏两列、圆角发丝框），规格取 --card-* 令牌 */
 .echoes {
   list-style: none;
   margin: 0 0 var(--space-4);
@@ -150,27 +145,27 @@ onMounted(refresh)
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: var(--space-2);
-  border: 1px solid var(--line);
+  gap: var(--space-1);
+  padding: var(--card-pad);
+  border: 1px solid var(--card-brd);
   border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--ink-1) 22%, transparent);
+  background: var(--card-bg);
   overflow: hidden;
   transition: border-color 0.28s, background 0.28s;
 }
 
 .echo:hover {
-  border-color: color-mix(in srgb, var(--cold) 55%, transparent);
-  background: color-mix(in srgb, var(--ink-1) 34%, transparent);
+  border-color: var(--card-brd-hover);
+  background: var(--card-bg-hover);
 }
 
 .who {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 11.5px;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-3xs);
 }
 
 .who .name {
@@ -181,21 +176,9 @@ onMounted(refresh)
   color: var(--hot);
 }
 
-.del {
+/* 版式规则：删除按钮靠右。按钮外观全部来自 .neo-btn，这里只管位置 */
+.who .neo-btn {
   margin-left: auto;
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--text-1);
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  cursor: pointer;
-  transition: color 0.22s;
-}
-
-.del:hover {
-  color: var(--hot);
 }
 
 .say {
@@ -203,15 +186,15 @@ onMounted(refresh)
   z-index: 1;
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 15.5px;
-  line-height: 1.9;
+  font-size: var(--fs-md);
+  line-height: var(--lh-relaxed);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .echo:hover .say {
-  transform: translateX(5px);
+  transform: translateX(var(--space-0));
 }
 
 .empty {
@@ -226,10 +209,10 @@ onMounted(refresh)
   flex-direction: column;
   gap: var(--space-2);
   max-width: 640px;
-  padding: var(--space-2);
-  border: 1px solid var(--line);
+  padding: var(--card-pad);
+  border: 1px solid var(--card-brd);
   border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--ink-1) 20%, transparent);
+  background: var(--card-bg);
 }
 
 .foot {
@@ -240,6 +223,6 @@ onMounted(refresh)
 }
 
 .count {
-  font-size: 11px;
+  font-size: var(--fs-3xs);
 }
 </style>

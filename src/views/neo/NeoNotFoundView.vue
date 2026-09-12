@@ -140,19 +140,19 @@ import { N } from '../../config/narrative.js'
 }
 
 .title {
-  margin-bottom: 6px;
+  margin-bottom: var(--space-0);
 }
 
 .lede {
   margin: 0 0 var(--space-3);
   max-width: 34ch;
   color: var(--text-1);
-  font-size: 15px;
+  font-size: var(--fs-md);
 }
 
 .cta {
   display: flex;
-  gap: 12px;
+  gap: var(--space-2);
   flex-wrap: wrap;
   justify-content: center;
 }

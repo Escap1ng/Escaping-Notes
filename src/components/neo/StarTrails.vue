@@ -11,6 +11,7 @@
 // 主题：深空=冷白/暖白/琥珀星轨（lighter 发光）；纸面=天文干版底片（墨/sepia 轨迹 + 朱砂点睛）。
 // 工程约定：像素预算封顶、rAF 单循环、visibilitychange 暂停、reduced-motion 静态快进底片、颜色读 CSS 变量。
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { debounce } from '../../lib/debounce.js'
 
 const props = defineProps({
   interactive: { type: Boolean, default: false },
@@ -42,6 +43,9 @@ const PLATE_STEPS = 380 // reduced-motion 静态底片快进步数
 const PLATE_OM = 0.17 // 快进角速度 rad/s
 const PLATE_FADE = 0.0045
 const MAXPX = 4.6e6 // 画布像素预算（超出则自动降 DPR）
+// 次级页只是静默活背景：限帧到 30fps。长曝光靠短弧增量累积，帧率减半不影响观感，
+// 但全屏 destination-out + drawImage 的绘制量直接减半（首页交互层仍走满帧）。
+const SUB_FPS = 30
 // 环带取样区间：3 条暗带间隙 → 同心结构感
 const BANDS = [
   [0.03, 0.32],
@@ -60,6 +64,7 @@ let dpr = 1
 let reduced = false
 let raf = 0
 let last = 0
+let lastDraw = 0 // 上一次真正绘制的时刻（次级页限帧用）
 let visible = true
 let t0 = 0
 
@@ -556,11 +561,16 @@ function draw(now) {
 function tick(now) {
   raf = 0
   if (reduced || !visible) return
+  raf = requestAnimationFrame(tick)
+  // 次级页限帧：不足一帧间隔就空转（一次 rAF 回调的开销可忽略，不画任何东西）。
+  if (!props.interactive && now - lastDraw < 1000 / SUB_FPS - 1) return
+  lastDraw = now
+  // last 只在真正绘制时推进：dt 会是 ~33ms，update() 按真实时长累积，
+  // 因此星轨的转速与满帧完全一致，只是每秒少画一半帧。
   const dt = Math.min(48, now - last)
   last = now
   update(dt, now)
   draw(now)
-  raf = requestAnimationFrame(tick)
 }
 
 function kick() {
@@ -611,10 +621,11 @@ function onVisibility() {
   if (visible) kick()
 }
 
-function onResize() {
+// resize 要重建画布 + 重播星群，拖拽窗口时逐像素触发代价过高 → 去抖
+const onResize = debounce(() => {
   resize()
   if (!reduced) kick()
-}
+}, 150)
 
 let observer = null
 
@@ -652,6 +663,7 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', onVisibility)
   removeEventListener('scroll', onFlowScroll)
   removeEventListener('resize', onResize)
+  onResize.cancel()
   acc = null
   accCtx = null
 })
