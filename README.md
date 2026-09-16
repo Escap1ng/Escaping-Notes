@@ -105,6 +105,8 @@ npm run preview        # 本地预览 dist/
 | `/about` | 关于 | 夜幕尽头写「我」 |
 | `/admin` | 管理 | 观测台后场 |
 
+> 另有 `/login` `/register` 两个功能页；任何未匹配路由落到 404 ——「此星不在星图」。
+
 ## 项目结构
 
 ```text
@@ -112,15 +114,16 @@ npm run preview        # 本地预览 dist/
 ├── server/api.py          # 后端：内容 / 鉴权 / 留言 / RSS / OG 注入 / 歌单同步
 ├── content/posts/         # Markdown 文章（frontmatter）
 ├── public/                # 静态资源：favicon、robots.txt、og.png
-├── scripts/               # 构建期脚本（Node，零依赖）
-│   ├── build_font.mjs     #   展示层子集字体裁切
-│   └── build_seo.mjs      #   rss.xml / sitemap.xml / og.png
+├── scripts/               # 构建期与内容刷新脚本
+│   ├── build_font.mjs     #   展示层子集字体裁切（Node，依赖 devDep `subset-font`）
+│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块）
+│   └── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
 ├── docs/                  # design-neo.md 设计依据 · manual.md 使用手册
 └── src/
     ├── assets/fonts/      # 自托管子集字体 + OFL 许可
     ├── components/neo/    # StarTrails 星轨装置 · HorizonHero · NeoSiteHeader · NeoCursor …
-    ├── config/            # narrative.js 文案层 · site.js 站点信息 · 各类内容种子
-    ├── lib/               # api / auth / content / posts / theme / music / records / lens / debounce / focus
+    ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子（records.js 由脚本生成，勿手改）
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
     └── views/neo/         # 全部页面视图
 ```
@@ -142,7 +145,7 @@ npm run preview        # 本地预览 dist/
 
 1. **性质界定**：本项目（含源代码、设计文档、视觉与交互设计、文案等全部组成部分）系作者个人学习与实践性质的作品，仅供个人学习、研究及非商业性交流使用。
 2. **禁止商用**：未经作者事先书面许可，不得将本项目全部或部分用于任何商业用途或以任何方式营利。
-3. **原创保护**：未经许可，不得对核心原创设计（「多普勒坠入」隐喻、视觉语言、星轨交互装置）整体复制、仿冒或二次包装发布。
+3. **原创保护**：未经许可，不得对核心原创设计（「长曝光星轨」隐喻、视觉语言、星轨交互装置）整体复制、仿冒或二次包装发布。
 4. **学习引用**：学习性引用须显著注明项目来源与作者信息，并保留本声明。
 5. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用产生的任何损失或纠纷，作者不承担责任。
 6. **授权联系**：商业授权或其他授权事宜，请联系 chunqi-yu@outlook.com。

@@ -46,7 +46,7 @@ In this setting the pointer becomes a pocket of time dilation: star trails withi
 - **Performance** — the secondary-page backdrop is frame-capped at 30fps, every resize listener is debounced by 150ms, `--shift` is cached instead of reading `scrollHeight` per frame, persistent surfaces avoid `backdrop-filter`, and the lens glow moves by transform (the `fall` transition deliberately keeps its full-page blur for the collapse feel)
 - **Reading readability** — the article page uses a frosted-glass plate (semi-transparent page colour + backdrop blur) to isolate the star-trail background, feathered on all four edges with no hard seam, and foreground contrast meets WCAG AA
 - **Feedback loop** — skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and search/tag filters stored in the URL (shareable, survives reload)
-- **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the record can be synced with a public QQ Music playlist in one click; three role tiers; guestbook and RSS included
+- **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the Records page can be refreshed from a public QQ Music playlist in one click; three role tiers; guestbook and RSS included
 
 ## Tech Stack
 
@@ -105,6 +105,8 @@ npm run preview        # preview dist/ locally
 | `/about` | About | Writing "me" beyond the horizon |
 | `/admin` | Console | Backyard of the observatory |
 
+> Two utility pages also live at `/login` and `/register`; any unmatched route renders the 404 page, titled 此星不在星图 ("this star is not on the chart") — site copy is Chinese-only.
+
 ## Project Structure
 
 ```text
@@ -112,15 +114,16 @@ npm run preview        # preview dist/ locally
 ├── server/api.py          # Backend: content / auth / guestbook / RSS / OG injection / record sync
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── public/                # Static assets: favicon, robots.txt, og.png
-├── scripts/               # Build-time scripts (Node, zero dependencies)
-│   ├── build_font.mjs     #   display-font subsetting
-│   └── build_seo.mjs      #   rss.xml / sitemap.xml / og.png
+├── scripts/               # Build-time and content-refresh scripts
+│   ├── build_font.mjs     #   display-font subsetting (Node; needs the `subset-font` devDep)
+│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only)
+│   └── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
 ├── docs/                  # design-neo.md design spec · manual.md handbook
 └── src/
     ├── assets/fonts/      # Self-hosted subset font + OFL licence
     ├── components/neo/    # StarTrails device · HorizonHero · NeoSiteHeader · NeoCursor …
-    ├── config/            # narrative.js copy layer · site.js site info · content seeds
-    ├── lib/               # api / auth / content / posts / theme / music / records / lens / debounce / focus
+    ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
     └── views/neo/         # All page views
 ```

@@ -28,7 +28,7 @@
     <meta name="twitter:image" content="https://escaping.top/og.png" />
     <title>Escaping Notes · 逃逸笔记</title>
     <script>
-      // 首帧前应用主题，避免切换后闪一下。默认深空（well）；首次访问跟随系统偏好。
+      // 首帧前应用主题，避免切换后闪一下。已存偏好优先；首次访问不设默认主题，直接跟随系统偏好。
       // 这段逻辑是主题默认值的唯一来源，theme.js 直接读已写入的 data-theme，勿在此之外重复实现。
       const stored = localStorage.getItem('en-theme')
       document.documentElement.dataset.theme =
