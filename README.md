@@ -123,7 +123,7 @@ npm run preview        # 本地预览 dist/
     ├── assets/fonts/      # 自托管子集字体 + OFL 许可
     ├── components/neo/    # StarTrails 星轨装置 · HorizonHero · NeoSiteHeader · NeoCursor …
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子（records.js 由脚本生成，勿手改）
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / debounce / focus
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / shift / sky / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
     └── views/neo/         # 全部页面视图
 ```

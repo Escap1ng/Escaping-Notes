@@ -9,6 +9,7 @@ import StarTrails from './components/neo/StarTrails.vue'
 import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
 import { debounce } from './lib/debounce.js'
+import { shift } from './lib/shift.js'
 
 const route = useRoute()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
@@ -16,14 +17,22 @@ const isSub = computed(() => route.path !== '/')
 
 // 路由切换后向读屏播报新页面（SPA 不会自行触发）
 const announced = ref('')
+// 快门：每换一次页加一，用它给 .neo-shutter 重新 key 才能重放动画。
+// 首帧不触发——setup 跑起来时 route.path 已是解析完的目标页，第一次变更就是真导航。
+// 减弱动效下 neo.css §11 把整层设成 display:none，动画不跑也就不会有 animationend
+// 来收尾摘节点，所以这里直接不起快门。
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)')
+const shot = ref(0)
 watch(
   () => route.path,
   () => {
     announced.value = route.meta.t || ''
+    if (!reduceMotion.matches) shot.value++
   }
 )
 
-// 滚动深度：写入 --shift（0..1），驱动首页标题字距与全站晕影随下潜加深。
+// 滚动深度：写入 --shift（0..1）与 lib/shift.js，驱动首页标题字距、全站晕影，
+// 以及次级页星轨的曝光响应（canvas 读 JS 值，不读 DOM）。
 // maxScroll 只缓存、不每帧读取：scrollHeight 会强制同步布局，60fps 下等于每帧一次重排。
 let shiftRaf = 0
 let maxScroll = 0
@@ -36,6 +45,7 @@ function applyShift() {
   const p = maxScroll > 0 ? Math.min(1, Math.max(0, scrollY / maxScroll)) : 0
   if (p === lastShift) return // 值没变就不写样式，省掉一次无关的重算
   lastShift = p
+  shift.v = p
   document.documentElement.style.setProperty('--shift', p.toFixed(4))
 }
 function onScroll() {
@@ -86,6 +96,8 @@ onUnmounted(() => {
       </Transition>
     </RouterView>
   </main>
+  <!-- 快门：一次导航 = 一次曝光。key 变更即重放两片帘幕，动画结束就摘掉这一层 -->
+  <div v-if="shot" :key="shot" class="neo-shutter" aria-hidden="true" @animationend="shot = 0"></div>
   <NeoSiteFooter />
   <MusicPlayer />
   <NeoCursor />

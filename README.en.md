@@ -123,7 +123,7 @@ npm run preview        # preview dist/ locally
     ├── assets/fonts/      # Self-hosted subset font + OFL licence
     ├── components/neo/    # StarTrails device · HorizonHero · NeoSiteHeader · NeoCursor …
     ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / debounce / focus
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / shift / sky / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
     └── views/neo/         # All page views
 ```

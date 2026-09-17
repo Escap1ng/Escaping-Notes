@@ -40,30 +40,42 @@
 
 ### 3.1 长曝光星轨（`components/neo/StarTrails.vue`）
 
-- **概念**：首屏 = 架在三脚架上的相机长曝光。恒星周日视运动是刚体旋转（全场一致 ω≈0.05 rad/s），星轨绕偏心天极（首页 62%x / 38%y；次级页 50%x / 40%y）累积成同心弧。
-- **渲染管线（Canvas 2D · 累积缓冲）**：ACC 离屏底片与主画布同尺寸，每帧不清空——① 衰减 pass：`destination-out` 填 `alpha=fade`（尾迹长度 ∝ 1/fade）；② 增量 pass：每星画本帧短弧（含 0.12rad 快门拖尾)沉积。主画布每帧 = 底 → `drawImage(ACC)` → 当帧层（变星/流星，不累积，保持锐利）。像素预算 4.6MP 封顶自动降 DPR。
+- **概念**：首屏 = 架在三脚架上的相机长曝光。恒星周日视运动是刚体旋转（全场一致 ω≈0.042 rad/s），星轨绕偏心天极（全站同一处：视口 62%x / 38%y）累积成同心弧。
+- **渲染管线（Canvas 2D · 累积缓冲）**：ACC 离屏底片按**视口**尺寸分配、全站共享（见下「天与相机」），每帧不清空——① 衰减 pass：`destination-out` 填 `alpha=fade`（尾迹长度 ∝ 1/fade）；② 增量 pass：每星画本帧短弧（含 0.12rad 快门拖尾)沉积。主画布每帧 = 底 → `drawImage(ACC, 0, 0, W, H)`（顺带把天区坐标缩放进本机盒子）→ 当帧层（变星/流星，不累积，保持锐利）。像素预算 4.6MP 封顶自动降 DPR，相机跟随底片 DPR。
+- **天与相机（`src/lib/sky.js`）**：底片像素、星群、天极、时钟、取景权放在模块级单例 `sky` 里——**星空是一份，相机是两台**。要点：
+  - `ensurePlate()` 只在**视口尺寸或 DPR 变化时**才新建底片；桌面换页时两者都不变，于是同一张底片继续感光。这是"一夜连续曝光"从口号变成实现的唯一一处改动。**但移动端会变**：地址栏收放改 `innerHeight` → `resize` → 走到重开分支，早期版本等于用户第一次滚动就把整夜曝光倒掉（且只在手机上发生，桌面测不出）。现在重开前把旧底片等比 `drawImage` 进新底片——极点按新尺寸重算，弧会漂一两度，**漂移可接受，黑屏不可接受**。
+  - `sky.t0` 全站起一次，星角 `s.th` 因此跨路由连续；组件卸载只 `releasePlate(self)` 交还取景权，**不再把 `acc` 置 null**（那正是过去每次导航重铺底片的根因）。
+  - **取景权**：`fall` 是并行转场，离开方与进入方并存约 220ms（leave 0.22s / enter 0.42s），两台相机同时往一张底片沉积会画双份、`resize()` 还会互相清屏。故底片同一时刻只认一个主人，后挂载者接管。**但取景权只管沉积，不管重绘**：`ownsPlate()` 只包住 `update()` 里的 `accPass()` 与抽独立尾部那一段，非主人照样每帧 `draw()`。早期版本把它写进了 `tick()` 的停帧条件，结果交出底片那台在淡出的 220ms 里**冻在半帧上**——那就是切换顿挫感的来源。
+  - **坐标**：星群/变星/指针都在天区坐标，`draw()` 用 `kx = W/sky.w`、`ky = H/sky.h` 换算变星位置，指针经 `toSky()` 换算回天区。**两台相机的盒子一律取视口**（`resize()` 里不再量 hero 的盒子），所以 `kx = ky = 1` 是恒等式，不是巧合：首页 `.hero` 是 `100svh`，手机上比 `innerHeight` 小最多 ~17%，拿它当相机会把底片**非等比压扁**——同心弧在首页变椭圆、进文章页又跳回正圆，正是统一天极要消灭的那种穿帮。多出来的一截由 `.hero{overflow:hidden}` 裁掉，牺牲几十像素取景，换几何不出错。
+  - 天极**全站统一**为视口 `0.62 / 0.38`（原先次级页是 0.5/0.4）。两台相机极点不同，导航后同心弧的圆心会跳，"同一片天"当场穿帮。
 - **Props / Emits（开发用）**：
 
   | 名称 | 类型 | 默认 | 说明 |
   | --- | --- | --- | --- |
-  | `interactive` | Boolean | `false` | `true` 才启用变星/流星/指针层及 `--lx/--ly` 时间膨胀；`false` 星数减半、无交互层，只作静默活背景 |
+  | `interactive` | Boolean | `false` | `true` 才启用变星/流星/指针层及 `--lx/--ly` 时间膨胀；`false` 无交互层、限帧 30fps，只作活背景。**星数与之无关**——星群属于全站共享的天空（按视口宽度定数），次级页若少沉积一半星，那些圆弧会在阅读中因全局衰减慢慢消失 |
   | `posts` | Array | `[]` | 变星数据源；`interactive` 时取前 ≤8 枚做变星 |
-  | `@hover` | Event | — | 悬停变星下标（`interactive` 下） |
+  | `@hover` | Event | — | 悬停变星下标（`interactive` 下）。**当前无消费方**——首屏的悬停读数条已按反馈移除（§10），`HorizonHero` 不再挂空监听；保留作装置对外接口（内部 `syncHover()` 仍驱动芒的绽放缓动） |
   | `@select` | Event | — | 点击变星，回传对应 post 对象 |
 
-- **交互语义**：滚动 = 时间流速（`flow = 1 + k·2.2`，`fade` 由 0.0125→0.005，越深尾迹越长天越快）；文章 = 变星（随天刚体旋转、脉动亮度，hover 缓绽锥形衍射十字芒·沿芒长渐隐、点击坠入）；指针 = 引力时间膨胀（180px 半径内转速×2.8、提亮，轨迹局部卷曲，移开恢复）。
-- **主题**：深空 = 冷白/暖白/琥珀三档色温（`lighter` 发光）；纸面 = 天文干版底片（墨/sepia 轨迹 + 朱砂点睛，`source-over`，fade×1.4 尾迹更干净）。主题/尺寸切换清空 ACC（"换一张底片"）。
-- **部署**：首页由 `HorizonHero` 以 `interactive` 挂载；次级页由 `App.vue` 以非交互模式挂载为活背景。`reduced-motion` = 一次性快进 380 步生成静态底片，不启动 rAF。
+- **交互语义**：滚动 = 时间流速（`flow = 1 + k·2.2`，`fade` 由 0.0104→0.0044，越深尾迹越长天越快）；文章 = 变星（随天刚体旋转、脉动亮度，hover 缓绽锥形衍射十字芒·沿芒长渐隐、点击坠入）；指针 = 引力时间膨胀（180px 半径内转速×2.8、提亮，轨迹局部卷曲，移开恢复）。
+- **主题**：深空 = 冷白/暖白/琥珀三档色温（`lighter` 发光）；纸面 = 天文干版底片（墨/sepia 轨迹 + 朱砂点睛，`source-over`，fade×1.4 尾迹更干净）。**换主题才"换一张底片"**（防串色）：`readColors()` 拿 `data-theme` 与 `sky.theme` 比对，相同就直接返回——两台相机各挂一个 MutationObserver，一次切换会进来两趟，靠这个比较幂等。**挂载不重铺**。
+- **部署**：首页由 `HorizonHero` 以 `interactive` 挂载；次级页由 `App.vue` 以非交互模式挂载为活背景；两者看同一张底片（§3.1「天与相机」）。`reduced-motion` = 一次性快进 380 步生成静态底片，不启动 rAF；由 `ensureStaticPlate()` 按 `sky.plateBuilt` 保证**每张底片只冲一次**，换页与第二台相机都不重冲。
 - **次级页限帧（1.2.0）**：非交互模式目标帧率 30fps（`SUB_FPS`），不足一帧间隔时 rAF 回调直接返回、不绘制。`update()` 用的是真实 `dt`（≈33ms），故星轨转速与满帧完全一致，只是全屏 `destination-out` + `drawImage` 的绘制量减半。首页交互层不受影响（满帧）。
+- **次级页曝光响应（「阅读即曝光」）**：非交互模式原先只有页顶一个固定基线，整篇文章的星空一样静。现在 `update()` 每帧读 `src/lib/shift.js` 的 `shift.v`（文档级滚动深度，由 `App.vue` 的 `applyShift` 写入，见 §9.4），推进 `flowT = 1 + d·SUB_FLOW`（`SUB_FLOW=1.1`，首页 `FLOW_MAX` 的一半，次级页保持克制）与 `fadeT = SUB_FADE_TOP − d·(SUB_FADE_TOP − FADE_1)`（`SUB_FADE_TOP = FADE_0·1.3`）——页顶是安静的短尾迹，越往下读曝光越久、尾迹越长、天空转得越快，目标值交由既有惯性推进平滑，不加额外补间。深度取**文档级**而非首页那套 `scrollY/(H·1.1)`：长文章滚过一屏后者就饱和了，读不出整篇的进度。`reduced-motion` 无需另设分支——`tick()` 在 `reduced` 下直接返回，`update()` 根本不执行，静态 `buildPlate()` 底片即是结果。
+- **两道停帧闸门 + 一道沉积闸门**：`tick()` / `kick()` 只看两件事——① `document.hidden`（`visibilitychange`，标签页不可见即停）；② `onScreen`（**仅首页相机**：hero 在流内，整块滚出视口后没人在看，别再白画。用 `IntersectionObserver` + `rootMargin: 200px` 外留余量，回滚时不会先撞上一帧停滞的画面；次级页相机是 `position: fixed` 满屏，恒在视口内，不需要观察）。**取景权不在这两道闸门里**（见上，它只关沉积）。停帧期间星角冻结——等价于镜头被盖上时不再曝光，回到视口后按 `dt ≤ 48ms` 的上限续长，不会跳变。
+- **惯性常数 `0.94`**：`flow` / `fade` / 指针光锥都按 `1 - 0.94^step` 向目标推进，约 1 秒收敛。早先是 `0.9`（≈1/3 秒），改滚动速度的瞬间天空会"弹"一下；放缓之后是被慢慢推动的。这一条与快门、`fall` 同属"整体舒缓"的方向。
+- **流星 × 播放**：`update()` 在生成下一颗流星的时刻读 `music.playing`（`src/lib/music.js`）：在响则把随机间隔压向最短值（区间长度 ×0.4），停下后**下一次生成**即自然回弹。刻意不做 `watch`——在 rAF 里读一个普通属性不建立响应式依赖，代价为零；代价是间隔变更有一拍延迟，而流星间隔本来就是秒级。这也是全站唯一一处"天随人动"的耦合，最容易单独回退（删掉那三行即可）。
 - 已退役：黑洞/吸积盘/仪表环管线（原 `BlackHole.vue`）与红移坠入深度轨（原 `DepthRail.vue`，现由 `App.vue` 写 `--shift`）。
 - **v3 定稿微调（1.0.0）**：变星移除外围圆环、呼吸幅度收窄并缓慢自转（`rot = t·0.22 + ph`）；光标三星为短弧带拖尾彗星、无衍射芒；流星与变星共用 `drawStar` 渲染器。
-- **防饱和尾部渐隐（1.1.0）**：星轨即将转满前 20% 平滑暗化（`SETTLE_START=0.8`、`SETTLE_DEPTH=0.55`），另随机 1-2 根做柔和独立渐隐；每颗星带随机尾迹起点偏移（`shear`），使弧段截端错落、圆环连续无对齐断口；`FADE_0=0.008 / FADE_1=0.0032` 拉长尾迹，让相邻弧段衔接成连续同心圆环。
+- **防饱和尾部渐隐（1.1.0）**：星轨即将转满前 20% 平滑暗化（`SETTLE_START=0.8`、`SETTLE_DEPTH=0.55`），另随机 1-2 根做柔和独立渐隐；每颗星带随机尾迹起点偏移（`shear`），使弧段截端错落、圆环连续无对齐断口；`FADE_0=0.008 / FADE_1=0.0032` 拉长尾迹，让相邻弧段衔接成连续同心圆环。**2026-09-17 按"久了过饱和、要更透气"回收**：`SETTLE_DEPTH → 0.72`、`FADE_0 → 0.0104`、`FADE_1 → 0.0044`、`DEP → 0.0072`（稳态亮度 ≈ DEP ÷ fade，两头一起动才不会既变淡又变短）。上面这组是 1.1.0 的历史值，别照抄。
 
 ### 3.2 曝光深度与时间流速
 
-- 滚动 = 曝光加深，进度 `p∈[0,1]` 由 `App.vue` 写入 CSS 变量 `--shift`，驱动：暗角晕影加深、首页宣言字距随潮汐力拉长。
-- **fall 转场**：路由跳转 = 一次下坠重开（`scale .8→1`、`blur 12→0`、sepia/hue-rotate 相位）→ 展开成新页。全站唯一转场。
+- 滚动 = 曝光加深，进度 `p∈[0,1]` 由 `App.vue` 写入 CSS 变量 `--shift`，驱动：暗角晕影加深、首页宣言字距随潮汐力拉长、幽灵汉字显影下沉（§4.4）。同一个值另镜像进 `src/lib/shift.js` 的 `shift.v`，供需要**在 JS 里每帧读**的消费方使用（次级页画布的曝光深度，§3.1）——CSS 变量读回来要走一次 `getComputedStyle`，放进 rAF 等于每帧一次样式查询。`--shift` 与 `shift.v` 由 `applyShift()` 同时写，不存在第二个来源。
+- **fall 转场**：路由跳转 = 一次下坠重开（`scale .8→1`、`blur 12→0`、sepia/hue-rotate 相位）→ 展开成新页。全站唯一的内容转场（快门层与它同时发生，见下）。
   关键帧里的 `filter` 作用于**整页子树**，每一帧都要重新栅格化，且离开方与进入方并行叠影时更甚——这是本站最贵的一处绘制。1.2.0 曾评估改为"只动 opacity/transform + 独立红移覆盖层"，实为可行但**叠影模糊正是"坍缩"的手感来源，最终决定保留原样**（取舍记录见 §10）。
+- **快门层 `.neo-shutter`**：底片共享之后，换页不再是"重铺一张"，语义上就只剩**一次快门开合**。`App.vue` 用一个计数器 `shot` 给这一层重新 key（首次加载不触发——setup 跑起来时 `route.path` 已是解析完的目标页），上下两片焦平面帘幕扫到 55% 再退开：只动 `transform: scaleY()`（§9.5），`animationend` 后整层摘掉；减弱动效下**整层 `display: none`**——只写 `animation: none` 会让帘幕退回未变换的 `scaleY(1)`，把页面永久盖住。另外 `shot` 在 `prefers-reduced-motion` 下干脆不递增：那一层被 `display:none` 掉了，动画不跑也就永远等不到 `animationend` 来收尾摘节点。
+  **两条别当它做到了的说法**（都是实测边界，不是缺陷）：⑴ 每片帘幕是 `height: 50%` 的条带 `scaleY(0.55)`，两片合起来只压住画面高度的 55%，**中间 45% 从头到尾没被盖过**——所以它盖不住 `fall` 最糊的那几帧，只是给转场加了一次眨眼；真要吃掉模糊得让 `scaleY` 到 1（全黑）才够，那已不是"舒缓"。⑵ 它在 `z-index: 40`，**顶栏 60 / 进度线 65 / 灯箱 80 都在它上面**，这是有意的（仪器面板与模态不该跟着眨眼），但也就谈不上"盖在正文之上"这么绝对。
 - 文章页时间膨胀读数：`τ/t = √(1−1/r)`——"你在此处停留的光阴，比人间慢一拍"。
 
 ---
@@ -129,7 +141,18 @@
 ### 4.4 幽灵汉字签名
 
 叙事弧线 `渊→藏→坠→息→弦→掷→响→我→无`：渊（首页）、藏（文章）、坠（文章页）、息（动态）、弦（歌单）、掷（项目）、响（留言）、我（关于）、无（404）。
-样式由 `.neo-glyph` 提供（stroke 空心、`opacity .07`、绝对定位）。**每页一枚**，位置可视图微调（见各视图 `.glyph` 覆盖）。
+样式由 `.neo-glyph` 提供（stroke 空心、绝对定位）。**每页一枚**，位置可视图微调（见各视图 `.glyph` 覆盖）。
+
+**显影**：签名不再是一张恒定 `opacity .07` 的静物，而是随 `--shift` 从 `0.07` 显影到 `0.13`、同时下沉 `4vh`——
+读者越往下潜，页面上那枚汉字越清晰、越往下坠，像长曝光里慢慢浮出的暗记。全程只挂 CSS 变量（零 JS、零滚动监听），
+只动 `opacity` / `translate`，符合 §9.5 红线。
+
+**为什么是 `translate` 而不是 `transform`**：`HorizonHero` 与 `NeoNotFoundView` 的 scoped `.glyph` 已经把
+`transform` 花在 `translate(-50%, -50%)` 的居中上。同一个属性被两件事抢，两头都输——那两页拿不到下沉
+（scoped 的特异性更高），而减弱动效那条 `html[data-skin='neo'] .neo-glyph`（(0,2,1)）又会连居中一起清掉，
+让 620px 首页大字横跳约 270px。`translate` 与 `transform` 是**可以叠加**的两个独立属性（前先生效），
+于是各管各的：定位归 `transform`，下沉归 `translate`，减弱动效只钉 `translate: none`。
+`NeoPostView` 的「坠」把下沉量覆写成 `14vh`，让这枚字面意义地随阅读坠落。
 
 ### 4.5 光标系统（`neo.css`）
 
@@ -305,7 +328,8 @@
 | `.sr-only` | 仅供读屏：视觉隐藏但留在可访问性树（路由播报、跳转提示） |
 | `.neo-vignette` | 全屏晕影：fixed `z-30`、`opacity calc(var(--shift,0)*.55)`、`pointer-events none` |
 | `.neo-prose` | 正文容器（命中 `v-html`，**放全局**）：serif 17px/1.95、限宽居中；h2 带 `--hot` 左缘、代码/表格/引用等样式齐全 |
-| `.neo-glass` | **文章页磨砂玻璃阅读底板**：半透明页面色（`--panel-bg`）+ `backdrop-filter: blur(22px)` + 四边 `mask` 羽化（水平/垂直 intersect），隔离星轨、提升前景对比（WCAG AA）；本页局部放宽 `--measure` 提高文字占比 |
+| `.neo-glass` | **磨砂玻璃阅读底板**（`neo.css` §6c）：半透明页面色（`--panel-bg`）+ `backdrop-filter: blur(22px)` + 四边 `mask` 羽化（水平/垂直 intersect），隔离星轨、提升前景对比（WCAG AA）；局部放宽 `--measure` 提高文字占比。曾错误地实现在 `NeoPostView` 的 scoped 里（与本表"全局可用"自相矛盾），已归位 |
+| `.neo-spike` | **衍射十字芒**（§5.5）：宿主 `a` / `button` hover 时缓绽的星芒记号；必须是宿主的直接子元素，`aria-hidden` + `pointer-events: none` |
 
 ### 5.5 引力微交互基元
 
@@ -313,16 +337,23 @@
 - **左缘引力标记** `.neo-lens .bar`：2px 冷色竖条，hover `scaleY(0)→1`。
 - **按钮扫光** `.neo-btn::before`：`--white` 45% 斜面高光，`neo-sheen` 0.65s 划过。
 - **胶囊填充扫入** `.neo-chip::before`：冷色 16% 底 `scaleX(0)→1`。
+- **衍射十字芒** `.neo-spike`：把画布上"变星 hover 缓绽锥形芒"搬到 DOM 的一张记号——22px 盒内一个 `--cold` 光子核心 + 两条 1.5px 渐隐芒臂（`::before` / `::after` 各一，后者 `rotate(90deg)`），宿主 hover 时 `scale(0.35)→scale(1) rotate(45deg)` 缓绽。三点约定：
+  - **它是子元素而非伪元素**，因为宿主多半已经把 `::after` 花在了 `.neo-lens` 的透镜光斑上，抢同一个伪元素会互相覆盖。
+  - **只在 `a:hover >` / `button:hover >` / `.on` 下绽开**，不写裸 `:hover >`：否则任意容器（`li`、`section`）hover 都会误触发。所以它必须是宿主的**直接子元素**。`.on` 这条逃生口**目前没有生产方**，留着是为了将来能用键盘焦点强制点亮；在那之前它就是三个字符的死规则，别当成已接好的功能。
+  - 颜色只走 `--cold`（§5.3①：冷=交互方向）。`--white` 按规范只留给 ≤2px 高光与光子核心，纸面主题下纯白芒臂会消失，故不用。
+  - 纯装饰：`pointer-events: none` + 调用处 `aria-hidden="true"`；`prefers-reduced-motion` 下静止态与绽开放态的 `transform` 都钉成 `none`，只留淡入淡出。
+  - 现有两处消费方，都服从「文章 = 变星」这一条隐喻：`NeoBlogView` 卡面右上角、`NeoPostView` 上下篇外侧留白（各一枚，移到哪篇哪颗亮）。
 - 所有位移弹簧都用 `cubic-bezier(0.2, 0.8, 0.2, 1)`。
 
 ### 5.6 晕影、转场与降级
 
 - **晕影**：`.neo-vignette` 用 `radial-gradient(ellipse 120% 92% …)`，越深越暗。
 - **fall 转场**：`fall-enter/fall-leave` + `fall-in / fall-out` 关键帧（`scale` + `blur` + sepia/hue-rotate 相位）；离场页 `position: absolute` 叠在进入页之下（并行模式，见 §6.1 注释）。**这是本站唯一一处刻意的整页 `filter`**——保留下坠感优先于回收开销，改法见 §10。
+- **快门层 `.neo-shutter`**：`neo.css` §8.5，两片帘幕只动 `transform: scaleY()`；随每次路由变更重放。它**盖不住画面中间**、也不盖顶栏与灯箱——实测边界见 §3.2，别按"整屏快门"理解。
 - **backdrop-filter 红线（1.2.0）**：常驻悬在动画画布之上的表面一律不用 `backdrop-filter`（否则浏览器在星轨每动一帧时都要重算背后模糊）。吸顶栏与音乐播放器改为 `color-mix(in srgb, var(--ink-0) 94%, transparent)` 实底；仅抽屉（遮满全屏的模态、进出场各 0.28s）保留 `blur(24px)`；文章页阅读底板 `blur(22px)` 是有意保留的可读性取舍（见 §5.4），其代价已由次级页限帧对冲掉一半。
 - **resize 去抖**：所有 resize 处理（`App.vue` 重测滚动上限、顶栏断点收抽屉、两处画布重建）统一经 `src/lib/debounce.js`，静默 150ms 后执行一次。
-- **不影响布局的滚动监视**：滚动深度只由 `App.vue` 一处写入 `--shift`——它缓存了 `scrollHeight`（避免每帧强制同步布局），值不变时不写样式；文章页顶部进度线直接用 `width: calc(var(--shift,0) * 100%)`，不再自建滚动监听。
-- **减弱动效**：`prefers-reduced-motion` 下关闭 fall 动画、按钮位移、扫光、骨架屏动画，并让 `.neo-vignette` 恒为 0；`StarTrails` 走静态快进底片；全局 `tokens.css` 已把动画/过渡压到 0.01ms。
+- **不影响布局的滚动监视**：滚动深度只由 `App.vue` 一处写入 `--shift`——它缓存了 `scrollHeight`（避免每帧强制同步布局），值不变时不写样式；文章页顶部进度线用 `transform: scaleX(var(--shift,0))`（不是 `width`，见 §9.5），同样不自建滚动监听。
+- **减弱动效**：`prefers-reduced-motion` 下关闭 fall 动画、按钮位移、扫光、骨架屏动画，并让 `.neo-vignette` 恒为 0、`.neo-glyph` 钉回静态基线；快门层**整层 `display: none`**（只关动画会让帘幕停在未变换的 `scaleY(1)` 永久盖住页面）；`StarTrails` 走静态快进底片；全局 `tokens.css` 已把动画/过渡压到 0.01ms。
 
 ---
 
@@ -335,6 +366,7 @@ StarTrails (仅次级页 v-if="isSub")
 .neo-vignette
 NeoSiteHeader        → 导航 / 主题切换 / 音乐 / 沉浸光标开关
 main#main(.neo-sub)  → tabindex="-1"（供 .skip-link 落焦）；RouterView <Transition name="fall">
+.neo-shutter         → v-if="shot" + :key="shot"，每次路由变更重放两片帘幕，animationend 后摘掉
 NeoSiteFooter
 MusicPlayer
 NeoCursor            → 默认关闭、仅首页；画出首帧后写 / 交还时删 <html data-cursor>
@@ -345,7 +377,7 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 
 | 组件 | 挂载 | Props / Emits | 职责 |
 | --- | --- | --- | --- |
-| `StarTrails` | 首页由 `HorizonHero`（`interactive`）；次级页由 `App.vue`（非交互） | `interactive`(Bool)、`posts`(Array)；`@hover`、`@select` | 星轨 Canvas 装置，见 §3.1 |
+| `StarTrails` | 首页由 `HorizonHero`（`interactive`）；次级页由 `App.vue`（非交互） | `interactive`(Bool)、`posts`(Array)；`@hover`、`@select` | 星轨 Canvas 装置——**只是取景器**，底片与星群归 `src/lib/sky.js`，见 §3.1 |
 | `HorizonHero` | `NeoHomeView` | `posts`(Array)、`now`(Object)；`@select` | 首页首屏叙事排版 + 读数，不画星星 |
 | `NeoCursor` | `App.vue` | — | 沉浸光标（默认关闭、仅首页生效）；画出首帧后写 `data-cursor='on'`，交还时删除 |
 | `NeoSiteHeader` | `App.vue` | — | 顶部：`N.nav` 导航高亮、主题切换（`toggleTheme`→`data-theme`+`localStorage['en-theme']`）、音乐按钮、沉浸光标开关 |
@@ -443,8 +475,11 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 - 直写裸 `px` 前先问一句：这是间距/字号/颜色吗？是 → 用令牌；只有**结构性尺寸**（控件高度、封面边长、图标盒、光学补偿）才留字面量。
 
 ### 9.4 制造"随深度变化"的视觉
-- 读 `var(--shift, 0)`（0..1），写到 `opacity` / `letter-spacing` / 过滤等。例：`opacity: calc(var(--shift,0)*0.55)`。
+- 读 `var(--shift, 0)`（0..1），写到 `opacity` / `letter-spacing` / `transform` / 过滤等。例：`opacity: calc(var(--shift,0)*0.55)`。
 - 不要每处写死滚动监听；深度统一由 `App.vue` 的 `--shift` 驱动。
+- **要在 rAF / canvas 里每帧用这个值**：`import { shift } from '../../lib/shift.js'`（按层级取相对路径，本站**没有配 `@` 别名**）读 `shift.v`（`App.vue` 与 `--shift` 同一次写入，§3.2）。
+  两条都不许：① 为**深度**再建一个自己的真相源（各页自己算 `scrollY/scrollHeight` 喂样式）；② `getComputedStyle(...).getPropertyValue('--shift')` 读回来——那是每帧一次样式查询。现成范例：`StarTrails.vue` 非交互分支在 `update()` 里用 `shift.v` 推进 `flowT` / `fadeT`。
+  **两个合法的 `scroll` 监听例外**（都是 1.0.0 就在的，别误删、也别再新增第三个）：`StarTrails` 交互模式下用 `scrollY/(H·1.1)` 算首屏时间流速（它要的是**滚动速度感**，不是文档深度，且已 `passive`）；`HorizonHero.onScroll` 做首屏视差。二者都不读 `scrollHeight`。
 
 ### 9.5 无障碍与性能红线
 
@@ -452,9 +487,9 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 
 - 一切动效必须有 `prefers-reduced-motion` 降级（见 §5.6）。
 - 动画只动 `opacity` / `transform`：**不要新增大面积的 `filter`**（唯一例外是 `fall` 转场，理由与改法见 §3.2 / §10）；不要给常驻悬在动画画布之上的元素加 `backdrop-filter`（理由见 §5.6）。
-- `resize` 一律经 `src/lib/debounce.js` 去抖；需要"随滚动变化"就读 `var(--shift, 0)`，**不要自建滚动监听、更不要每帧读 `scrollHeight`**（强制同步布局）。
-- 指针跟随类效果用 `transform` 位移（配 `will-change`），不要改会触发重绘的属性（见 §5.5）。
-- Canvas 尊重 `devicePixelRatio` 上限与像素预算（`StarTrails` 已内置 4.6MP 封顶 + 页面隐藏暂停 + 次级页 30fps 限帧）。
+- `resize` 一律经 `src/lib/debounce.js` 去抖；需要"随滚动变化"就读 `var(--shift, 0)`，**不要为深度自建第二个真相源、更不要每帧读 `scrollHeight`**（强制同步布局）。§9.4 记明了两个合法的 `scroll` 监听例外。
+- 指针跟随类效果用 `transform` 位移（配 `will-change`），不要改会触发重绘的属性（见 §5.5）。**由 `--shift` 驱动"长短/多少"的元素同理**：写 `transform: scaleX(var(--shift))` + `transform-origin`，不要写 `width: calc(var(--shift)*100%)`——`--shift` 每个滚动帧都在变，改宽度等于每帧一次布局（文章页顶部进度线已按此改法收敛）。
+- Canvas 尊重 `devicePixelRatio` 上限与像素预算（`StarTrails` 已内置 4.6MP 封顶 + 次级页 30fps 限帧），另有**两道停帧闸门**（标签页隐藏、首页相机划出视口 `IntersectionObserver`）与**一道只关沉积的取景权闸门**——见 §3.1，别把取景权写成停帧条件，那会造成导航瞬间的冻帧。
 
 **无障碍**
 
@@ -474,3 +509,14 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 - 语义收敛：导航/页面统一"文章"表述（不再用"归档"）；滚动进度与深浅隐喻收敛为 `--shift` 与"由浅及深"；404 用"星图"而非"天区"，按钮保持功能直白（`回到首页` / `查看文章`）。
 - **1.2.0 的取舍备忘**：① 玻璃从"全站语言"收缩为"抽屉专属"——吸顶栏与播放器常驻在动画画布之上，`backdrop-filter` 的每帧代价换不来对应的观感收益（§5.6）；② `fall` 转场**保留整页 `filter`**：它是本站最贵的一处绘制（每帧重栅格化整棵子树，且离开/进入两页并行）。1.2.0 曾实现过"只动 opacity/transform + 单层红移覆盖 `.fall-veil`"的替代版并实测通过，最终因**叠影模糊正是"坍缩"的手感来源**而回退。若要回收这部分开销：关键帧只留 `opacity`/`transform`，再在 `App.vue` 加一层按 `route.path` 重挂载的静止径向渐变（只动 opacity）承担红移闪光；③ `--hole` / `--signal-canvas` / `--glass-*` 等无人消费的令牌一并删除，避免"看起来可调、实际改了没反应"；④ 首屏「现在」栏在窄屏不再隐藏内容——可读性优先于排版整齐；⑤ 沉浸光标默认关闭，把"接管指针"从默许改为显式授权。
 - **1.3.0 的一致性备忘**：① 收敛前实测到的规模——字号 17 种、行高 9 种、按钮 6 套（`.neo-btn` / `.submit` / `.act` / `.tab` / `.neo-chip` / `.link-item`）、输入框 2 套（盒子 vs 下划线）、卡片 3 套规格、提示 5 种各自实现。收敛后：**11 档字号 / 4 档行高 / 3 档字重 / 6 档间距**，按钮只剩「2 尺寸 × 4 语义」，输入只剩「单行下划线 / 多行盒子」，卡片只剩 `--card-*` 一组，提示只剩 `.neo-note-*` 三态。② 三张功能页（`/login` `/register` `/admin`）的私有类 `.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn` 全部删除，改用 `.neo-*`；`/admin` 页签选中态由**热色改冷色**——热色是"深度方向"的专属，页签属于仪器文字，用冷色才与 `.neo-chip` 全站一致。③ 表单形态定为一条：单行下划线、多行发丝框；因此 `.field` 从盒子改下划线，并新增 `textarea.field` / `textarea.neo-field` 的盒子形态，后台的长文编辑器仍保住边界。④ 顶栏控件（`.ico-btn` / `.auth-link`）保留 32px 这一档，因为它是固定壳层里与顶栏等高的一排；这是"2 尺寸"之外的**壳层专用档**，不对外复用。⑤ `.field` 显式声明 `font-family: var(--font-sans)` 与 `text-transform: none`：它嵌在 `.readout` 标签里，若沿用 `inherit` 会把等宽字体和大写转换带进输入框。⑥ 验收方式：`npm run build` + IDE 诊断 + 无头浏览器实测（按钮计算样式落到 `--hot` 实心 40px / 错误提示落到 `--hot` / 成功提示落到 `--cold` / 卡片底色跟随主题切换），并临时起后端走通"初始化站长 → 进入后台 → 保存并看到提示"全链路。
+- **连续曝光改造（一 / 二 / 三阶段）的取舍备忘**：① **主动突破了"次级页画布是静默活背景"这条既有描述**——原先整篇文章的星空一个节奏，"越往下读曝光越久"只在首页成立，在文章页是空头承诺。现在非交互模式也随深度推进（§3.1）。② 为此新增 `src/lib/shift.js`，而不是给画布挂 `scroll` 监听：次级页画布本来就没注册监听，§9.5 也明令禁止自建；`shift.v` 是 `applyShift()` 写 `--shift` 时顺手镜像的一份可变数值，**故意不用 `reactive`**——每帧变更会触发 Vue 重渲染，而这里只需要一个能在 rAF 里读的普通数字。③ 两处都刻意压住了幅度：`SUB_FLOW=1.1` 只取首页 `FLOW_MAX=2.2` 的一半（次级页是阅读场景，天空转太快会抢正文）；幽灵汉字显影峰值 `0.13` 而不是更高（它必须是"幽灵"，一旦清晰到能读，就从底噪变成了内容）。④ **二阶段：底片跨路由常驻（已解决上一版留档的问题）**。原 `acc` 是组件作用域的 `let` 且 `onUnmounted` 里置 null，两个实例又按路由互斥挂载——每次导航都在重铺底片，"一夜连续曝光"当时只是说法。现在底片像素、星群、天极、时钟、取景权全部提到 `src/lib/sky.js` 的模块级单例，`StarTrails` 降格为取景器。三处连带突破：**天极由"首页 0.62/0.38、次级页 0.5/0.4"统一成视口 0.62/0.38**（极点不同则导航后弧心跳位）；**次级页"星数减半"取消**（共享底片上少沉积一半星＝那半边圆弧在阅读中慢慢衰减消失）；**引入取景权**，因为 `fall` 并行转场有约 220ms 两机并存，不锁就会双份沉积、`resize()` 互相清屏。配套新增 `.neo-shutter` 把导航读成一次快门开合，`fall` 的整页模糊按 1.2.0 的决定**不动**（当时写作"让帘幕盖住 `fall` 最糊的几帧"，⑦ 实测推翻：中间 45% 从未被盖住）。实测（dev 下直接 `import('/src/lib/sky.js')`）：`/blog/core-idea → /` 之后 `sky.acc` 与 `sky.stars` 对象身份不变、`sky.t0` 未重置、次级页极点为 0.620/0.380、星数 220。⑤ **三阶段（卫生批 + 余下两个提案）的取舍备忘**：**已做**——⑴ 文章页顶部进度线 `width: calc(var(--shift)*100%)` → `transform: scaleX(var(--shift))`，消掉 §9.5 上唯一一处"每帧改布局"；⑵ `markdown.js` 补 GFM 管道表格，把 `neo.css` 里**早就写好却无人生产**的 `.neo-prose table/th/td` 从死样式变成活样式（没有分隔行的裸竖线会退回普通段落文本，不吞内容）；⑶ 标题正则放开到五个 `#`，并补 `.neo-prose h5 / h6`——此前 `####` 已经会渲染成 h5 却没有对应样式；⑷ 渲染器与歌单封面的 `<img>` 补 `decoding="async"`；⑸ `.neo-glass` 从 `NeoPostView` 的 scoped 里搬到 `neo.css` §6c（它一直躺在 §5.4 的"全局基元"表里，属自相矛盾）；⑹ 首页相机加 `IntersectionObserver` 停帧闸门；⑺ 删掉 `HorizonHero` 里从未被读取的 `hov` ref 与 `@hover="hov = $event"` 空监听（首屏悬停读数条早已移除，见上方 1.2.0 ①②；`@hover` 作为装置接口保留）。**新基元**——`.neo-spike` 衍射十字芒（§5.5），把画布上变星的缓绽搬到 DOM，两处消费方都服从"文章=变星"：文章卡右上角、上下篇外侧留白。**新耦合**——流星间隔读 `music.playing`（§3.1），这是全站唯一一处"天随人动"，也是最容易单独回退的一处。**明确不做**——⑴ 展示层字体的 `preload`：Vite 会给 CSS 里引用的字体文件名加哈希，`index.html` 无法硬写 `href`，要做得把字体挪进 `public/` 并改 `build_font.mjs` 的产物路径，代价与收益不匹配（现况已是 `font-display: swap`，正文系统字体不受影响）；⑵ 首页宣言的 `letter-spacing: calc(... + var(--shift)*...)`——它确实是随帧重算布局的属性，但"字距被潮汐拉长"是 §3.2 记在案的叙事意图，用 `scaleX` 替代会把展示层衬线字面拉变形，故按**刻意的例外**保留（与 `fall` 的整页 `filter` 同类对待）。**实测中发现、非本轮引入的既有现象**：`fall-enter` 期间页根 `section` 带着 `transform` 与 `filter`，因而成为 `position: fixed` 后代的包含块——文章页顶部进度线只在这 0.42s 内不是相对视口定位，转场结束类名摘掉后即恢复。改前（`width` 版）与改后（`scaleX` 版）行为一致，未处理。⑥ **2026-09-17 手感回收（来自用户反馈，不是测量）**：⑴ **修掉导航冻帧**——上一轮把「不许往底片沉积」写成了 `tick()` 的停帧条件，于是交出取景权那台相机在淡出的 220ms 里整帧冻住，这就是"切换顿挫"的来源；现在 `ownsPlate()` 只包住 `update()` 里的 `accPass()` 与抽独立尾部，非主人照常 `draw()`，两台相机显示的是同一张仍在长的底片。⑵ **久了过饱和 → 更透气**：`OMEGA 0.05→0.042`、`DEP 0.0085→0.0072`、`FADE_0 0.008→0.0104`、`FADE_1 0.0032→0.0044`、`SETTLE_DEPTH 0.55→0.72`。依据是稳态亮度 ≈ DEP ÷ fade，所以两头一起收；`SETTLE_DEPTH` 单独拉高是因为最糊眼的正是"转满后闭合成实心亮环"那一段。⑶ **整体更舒缓**：惯性常数 `0.9 → 0.94`（约 1 秒收敛），天空不再随着滚动手感"弹"。这三组数字都是**口味值而非计算值**——我这边看不到渲染，全部集中在 `StarTrails.vue` 顶部常量块那几行，觉得过了/不够直接改数，改完 §3.1 的 ω 与 fade 两处引用需同步。
+
+⑦ **同一次改动经独立代码评审查出 6 个缺陷（作者侧自查全漏）**，全部已修，记录以免有人以为一~三阶段是干净的：
+- **致命：`plateSpace()` 丢了 `globalCompositeOperation` 的还原**（`src/lib/sky.js`）。我把衰减 pass 后的 `setTransform + source-over` 两行合并成一个 helper 时只搬走了变换，于是每颗星的短弧仍在 `destination-out` 下绘制——**它擦除底片而不是曝光底片**，累积缓冲永远全透明，实时与 reduced-motion 两条路径都看不到任何星轨。整个特性的核心功能死了很久。
+- **为什么没被发现**：上一轮写在 §10 的"实测"只比对了 `sky.acc` 的**对象身份**、从没读过像素；而 Qoder 内置浏览器没有可见表面、rAF 冻结，压根一帧都没画，也就无从暴露。**教训：画布类改动没有量过像素输出就不算"已验证"**，对象身份、CSSOM 规则、构建通过都证明不了渲染结果。复核方式：页面里手驱动画布复刻 `accPass` 的调用序列，不还原合成模式时 `alphaSum 0 / litPx 0`，还原后 `131 / 3`。
+- **移动端地址栏收放把底片清空**：`innerHeight` 变化 → `resize` → `ensurePlate()` 重开一张空白，等于用户第一次滚动就倒掉整夜曝光，且只在手机上发生。改为重开前把旧底片等比 `drawImage` 进新底片。
+- **`100svh` 的 hero 当相机导致非等比压扁**：底片按视口分配、首页相机却量 hero 盒子，手机上差 ~17%，首页同心弧变椭圆、进文章页跳回正圆。改为**两台相机一律取视口**，多出部分由 `.hero{overflow:hidden}` 裁掉（`kx = ky = 1` 从此是恒等式）。
+- **减弱动效的 `transform: none` 连居中一起杀**：`html[data-skin='neo'] .neo-glyph`(0,2,1) 压过 `HorizonHero` / `NeoNotFoundView` scoped `.glyph`(0,2,0) 的 `translate(-50%,-50%)`，620px 首页大字横跳约 270px；同时正常动效下这两页其实从来没拿到 4vh 下沉。改用独立的 `translate` 属性承载下沉（见 §4.4）。实测：「渊」在 `--shift=1` 时 `translate: 0px 48.36px` 与居中 `matrix(1,0,0,1,-270,-243)` 并存。
+- **表格解析器会重排文档**：`>` / `-` / `1.` 三个分支没调 `flushTable()`，表格被排到后方法块之后；而"含竖线就算候选表头"又把普通正文断成多段、把行内代码 `` `a|b` `` 改写成 `a | b`。改为**只在下一行是分隔行时才开表**（索引循环 + 前瞻）。
+- **首帧 `dt` 可为负**：`kick()` 里 `last = performance.now()`，而下一帧 rAF 时间戳是帧起始时刻、可能更早 → `step<0` → 衰减 `fillStyle` 成 `rgba(0,0,0,-x)` 被静默丢弃、短弧反向扫。补下界 `Math.max(0, …)`。
+- **顺带修正三处文档说过头的断言**：快门"盖住 fall 最糊的几帧"（两片各压 27.5%，中间 45% 从未被盖）、"压在正文之上"（顶栏 60 / 进度线 65 / 灯箱 80 都在它上面）、§9.4"不要自建滚动监听"（`StarTrails` 交互层与 `HorizonHero` 视差一直有合法监听，已改写成"不要为深度建第二个真相源"并记明例外）。`.neo-spike` 的 `.on` 触发口无生产方，也已标注。

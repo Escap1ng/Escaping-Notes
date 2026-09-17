@@ -12,7 +12,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['select'])
 
-const hov = ref(-1)
 const textEl = ref(null)
 
 /* 首屏视差：文字随滚动下沉并淡出 */
@@ -40,7 +39,8 @@ onUnmounted(() => {
   <section class="hero">
     <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.home }}</span>
 
-    <StarTrails interactive :posts="posts" @hover="hov = $event" @select="emit('select', $event)" />
+    <!-- StarTrails 仍对外发 @hover；首屏的悬停读数已按反馈移除（§10），这里不再挂空监听 -->
+    <StarTrails interactive :posts="posts" @select="emit('select', $event)" />
 
     <div ref="textEl" class="hero-text">
       <p class="neo-eyebrow">{{ N.heroEyebrow }}</p>

@@ -1,5 +1,5 @@
 // 小型 Markdown 渲染器：先转义再渲染，覆盖个人博客常用语法
-// 支持：标题/加粗/斜体/行内代码/链接/图片/代码块/列表/引用/分隔线
+// 支持：标题/加粗/斜体/行内代码/链接/图片/代码块/列表/引用/分隔线/表格（GFM 管道语法）
 
 const esc = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -7,13 +7,23 @@ const esc = (s) =>
 function inline(s) {
   return esc(s)
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />')
+    .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1" loading="lazy" decoding="async" />')
     .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
 }
 
+/* ---------------- 表格 ---------------- */
+// 只认 GFM 的必需分隔行：没有 `|---|` 那一行就不算表，退回普通段落文本。
+const DELIM = /^\|?\s*:?-{1,}:?\s*(?:\|\s*:?-{1,}:?\s*)*\|?$/
+const cells = (s) => s.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim())
+// 对齐只可能取 left/right/center 三个自造值（分隔行除 : - | 与空格外无其他字符），不来自用户文本
+const alignOf = (c) =>
+  c.startsWith(':') && c.endsWith(':') ? 'center' : c.endsWith(':') ? 'right' : c.startsWith(':') ? 'left' : ''
+const al = (a) => (a ? ` style="text-align:${a}"` : '')
+
 export function renderMarkdown(src) {
+  const lines = src.split('\n')
   const out = []
   const toc = []
   let para = []
@@ -22,6 +32,7 @@ export function renderMarkdown(src) {
   let code = null
   let lang = ''
   let hn = 0
+  let tbl = null // 已确认的分隔行之后才是表：{ head, align: [], rows }
 
   const flushPara = () => {
     if (para.length) {
@@ -41,13 +52,24 @@ export function renderMarkdown(src) {
       quote = []
     }
   }
+  const flushTable = () => {
+    if (!tbl) return
+    const th = tbl.head.map((c, i) => `<th${al(tbl.align[i])}>${inline(c)}</th>`).join('')
+    const body = tbl.rows
+      .map((r) => `<tr>${r.map((c, i) => `<td${al(tbl.align[i])}>${inline(c)}</td>`).join('')}</tr>`)
+      .join('')
+    out.push(`<table><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table>`)
+    tbl = null
+  }
   const flushAll = () => {
     flushPara()
     flushList()
     flushQuote()
+    flushTable()
   }
 
-  for (const raw of src.split('\n')) {
+  for (let li = 0; li < lines.length; li++) {
+    const raw = lines[li]
     const t = raw.trim()
 
     if (code !== null) {
@@ -71,7 +93,7 @@ export function renderMarkdown(src) {
       continue
     }
 
-    const h = /^(#{1,4})\s+(.*)$/.exec(t)
+    const h = /^(#{1,5})\s+(.*)$/.exec(t)
     if (h) {
       flushAll()
       const level = h[1].length + 1 // h1 留给文章标题
@@ -91,6 +113,7 @@ export function renderMarkdown(src) {
     if (q) {
       flushPara()
       flushList()
+      flushTable()
       quote.push(q[1])
       continue
     }
@@ -99,6 +122,7 @@ export function renderMarkdown(src) {
     if (ul) {
       flushPara()
       flushQuote()
+      flushTable()
       if (!list || list.t !== 'ul') {
         flushList()
         list = { t: 'ul', items: [] }
@@ -111,6 +135,7 @@ export function renderMarkdown(src) {
     if (ol) {
       flushPara()
       flushQuote()
+      flushTable()
       if (!list || list.t !== 'ol') {
         flushList()
         list = { t: 'ol', items: [] }
@@ -119,8 +144,21 @@ export function renderMarkdown(src) {
       continue
     }
 
+    // 表格：正在表中 → 后续竖线行都是数据行
+    if (tbl && t.includes('|')) {
+      tbl.rows.push(cells(t))
+      continue
+    }
+    // 开表：必须"下一行就是分隔行"才算，否则只是碰巧含竖线的普通文字
+    if (t.includes('|') && DELIM.test((lines[li + 1] || '').trim())) {
+      flushAll()
+      tbl = { head: cells(t), align: cells(lines[++li].trim()).map(alignOf), rows: [] }
+      continue
+    }
+
     flushList()
     flushQuote()
+    flushTable()
     para.push(t)
   }
 

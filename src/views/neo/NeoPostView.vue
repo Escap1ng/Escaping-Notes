@@ -129,11 +129,13 @@ onUnmounted(() => {
 
         <nav class="ends" aria-label="上下篇与出口">
           <RouterLink v-if="neighbors.prev" :to="`/blog/${neighbors.prev.slug}`" class="end">
+            <span class="neo-spike" aria-hidden="true"></span>
             <span class="neo-mono">{{ N.postPrev }}</span>
             <span class="end-title">{{ neighbors.prev.title }}</span>
           </RouterLink>
           <span v-else></span>
           <RouterLink v-if="neighbors.next" :to="`/blog/${neighbors.next.slug}`" class="end next">
+            <span class="neo-spike" aria-hidden="true"></span>
             <span class="neo-mono">{{ N.postNext }}</span>
             <span class="end-title">{{ neighbors.next.title }}</span>
           </RouterLink>
@@ -165,85 +167,28 @@ onUnmounted(() => {
   padding-top: var(--page-top);
 }
 
-/* 正文玻璃底板：隔离星轨背景 + 提升前景对比（磨砂 Gaussian blur）。
-   背景为半透明页面色（`--panel-bg`，深浅两套各自定义，落在 60%–80% 区间）；
-   配合 blur 弱化星轨纹理。 */
-.neo-glass {
-  position: relative;
-  z-index: 1;
-  --fx: 120px; /* 左右羽化：磨砂/底色向两侧渐隐 */
-  --fy: 40px; /* 上下羽化：与内容留白配合，标题不落在渐隐区（保对比） */
-  --measure: 78ch; /* 放宽文章阅读栏，提高文字占屏比例 */
-  /* 底板贴近屏幕（≤1240px 或 94vw），大屏下占据更多宽度；正文栏居中于 --measure */
-  max-width: min(1240px, 94vw);
-  margin: var(--space-3) auto;
-  padding: var(--space-4) var(--space-3) var(--space-3);
-  border-radius: var(--r-lg);
-  border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
-  background: var(--panel-bg, rgba(2, 2, 4, 0.64));
-  -webkit-backdrop-filter: blur(22px) saturate(1.08);
-  backdrop-filter: blur(22px) saturate(1.08);
-  /* 抬升阴影走 --shadow：纸面下用浅色 --ink-2 会晕出一圈浅色光斑，而非阴影 */
-  box-shadow: 0 22px 60px -34px var(--shadow, rgba(0, 0, 0, 0.6));
-  /* 四边 mask 羽化（水平+垂直 intersect）：让磨砂从边缘平滑褪去，不产生任何硬截断面 */
-  -webkit-mask:
-    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
-    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask:
-    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
-    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
-  mask-composite: intersect;
-  animation: neo-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
-}
-
-/* 无 backdrop-filter 的旧浏览器：抬高底板不透明度（≤80%），仍能隔离背景与保证对比 */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .neo-glass {
-    background: var(--panel-frost-bg, var(--panel-bg, rgba(2, 2, 4, 0.8)));
-  }
-}
-
-@keyframes neo-glass-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (max-width: 720px) {
-  .neo-glass {
-    --fx: 24px;
-    --fy: 16px;
-    max-width: 100%;
-    padding: var(--space-3) var(--space-2);
-    border-radius: var(--r-md);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .neo-glass {
-    animation: none;
-  }
-}
+/* .neo-glass（阅读底板）已上移到 neo.css §6c：它是 §5.4 列出的全站基元，不该锁在本页 scoped 里 */
 
 .glyph {
   top: var(--space-4);
   left: -8vw;
+  /* 「坠」字面意义地随阅读下坠，比全站基线（4vh）更深。
+     写在 translate 上：它只覆写"下沉"，不碰定位用的 transform */
+  translate: 0 calc(var(--shift, 0) * 14vh);
 }
 
-/* 顶部进度线（冷 → 热）：宽度直接由 --shift 驱动，零 JS、零滚动监听 */
+/* 顶部进度线（冷 → 热）：--shift 直接喂给 scaleX，零 JS、零滚动监听。
+   必须是 transform 而非 width：--shift 每个滚动帧都在变，改宽度等于每帧一次布局。
+   渐变随 scaleX 一起被压缩，观感与原先按宽度绘制时一致。 */
 .progress {
   position: fixed;
   top: 0;
   left: 0;
-  width: calc(var(--shift, 0) * 100%);
+  width: 100%;
   height: 2px;
   z-index: 65;
+  transform-origin: left;
+  transform: scaleX(var(--shift, 0));
   background: linear-gradient(90deg, var(--cold), var(--hot));
 }
 
@@ -298,9 +243,12 @@ onUnmounted(() => {
 }
 
 .end {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-0);
+  /* 左出让 28px 给衍射芒，指针移过来时"这颗星"在文字外侧亮起 */
+  padding-left: 28px;
   text-decoration: none;
   color: inherit;
 }
@@ -308,6 +256,22 @@ onUnmounted(() => {
 .end.next {
   text-align: right;
   align-items: flex-end;
+  padding-left: 0;
+  padding-right: 28px;
+}
+
+/* 形态与绽放在 neo.css §6b；这里只给位置。上下用 inset + auto 外边距居中，
+   不碰 transform——那是基元用来做缓绽的。 */
+.end .neo-spike {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto 0;
+}
+
+.end.next .neo-spike {
+  left: auto;
+  right: 0;
 }
 
 .end .neo-mono {

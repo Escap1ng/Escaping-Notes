@@ -44,6 +44,7 @@ onMounted(loadRecords)
         width="132"
         height="132"
         loading="lazy"
+        decoding="async"
       />
       <div class="info">
         <h3 class="name">{{ records.name }}</h3>

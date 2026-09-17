@@ -230,7 +230,13 @@ html[data-skin='neo'] main.neo-sub {
   font-weight: 700;
   color: transparent;
   -webkit-text-stroke: 1px var(--text-1);
-  opacity: 0.07;
+  /* 显影：签名随下潜由 0.07 提到 0.13 并缓缓下沉。挂 --shift（零 JS、零监听），
+     且只动 opacity / translate，符合 §9.5 红线。
+     用独立的 `translate` 属性而不是 `transform`：HorizonHero 与 NeoNotFoundView 的
+     scoped `.glyph` 拿 transform 做 translate(-50%,-50%) 居中，共用一个属性会互相顶掉
+     （它们顶不到下沉、减弱动效那条又会连居中一起清掉）。两者可叠加，各管各的。 */
+  opacity: calc(0.07 + var(--shift, 0) * 0.06);
+  translate: 0 calc(var(--shift, 0) * 4vh);
   pointer-events: none;
   user-select: none;
 }
@@ -683,6 +689,104 @@ textarea.neo-field:hover {
   transform: scaleX(1);
 }
 
+/* 衍射十字芒：把画布上"变星 hover 缓绽锥形芒"的语言搬到 DOM。
+   芒臂 ≤2px 且只用冷色（§5.3①：冷=交互方向；白热只留给光子核心）。
+   纯装饰：不接指针事件，调用处须带 aria-hidden。 */
+.neo-spike {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--cold) 0 1px, transparent 1.6px);
+  opacity: 0;
+  transform: scale(0.35);
+  transition:
+    opacity 0.26s ease,
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.neo-spike::before,
+.neo-spike::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 1.5px;
+  margin: -0.75px 0 0 -50%;
+  background: linear-gradient(90deg, transparent, var(--cold) 50%, transparent);
+}
+
+.neo-spike::after {
+  transform: rotate(90deg);
+}
+
+/* 宿主页 hover 即缓绽：只挂在可交互元素上，避免任意容器 hover 误触发 */
+a:hover > .neo-spike,
+button:hover > .neo-spike,
+.neo-spike.on {
+  opacity: 1;
+  transform: scale(1) rotate(45deg);
+}
+
+/* ---------- 6c. 阅读底板（磨砂玻璃基元；§5.4 列为全站可用） ----------
+   隔离星轨背景 + 提升前景对比。四边 mask 羽化，让磨砂从边缘平滑褪去、不产生硬截断面。 */
+html[data-skin='neo'] .neo-glass {
+  position: relative;
+  z-index: 1;
+  --fx: 120px; /* 左右羽化：磨砂/底色向两侧渐隐 */
+  --fy: 40px; /* 上下羽化：与内容留白配合，标题不落在渐隐区（保对比） */
+  --measure: 78ch; /* 放宽文章阅读栏，提高文字占屏比例 */
+  /* 底板贴近屏幕（≤1240px 或 94vw），大屏下占据更多宽度；正文栏居中于 --measure */
+  max-width: min(1240px, 94vw);
+  margin: var(--space-3) auto;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  background: var(--panel-bg, rgba(2, 2, 4, 0.64));
+  -webkit-backdrop-filter: blur(22px) saturate(1.08);
+  backdrop-filter: blur(22px) saturate(1.08);
+  /* 抬升阴影走 --shadow：纸面下用浅色 --ink-2 会晕出一圈浅色光斑，而非阴影 */
+  box-shadow: 0 22px 60px -34px var(--shadow, rgba(0, 0, 0, 0.6));
+  -webkit-mask:
+    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask:
+    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
+  mask-composite: intersect;
+  animation: neo-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
+}
+
+/* 无 backdrop-filter 的旧浏览器：抬高底板不透明度（≤80%），仍能隔离背景与保证对比 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-skin='neo'] .neo-glass {
+    background: var(--panel-frost-bg, var(--panel-bg, rgba(2, 2, 4, 0.8)));
+  }
+}
+
+@keyframes neo-glass-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 720px) {
+  html[data-skin='neo'] .neo-glass {
+    --fx: 24px;
+    --fy: 16px;
+    max-width: 100%;
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--r-md);
+  }
+}
+
 /* ---------- 7. 晕影与深度 ---------- */
 .neo-vignette {
   position: fixed;
@@ -741,6 +845,53 @@ textarea.neo-field:hover {
   }
 }
 
+/* ---------- 8.5 快门：一次导航 = 一次曝光 ---------- */
+/* 底片全站共享后，换页不再是"重铺一张"，而是焦平面快门开合一次：上下两片帘幕扫到
+   五成五再退开，最合拢的那一刻正好盖住 fall 最糊的几帧。只动 transform（§9.5），
+   z-index 压在正文与星轨之上、顶栏之下——仪器面板不该跟着眨眼。 */
+.neo-shutter {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.neo-shutter::before,
+.neo-shutter::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+}
+
+.neo-shutter::before {
+  top: 0;
+  transform-origin: top;
+  background: linear-gradient(to bottom, var(--ink-0), var(--ink-0) calc(100% - 2px), color-mix(in srgb, var(--hot) 60%, transparent));
+  animation: neo-blind 0.34s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+.neo-shutter::after {
+  bottom: 0;
+  transform-origin: bottom;
+  background: linear-gradient(to top, var(--ink-0), var(--ink-0) calc(100% - 2px), color-mix(in srgb, var(--hot) 60%, transparent));
+  animation: neo-blind 0.34s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes neo-blind {
+  0% {
+    transform: scaleY(0);
+  }
+  44% {
+    transform: scaleY(0.55);
+  }
+  100% {
+    transform: scaleY(0);
+  }
+}
+
 /* ---------- 9. 正文排版（命中 v-html，放全局） ---------- */
 html[data-skin='neo'] .neo-prose {
   max-width: var(--measure);
@@ -754,7 +905,9 @@ html[data-skin='neo'] .neo-prose {
 
 html[data-skin='neo'] .neo-prose h2,
 html[data-skin='neo'] .neo-prose h3,
-html[data-skin='neo'] .neo-prose h4 {
+html[data-skin='neo'] .neo-prose h4,
+html[data-skin='neo'] .neo-prose h5,
+html[data-skin='neo'] .neo-prose h6 {
   font-family: var(--font-display);
   line-height: 1.35;
   letter-spacing: -0.01em;
@@ -788,6 +941,18 @@ html[data-skin='neo'] .neo-prose h4 {
   font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
   margin: var(--space-3) 0 var(--space-1);
+}
+
+html[data-skin='neo'] .neo-prose h5 {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+html[data-skin='neo'] .neo-prose h6 {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  margin: var(--space-2) 0 var(--space-0);
 }
 
 html[data-skin='neo'] .neo-prose p {
@@ -923,5 +1088,30 @@ html[data-skin='neo'] .page-title {
 
   html[data-skin='neo'] .neo-vignette {
     opacity: 0;
+  }
+
+  /* 阅读底板的淡入上浮随 §6c 一起搬到这里 */
+  html[data-skin='neo'] .neo-glass {
+    animation: none;
+  }
+
+  /* 幽灵汉字的显影/下沉是滚动驱动的，减弱动效下钉回静态基线。
+     只钉 translate：居中用的 transform 是各页 scoped 自己的，不该被这里连带清掉 */
+  html[data-skin='neo'] .neo-glyph {
+    opacity: 0.07;
+    translate: none;
+  }
+
+  /* 衍射芒的绽开靠 transform：减弱动效下两态都钉成 none，只留淡入淡出 */
+  .neo-spike,
+  a:hover > .neo-spike,
+  button:hover > .neo-spike,
+  .neo-spike.on {
+    transform: none;
+  }
+
+  /* 快门整层移除：只写 animation: none 的话帘幕会退回未变换的 scaleY(1)，把页面永久盖住 */
+  .neo-shutter {
+    display: none;
   }
 }

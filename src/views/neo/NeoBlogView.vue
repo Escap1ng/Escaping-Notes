@@ -94,6 +94,7 @@ const filtered = computed(() =>
         <li v-for="p in filtered" :key="p.slug">
           <RouterLink :to="`/blog/${p.slug}`" class="card neo-lens" @pointermove="onLens">
             <span class="bar" aria-hidden="true"></span>
+            <span class="neo-spike" aria-hidden="true"></span>
             <span class="date neo-mono">{{ p.date }}</span>
             <h3 class="title">{{ p.title }}</h3>
             <p v-if="p.summary" class="summary">{{ p.summary }}</p>
@@ -184,6 +185,13 @@ const filtered = computed(() =>
 .card:hover {
   border-color: var(--card-brd-hover);
   background: var(--card-bg-hover);
+}
+
+/* 衍射芒落在卡面右上角：hover 时"这颗星被点亮"。形态与绽放在 neo.css §6b，这里只管位置 */
+.card .neo-spike {
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
 }
 
 .date {
