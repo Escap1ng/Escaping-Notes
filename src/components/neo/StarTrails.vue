@@ -794,6 +794,28 @@ onUnmounted(() => {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  /* 暗带契约（令牌在 neo.css §1 的 --sky-band / --sky-feather 与 §2/§3 各自的 --sky-k；
+     设计说明见 docs/design-neo.md §3.3）：视口正中 --sky-band 宽的一条天空被压到 --sky-k
+     强度，两侧各 --sky-feather 羽化回全亮。整站一处生效——9 个次级页共用这块 fixed 画布，
+     而画布在 main **之外**，所以它不随页根 transform 变包含块（那是进度线的老毛病）。
+     mask 走 alpha 模式，故 rgba() 的 alpha 就是"天空保留多少"。
+     首页那台 .st-abs 不进这里：它是主视觉，且它的文字已有 --scrim 底衬。
+     不支持 mask 的浏览器等于回到改动前的样子（可读性不达标但不会画错），可优雅降级。 */
+  --_band-in: calc(50% - var(--sky-band) / 2);
+  --_band-out: calc(50% + var(--sky-band) / 2);
+  --_sky-mask: linear-gradient(
+    90deg,
+    #000 0,
+    #000 calc(var(--_band-in) - var(--sky-feather)),
+    rgba(0, 0, 0, var(--sky-k)) var(--_band-in),
+    rgba(0, 0, 0, var(--sky-k)) var(--_band-out),
+    #000 calc(var(--_band-out) + var(--sky-feather)),
+    #000 100%
+  );
+  -webkit-mask-image: var(--_sky-mask);
+  mask-image: var(--_sky-mask);
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
 }
 
 .st-abs {
