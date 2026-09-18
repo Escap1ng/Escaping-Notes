@@ -6,7 +6,18 @@ meta 注入（/ 与 /blog/:slug 服务端改写 index.html 的 title/OG/canonica
 - 存储：JSON 文件 + data/posts/*.md，无数据库
 - 监听：仅 127.0.0.1:8787，由 nginx 反代 /api/、/、/blog/、/rss.xml
 - 安全：pbkdf2_hmac 加盐哈希、会话过期、每 IP 限流、长度限制
-部署见 docs/manual.md §4.3；接口设计见 docs/design.md §7。
+- 部署见 docs/manual.md §4.3
+
+存储契约（2026-09-18 定，改动前先读）：
+- 「文件不存在」与「文件存在但读不出」是两件事。前者是合法的首次运行；后者一律
+  视为异常：普通读侧降级为 default 并打日志，**涉及权限的判断则 fail-closed**
+  （见 owner_gate / _create_user）——users.json 损坏绝不能被当成"还没有站长"。
+- 写侧统一走 save()：唯一临时名 + fsync + replace，且整段在 LOCK 内串行。
+- DATA / DIST 可用 SITE_DATA / SITE_DIST 覆盖（默认仍是仓库内相对布局）。
+  运维视角的说明（含"重置一台机器该怎么做"）在 docs/manual.md §2.7。
+
+接口目前没有独立文档：docs/design.md 并不存在（docs/ 下只有 design-neo.md 与
+manual.md），端点行为以本文件为唯一权威。补一份接口文档是已排期的待办。
 """
 import hashlib
 import html
@@ -23,12 +34,17 @@ from urllib.parse import urlparse
 
 HOST, PORT = '127.0.0.1', 8787
 BASE = Path(__file__).resolve().parent
-DATA = BASE / 'data'
+# 两个路径都可由环境变量指走，默认仍是仓库内的相对布局（本地开发零改变）。
+# 为什么要开这个口子：手册 §4.3 把 api.py 放 /opt/escaping-notes/、静态产物放
+# /var/www/escaping-notes，原先写死的 BASE.parent/'dist' 在那种布局下必然不存在
+# → / 与 /blog/* 全部 404；而 DATA 也会指向一个空目录，等于"换机器即丢库"。
+# 现在部署只需两个变量，不必改代码（取值见 docs/manual.md §4.3）。
+DATA = Path(os.environ.get('SITE_DATA') or BASE / 'data')
+DIST = Path(os.environ.get('SITE_DIST') or BASE.parent / 'dist')
 POSTS_DIR = DATA / 'posts'
-DIST = BASE.parent / 'dist'
 SITE_URL = os.environ.get('SITE_URL', 'https://escaping.top')
-DATA.mkdir(exist_ok=True)
-POSTS_DIR.mkdir(exist_ok=True)
+DATA.mkdir(parents=True, exist_ok=True)
+POSTS_DIR.mkdir(parents=True, exist_ok=True)
 
 USERS_F = DATA / 'users.json'
 SESS_F = DATA / 'sessions.json'
@@ -38,7 +54,7 @@ CONTENT_F = DATA / 'content.json'
 FRAG_F = DATA / 'fragments.json'
 RECORDS_F = DATA / 'records.json'
 UPLOADS = DATA / 'uploads'
-UPLOADS.mkdir(exist_ok=True)
+UPLOADS.mkdir(parents=True, exist_ok=True)
 CONTENT_KEYS = {'site', 'updates', 'links', 'projects', 'gear', 'playlist'}
 CTYPES = {'.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
           '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml'}
@@ -50,21 +66,99 @@ LOCK = threading.RLock()  # 可重入：setup/register 外层持锁时 new_sessi
 RATE = {}
 SLUG_RE = re.compile(r'^[a-z0-9-]{1,60}$')
 USER_RE = re.compile(r'^[a-z0-9_-]{3,20}$')
-FRONT_RE = re.compile(r'^---\n(.*?)\n---\n?(.*)$', re.S)
+# frontmatter：与 scripts/build_seo.mjs 的那份口径对齐，CRLF 也得认。
+# 本机 git core.autocrlf=true，content/posts/*.md 在 Windows 工作树里是 \r\n，
+# 只写 ^---\n 会让整段 frontmatter 匹配失败 → 标题/日期/标签静默丢失。
+FRONT_RE = re.compile(r'^---\r?\n(.*?)\r?\n---\r?\n?(.*)$', re.S)
 
 
 # ---------- 存储 ----------
-def load(path, default):
+class CorruptJSON(Exception):
+    """文件在，但读不出合法 JSON。与"文件还不存在"必须区分开——见 load()。"""
+
+
+MISSING = object()  # read_json 的哨兵：文件不存在（＝首次运行的正常状态）
+
+
+def log(msg):
+    """部署侧唯一的可见性通道（stdout，由 systemd/nginx 收）。"""
+    print(f'[api] {time.strftime("%Y-%m-%d %H:%M:%S")} {msg}', flush=True)
+
+
+def read_json(path):
+    """成功→解析结果；文件不存在→MISSING；存在但读不出→抛 CorruptJSON。"""
+    if not path.exists():
+        return MISSING
     try:
         return json.loads(path.read_text('utf-8'))
-    except Exception:
+    except Exception as e:
+        raise CorruptJSON(f'{path.name}: {e.__class__.__name__}: {e}') from e
+
+
+def load(path, default):
+    """读 JSON，读不出就降级成 default——但**降级必须是吵的**。
+
+    原先这里是一句 `except Exception: return default`，把"文件损坏"和"文件还不在"
+    合并成同一个返回值。后果不只是丢数据：`load(USERS_F, [])` 读到空列表会被判成
+    "这个站点从未初始化"，于是任何人都能 POST /api/setup 把自己注册成站长（fail-open）。
+    普通读侧（留言、计数、歌单…）损坏时降级为空仍可接受，但必须留下痕迹；
+    涉及权限的那两处不走这条路径，见 owner_gate()。
+    """
+    try:
+        v = read_json(path)
+    except CorruptJSON as e:
+        log(f'DATA 读不出，本次按 default 降级：{e}')
         return default
+    return default if v is MISSING else v
+
+
+def owner_gate():
+    """站长初始化闸门，返回 (needs_setup, users | None)。
+
+    **fail-closed**：只有在确实读得出用户表时才判断"有没有站长"。文件损坏、或内容
+    不是数组，一律返回 (False, None)——宁可让部署者去查文件，也绝不能把"损坏"当成
+    "还没有人注册"而把建立站长的口子重新打开。
+    """
+    try:
+        users = read_json(USERS_F)
+    except CorruptJSON as e:
+        log(f'users.json 损坏，拒绝按未初始化处理（否则任何人都能来注册站长）：{e}')
+        return False, None
+    if users is MISSING:
+        return True, []
+    if not isinstance(users, list):
+        log('users.json 不是数组，拒绝按未初始化处理')
+        return False, None
+    return len(users) == 0, users
 
 
 def save(path, obj):
-    tmp = path.with_suffix('.tmp')
-    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2), 'utf-8')
-    tmp.replace(path)
+    """原子写：唯一临时名 + fsync + replace。
+
+    原先是 `path.with_suffix('.tmp')` 直写后 replace，有两个问题：
+    ① 临时名不唯一——同一文件的两个并发写者写进**同一个** .tmp 互相踩（多数调用点在
+      LOCK 内，但 write_post / 计数等并不全在）；顺带说，`users.json` 的 .tmp 会变成
+      `users.tmp`，与 data 目录里其它文件混在一起。
+    ② 没有 fsync——崩溃或掉电可以留下一个截断的 JSON。而截断的 users.json 正是上面
+      A1 那个 fail-open 的触发源，所以这两条是同一个事故的两段。
+
+    写与 replace 整段收在 LOCK 里（RLock，同线程可重入，所以外层已持锁的调用点不会自锁）。
+    功能测试在 Windows 上量到：即使临时名唯一，两个线程同时 replace 同一个目标仍会抛
+    PermissionError。收进锁内除了消掉竞态，还意味着**写侧不再依赖每个调用点自己记得加锁**
+    ——原先 14 个 save() 调用点里只有一部分在 LOCK 内。
+    """
+    tmp = path.with_name(f'{path.name}.{os.getpid()}.{threading.get_ident()}.tmp')
+    with LOCK:
+        try:
+            # encoding 必须走关键字：Path.open 的第二个位置参数是 buffering，
+            # 写成 open('w', 'utf-8') 会当场 TypeError（原实现用的是 write_text，那位才是 encoding）。
+            with tmp.open('w', encoding='utf-8') as f:
+                json.dump(obj, f, ensure_ascii=False, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            tmp.replace(path)
+        finally:
+            tmp.unlink(missing_ok=True)  # 成功时已被 replace 走；失败时别留垃圾
 
 
 # ---------- 密码与会话 ----------
@@ -287,7 +381,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/health':
             self._json(200, {'ok': True})
         elif path == '/api/bootstrap':
-            self._json(200, {'needsSetup': len(load(USERS_F, [])) == 0})
+            self._json(200, {'needsSetup': owner_gate()[0]})
         elif path == '/api/me':
             u = self._user()
             self._json(200, self._pub(u)) if u else self._json(401, {'error': 'unauthorized'})
@@ -382,7 +476,12 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == '/api/setup':
             with LOCK:
-                if load(USERS_F, []):
+                needs, gate_users = owner_gate()
+                if gate_users is None:
+                    # 用户表读不出：绝不能因为"看起来是空的"就放人建立站长
+                    self._json(503, {'error': 'storage unavailable'})
+                    return
+                if not needs:
                     self._json(409, {'error': 'already setup'})
                     return
                 ok, resp = self._create_user(data, 'owner')
@@ -568,7 +667,19 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {'error': 'bad username'}
         if len(pw) < 6:
             return 400, {'error': 'weak password'}
-        users = load(USERS_F, [])
+        # 这里是 /api/setup 与 /api/register 共同的落库点，所以也是 owner_gate 之外
+        # 真正必须收口的一处：若 users.json 损坏而这里退回 `[]`，紧接着的 save()
+        # 就会用"只有一个新账号"的数组覆盖整张旧表 —— 静默毁掉现有站长账号。
+        try:
+            users = read_json(USERS_F)
+        except CorruptJSON as e:
+            log(f'拒绝建号：用户表读不出，写回会毁掉现有账号 —— {e}')
+            return 503, {'error': 'storage unavailable'}
+        if users is MISSING:
+            users = []  # 首次运行，正常
+        elif not isinstance(users, list):
+            log('拒绝建号：users.json 不是数组')
+            return 503, {'error': 'storage unavailable'}
         if any(x['username'] == uname for x in users):
             return 409, {'error': 'taken'}
         user = {'id': secrets.token_hex(6), 'username': uname, 'nickname': nick,

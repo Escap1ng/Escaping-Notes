@@ -13,7 +13,15 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'dist')
-const POSTS = join(ROOT, 'content', 'posts')
+// 文章有**两个**目录（真正的单一事实源合并放在方案 S2，这里先止住漏发文）：
+//   content/posts      —— 仓库里手写的稿子，同时是前端的离线兜底（src/lib/posts.js）
+//   server/data/posts  —— 站长在 /admin 里发的文，即 api.py 的 POSTS_DIR
+// 原先只读前者，于是**后台发的文章永远进不了 dist/sitemap.xml 与 dist/rss.xml**。
+// 也支持 SITE_DATA 覆盖，口径与 api.py 一致（部署机上的 data 不在仓库里时能指对）。
+const POSTS_DIRS = [
+  join(ROOT, 'content', 'posts'),
+  join(process.env.SITE_DATA || join(ROOT, 'server', 'data'), 'posts'),
+]
 
 /* ---------------- 站点信息 / 文章 ---------------- */
 function siteUrl() {
@@ -23,31 +31,34 @@ function siteUrl() {
 }
 
 function parsePosts() {
-  if (!existsSync(POSTS)) return []
-  const out = []
-  for (const name of readdirSync(POSTS)) {
-    if (!name.endsWith('.md')) continue
-    const raw = readFileSync(join(POSTS, name), 'utf8')
-    const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
-    const meta = {}
-    const body = m ? m[2] : raw
-    if (m) {
-      for (const line of m[1].split(/\r?\n/)) {
-        const i = line.indexOf(':')
-        if (i < 0) continue
-        meta[line.slice(0, i).trim()] = line.slice(i + 1).trim().replace(/^['"]|['"]$/g, '')
+  const bySlug = new Map() // 后一个目录（server 侧）覆盖同名 slug：它是线上实际服务的那份
+  for (const dir of POSTS_DIRS) {
+    if (!existsSync(dir)) continue
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith('.md')) continue
+      const raw = readFileSync(join(dir, name), 'utf8')
+      const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
+      const meta = {}
+      const body = m ? m[2] : raw
+      if (m) {
+        for (const line of m[1].split(/\r?\n/)) {
+          const i = line.indexOf(':')
+          if (i < 0) continue
+          meta[line.slice(0, i).trim()] = line.slice(i + 1).trim().replace(/^['"]|['"]$/g, '')
+        }
       }
+      const slug = name.replace(/\.md$/, '')
+      bySlug.set(slug, {
+        slug,
+        title: meta.title || slug,
+        date: meta.date || '1970-01-01',
+        summary: meta.summary || '',
+        body,
+      })
     }
-    out.push({
-      slug: name.replace(/\.md$/, ''),
-      title: meta.title || name.replace(/\.md$/, ''),
-      date: meta.date || '1970-01-01',
-      summary: meta.summary || '',
-      body,
-    })
   }
   // 与前端一致：按日期倒序
-  return out.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  return [...bySlug.values()].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 }
 
 const esc = (s) =>

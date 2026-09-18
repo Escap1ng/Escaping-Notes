@@ -115,6 +115,12 @@ export const site = {
 4. 插图：把图片放进 `public/images/`，正文里写 `![描述](/images/图片名.png)`。
 5. 文章系统已接通：`/blog` 列表与阅读页优先从服务器拉取；后端缺席时（如 GitHub Pages 镜像）回退本目录种子文件。
 6. 发文主路径是**站长网页编辑器**（`/admin`），或直接把 md 投到服务器 `data/posts/`；本地 `content/posts/` 用作开发预览与离线回退。
+   - **SEO 产物取两个目录的并集**（`scripts/build_seo.mjs`，按文件名去重、`data/posts/` 优先）：
+     修之前它只读 `content/posts/`，所以**在网页上发的文章永远进不了 `dist/sitemap.xml`**。
+     两个直接后果：⑴ 构建机必须**看得见** `server/data/posts/` 才能把它们收进产物——本地很久
+     没跑过后端时，该目录可能只是早期副本，发布新文章后请先从服务器同步一次再 `npm run build`；
+     ⑵ Vercel / GitHub Pages 这类**无后端镜像**本来就没有 `data/`，列进 sitemap 的后台文章 URL
+     在镜像上会落到离线回退页。若你只维护一条域名，建议以自建服务器为准。
 
 ### 2.3 发一条动态
 
@@ -159,6 +165,15 @@ export const site = {
 
 - 管理界面在 `/admin`，仅管理员/站长可见；站长比管理员多一个“文章”页签。
 - 忘密码应急：到服务器编辑 `data/users.json`（删除对应账号后重新注册/初始化），操作前先备份该文件。
+- **`users.json` 损坏 ≠ 没有账号（fail-closed）**。以前"文件读不出"会被当成"站点从未初始化"，
+  于是任何人都能重开站长注册——那是安全洞，而且全程没有任何日志。现在的行为：
+  文件**不存在** = 合法的首次运行，正常引导建站长；文件**存在但 JSON 写坏 / 不是数组**
+  = 拒绝按未初始化处理（`/api/bootstrap` 的 `needsSetup` 为 `false`、`POST /api/setup` 与
+  一切建号请求返回 `503 storage unavailable`），并在 stdout 打 `[api] users.json 损坏…`。
+  对人工编辑的直接影响：上一条"删掉某个账号"之后**必须确认文件仍是合法 JSON**
+  （`python3 -c "import json;json.load(open('data/users.json'))"`）；真要重置一台机器，
+  把 `users.json` **移出目录**即可（"不存在"才是合法的未初始化状态），
+  不要留一个坏文件在里面——那会把你自己锁在门外。
 
 ## 3. 适配方法（外观与设备）
 
@@ -341,6 +356,11 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
 
    在服务器创建自启服务 `/etc/systemd/system/escaping-notes-api.service`：
 
+   `SITE_DIST` **必须设**：`api.py` 原先把 dist 写死成"自己上一级的 `dist/`"，而本手册的布局是
+   `api.py` 在 `/opt/escaping-notes`、静态产物在 `/var/www/escaping-notes` —— 指错时服务端 meta
+   注入与 `/rss.xml` 会直接 404。`SITE_DATA` 的默认值虽也是 `/opt/escaping-notes/data`，仍建议
+   显式写出：路径一旦被移动，`api.py` 会读到一个空目录（表现为"站点未初始化"，见 §2.7 的 fail-closed 说明）。
+
    ```ini
    [Unit]
    Description=Escaping Notes API
@@ -348,6 +368,8 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
 
    [Service]
    Environment=SITE_URL=https://escaping.top
+   Environment=SITE_DIST=/var/www/escaping-notes
+   Environment=SITE_DATA=/opt/escaping-notes/data
    ExecStart=/usr/bin/python3 /opt/escaping-notes/api.py
    Restart=always
 
