@@ -807,7 +807,7 @@ html[data-skin='neo'] .neo-glass {
    "只动 opacity/transform + 独立红移覆盖层"，但叠影模糊正是"坍缩"的手感来源，
    故按设计取舍保留原样。若日后要回收这部分开销，改法见 docs/design-neo.md §10。 */
 .fall-enter-active {
-  animation: fall-in 0.42s cubic-bezier(0.16, 0.84, 0.28, 1);
+  animation: fall-in 0.44s cubic-bezier(0.52, 0.04, 0.24, 1);
 }
 
 .fall-leave-active {
@@ -816,14 +816,14 @@ html[data-skin='neo'] .neo-glass {
   left: 0;
   right: 0;
   pointer-events: none;
-  animation: fall-out 0.22s ease-in;
+  animation: fall-out 0.26s cubic-bezier(0.36, 0.1, 0.6, 0.42);
 }
 
 @keyframes fall-in {
   from {
     opacity: 0;
-    transform: scale(0.8);
-    filter: blur(12px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
+    transform: scale(0.88);
+    filter: blur(15px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
   }
   to {
     opacity: 1;
@@ -840,21 +840,28 @@ html[data-skin='neo'] .neo-glass {
   }
   to {
     opacity: 0;
-    transform: scale(0.84);
-    filter: blur(10px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
+    transform: scale(0.9);
+    filter: blur(12px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
   }
 }
 
 /* ---------- 8.5 快门：一次导航 = 一次曝光 ---------- */
-/* 底片全站共享后，换页不再是"重铺一张"，而是焦平面快门开合一次：上下两片帘幕扫到
-   五成五再退开，最合拢的那一刻正好盖住 fall 最糊的几帧。只动 transform（§9.5），
-   z-index 压在正文与星轨之上、顶栏之下——仪器面板不该跟着眨眼。 */
+/* 底片全站共享后，换页不再是"重铺一张"，语义上就只剩一次快门开合。
+   形态是**羽化暗场呼吸**，不是闸门：`--ink-0` 就是页面底色，所以实心条带扫过时
+   等于用背景色把星轨和 fall 的虚化一起糊掉——2026-09-17 用户反馈"切换生硬、不如
+   之前的虚化"，元凶在此。改法：条带加高到 58%，实心段只留外侧 18%，其余一路渐隐到
+   透明，朝心的前沿不再有硬边（硬边才是"擦"，渐隐才是"化"）；整层压到 6 成不透明，
+   底片透过帘幕仍然在场；时长放到 0.52s，合拢峰值落在 46%（≈0.24s），正好对上 fall
+   中段两页都最糊的那一瞬——这一句是实测对齐，不再是"盖住"，中间始终盖不满。
+   两片帘幕必须**同时长同曲线**：animationend 会冒泡两次，先到那次就把整层摘掉，
+   异长会让另一片在半途被硬切（想错落开合得先把 App.vue 的摘除改成计数）。 */
 .neo-shutter {
   position: fixed;
   inset: 0;
   z-index: 40;
   pointer-events: none;
   overflow: hidden;
+  opacity: 0.6;
 }
 
 .neo-shutter::before,
@@ -863,29 +870,33 @@ html[data-skin='neo'] .neo-glass {
   position: absolute;
   left: 0;
   right: 0;
-  height: 50%;
+  height: 58%;
 }
 
 .neo-shutter::before {
   top: 0;
   transform-origin: top;
-  background: linear-gradient(to bottom, var(--ink-0), var(--ink-0) calc(100% - 2px), color-mix(in srgb, var(--hot) 60%, transparent));
-  animation: neo-blind 0.34s cubic-bezier(0.45, 0, 0.55, 1) both;
+  background:
+    linear-gradient(to bottom, var(--ink-0) 0%, var(--ink-0) 18%, transparent 78%),
+    linear-gradient(to bottom, transparent 26%, color-mix(in srgb, var(--hot) 22%, transparent) 58%, transparent 84%);
+  animation: neo-blind 0.52s cubic-bezier(0.33, 0, 0.2, 1) both;
 }
 
 .neo-shutter::after {
   bottom: 0;
   transform-origin: bottom;
-  background: linear-gradient(to top, var(--ink-0), var(--ink-0) calc(100% - 2px), color-mix(in srgb, var(--hot) 60%, transparent));
-  animation: neo-blind 0.34s cubic-bezier(0.45, 0, 0.55, 1) both;
+  background:
+    linear-gradient(to top, var(--ink-0) 0%, var(--ink-0) 18%, transparent 78%),
+    linear-gradient(to top, transparent 26%, color-mix(in srgb, var(--hot) 22%, transparent) 58%, transparent 84%);
+  animation: neo-blind 0.52s cubic-bezier(0.33, 0, 0.2, 1) both;
 }
 
 @keyframes neo-blind {
   0% {
     transform: scaleY(0);
   }
-  44% {
-    transform: scaleY(0.55);
+  46% {
+    transform: scaleY(0.86);
   }
   100% {
     transform: scaleY(0);

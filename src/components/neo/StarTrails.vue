@@ -32,18 +32,22 @@ const cvs = ref(null)
 const TAU = Math.PI * 2
 
 /* ---------------- 常量（手感/性能参数集中，便于调优） ---------------- */
-// 稳态亮度 ≈ 每帧沉积 DEP ÷ 每帧衰减 fade：想让成熟的星空"透气"，这两头要一起动，
-// 只调一个会同时改变起雾速度和最终密度。下面这组是 2026-09-17 按"久了过饱和"回收的。
+// 稳态亮度 ≈ 每帧沉积 DEP ÷ 每帧衰减 fade。这组值被调过两轮：1.1.0 的 0.0085/0.008 = 1.06
+// 被投诉"久了过饱和"，2026-09-17 收到 0.0072/0.0104 = 0.69 又被告知"不明显、不好看"。
+// 现在落在 0.98 —— **略低于**当初投诉过饱和的那一档，因为这一轮真正补回来的是**对比**
+// （星等分层 + 头部亮段，见 mkStar/accPass），不是单纯把整片提亮。两头一起动才同时满足
+// "更长更亮"和"留得住黑"。
 const OMEGA = 0.042 // 基础角速度 rad/s（刚体旋转，全场一致；越小天空转得越从容）
-const SMEAR = 0.12 // 每帧沉积的快门拖尾角长 rad
-const DEP = 0.0072 // 沉积基准 alpha（深空；原 0.0085）
-const FADE_0 = 0.0104 // 页顶衰减/帧（原 0.008；加快后弧与弧之间留得住黑）
-const FADE_1 = 0.0044 // 最深衰减/帧（原 0.0032；尾迹仍比页顶长，只是不再糊成一片）
+const SMEAR = 0.12 // 每帧沉积的快门拖尾角长 rad（只用于变星）
+const DEP = 0.0084 // 沉积基准 alpha（深空）
+const FADE_0 = 0.0086 // 页顶衰减/帧：衰减窗口 ≈ 1/FADE 帧，越小尾迹越长
+const FADE_1 = 0.0038 // 最深衰减/帧
 const FLOW_MAX = 2.2 // 下潜最深处的时间流速加成
 const SETTLE_START = 0.8 // 转满前 20% 开始尾部渐隐（cycle∈[0.8,1] 平滑过渡）
-const SETTLE_DEPTH = 0.72 // 临近转满暗化多深（原 0.55）；越大越不容易收成实心亮环
-const FEAT_MIN = 9000 // 独立尾部消失的最小间隔 ms
-const FEAT_MAX = 19000 // 最大间隔 ms
+const SETTLE_DEPTH = 0.6 // 临近转满暗化多深；越大越不容易收成实心亮环，也越灰
+const HEAD_GAIN = 2.6 // 头部亮段的 alpha 倍率：让拖痕前沿比尾巴亮
+const FEAT_MIN = 5200 // 独立尾部消失的最小间隔 ms（2026-09-17 加密：换着消失才显得随机）
+const FEAT_MAX = 11000
 const FEAT_DUR = 4.2 // 独立尾部消失时长 s（量级与整体旋转周期协调，避免突兀）
 const LENS_R = 180 // 指针时间膨胀半径 px
 const N_BIG = 220 // 星数（宽屏）
@@ -52,11 +56,11 @@ const METEOR_MIN = 6000 // 流星最短间隔 ms
 const METEOR_MAX = 9000
 const PLATE_STEPS = 380 // reduced-motion 静态底片快进步数
 const PLATE_OM = 0.17 // 快进角速度 rad/s
-// 静态底片是减弱动效用户**唯一**能看到的东西，所以它的浓淡必须跟着 live 的 DEP/fade 一起调：
-// 静态÷live 的浓度比历来约 1.8×，DEP/fade 改动后若留在 0.0045 会漂到 2.3×（正是被调掉的过饱和），
-// 取 0.006 是为了**恢复原有的设计比例**，不是另加口味。
-// 尾迹依然够长——快进角速度是实时 ω 的 4 倍，1/0.006 的衰减窗口仍有约 27° 的弧。
-const PLATE_FADE = 0.006
+// 静态底片是减弱动效用户**唯一**能看到的东西，所以它的浓淡必须跟着 live 的 fade 走：
+// PLATE_FADE : FADE_0 这个比例（≈0.58）自 2026-09-17 起就没变，这一轮 FADE_0 降了就跟着降，
+// 否则同一张底片会在"实时变亮"的同时被静态版相对压暗。
+// 尾迹依然够长——快进角速度是实时 ω 的 4 倍，1/0.005 的衰减窗口仍有约 33° 的弧。
+const PLATE_FADE = 0.005
 // 次级页限帧到 30fps。长曝光靠短弧增量累积，帧率减半不影响观感，
 // 但全屏 destination-out + drawImage 的绘制量直接减半（首页交互层仍走满帧）。
 const SUB_FPS = 30
@@ -65,14 +69,15 @@ const SUB_FPS = 30
 // 不用首页那套 scrollY/(H*1.1)——长文章滚过一屏它就饱和了，读不出整篇的进度。
 const SUB_FADE_TOP = FADE_0 * 1.3 // 页顶衰减/帧（沿用原静默基线：更短尾迹）
 const SUB_FLOW = 1.1 // 最深处的流速加成（首页 FLOW_MAX 的一半，次级页保持克制）
-// 环带取样区间：3 条暗带间隙 → 同心结构感
+// 环带取样：只当"哪半径偏密"的倾向，不当栅栏。原先是 4 段互不重叠、中间留 3 条空隙，
+// 那几道空环把天空切成了人为的同心结构 —— 用户说的"不好看/太规整"主要就出在这里。
 const BANDS = [
-  [0.03, 0.32],
-  [0.36, 0.55],
-  [0.59, 0.8],
-  [0.84, 1],
+  [0.04, 0.42],
+  [0.3, 0.7],
+  [0.55, 1],
 ]
 const BAND_TOT = BANDS.reduce((s, b) => s + (b[1] - b[0]), 0)
+const RND_R = 0.3 // 三成星的半径完全随机：打散环带残留的等距感
 
 let ctx = null
 let W = 0 // 本相机的盒子尺寸（CSS px）；底片尺寸在 sky.w/h
@@ -196,6 +201,7 @@ function resize() {
 }
 
 function pickRn() {
+  if (Math.random() < RND_R) return 0.02 + Math.random() * 0.97
   let u = Math.random() * BAND_TOT
   for (const b of BANDS) {
     const w = b[1] - b[0]
@@ -206,7 +212,11 @@ function pickRn() {
 }
 
 function mkStar() {
-  const z = 0.22 + Math.pow(Math.random(), 1.7) * 0.78
+  // 星等：多数暗、极少数亮。原来是 0.22 + r^1.7·0.78，中位数就有 0.6，全场一样亮 →
+  // 累积成一片没有层次的雾。真实长曝光照片读得出来的正是那几颗亮星的拖痕，所以这里
+  // 用更强的幂把分布压向低端，再单独放一撮亮星出来。
+  let z = 0.16 + Math.pow(Math.random(), 2.4) * 0.62
+  if (Math.random() < 0.07) z *= 2.1
   const rr = Math.random()
   return {
     rn: pickRn(),
@@ -214,11 +224,14 @@ function mkStar() {
     th: Math.random() * TAU,
     z,
     tier: rr < 0.56 ? 0 : rr < 0.89 ? 1 : 2, // 冷白居多，琥珀最稀
-    lw: 0.7 + z * 0.9,
-    tw: 0.3 + Math.random() * 1.1,
+    lw: 0.6 + z * 1.2, // 亮星更粗：亮度之外再给一层尺寸差
+    head: z > 0.62, // 亮星才拖"头部亮段"：实测占 14.2%，额外描边数因此受控
+    ta: 0.08 + 0.13 * Math.min(1, z), // 闪烁幅度随星等增大（亮星才看得见眨眼）
+    tw: 0.3 + Math.random() * 1.3,
     ph: Math.random() * TAU,
-    // 尾迹起点偏移（rad）：每颗星从不同角度开始沉积，使弧段截端错落，避免对齐成断口
-    shear: 0.04 + Math.random() * 0.22,
+    // 尾迹起点偏移（rad）：每颗星从不同角度开始沉积，使弧段截端错落，避免对齐成断口。
+    // 分布放宽到 3.4°~23°——弧长差异够大，一眼读得出"每根不一样长"，这是随机感的主力。
+    shear: 0.06 + Math.pow(Math.random(), 1.25) * 0.34,
   }
 }
 
@@ -237,10 +250,12 @@ function seedStars() {
   sky.featNext = 0
 }
 
-/* ---------------- 独立尾部消失（随机 1-2 根星轨，周期性换角） ---------------- */
+/* ---------------- 独立尾部消失（随机 1-3 根星轨，周期性换角） ---------------- */
 function pickFeat(tSec) {
   sky.feat = []
-  const count = 1 + (Math.random() < 0.5 ? 0 : 1) // 1 或 2 根
+  const r = Math.random()
+  // 1/2/3 根按 45%/37%/18% 抽。固定"1 或 2 根"抽久了会听出节拍，偶发三根一起换角才像云过。
+  const count = r < 0.45 ? 1 : r < 0.82 ? 2 : 3
   const set = new Set()
   let guard = 0
   while (set.size < count && guard++ < 60 && set.size < sky.stars.length) {
@@ -358,12 +373,25 @@ function accPass(om, fd, dtS, tAbs, dep) {
         vk = Math.max(vk, (0.5 - 0.5 * Math.cos(TAU * p)) * 0.6) // 0→0.6→0 的柔和独立渐隐（不整星熄灭，避免环口）
       }
       s.th += dth
-      const tw = 0.86 + 0.14 * Math.sin(tAbs * s.tw + s.ph)
-      a.globalAlpha = Math.min(1, dep * s.z * ab * tw * (1 - vk * SETTLE_DEPTH))
+      const dthLen = s.shear * boost + dth // 本帧沉积的弧长
+      const tw = 1 - s.ta + s.ta * Math.sin(tAbs * s.tw + s.ph)
+      const al = Math.min(1, dep * s.z * ab * tw * (1 - vk * SETTLE_DEPTH))
+      a.globalAlpha = al
       a.lineWidth = s.lw
       a.beginPath()
-      a.arc(polx, poly, s.r, s.th - (s.shear * boost + dth), s.th)
+      a.arc(polx, poly, s.r, s.th - dthLen, s.th)
       a.stroke()
+      // 头部亮段：等亮的长弧只是一根光棒，前沿再叠一笔短而亮的弧才有"自尾向头递增"，
+      // 读起来才是一颗正在划过的星。累积稳态的 头/尾 实测 1.3~1.6 倍（HEAD_GAIN 2.6 看着大，
+      // 但每帧增量要走完 al/(al+fade) 才显现）——要更突出就同时动 HEAD_GAIN 和这里的 0.22。
+      // 只有 14.2% 的星走到这一支，220 星满打满算多约 31 次描边/帧，不是多 220 次。
+      if (s.head) {
+        a.globalAlpha = Math.min(1, al * HEAD_GAIN)
+        a.lineWidth = s.lw * 0.72
+        a.beginPath()
+        a.arc(polx, poly, s.r, s.th - dthLen * 0.22, s.th)
+        a.stroke()
+      }
     }
   }
 
@@ -423,11 +451,11 @@ function update(dt, now) {
   }
   const tSec = (now - sky.t0) / 1000
   // 只有底片的主人能改天空：抽独立尾部、以及 accPass 里推进的星角。
-  // 非主人照常往下走并 draw()——转场重叠的那 220ms 里两台相机显示的是同一张
+  // 非主人照常往下走并 draw()——转场重叠的那 260ms 里两台相机显示的是同一张
   // "还在长"的底片，交出取景权的那台不再冻在半帧上（那是切换顿挫感的真正来源）。
-  // 代价：非主人自己那份变星角度这 220ms 不推进，而它正在淡出，看不出来。
+  // 代价：非主人自己那份变星角度这 260ms 不推进，而它正在淡出，看不出来。
   if (ownsPlate(self)) {
-    // 独立尾部消失：定时随机挑 1-2 根，周期独立、与整体旋转周期量级协调
+    // 独立尾部消失：定时随机挑 1-3 根，周期独立、与整体旋转周期量级协调
     if (now > sky.featNext && sky.stars.length) {
       pickFeat(tSec)
       sky.featNext = now + FEAT_MIN + Math.random() * (FEAT_MAX - FEAT_MIN)
