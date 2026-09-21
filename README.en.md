@@ -24,7 +24,7 @@
 
 ## About
 
-Escaping Notes is a personal writing and journal site that frames "writing" as a long exposure of the night sky. The landing screen is a camera on a tripod mid long exposure: hundreds of concentric star-trail arcs rotate rigidly around an offset celestial pole, accumulating and decaying frame by frame, while a giant ghost glyph rests between the pages as the author's mark. All four devices below grow out of that one camera —
+Escaping Notes is a personal writing and journal site that frames "writing" as a long exposure of the night sky. The landing screen is a camera on a tripod mid long exposure, and all four devices below grow out of that one camera —
 
 - **Posts as variable stars** — every article is a pulsing fixed star; hover unfolds a conical diffraction cross, click to fall into the prose
 - **Scroll as time** — the deeper you dive, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
@@ -38,7 +38,7 @@ Escaping Notes is a personal writing and journal site that frames "writing" as a
   </tr>
 </table>
 
-> Left Deep Space / right Paper. Both are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain so the layers still read at thumbnail size — **the site itself is darker**. Stellar magnitudes follow a power law pushed toward the faint end, so most trails are meant to be dim and only a few should stand out.
+> Left Deep Space / right Paper: both are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain, so **the site itself is darker**.
 
 ## Features
 
