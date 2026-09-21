@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" width="920" height="300" role="img" aria-label="暗带契约剖面图：视口中央 1120px 的天空被压到 --sky-k，两侧羽化回全亮">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" width="920" height="300" role="img" aria-label="Cross-section of the dark band: the central 1120px of the viewport is dimmed to --sky-k and feathered back to full strength on both sides">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".55"/>
       <stop offset="1" stop-color="#8ec9ff" stop-opacity=".06"/>
     </linearGradient>
     <style>
-      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", monospace; fill: #f4f1ea; }
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; fill: #f4f1ea; }
       .t { font-size: 13px; }
       .s { font-size: 11px; fill: #8f8c96; }
       .h { font-size: 14px; fill: #8ec9ff; }
@@ -33,8 +33,8 @@
   <text class="s" x="42" y="202">--sky-feather</text>
   <text class="s" x="42" y="215">= (100% − band) / 2</text>
   <path d="M133 186 H787 M133 182 V190 M787 182 V190" class="dim"/>
-  <text class="t" x="300" y="203">--sky-band: min(1120px, 100%)</text>
-  <text class="s" x="300" y="216">= .neo-shell max-width，正文整块落在带内</text>
+  <text class="t" x="290" y="203">--sky-band: min(1120px, 100%)</text>
+  <text class="s" x="290" y="216">= .neo-shell max-width, so text never sits on the feather</text>
   <path d="M787 186 H880 M787 182 V190 M880 182 V190" class="dim"/>
   <text class="s" x="792" y="202">feather</text>
 
@@ -49,6 +49,6 @@
   <rect x="300" y="258" width="252" height="28" fill="#020204"/>
   <rect x="300" y="258" width="252" height="28" fill="#ff977d" fill-opacity=".113"/>
   <text class="t" x="312" y="277">in band · 5.48:1 ✓ AA</text>
-  <text class="s" x="566" y="270">k 是按峰值 alpha 0.753 解出来的，不是按中位数 0.247：</text>
-  <text class="s" x="566" y="284">星轨在动，同一枚文字像素的底随时间明暗波动。</text>
+  <text class="s" x="566" y="270">k solved on peak alpha 0.753, not median 0.247:</text>
+  <text class="s" x="566" y="284">the trails move; a text pixel's ground varies.</text>
 </svg>

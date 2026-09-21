@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" role="img" aria-label="一次导航的时间轴：fall 进出场重叠 260 毫秒，快门两片帘幕 0.52 秒同时长同曲线">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" role="img" aria-label="Timing of one navigation: the fall transition's enter and leave overlap by 260ms, both shutter blades run 0.52s with the same duration and curve">
   <defs>
     <linearGradient id="in" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".12"/>
@@ -9,7 +9,7 @@
       <stop offset="1" stop-color="#f4f1ea" stop-opacity="0"/>
     </linearGradient>
     <style>
-      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", monospace; fill: #f4f1ea; }
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; fill: #f4f1ea; }
       .t { font-size: 13px; }
       .s { font-size: 11px; fill: #8f8c96; }
       .h { font-size: 14px; fill: #8ec9ff; }
@@ -28,14 +28,14 @@
   </g>
   <text class="s" x="52" y="272">0</text>
   <text class="s" x="196" y="272">100ms</text>
-  <text class="s" x="349" y="272">200</text>
-  <text class="s" x="502" y="272">300</text>
-  <text class="s" x="655" y="272">400</text>
-  <text class="s" x="808" y="272">500</text>
+  <text class="s" x="356" y="272">200</text>
+  <text class="s" x="509" y="272">300</text>
+  <text class="s" x="663" y="272">400</text>
+  <text class="s" x="816" y="272">500</text>
 
   <!-- 重叠窗口 -->
   <rect x="60" y="66" width="400" height="184" fill="#ff5c39" fill-opacity=".07" stroke="#ff5c39" stroke-opacity=".35" stroke-dasharray="4 4"/>
-  <text class="s" x="250" y="243" fill="#ff5c39">260ms 两页并存</text>
+  <text class="s" x="252" y="243" fill="#ff5c39">260ms: both pages alive</text>
 
   <!-- enter -->
   <rect x="60" y="78" width="677" height="30" fill="url(#in)"/>
@@ -52,11 +52,11 @@
   <path d="M60 218 C 200 218, 330 172, 429 172 C 540 172, 700 218, 860 218" stroke="#ff5c39" stroke-width="1.6" fill="none"/>
   <path d="M429 168 V222" stroke="#ff5c39" stroke-dasharray="3 3"/>
   <text class="t" x="60" y="212" fill="#ff5c39">shutter 0.52s</text>
-  <text class="s" x="440" y="166">峰值 scaleY 0.86 落在 46% ≈ 240ms —— 正好对上两页都最糊的那一瞬</text>
-  <text class="s" x="640" y="212">两片帘幕必须同时长同曲线</text>
-  <text class="s" x="640" y="226">（animationend 冒泡两次，先到即摘层）</text>
+  <text class="s" x="440" y="166">peak scaleY 0.86 at 46% ≈ 240ms — where both pages blur most</text>
+  <text class="s" x="600" y="212">both blades share duration + curve</text>
+  <text class="s" x="600" y="226">animationend bubbles twice</text>
 
   <!-- 结论 -->
-  <text class="s" x="60" y="298">底片是全站一份（src/lib/sky.js）：这 260ms 里两台相机看的是同一张还在感的底片 —— 只锁沉积（claimPlate），不锁重绘。</text>
-  <text class="s" x="60" y="313">改前交出底片那台冻在半帧上，那就是「切换顿挫」的真正来源（design-neo.md §10 ⑥）。</text>
+  <text class="s" x="60" y="298">the plate is one per site (src/lib/sky.js): during those 260ms both cameras show the same plate, still being exposed —</text>
+  <text class="s" x="60" y="313">deposition is locked (claimPlate), redraw is not — freezing the handing-over camera mid-frame WAS the stutter.</text>
 </svg>
