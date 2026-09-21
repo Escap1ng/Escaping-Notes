@@ -26,7 +26,7 @@ BLOG/
 │   └── styles/           ← 改外观只碰这两个文件：
 │       ├── tokens.css    ←   基线令牌（灰阶/间距/字体栈）
 │       └── neo.css       ←   皮肤令牌（深浅两套配色 + 圆角/阴影）
-├── docs/                 ← 设计文档与本手册
+├── docs/                 ← design-neo.md 界面设计 · manual.md 本手册 · api.md 后端接口契约
 └── index.html            ← 网页标题、描述、OG/SEO 元信息在这里改
 ```
 
@@ -264,9 +264,14 @@ export const site = {
 ### 4.0 上传前自检
 
 ```powershell
-npm run build     # 生成 dist/ 目录（含 rss.xml / sitemap.xml），无报错即合格
-npm run preview   # 本地模拟线上环境，浏览器打开检查一遍
+npm run build       # 生成 dist/ 目录（含 rss.xml / sitemap.xml），无报错即合格
+npm run check:api   # docs/api.md 的端点表 vs server/api.py 的路由，双向对拍
+npm run check:docs  # 文档里的文件引用与 § 节号是否还指得到东西 + README 路由表 vs src/router 是否一致
+npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 ```
+
+后两条查的是**文档有没有开始说谎**（漂移即退出码非 0）。脚本里写的是 `python`；只有 `python3`
+的机器上直接跑 `python3 scripts/check_api_doc.py` 与 `python3 scripts/check_doc_refs.py`。
 
 构建会顺带跑 `scripts/build_seo.mjs` 产出 `dist/rss.xml` 与 `dist/sitemap.xml`：自有服务器上这两条路由会被 nginx 转给后端（动态、含后台上传的文章），构建产物只是 GitHub Pages 镜像的兜底。
 
@@ -430,7 +435,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
   - 功能页并入——`/login` `/register` `/admin` 的私有类（`.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn`）全部删除，改用 `.neo-*`；后台页签选中态由热色改冷色，与全站 `.neo-chip` 一致。
   - 修正——`.field` 显式声明 `font-family` / `text-transform`，避免嵌在 `.readout` 标签里被带成等宽大写；修复本次重构一度造成的提交按钮无样式、错误提示无颜色。
 - **v1.2.0 · 运行时性能 / 无障碍 / SEO**：
-  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留，见设计文档 §10。）
+  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留，见 `docs/design-neo.md` §10。）
   - 无障碍——抽屉与灯箱加焦点陷阱并在关闭时归还焦点；路由切换向读屏播报；`#main` 可聚焦供「跳到内容」；触控目标 ≥44px；最小字号下限 11.5px。
   - 反馈——文章列表骨架屏；「本来没有内容」与「筛选无结果」分文案；搜索/标签筛选写入 URL（可分享、刷新不丢）。
   - SEO——`og:image` / `og:url` / `canonical` / `twitter:*` 补全；构建期生成 `rss.xml` 与 `sitemap.xml`；新增 `robots.txt`。

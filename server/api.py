@@ -16,8 +16,8 @@ meta 注入（/ 与 /blog/:slug 服务端改写 index.html 的 title/OG/canonica
 - DATA / DIST 可用 SITE_DATA / SITE_DIST 覆盖（默认仍是仓库内相对布局）。
   运维视角的说明（含"重置一台机器该怎么做"）在 docs/manual.md §2.7。
 
-接口目前没有独立文档：docs/design.md 并不存在（docs/ 下只有 design-neo.md 与
-manual.md），端点行为以本文件为唯一权威。补一份接口文档是已排期的待办。
+接口契约见 docs/api.md（端点全表、状态码、存储与 fail-closed 边界、已知缺陷 T1–T8）。
+**改任何端点前后都要同步那份文档**——它的 §7 有一段脚本，能把文档与本文的路由双向对拍。
 """
 import hashlib
 import html
