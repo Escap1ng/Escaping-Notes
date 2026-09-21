@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" width="920" height="300" role="img" aria-label="暗带契约剖面图：视口中央 1120px 的天空被压到 --sky-k，两侧羽化回全亮">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8ec9ff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#8ec9ff" stop-opacity=".06"/>
+    </linearGradient>
+    <style>
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", monospace; fill: #f4f1ea; }
+      .t { font-size: 13px; }
+      .s { font-size: 11px; fill: #8f8c96; }
+      .h { font-size: 14px; fill: #8ec9ff; }
+      .line { stroke: #f4f1ea; stroke-opacity: .18; stroke-width: 1; fill: none; }
+      .dim { stroke: #8f8c96; stroke-width: 1; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="920" height="300" fill="#0a0a10"/>
+  <text class="h" x="40" y="30">sub-page sky, horizontal cross-section</text>
+  <text class="s" x="40" y="48">StarTrails.vue .st-fixed mask-image · tokens in neo.css §1 / §2 / §3</text>
+
+  <!-- 改前：整片全亮 -->
+  <path d="M40 70 H880" stroke="#ff5c39" stroke-opacity=".55" stroke-width="1" stroke-dasharray="4 4" fill="none"/>
+  <text class="s" x="640" y="66" fill="#ff5c39">before: sky at full strength everywhere</text>
+
+  <!-- 现况曲线 -->
+  <path d="M40 70 L133 155 H787 L880 70 V170 H40 Z" fill="url(#sky)"/>
+  <path d="M40 70 L133 155 H787 L880 70" stroke="#8ec9ff" stroke-width="1.6" fill="none"/>
+  <path d="M40 170 H880" class="line"/>
+  <path d="M133 155 V170 M787 155 V170" class="dim" stroke-dasharray="3 3"/>
+
+  <!-- 标注 -->
+  <path d="M40 186 H133 M40 182 V190 M133 182 V190" class="dim"/>
+  <text class="s" x="42" y="202">--sky-feather</text>
+  <text class="s" x="42" y="215">= (100% − band) / 2</text>
+  <path d="M133 186 H787 M133 182 V190 M787 182 V190" class="dim"/>
+  <text class="t" x="300" y="203">--sky-band: min(1120px, 100%)</text>
+  <text class="s" x="300" y="216">= .neo-shell max-width，正文整块落在带内</text>
+  <path d="M787 186 H880 M787 182 V190 M880 182 V190" class="dim"/>
+  <text class="s" x="792" y="202">feather</text>
+
+  <path d="M133 155 H787" stroke="#ff5c39" stroke-width="1" stroke-dasharray="5 4" fill="none"/>
+  <text class="t" x="133" y="148" fill="#ff5c39">--sky-k = 0.15 (deep) / 0.06 (paper)</text>
+
+  <!-- 对比度实测 -->
+  <text class="h" x="40" y="250">text-1 contrast measured on the composited ground</text>
+  <rect x="40" y="258" width="252" height="28" fill="#020204"/>
+  <rect x="40" y="258" width="252" height="28" fill="#ff977d" fill-opacity=".75"/>
+  <text class="t" x="52" y="277">naked trail · 1.7:1</text>
+  <rect x="300" y="258" width="252" height="28" fill="#020204"/>
+  <rect x="300" y="258" width="252" height="28" fill="#ff977d" fill-opacity=".113"/>
+  <text class="t" x="312" y="277">in band · 5.48:1 ✓ AA</text>
+  <text class="s" x="566" y="270">k 是按峰值 alpha 0.753 解出来的，不是按中位数 0.247：</text>
+  <text class="s" x="566" y="284">星轨在动，同一枚文字像素的底随时间明暗波动。</text>
+</svg>

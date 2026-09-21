@@ -2,6 +2,9 @@
   "name": "escaping-notes",
   "private": true,
   "version": "1.3.0",
+  "engines": {
+    "node": ">=18"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +12,10 @@
     "build:pages": "vite build --mode pages && node scripts/build_seo.mjs",
     "font:build": "node scripts/build_font.mjs",
     "og:build": "node scripts/build_seo.mjs --og",
+    "art:build": "node scripts/build_readme_art.mjs",
     "seo:build": "node scripts/build_seo.mjs",
+    "check:api": "python scripts/check_api_doc.py",
+    "check:docs": "python scripts/check_doc_refs.py",
     "preview": "vite preview"
   },
   "dependencies": {
