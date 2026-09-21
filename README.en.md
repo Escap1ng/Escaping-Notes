@@ -24,7 +24,7 @@
 
 ## About
 
-Escaping Notes is a personal blog and journal that treats writing as a long exposure of the night sky: posts, updates, records, projects and guestbook entries are all exposed onto the same plate. All four devices below grow out of that one camera —
+Escaping Notes is a personal blog and journal that treats writing as a long exposure of the night sky — the camera set up on the landing screen keeps the exposure for me: posts, updates, records, projects and guestbook entries all land on the same plate. All four devices below grow out of that one camera —
 
 - **Posts as variable stars** — every article is a pulsing fixed star; hover unfolds a conical diffraction cross, click to fall into the prose
 - **Scroll as time** — the deeper you dive, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
