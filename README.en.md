@@ -18,15 +18,6 @@
 
 [中文](README.md) · **English**
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="Deep Space plate: hundreds of concentric star-trail arcs accumulating around an offset celestial pole" title="Deep Space"></td>
-    <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="The same plate on the Paper theme: ink trails laid over a dry plate, vermilion accents" title="Paper"></td>
-  </tr>
-</table>
-
-<sub>These two are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain so the layers still read at thumbnail size — **the site itself is darker**. Stellar magnitudes follow a power law pushed toward the faint end, so most trails are meant to be dim and only a few should stand out.</sub>
-
 </div>
 
 ---
@@ -39,6 +30,15 @@ Escaping Notes is a personal writing and journal site that frames "writing" as a
 - **Scroll as time** — the deeper you dive, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
 - **Pointer as time dilation** — star trails inside the cursor radius locally accelerate and curl
 - **Easter eggs as narrative** — meteors occasionally cross the plate; click a variable star to fall into an article; a giant ghost glyph rests on every page
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="Deep Space plate: hundreds of concentric star-trail arcs accumulating around an offset celestial pole" title="Deep Space"></td>
+    <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="The same plate on the Paper theme: ink trails laid over a dry plate, vermilion accents" title="Paper"></td>
+  </tr>
+</table>
+
+> Left Deep Space / right Paper. Both are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain so the layers still read at thumbnail size — **the site itself is darker**. Stellar magnitudes follow a power law pushed toward the faint end, so most trails are meant to be dim and only a few should stand out.
 
 ## Features
 

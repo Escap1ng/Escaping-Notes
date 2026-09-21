@@ -18,15 +18,6 @@
 
 [中文](README.md) · [English](README.en.md)
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="深空主题的长曝光底片：数百条同心星轨弧绕一枚偏心天极累积" title="深空"></td>
-    <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="纸面主题的同一张底片：墨色轨迹压在干版上，朱砂点睛" title="纸面"></td>
-  </tr>
-</table>
-
-<sub>上面两张是**按站点同一套常数离线复算的底片**（`npm run art:build`），不是站点截图；为在缩略尺寸下读得出层次，出图时提了 ×2.8 / ×1.6 一档冲印增益，**实际观感更暗**。星等按幂分布压向暗端，所以多数轨迹本就该是暗的、只有少数几颗读得出来。</sub>
-
 </div>
 
 ---
@@ -39,6 +30,15 @@ Escaping Notes 是一个个人书写与记录站点，把「写作」抽象为�
 - **滚动即时间**：下潜越深，曝光窗口越长、天空转得越快；页首到页尾是一整次夜拍
 - **指针即时间膨胀**：光标半径内星轨局部加速卷曲
 - **彩蛋即叙事**：偶有流星划过曝光底片；点击变星坠入文章；每页沉着一枚巨型幽灵汉字签名
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="深空主题的长曝光底片：数百条同心星轨弧绕一枚偏心天极累积" title="深空"></td>
+    <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="纸面主题的同一张底片：墨色轨迹压在干版上，朱砂点睛" title="纸面"></td>
+  </tr>
+</table>
+
+> 左 深空 / 右 纸面。两张都是**按站点同一套常数离线复算的底片**（`npm run art:build`），不是站点截图；为在缩略尺寸下读得出层次，出图时提了 ×2.8 / ×1.6 一档冲印增益，**实际观感更暗**。星等按幂分布压向暗端，所以多数轨迹本就该是暗的、只有少数几颗读得出来。
 
 ## 特性
 
