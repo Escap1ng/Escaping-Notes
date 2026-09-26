@@ -542,8 +542,9 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 - **不写没量过的数字**。页面数、端点数、对比度、alpha，凡写进文档的都应有出处（脚本或实测）。
 - **改端点 → 跑 `npm run check:api`**（`docs/api.md` §2 的端点表与 `api.py` 路由双向对拍）；
   **改文档 → 跑 `npm run check:docs`**（扫文件引用与 § 节号是否指得到东西，并核对 README 路由表与 `src/router` 一致）；
-  **改文件名 → 跑 `npm run check:naming`**（§9.7 的命名规约逐条把守，`EXEMPT` 里的待办必须随批次删掉）。
-  三者漂移都以退出码 1 结束，可直接接进 CI；`npm run check` 一次跑全。
+  **改文件名 → 跑 `npm run check:naming`**（§9.7 的命名规约逐条把守，`EXEMPT` 里的待办必须随批次删掉）；
+  **改解析/渲染 → 跑 `npm test`**（20 条 Node 用例 + 4 条 Python 用例，含跨语言对拍与一条 `expectedFailure`
+  记着标题缺省值尚未统一）。四者漂移都以退出码 1 结束，可直接接进 CI；`npm run check` 一次跑前三个。
 - **README 那四张图也算文档**。两张底片 PNG 由 `npm run art:build` 从 `StarTrails.vue` / `sky.js` /
   `neo.css` 的常数离线复算（常数读不到就直接抛错，图不会悄悄说谎），改了星轨参数或主题色要重跑；
   两张原理 SVG 是手写的，数字取自本文 §3.3 与 `neo.css` §8/§8.5，改令牌或改转场就要跟着改。
@@ -567,6 +568,10 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
   一律 `.py` + PEP 8 `snake_case`，不与 JS 命名风格混用。
 - **脚本按动词族起手**：`build_*` 产出物、`check_*` 对拍校验、`sync_*` 从外部拉数据；共用模块进
   `scripts/lib/`，脚本的输入数据进 `scripts/data/`。前缀即职责，所以 `scripts/` 不必再开子目录。
+- **测试只进 `tests/`，按 runner 定后缀**：Node 侧文件名以 `.test` 段结尾（例 `tests/markdown.test.mjs`），
+  Python 侧以 `test_` 开头（例 `tests/test_parsers.py`）。两个 runner 都是语言自带的（`node --test`
+  与 `unittest`），不为此引依赖。跨语言对拍用例（同一篇文章在三份解析器下必须同答案）就在
+  `tests/test_parsers.py`，它同时起 `node` 与 `python`。
 - **标识符**：组件与类实例 PascalCase（`StarTrails`、`HorizonHero`），函数与变量 camelCase，
   模块级常量 `SCREAMING_SNAKE`（`TIMEOUT`、`CONTENT_KEYS`），CSS 自定义属性 `--kebab-case`。
   布尔量用 `is/has/can` 前缀（`isOwner`、`ownsPlate`），别用 `flag` / `status2`。

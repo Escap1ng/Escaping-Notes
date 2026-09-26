@@ -1,14 +1,32 @@
 // 小型 Markdown 渲染器：先转义再渲染，覆盖个人博客常用语法
 // 支持：标题/加粗/斜体/行内代码/链接/图片/代码块/列表/引用/分隔线/表格（GFM 管道语法）
+// 链接与图片的 URL 走白名单（见下方 safeHref）：站内相对路径、锚点、http(s)、mailto、tel
 
 const esc = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
+// URL 口径：渲染结果经 v-html 进 DOM，而 /api/posts 的写权限是 admin **或** owner
+// （server/api.py 的 _post_write），所以"写文章的人一定可信"不成立——读者登录后 en-token
+// 就躺在 localStorage 里，一个 javascript: 链接足以把它取走。白名单之外一律不成链接/图片，
+// 但保留可见文字，与 §10 ⑦ 修表格时定下的"不吞内容"是同一条取向。由 tests/markdown.test.mjs 把守。
+const SAFE_SCHEME = /^(?:https?:|mailto:|tel:)/i
+// 浏览器解析 URL 时会自行剥掉前导控制符与空白，所以这里也先按同一口径擦一遍再判
+const CTRL = new RegExp('[\\u0000-\\u0020]', 'g')
+
+function safeHref(u) {
+  const s = u.replace(CTRL, '')
+  return /^[#./]/.test(s) || s.startsWith('//') || SAFE_SCHEME.test(s)
+}
+
 function inline(s) {
   return esc(s)
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1" loading="lazy" decoding="async" />')
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m, alt, url) =>
+      safeHref(url) ? `<img src="${url}" alt="${alt}" loading="lazy" decoding="async" />` : alt,
+    )
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, text, url) =>
+      safeHref(url) ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>` : text,
+    )
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
 }
