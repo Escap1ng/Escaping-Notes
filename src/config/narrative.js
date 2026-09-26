@@ -79,4 +79,33 @@ export const N = {
     wall: '// 尚无回声落于此',
     projects: '// 载荷舱空',
   },
+
+  // 后端机器码 → 给人看的一句话。键必须与 server/api.py 各分支返回的 error 值逐字对上
+  //（改端点提示时跑 npm run check:api 与 npm test）。offline 与 unknown 两条负责分开
+  // "服务器答了但拒绝"和"服务器根本没答话"——T2 那类误导提示正出在这里没分开。
+  errors: {
+    'bad credentials': '用户名或密码错误',
+    unauthorized: '登录已过期，请重新登录',
+    banned: '该账号已被停用',
+    forbidden: '没有该操作的权限',
+    'owner only': '仅站长可执行该操作',
+    'bad username': '用户名需 3-20 位，只用小写字母、数字、下划线或连字符',
+    'weak password': '密码至少 6 位',
+    taken: '该用户名已被占用',
+    exists: '已存在同标识符的文章',
+    'bad role': '角色不合法（仅 admin / visitor）',
+    'bad json': '请求内容格式不正确',
+    'already setup': '站长已初始化，请直接登录',
+    'too fast': '操作过于频繁，请稍候再试',
+    'storage unavailable': '服务器存储不可用，请稍后重试',
+    'sync failed': '歌单同步失败，可能是源站未响应',
+    'type not allowed': '不支持的文件类型',
+    'bad file': '未收到文件',
+    'bad image': '图片读取失败',
+    empty: '内容不能为空',
+    'bad slug': '标识符不合法（仅限小写字母、数字与连字符）',
+    'not found': '未找到该条目',
+    offline: '连不上服务器：后端未启动或网络不通',
+    unknown: '请求未成功',
+  },
 }

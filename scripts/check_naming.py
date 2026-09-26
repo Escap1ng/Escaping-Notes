@@ -48,6 +48,9 @@ PY = re.compile(r'^[a-z][a-z0-9_]*\.py$')                           # Python PEP
 ASSET = re.compile(r'^[a-z0-9][a-z0-9._-]*$')                       # 静态资源全小写 kebab
 STORE_KEY = re.compile(r"""localStorage\.(?:get|set|remove)Item\(\s*[`'"]([A-Za-z0-9_-]+)""")
 BAD_STORE_PREFIX = re.compile(r'^(?!en-)')
+# 存储读写只能经 src/lib/storage.js：键名在那里由 PREFIX 拼出来，别处再写字面量就会拼错而无人报错
+STORE_CALL = re.compile(r'\b(?:local|session)Storage\.(?:get|set|remove)Item\s*\(')
+STORE_HOME = 'src/lib/storage.js'
 
 
 def tracked_files():
@@ -107,7 +110,7 @@ def check_rules(files):
             if not ASSET_ALLOW.match(base):
                 flag('kebab-static-assets', f, '资源名应为小写 kebab（不带大写/空格/哈希）')
 
-    # 7. 浏览器存储键前缀
+    # 7. 浏览器存储：键前缀 + 只能经 storage.js 读写
     for f in files:
         if not f.endswith(('.js', '.vue')) or not pathlib.Path(f).exists():
             continue
@@ -115,6 +118,8 @@ def check_rules(files):
         for key in STORE_KEY.findall(text):
             if BAD_STORE_PREFIX.match(key):
                 flag('storage-key-prefix', f, f'存储键 `{key}` 未用 en- 前缀')
+        if f != STORE_HOME and STORE_CALL.search(text):
+            flag('storage-via-lib', f, f'直接读写浏览器存储，应改用 {STORE_HOME} 的 read()/write()')
 
     return bad
 
@@ -129,7 +134,15 @@ def fixture_rules():
         'case-by-file-type': ('src/views/home_view.vue', 'server/API.py'),
         'kebab-static-assets': ('src/assets/fonts/DisplaySerif.woff2',),
         'storage-key-prefix': (None,),
+        'storage-via-lib': (None,),
     }
+
+
+# 按**内容**判定的规则：负向样本得写成文件片段，路径本身说明不了问题
+CONTENT_FIXTURES = {
+    'storage-key-prefix': "localStorage.setItem('bogus-key', '1')\n",
+    'storage-via-lib': "const v = sessionStorage.getItem('en-token')\n",
+}
 
 
 def run_self_test():
@@ -138,15 +151,15 @@ def run_self_test():
     failures = []
     for rule, fixtures in fixture_rules().items():
         for fx in fixtures:
-            if fx is None:                       # 存储键规则走内容而非路径
+            if fx is None:                       # 内容类规则：临时写一个探针文件
                 tmp = pathlib.Path('.naming_self_probe.js')
-                tmp.write_text("localStorage.setItem('bogus-key', '1')\n", encoding='utf-8')
+                tmp.write_text(CONTENT_FIXTURES[rule], encoding='utf-8')
                 hits = [b for b in check_rules([posix(tmp)]) if b[0] == rule]
                 tmp.unlink(missing_ok=True)
             else:
                 hits = [b for b in check_rules([fx]) if b[0] == rule]
             ok = bool(hits)
-            print(f'  {"ok  " if ok else "FAIL"} {rule:28s} ← {fx or "(存储键字面量)"}')
+            print(f'  {"ok  " if ok else "FAIL"} {rule:28s} ← {fx or CONTENT_FIXTURES[rule].strip()}')
             if not ok:
                 failures.append(rule)
     # 反向覆盖：真仓库里必须"干净"，否则说明自测样本与真实规则不是一回事

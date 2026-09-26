@@ -3,11 +3,12 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { content } from '../lib/content.js'
 import { music } from '../lib/music.js'
+import { KEYS, read, write } from '../lib/storage.js'
 
 const audio = ref(null)
 const idx = ref(0)
 const playing = ref(false)
-const vol = ref(Number(localStorage.getItem('en-vol') ?? 0.8))
+const vol = ref(Number(read(KEYS.volume, '0.8')))
 
 const list = computed(() => content.playlist || [])
 const cur = computed(() => list.value[idx.value])
@@ -26,7 +27,7 @@ function next() {
 
 function onVol(e) {
   vol.value = Number(e.target.value)
-  localStorage.setItem('en-vol', String(vol.value))
+  write(KEYS.volume, vol.value)
   if (audio.value) audio.value.volume = vol.value
 }
 

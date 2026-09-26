@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { api, getToken } from '../lib/api.js'
+import { api, tryApi, uploadFile } from '../lib/api.js'
 import { auth, isOwner } from '../lib/auth.js'
 import { content, loadContent } from '../lib/content.js'
 import { loadPosts } from '../lib/posts.js'
@@ -116,14 +116,16 @@ async function savePost() {
     summary: ed.value.summary,
     content: ed.value.body,
   }
-  const res = ed.value.slug
-    ? await api(`/api/posts/${ed.value.slug}`, { method: 'POST', body })
-    : await api('/api/posts', { method: 'POST', body })
-  if (res) {
+  const r = ed.value.slug
+    ? await tryApi(`/api/posts/${ed.value.slug}`, { method: 'POST', body })
+    : await tryApi('/api/posts', { method: 'POST', body })
+  // 后端在这里会分「内容不能为空」「标识符不合法」「已有同名文章」，全说成"保存失败"
+  // 就等于让站长自己猜（尤其改了 slug 之后撞上 409）
+  if (r.ok) {
     flash('文章已保存')
     newPost()
     refresh()
-  } else flash('保存失败', true)
+  } else flash(r.reason || '保存失败', true)
 }
 async function delPost(slug) {
   await api(`/api/posts/${slug}`, { method: 'DELETE' })
@@ -143,6 +145,17 @@ function newProject() {
   projectsForm.value = `新项目 | 项目描述 | ${y} | #\n` + projectsForm.value
 }
 
+// 四个内容保存走同一条路：成了就重取内容并回填表单，败了把后端那句话说出来。
+// 原来写成 `if (await api(...)) { … }` 且没有 else——保存失败时界面完全没反应，
+// 是 T2 那类"塌成 null 就没人报告"的另一面。
+async function saveContent(key, arr, label) {
+  const r = await tryApi(`/api/content/${key}`, { method: 'PUT', body: arr })
+  if (!r.ok) return flash(r.reason || '保存失败', true)
+  await loadContent()
+  fillForms()
+  flash(label)
+}
+
 async function saveUpdates() {
   // 按日期倒序（新→旧），保证时间线有序，便于管理
   const arr = lines(updatesForm.value)
@@ -151,9 +164,7 @@ async function saveUpdates() {
       return { date: (date || '').trim(), text: rest.join('|').trim() }
     })
     .sort((a, b) => b.date.localeCompare(a.date))
-  if (await api('/api/content/updates', { method: 'PUT', body: arr })) {
-    await loadContent(); fillForms(); flash('动态已保存')
-  }
+  await saveContent('updates', arr, '动态已保存')
 }
 // ---------- 图片管理 ----------
 const imgName = (x) => x.name.replace(/\.[a-z0-9]+$/i, '')
@@ -180,27 +191,23 @@ async function loadImages() {
   images.value = list.filter((x) => x.kind === 'image')
 }
 
-async function onImgFile(e) {
+// 两处上传（正文插图、附件）走同一条通道：令牌、超时、失败原因都由 lib/api.js 负责。
+// 此前这里是裸 fetch 手拼 Bearer——全站唯一不受取数层契约保护的调用点（缺陷 T4）。
+async function uploadFrom(e, after) {
   const f = e.target.files[0]
+  e.target.value = '' // 先清空：否则连续选同一个文件不再触发 change
   if (!f) return
-  const fd = new FormData()
-  fd.append('file', f)
-  try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${getToken()}` },
-      body: fd,
-    })
-    const j = await res.json()
-    if (j.url) {
-      insertAtCursor(`![${f.name.replace(/\.[a-z0-9]+$/i, '')}](${j.url})`)
-      flash('图片已上传并插入')
-      loadImages()
-    } else flash(j.error === 'type not allowed' ? '仅支持图片/音乐文件' : '上传失败', true)
-  } catch {
-    flash('上传失败', true)
-  }
-  e.target.value = ''
+  const r = await uploadFile('/api/upload', f)
+  if (r.ok && r.data?.url) after(r.data.url, f)
+  else flash(r.reason || '上传失败', true)
+}
+
+async function onImgFile(e) {
+  await uploadFrom(e, (url, f) => {
+    insertAtCursor(`![${f.name.replace(/\.[a-z0-9]+$/i, '')}](${url})`)
+    flash('图片已上传并插入')
+    loadImages()
+  })
 }
 
 async function delImage(x) {
@@ -212,46 +219,25 @@ async function saveProjects() {
     const [name, desc, year, url] = l.split('|')
     return { name: name || '', desc: desc || '', year: year || '', url: url || '#' }
   })
-  if (await api('/api/content/projects', { method: 'PUT', body: arr })) {
-    await loadContent(); fillForms(); flash('项目已保存')
-  }
+  await saveContent('projects', arr, '项目已保存')
 }
 async function saveGear() {
-  if (await api('/api/content/gear', { method: 'PUT', body: lines(gearForm.value) })) {
-    await loadContent(); fillForms(); flash('装备已保存')
-  }
+  await saveContent('gear', lines(gearForm.value), '装备已保存')
 }
 async function savePlaylist() {
   const arr = lines(playlistForm.value).map((l) => {
     const [title, artist, file] = l.split('|')
     return { title: title || '', artist: artist || '', file: file || '' }
   })
-  if (await api('/api/content/playlist', { method: 'PUT', body: arr })) {
-    await loadContent(); fillForms(); flash('歌单已保存')
-  }
+  await saveContent('playlist', arr, '歌单已保存')
 }
 
 // ---------- 上传 ----------
 async function onFile(e) {
-  const f = e.target.files[0]
-  if (!f) return
-  const fd = new FormData()
-  fd.append('file', f)
-  try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${getToken()}` },
-      body: fd,
-    })
-    const j = await res.json()
-    if (j.url) {
-      uploadUrl.value = j.url
-      flash('上传成功，URL 已填出')
-    } else flash('上传失败', true)
-  } catch {
-    flash('上传失败', true)
-  }
-  e.target.value = ''
+  await uploadFrom(e, (url) => {
+    uploadUrl.value = url
+    flash('上传成功，URL 已填出')
+  })
 }
 </script>
 

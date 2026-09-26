@@ -211,7 +211,7 @@
 
 ### 5.1 样式网关（唯一入口）
 
-任何 neo 规则都必须写在 `html[data-skin='neo']` 下（`index.html` 的 `<html>` 硬编码 `data-skin="neo"`，本站唯一样式网关）。这样做的目的只是以特异性压过 `tokens.css` 的基线令牌：全站——含 `/login` `/register` `/admin` 三张功能页——都走同一套 `.neo-*`，不存在需要协调的第二套样式类。
+任何 neo 规则都必须写在 `html[data-skin='neo']` 下（`index.html` 的 `<html>` 硬编码 `data-skin="neo"`，本站唯一样式网关）。这样做的目的：以特异性压过 `tokens.css` 的基线令牌，并让**仍沿用基线类的三张功能页**（`/login` `/register` `/admin` 走 `.page` / `.readout`，9 张内容页走 `.neo-shell`——两套骨架并存是 §10 ⑨ 记在案的病灶 ⑶，尚未统一）自动协调。
 
 - **导入顺序**：`main.js` 先 `tokens.css` 后 `neo.css`（同名令牌以 `neo.css` 为准）。
 - **属性开关**：
@@ -458,6 +458,7 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 | `footer` | Object | 页脚：`line/thanks/top` |
 | `theme` | Object | 主题标签：`dark`（深空）/`light`（纸面） |
 | `empty` | Object | 各列表空态：`posts/search/updates/wall/projects`（`search` 专用于"筛选后为空"，与"本来就没有内容"分开） |
+| `errors` | Object | 后端机器码 → 一句话提示。**键必须与 `api.py` 的 `error` 值逐字对上**，漏一个就会回落成无信息的"请求未成功"；由 `npm run check:api` 对拍（含 `offline`/`unknown` 两条兜底，见 `docs/api.md` §1.1） |
 
 ---
 
@@ -575,8 +576,11 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 - **标识符**：组件与类实例 PascalCase（`StarTrails`、`HorizonHero`），函数与变量 camelCase，
   模块级常量 `SCREAMING_SNAKE`（`TIMEOUT`、`CONTENT_KEYS`），CSS 自定义属性 `--kebab-case`。
   布尔量用 `is/has/can` 前缀（`isOwner`、`ownsPlate`），别用 `flag` / `status2`。
-- **浏览器存储键统一 `en-` 前缀 + 概念名**（现有 `en-token` / `en-theme` / `en-vol` / `en-wall` /
-  `en-views-<slug>` 五个）。命名已合规，但字面量还散在调用点——收口成单一注册表记在 §10 ⑩ 待办。
+- **浏览器存储键统一 `en-` 前缀 + 概念名**，且只在 `src/lib/storage.js` 一处声明（`KEYS.token` /
+  `theme` / `cursor` / `volume` / `wall` / `views` / `viewed`）。其它文件不出现 `localStorage.` /
+  `sessionStorage.` 的直接调用——这条由 `check:naming` 的 `storage-via-lib` 把守。
+  唯一例外是 `index.html` 首帧内联脚本（防闪烁要求它在任何模块之前跑，只能写字面量），
+  所以改 `KEYS.theme` 的值必须同步改 `index.html`。
 - **静态资源用 `<家族>-<变体>.<ext>` 全小写 kebab**（真实例子：`en-display-serif-700.woff2`、
   `plate-paper.png`），不带哈希与时间戳；带哈希的文件名只允许出现在 `dist/` 里，那是构建产物。
 - **后端文件名不参与改名**：`server/api.py` 是 systemd 单元里的部署路径（`docs/manual.md` §4.3），
@@ -618,11 +622,15 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 
 ⑩ **待办（本轮明确不做、但已量出依据的）**：
 - **流体字号缺档**。全文共 8 处 `font-size: clamp(...)`，其中 **6 处是纯字面量**、游离在 `--fs-*` 刻度之外（`HomeView` / `PostView` / `ProjectsView` / `RecordsView` 各 1、`HorizonHero` 2）。排版刻度是离散步进，没有"随视口连续变化"这一档，展示层只能就地写 clamp。要么在 §5.2 增设流体字号一族，要么明确"展示字号不入刻度"——**现状是没说过**，二选一定下来再写进来。
-- **`src/lib/` 缺接口层边界**：`api.js` 同时是 transport 与 token 存储，所以 `lib/data/` 的目录切分是伪命题；必须先拆 transport 与 session store（结构方案 S1）。
+- **`src/lib/` 缺接口层边界**：存储键与读写已经收进 `src/lib/storage.js`，但 `api.js` 仍同时是
+  transport 与令牌出入口（`getToken`/`setToken` 只是薄封装，留在里面）。所以 `lib/data/` 的目录切分
+  依然是伪命题；要先拆 transport 与 session store（结构方案 S1 的余下半程）。
+- **同一个事实仍有两份实现**：RSS 在 `scripts/build_seo.mjs` 与 `server/api.py` 各一份、QQ 歌单 URL
+  模板在 `api.py` 与 `scripts/sync_records.py` 各一份。跨语言没法像解析器那样用一个对拍测试钉住
+  （`tests/test_parsers.py` 那种"同时起 node 与 python"的做法对 RSS 不适用：`build_seo.mjs` 一被
+  import 就会执行并写产物）。收口口径待定，见 `docs/api.md` §6 T3。
 - **已实现但无前端消费方**：`/api/fragments`、`/api/health`、`PUT /api/content/site|links`。T1–T8 全表见 `docs/api.md` §6。
-- **对拍脚本尚未接进 CI**：`check:api`、`check:docs`、`check:naming` 目前只在本地跑。
-- **存储键字面量仍散在调用点**：5 个 `en-*` 键分布在 6 个文件里。命名已合规（§9.7），但收口成单一
-  注册表之前，`check:naming` 只能查前缀、查不出同一个键被两处拼成不同名字。
+- **对拍脚本尚未接进 CI**：`check:api`、`check:docs`、`check:naming` 与 `npm test` 目前只在本地跑。
 ⑪ **2026-09-26 底图层：给夜空加低频纵深**。起因是用户反馈"前端还是有点单调"，并给了一张星轨长曝光照片当参考。
 - **先照抄、被否，再自创**。第一版程序化底图把参考图的内容全搬了过来（地平线、小岛、水面、镇灯），判定是"抄内容、不精致"；
   于是只借它的**原理**（参差 = 低频遮挡 + 纵深 + 非均匀），出三个自有方向：显影盘（液面/化学斑/尘点划痕）、

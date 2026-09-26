@@ -2,17 +2,16 @@
 // 默认关闭（系统光标优先）；用户开启后由 localStorage 记忆。
 // capable 由 NeoCursor 挂载时写入（需精细指针且未开启「减弱动效」），顶栏据此禁用按钮。
 import { reactive } from 'vue'
-
-const KEY = 'en-cursor'
+import { KEYS, read, write } from './storage.js'
 
 export const cursor = reactive({
-  on: localStorage.getItem(KEY) === 'on',
+  on: read(KEYS.cursor) === 'on',
   capable: false,
 })
 
 export function applyCursor(on) {
   cursor.on = on
-  localStorage.setItem(KEY, on ? 'on' : 'off')
+  write(KEYS.cursor, on ? 'on' : 'off')
 }
 
 export function toggleCursor() {

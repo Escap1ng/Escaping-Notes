@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { api, setToken } from '../lib/api.js'
+import { setToken, tryApi } from '../lib/api.js'
 import { loadMe } from '../lib/auth.js'
 
 const router = useRouter()
@@ -10,12 +10,18 @@ const err = ref('')
 
 async function submit() {
   err.value = ''
-  const res = await api('/api/register', { method: 'POST', body: form.value })
-  if (!res || !res.token) {
-    err.value = '注册失败：用户名 3-20 位小写字母数字_-，密码 ≥6 位，或已被占用'
+  const r = await tryApi('/api/register', { method: 'POST', body: form.value })
+  // 原来是一句"用户名 3-20 位…，或已被占用"把所有可能原因堆在一起让人逐条试。
+  // 现在按后端给的机器码只说中的那一条（映射见 narrative.js errors）。
+  if (!r.ok) {
+    err.value = r.reason
     return
   }
-  setToken(res.token)
+  if (!r.data?.token) {
+    err.value = '注册异常：服务器没返回令牌'
+    return
+  }
+  setToken(r.data.token)
   await loadMe()
   router.push('/')
 }

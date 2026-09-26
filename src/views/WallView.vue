@@ -5,6 +5,7 @@ import { api } from '../lib/api.js'
 import { auth, isAdmin } from '../lib/auth.js'
 import { onLens } from '../lib/lens.js'
 import { N } from '../config/narrative.js'
+import { KEYS, read, write } from '../lib/storage.js'
 
 const msgs = ref([])
 const local = ref(false)
@@ -14,13 +15,24 @@ const sent = ref(false)
 
 const canManage = computed(() => isAdmin())
 
+// 本地副本是后端缺席时的降级面：读不出或不是合法 JSON 就按「没有留言」处理，
+// 不让一条坏数据把整个留言墙炸掉（与 api.py 对 users.json 的处置同一条取向）
+function readWall() {
+  try {
+    const arr = JSON.parse(read(KEYS.wall, '[]'))
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return []
+  }
+}
+
 async function refresh() {
   const remote = await api('/api/messages')
   if (Array.isArray(remote)) {
     msgs.value = remote.slice().reverse()
     local.value = false
   } else {
-    msgs.value = JSON.parse(localStorage.getItem('en-wall') || '[]').reverse()
+    msgs.value = readWall().reverse()
     local.value = true
   }
 }
@@ -35,9 +47,10 @@ async function submit() {
     setTimeout(() => (sent.value = false), 1500)
     refresh()
   } else {
-    const arr = JSON.parse(localStorage.getItem('en-wall') || '[]')
+    // 后端不可达才落到本地：留言只存在这台浏览器里，页面上那行「本地模式」说的就是这件事
+    const arr = readWall()
     arr.push({ name: name.value || '匿名观测者', text: t, ts: Math.floor(Date.now() / 1000) })
-    localStorage.setItem('en-wall', JSON.stringify(arr))
+    write(KEYS.wall, JSON.stringify(arr))
     text.value = ''
     refresh()
   }

@@ -7,6 +7,7 @@ import { loadPost, loadPosts } from '../lib/posts.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { api } from '../lib/api.js'
 import { trapFocus } from '../lib/focus.js'
+import { read, viewedKey, viewsKey, write } from '../lib/storage.js'
 import { N } from '../config/narrative.js'
 
 const route = useRoute()
@@ -71,9 +72,10 @@ onMounted(async () => {
   htmlBody.value = renderMarkdown(p.body).html
   document.title = `${p.title} · Escaping Notes`
 
-  const key = `en-viewed-${slug}`
-  if (!sessionStorage.getItem(key)) {
-    sessionStorage.setItem(key, '1')
+  // 同一会话只计一次数：这个标记只该活到关标签页，所以走 sessionStorage
+  const seen = viewedKey(slug)
+  if (!read(seen, null, sessionStorage)) {
+    write(seen, '1', sessionStorage)
     await api('/api/view', { method: 'POST', body: { slug } })
   }
   const stats = await api('/api/stats')
@@ -81,8 +83,9 @@ onMounted(async () => {
     views.value = stats[slug]
   } else {
     viewsLocal.value = true
-    const local = (Number(localStorage.getItem(`en-views-${slug}`)) || 0) + 1
-    localStorage.setItem(`en-views-${slug}`, local)
+    const key = viewsKey(slug)
+    const local = (Number(read(key)) || 0) + 1
+    write(key, local)
     views.value = local
   }
 

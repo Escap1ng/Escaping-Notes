@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { api, setToken } from '../lib/api.js'
+import { api, setToken, tryApi } from '../lib/api.js'
 import { loadMe } from '../lib/auth.js'
 
 const router = useRouter()
@@ -16,15 +16,21 @@ onMounted(async () => {
 
 async function submit() {
   err.value = ''
-  const res = await api(needsSetup.value ? '/api/setup' : '/api/login', {
+  const r = await tryApi(needsSetup.value ? '/api/setup' : '/api/login', {
     method: 'POST',
     body: form.value,
   })
-  if (!res || !res.token) {
-    err.value = needsSetup.value ? '初始化失败：用户名 3-20 位小写字母数字，密码 ≥6 位' : '用户名或密码错误'
+  // 后端每个失败分支都带机器码，这里翻成对应那一句（见 narrative.js errors）。
+  // 以前不分状态一律提示"用户名或密码错误"，于是"后端没起"也说成密码错——T2。
+  if (!r.ok) {
+    err.value = r.reason
     return
   }
-  setToken(res.token)
+  if (!r.data?.token) {
+    err.value = '登录异常：服务器没返回令牌'
+    return
+  }
+  setToken(r.data.token)
   await loadMe()
   router.push('/admin')
 }
