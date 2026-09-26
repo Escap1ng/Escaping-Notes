@@ -833,7 +833,7 @@ html[data-skin='neo'] .neo-glass {
 /* 说明：关键帧里的 filter: blur()/sepia() 是对整页子树生效的，每一帧都要重新栅格化，
    且离开方与进入方并行叠在一起时更甚——这是本站最贵的一处绘制。曾尝试换成
    "只动 opacity/transform + 独立红移覆盖层"，但叠影模糊正是"坍缩"的手感来源，
-   故按设计取舍保留原样。若日后要回收这部分开销，改法见 docs/design-neo.md §10。 */
+   故按设计取舍保留原样。若日后要回收这部分开销，改法见 docs/design.md §10。 */
 .fall-enter-active {
   animation: fall-in 0.44s cubic-bezier(0.52, 0.04, 0.24, 1);
 }

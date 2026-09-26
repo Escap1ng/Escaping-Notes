@@ -2,6 +2,10 @@ import re
 import sys
 import pathlib
 
+# Windows 控制台默认 GBK，中文诊断会直接崩；强制 UTF-8，Linux/CI 上是空操作
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 """docs/api.md 的端点表与 server/api.py 的路由双向对拍。
 
 用法：python scripts/check_api_doc.py          漂移则退出码 1

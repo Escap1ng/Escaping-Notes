@@ -11,51 +11,63 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: () => import('../views/neo/NeoHomeView.vue'),
+      component: () => import('../views/HomeView.vue'),
       meta: { t: `${T} · 逃逸笔记` },
     },
     {
       path: '/blog',
-      component: () => import('../views/neo/NeoBlogView.vue'),
+      component: () => import('../views/BlogView.vue'),
       meta: { t: `文章 · ${T}` },
     },
     {
       path: '/blog/:slug',
-      component: () => import('../views/neo/NeoPostView.vue'),
-      // 兜底标题：加载完成后由 NeoPostView 换成文章标题；路由播报用 meta.t
+      component: () => import('../views/PostView.vue'),
+      // 兜底标题：加载完成后由 PostView 换成文章标题；路由播报用 meta.t
       meta: { t: `阅读 · ${T}` },
     },
     {
       path: '/updates',
-      component: () => import('../views/neo/NeoUpdatesView.vue'),
+      component: () => import('../views/UpdatesView.vue'),
       meta: { t: `动态 · ${T}` },
     },
     {
       path: '/records',
-      component: () => import('../views/neo/NeoRecordsView.vue'),
+      component: () => import('../views/RecordsView.vue'),
       meta: { t: `歌单 · ${T}` },
     },
     {
       path: '/projects',
-      component: () => import('../views/neo/NeoProjectsView.vue'),
+      component: () => import('../views/ProjectsView.vue'),
       meta: { t: `载荷舱 · ${T}` },
     },
     {
       path: '/wall',
-      component: () => import('../views/neo/NeoWallView.vue'),
+      component: () => import('../views/WallView.vue'),
       meta: { t: `留言墙 · ${T}` },
     },
     {
       path: '/about',
-      component: () => import('../views/neo/NeoAboutView.vue'),
+      component: () => import('../views/AboutView.vue'),
       meta: { t: `关于 · ${T}` },
     },
-    { path: '/login', component: () => import('../views/LoginView.vue'), meta: { t: `登录 · ${T}` } },
-    { path: '/register', component: () => import('../views/RegisterView.vue'), meta: { t: `注册 · ${T}` } },
-    { path: '/admin', component: () => import('../views/AdminView.vue'), meta: { t: `管理 · ${T}` } },
+    {
+      path: '/login',
+      component: () => import('../views/LoginView.vue'),
+      meta: { t: `登录 · ${T}` },
+    },
+    {
+      path: '/register',
+      component: () => import('../views/RegisterView.vue'),
+      meta: { t: `注册 · ${T}` },
+    },
+    {
+      path: '/admin',
+      component: () => import('../views/AdminView.vue'),
+      meta: { t: `管理 · ${T}` },
+    },
     {
       path: '/:pathMatch(.*)*',
-      component: () => import('../views/neo/NeoNotFoundView.vue'),
+      component: () => import('../views/NotFoundView.vue'),
       meta: { t: `信号丢失 · ${T}` },
     },
   ],

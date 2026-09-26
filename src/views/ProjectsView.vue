@@ -1,8 +1,8 @@
 <script setup>
 // 新版载荷：单列宽行 + 冷色光带
-import { content } from '../../lib/content.js'
-import { onLens } from '../../lib/lens.js'
-import { N } from '../../config/narrative.js'
+import { content } from '../lib/content.js'
+import { onLens } from '../lib/lens.js'
+import { N } from '../config/narrative.js'
 </script>
 
 <template>

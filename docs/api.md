@@ -56,8 +56,8 @@
 | `/api/me` | 可选 | `{id,username,nickname,role}` | 401 | `lib/auth.js` |
 | `/api/posts` | — | `[{slug,title,date,tags,summary,words,minutes}]` 按 date 倒序 | — | `lib/posts.js` |
 | `/api/posts/{slug}` | — | `{meta:{…,slug},body}` | 404 | `lib/posts.js`、`AdminView` |
-| `/api/messages` | — | `[{name,text,ts}]` **最近 100 条** | — | `NeoWallView`、`AdminView` |
-| `/api/stats` | — | `{slug:count,…}` | — | `NeoPostView` |
+| `/api/messages` | — | `[{name,text,ts}]` **最近 100 条** | — | `WallView`、`AdminView` |
+| `/api/stats` | — | `{slug:count,…}` | — | `PostView` |
 | `/api/users` | a | `[{id,username,nickname,role,ban,created}]`（不含 `pass`） | 403 | `AdminView` |
 | `/api/records` | — | 歌单对象 | — | `lib/records.js` |
 | `/api/content` | — | `{site,updates,links,projects,gear,playlist}` | — | `lib/content.js` |
@@ -76,8 +76,8 @@
 | `/api/register` | — | `{token,user}`（角色固定 `visitor`） | **503** · 400 · 409 taken | `RegisterView` |
 | `/api/login` | — | `{token,user}` | 401 bad credentials · 403 banned | `LoginView` |
 | `/api/logout` | u | `{ok:true}`（**无 token 也返回 200**） | — | `lib/auth.js` |
-| `/api/messages` | — | `{ok:true}` | 400 empty | `NeoWallView` |
-| `/api/view` | — | `{ok:true,count}` | 400 bad slug | `NeoPostView` |
+| `/api/messages` | — | `{ok:true}` | 400 empty | `WallView` |
+| `/api/view` | — | `{ok:true,count}` | 400 bad slug | `PostView` |
 | `/api/fragments` | o | `{ok:true}` | 403 · 400 empty · 400 bad image | — |
 | `/api/sync/records` | o | 同 `/api/records` | 403 · 502 sync failed | `lib/records.js` |
 | `/api/posts` | o | `{ok:true,slug}` | 403 · 400 empty · 400 bad slug | `AdminView` |
@@ -96,7 +96,7 @@
 | 路径 | 角色 | 成功 | 失败 | 前端 |
 | --- | --- | --- | --- | --- |
 | `/api/posts/{slug}` | o | `{ok:true}`（文件不存在也算成功） | 403 | `AdminView` |
-| `/api/messages/{ts}` | a | `{ok:true}` | 403 | `NeoWallView`、`AdminView` |
+| `/api/messages/{ts}` | a | `{ok:true}` | 403 | `WallView`、`AdminView` |
 | `/api/users/{id}` | a | `{ok:true}` | 403（**不能删自己**、不能删 owner、admin 不能删 admin） | `AdminView` |
 | `/api/fragments/{ts}` | o | `{ok:true}` | 403 | — |
 | `/api/uploads/{name}` | o | `{ok:true}` | 403 | `AdminView` |

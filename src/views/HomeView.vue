@@ -2,12 +2,12 @@
 // 首页：星轨首屏 + 「星图」目录
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import HorizonHero from '../../components/neo/HorizonHero.vue'
-import { loadPosts } from '../../lib/posts.js'
-import { loadRecords, records } from '../../lib/records.js'
-import { content } from '../../lib/content.js'
-import { onLens } from '../../lib/lens.js'
-import { N } from '../../config/narrative.js'
+import HorizonHero from '../components/neo/HorizonHero.vue'
+import { loadPosts } from '../lib/posts.js'
+import { loadRecords, records } from '../lib/records.js'
+import { content } from '../lib/content.js'
+import { onLens } from '../lib/lens.js'
+import { N } from '../config/narrative.js'
 
 const router = useRouter()
 const posts = ref([])

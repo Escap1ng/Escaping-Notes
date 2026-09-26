@@ -1,8 +1,8 @@
 <script setup>
 // 新版观测者：第一人称自述 + 事实发丝表 + 装备 + 社交/友链
-import { content } from '../../lib/content.js'
-import { friends } from '../../config/friends.js'
-import { N } from '../../config/narrative.js'
+import { content } from '../lib/content.js'
+import { friends } from '../config/friends.js'
+import { N } from '../config/narrative.js'
 
 const facts = [
   { k: 'OBSERVER', v: () => content.site.author },

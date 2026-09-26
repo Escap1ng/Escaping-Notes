@@ -3,11 +3,11 @@
 // 文章页：上报/降级/灯箱/Esc 成对监听/复制/上下篇
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { loadPost, loadPosts } from '../../lib/posts.js'
-import { renderMarkdown } from '../../lib/markdown.js'
-import { api } from '../../lib/api.js'
-import { trapFocus } from '../../lib/focus.js'
-import { N } from '../../config/narrative.js'
+import { loadPost, loadPosts } from '../lib/posts.js'
+import { renderMarkdown } from '../lib/markdown.js'
+import { api } from '../lib/api.js'
+import { trapFocus } from '../lib/focus.js'
+import { N } from '../config/narrative.js'
 
 const route = useRoute()
 const post = ref(null)
@@ -47,7 +47,7 @@ watch(lightbox, async (open) => {
 })
 
 /* 顶部曝光进度线不在这里算：直接消费 App.vue 写入的 --shift，
-   省掉一套重复的滚动监听与 scrollHeight 强制布局（见 design-neo.md §9.4） */
+   省掉一套重复的滚动监听与 scrollHeight 强制布局（见 design.md §9.4） */
 
 async function copyLink() {
   try {

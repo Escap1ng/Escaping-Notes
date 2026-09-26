@@ -2,12 +2,16 @@ import re
 import sys
 import pathlib
 
+# Windows 控制台默认 GBK，中文诊断会直接崩；强制 UTF-8，Linux/CI 上是空操作
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 """文档引用完整性检查：抓两类必然会烂掉的东西。
 
 1. 指向不存在的文件（例如 api.py 曾长期指向根本不存在的 docs/design.md）；
 2. 指向不存在的 §节号（节号平移后最容易留下"见 §5.3"这种死链）。
 
-§ 有个坑：本仓库的 § 记号是**重载**的——既指文档章节（design-neo.md §3.1），
+§ 有个坑：本仓库的 § 记号是**重载**的——既指文档章节（design.md §3.1），
 也指代码文件的内部分节横幅（neo.css §8.5、§11）。所以解析顺序是：
   引用点前 30 字内若显式写了 xxx.md / xxx.css / xxx.py → 用它作目标；
   否则默认当前文档；再否则"任意文档或代码里有这节"只作提示、不算失效。
@@ -15,13 +19,13 @@ import pathlib
 用法：python scripts/check_doc_refs.py
 """
 
-DOCS = ['README.md', 'README.en.md', 'docs/design-neo.md', 'docs/manual.md', 'docs/api.md']
+DOCS = ['README.md', 'README.en.md', 'docs/design.md', 'docs/manual.md', 'docs/api.md']
 CODE_SECTIONED = ['src/styles/neo.css', 'src/styles/tokens.css', 'server/api.py', 'src/lib/sky.js']
 
 # 文档里作为"示例/待创建/构建产物"出现的路径，不是引用
 EXAMPLES = {
     'my-first-post.md', 'xx.png', '/etc/systemd/system/escaping-notes-api.service',
-    '/opt/escaping-notes/api.py', '/images/xx.png', 'NeoXView.vue', 'Node.js',
+    '/opt/escaping-notes/api.py', '/images/xx.png', 'XView.vue', 'Node.js',
     'package.js', 'vercel.js', 'users.js', 'data/users.js', 'server/data/records.js',
     'sitemap.xml', 'rss.xml', '/rss.xml', '/index.html', 'og.png', 'robots.txt',
     'hello-world.md', 'en-display-serif-700.woff2',
@@ -40,7 +44,7 @@ def headings(text):
 
 
 def match_secs_key(named, secs):
-    """把引用点写明的文件名对上 secs 的键（允许只写 neo.css / design-neo.md）。
+    """把引用点写明的文件名对上 secs 的键（允许只写 neo.css / design.md）。
 
     **只在该文件确有编号分节时才认它作目标**：`src/lib/sky.js` 这类文件虽在清单里却一条
     横幅都没有，若照样匹配，「归 `src/lib/sky.js`，见 §3.1」就会被错判成指向 sky.js。

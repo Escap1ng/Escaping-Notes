@@ -1,10 +1,10 @@
 <script setup>
 // 新版共振：歌单快照（运行时零外部请求）+ 谱线扫光曲目行
 import { onMounted, ref } from 'vue'
-import { records, loadRecords, syncRecords } from '../../lib/records.js'
-import { onLens } from '../../lib/lens.js'
-import { isOwner } from '../../lib/auth.js'
-import { N } from '../../config/narrative.js'
+import { records, loadRecords, syncRecords } from '../lib/records.js'
+import { onLens } from '../lib/lens.js'
+import { isOwner } from '../lib/auth.js'
+import { N } from '../config/narrative.js'
 
 const syncing = ref(false)
 const syncMsg = ref('')

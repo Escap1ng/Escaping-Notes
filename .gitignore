@@ -7,3 +7,13 @@ server/data/
 server/data.tested/
 __pycache__/
 *.pyc
+
+# ---------- 本地素材与一次性产物：不进仓库，别用 git add -A 扫进来 ----------
+# AI 生成的底片原图与探尺寸产物（~9MB，成品已压进 src/assets/plate/）
+vibe_images/
+# 视觉方案的对照截图，只对当轮改稿有用，README 用的是可复算的 SVG/PNG（docs/assets/readme/）
+docs/assets/mock/
+# 聊天/下载工具落在根目录的散图（内容哈希命名，非站点资源）
+/*.jpg
+/*.jpeg
+/*.png

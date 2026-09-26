@@ -1,10 +1,10 @@
 <script setup>
 // 回声墙：单列刻痕 + 下划线表单（含本地降级与 admin 删除）
 import { computed, onMounted, ref } from 'vue'
-import { api } from '../../lib/api.js'
-import { auth, isAdmin } from '../../lib/auth.js'
-import { onLens } from '../../lib/lens.js'
-import { N } from '../../config/narrative.js'
+import { api } from '../lib/api.js'
+import { auth, isAdmin } from '../lib/auth.js'
+import { onLens } from '../lib/lens.js'
+import { N } from '../config/narrative.js'
 
 const msgs = ref([])
 const local = ref(false)

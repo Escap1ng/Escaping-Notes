@@ -2,9 +2,9 @@
 // 归档页：大框体卡片列表，窗口足够时两列、不够时一列，带搜索与标签筛选
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { loadPosts } from '../../lib/posts.js'
-import { onLens } from '../../lib/lens.js'
-import { N } from '../../config/narrative.js'
+import { loadPosts } from '../lib/posts.js'
+import { onLens } from '../lib/lens.js'
+import { N } from '../config/narrative.js'
 
 const route = useRoute()
 const router = useRouter()

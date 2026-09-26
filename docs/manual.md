@@ -13,20 +13,26 @@ BLOG/
 ├── content/posts/        ← 文章种子/回退；上线后发文主路径是 /admin 网页编辑器
 ├── public/               ← 静态资源：favicon.svg、robots.txt、og.png（分享卡片）
 ├── server/               ← 后端 api.py（登录/发文/留言墙/上传/内容/歌单同步 API）
-├── scripts/              ← 构建期脚本（Node，零依赖）：
-│   ├── build_font.mjs    ←   展示层子集字体裁切
-│   └── build_seo.mjs     ←   dist/rss.xml、dist/sitemap.xml、public/og.png
+├── scripts/              ← 构建期脚本（Node 侧零依赖）；命名按动词分族，见 docs/design.md §9.7
+│   ├── build_font.mjs    ←   展示层子集字体裁切（依赖 devDep subset-font）
+│   ├── build_seo.mjs     ←   dist/rss.xml、dist/sitemap.xml、public/og.png
+│   ├── build_readme_art.mjs ← README 配图：按 StarTrails 常数离线复算
+│   ├── check_api_doc.py  ←   docs/api.md ⇄ server/api.py 端点对拍
+│   ├── check_doc_refs.py ←   文档引用 / § 节号 / 路由表漂移扫描
+│   ├── sync_records.py   ←   抓 QQ 公开歌单 → 生成 src/config/records.js
+│   ├── data/             ←   脚本输入数据（GB2312 一级字表）
+│   └── lib/              ←   脚本间共用的内部模块（PNG 编码器）
 ├── src/
 │   ├── assets/fonts/     ← 自托管子集字体 + OFL 许可
 │   ├── config/           ← 内容种子（站点信息/动态/项目/歌单/records 快照），改内容主路径是 /admin
 │   ├── lib/              ← API/内容/会话/光标开关等前端客户端（自动维护，无需手改）
-│   ├── components/       ← 头部、页脚、星轨/光标装置等公共组件（`neo/` 内为 neo 组件）
-│   ├── views/            ← 每个页面一个文件（含 /admin /login /register）
+│   ├── components/       ← 公共组件：`neo/` 内为星空与壳层装置，`MusicPlayer.vue` 在上一层
+│   ├── views/            ← 12 个页面各一个文件，平铺（含 /admin /login /register）
 │   ├── router/           ← 网址路由与页面标题
 │   └── styles/           ← 改外观只碰这两个文件：
 │       ├── tokens.css    ←   基线令牌（灰阶/间距/字体栈）
 │       └── neo.css       ←   皮肤令牌（深浅两套配色 + 圆角/阴影）
-├── docs/                 ← design-neo.md 界面设计 · manual.md 本手册 · api.md 后端接口契约
+├── docs/                 ← design.md 界面设计 · manual.md 本手册 · api.md 后端接口契约
 └── index.html            ← 网页标题、描述、OG/SEO 元信息在这里改
 ```
 
@@ -200,7 +206,7 @@ export const site = {
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。1.3.0 之前 `/login` `/register` `/admin` 各自写过一套，现已全部并入上面这些类。
 - 功能页（`/login` `/register` `/admin`）用 `tokens.css` 的 `.page` / `.readout` / `.field` 打底，交互元素同样用上面的 `.neo-*`。
-- 规则与理由的完整版见 `docs/design-neo.md` §5.3。
+- 规则与理由的完整版见 `docs/design.md` §5.3。
 
 ### 3.2 设备适配（响应式）
 
@@ -435,7 +441,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
   - 功能页并入——`/login` `/register` `/admin` 的私有类（`.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn`）全部删除，改用 `.neo-*`；后台页签选中态由热色改冷色，与全站 `.neo-chip` 一致。
   - 修正——`.field` 显式声明 `font-family` / `text-transform`，避免嵌在 `.readout` 标签里被带成等宽大写；修复本次重构一度造成的提交按钮无样式、错误提示无颜色。
 - **v1.2.0 · 运行时性能 / 无障碍 / SEO**：
-  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留，见 `docs/design-neo.md` §10。）
+  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留，见 `docs/design.md` §10。）
   - 无障碍——抽屉与灯箱加焦点陷阱并在关闭时归还焦点；路由切换向读屏播报；`#main` 可聚焦供「跳到内容」；触控目标 ≥44px；最小字号下限 11.5px。
   - 反馈——文章列表骨架屏；「本来没有内容」与「筛选无结果」分文案；搜索/标签筛选写入 URL（可分享、刷新不丢）。
   - SEO——`og:image` / `og:url` / `canonical` / `twitter:*` 补全；构建期生成 `rss.xml` 与 `sitemap.xml`；新增 `robots.txt`。

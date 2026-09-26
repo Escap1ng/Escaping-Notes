@@ -30,7 +30,7 @@ export const sky = {
 // fall 转场期间离开方与进入方并存约 260ms（leave 0.26s / enter 0.44s）。
 // 两台相机同时往同一张底片沉积会画双份、且 resize 互相清屏，所以底片同一时刻只认一个主人。
 // 后挂载者接管。**只锁沉积，不锁重绘**：交出底片那台照样每帧 draw() 同一张底片，
-// 否则它在淡出的 260ms 里冻在半帧上——那正是"切换顿挫"的来源（design-neo §10 ⑥）。
+// 否则它在淡出的 260ms 里冻在半帧上——那正是"切换顿挫"的来源（design.md §10 ⑥）。
 export function claimPlate(who) {
   sky.owner = who
 }

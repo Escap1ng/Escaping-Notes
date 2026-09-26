@@ -45,6 +45,7 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 - **双主题**：深空（冷白/暖白/琥珀星轨）与纸面（天文干版底片：墨色轨迹 + 朱砂点睛），头部一键切换并记忆偏好；首次访问跟随系统 `prefers-color-scheme`
 - **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距/字号/行高/字重）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入「单行下划线 / 多行发丝框」、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
 - **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制；无第三方 UI 库、图表库或字体 CDN（运行时依赖只有 Vue 与 Vue Router）
+- **低频底图**：星轨之下另有一层烘好的静态底图（WebP 19 / 31 KB，运行时零绘制成本）提供云气、暖光与纵深；它与天空共用同一条暗带几何、各用各的压低系数，所以加底图不牺牲小字对比度（实测带内 text-1 5.15:1）。素材为机器生成，来源与授权单列
 - **优雅降级**：API 不可达（或超时）时自动切换本地种子数据，站点仍是完整的离线底片
 - **沉浸光标（默认关闭）**：顶栏第三枚按钮开启并记忆；只在首页接管，其余页面保留系统光标；指针静止约 1.4s 后平滑收力并停帧
 - **无障碍**：抽屉与灯箱有焦点陷阱、路由切换向读屏播报、跳转链接与 `#main` 可聚焦、触控目标 ≥44px、`prefers-reduced-motion` 下有完整静态降级
@@ -59,7 +60,7 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 
 <img src="docs/assets/readme/dark-band.svg" alt="暗带契约剖面图：视口正中 1120px 的天空被压到 --sky-k，两侧羽化回全亮，并给出改前改后的对比度实测值" width="920">
 
-次级页文字底下的天空，由 `StarTrails.vue` 上**一条** `mask-image` 横向渐变压低：视口正中 `--sky-band`（对齐内容列 1120px）压到 `--sky-k`，两侧各 `--sky-feather` 羽化回全亮。改之前 11 个次级页只有文章页做过可读性底板，同一套文字色在实际合成底上的对比度从 15.7:1 到 1.7:1 都有——「阅读困难 + 体验割裂」的数值形态就是这样。压低系数是**按峰值而非中位数**解不等式解出来的，因为星轨在动、同一枚文字像素的底随时间明暗波动。取舍与推导见 [docs/design-neo.md §3.3](docs/design-neo.md#33-暗带契约天空与文字的位置协议)。
+次级页文字底下的天空，由 `StarTrails.vue` 上**一条** `mask-image` 横向渐变压低：视口正中 `--sky-band`（对齐内容列 1120px）压到 `--sky-k`，两侧各 `--sky-feather` 羽化回全亮。改之前 11 个次级页只有文章页做过可读性底板，同一套文字色在实际合成底上的对比度从 15.7:1 到 1.7:1 都有——「阅读困难 + 体验割裂」的数值形态就是这样。压低系数是**按峰值而非中位数**解不等式解出来的，因为星轨在动、同一枚文字像素的底随时间明暗波动。取舍与推导见 [docs/design.md §3.3](docs/design.md#33-暗带契约天空与文字的位置协议)。
 
 ### 一次导航 = 一次快门
 
@@ -137,14 +138,16 @@ npm run preview        # 本地预览 dist/
 ├── server/api.py          # 后端：内容 / 鉴权 / 留言 / RSS / OG 注入 / 歌单同步
 ├── content/posts/         # Markdown 文章（frontmatter）
 ├── public/                # 静态资源：favicon、robots.txt、og.png
-├── scripts/               # 构建期与内容刷新脚本
+├── scripts/               # 构建期与内容刷新脚本（命名按动词分族，见 docs/design.md §9.7）
 │   ├── build_font.mjs     #   展示层子集字体裁切（Node，依赖 devDep `subset-font`）
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块）
-│   ├── build_readme_art.mjs#  本页顶部两张底片图：按 StarTrails 常数离线复算
+│   ├── build_readme_art.mjs # 本页顶部两张底片图：按 StarTrails 常数离线复算
 │   ├── check_api_doc.py   #   docs/api.md ⇄ server/api.py 端点对拍（带 --self 负向对照）
 │   ├── check_doc_refs.py  #   文档引用 / § 节号 / README 路由表 的漂移扫描
-│   └── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
-├── docs/                  # design-neo.md 设计依据 · manual.md 使用手册 · api.md 后端接口契约
+│   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
+│   ├── data/              #   脚本输入数据（GB2312 一级字表，build_font 用）
+│   └── lib/               #   脚本间共用模块（PNG 编码器，build_seo 与 build_readme_art 共用）
+├── docs/                  # design.md 设计依据 · manual.md 使用手册 · api.md 后端接口契约
 │   └── assets/readme/     # README 配图（含生成方式与换真截图的步骤）
 └── src/
     ├── assets/fonts/      # 自托管子集字体 + OFL 许可
@@ -152,7 +155,7 @@ npm run preview        # 本地预览 dist/
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子（records.js 由脚本生成，勿手改）
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / shift / sky / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
-    └── views/             # 12 个视图：neo/ 9 个（首页与内容页），另有 AdminView / LoginView / RegisterView
+    └── views/             # 12 个视图平铺，一页一个文件：9 张内容页 + AdminView / LoginView / RegisterView
 ```
 
 ## 部署
@@ -166,16 +169,17 @@ npm run preview        # 本地预览 dist/
 
 ## 文档
 
-- [docs/design-neo.md](docs/design-neo.md) —— 界面设计唯一依据（概念、色彩与令牌、组件契约、开发指南）
+- [docs/design.md](docs/design.md) —— 界面设计唯一依据（概念、色彩与令牌、组件契约、开发指南）
 - [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 部署 / 常见问题）
 - [docs/api.md](docs/api.md) —— 后端接口契约：端点全表、鉴权与限流、状态码、存储与 fail-closed 边界、已知缺陷。附 `npm run check:api`，把文档与 `server/api.py` 的路由双向对拍——**改端点必须同步这份文档**
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) —— 本页四张配图的来源、重跑方式与「想换真截图该怎么做」
+- [docs/assets/plate.md](docs/assets/plate.md) —— 全站底图（`src/assets/plate/`）的来源与授权、裁水印与压缩步骤、以及换图时必须重量的那条对比度规则
 
 ## 许可与使用声明
 
 1. **性质界定**：本项目（含源代码、设计文档、视觉与交互设计、文案等全部组成部分）系作者个人学习与实践性质的作品，仅供个人学习、研究及非商业性交流使用。
 2. **禁止商用**：未经作者事先书面许可，不得将本项目全部或部分用于任何商业用途或以任何方式营利。
-3. **原创保护**：未经许可，不得对核心原创设计（「长曝光星轨」隐喻、视觉语言、星轨交互装置）整体复制、仿冒或二次包装发布。
+3. **原创保护**：未经许可，不得对核心原创设计（「长曝光星轨」隐喻、视觉语言、星轨交互装置）整体复制、仿冒或二次包装发布。本条主张的是隐喻、设计与代码；`src/assets/plate/` 下两张低频底图为**机器生成素材**，不属于作者的原创设计主张，且可随时替换（来源见 [docs/assets/plate.md](docs/assets/plate.md)）。
 4. **学习引用**：学习性引用须显著注明项目来源与作者信息，并保留本声明。
 5. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用产生的任何损失或纠纷，作者不承担责任。
 6. **授权联系**：chunqi-yu@outlook.com。

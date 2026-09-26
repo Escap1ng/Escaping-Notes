@@ -1,7 +1,7 @@
 <script setup>
 // 新版脉冲：等宽时间戳 + 文本双列，脉冲点冷/热交替
-import { content } from '../../lib/content.js'
-import { N } from '../../config/narrative.js'
+import { content } from '../lib/content.js'
+import { N } from '../config/narrative.js'
 </script>
 
 <template>

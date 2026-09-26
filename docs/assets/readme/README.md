@@ -7,7 +7,7 @@
 | --- | --- | --- |
 | `plate-deep-space.png` | `npm run art:build` 按 `StarTrails.vue` 的常数离线复算稳态底片 | 要 |
 | `plate-paper.png` | 同上，纸面主题（墨压干版，`source-over`） | 要 |
-| `dark-band.svg` | 手写；数字取自 `neo.css` §1/§2/§3 与 `design-neo.md` §3.3 | 改令牌/改实测值时手改 |
+| `dark-band.svg` | 手写；数字取自 `neo.css` §1/§2/§3 与 `design.md` §3.3 | 改令牌/改实测值时手改 |
 | `fall-timing.svg` | 手写；时长与缓动取自 `neo.css` §8/§8.5 | 改转场时手改 |
 
 ## 底片两张（PNG）

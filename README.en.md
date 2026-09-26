@@ -45,6 +45,7 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 - **Dual themes** — Deep Space (cold white / warm white / amber trails) and Paper (astronomical dry plate: ink trails + vermilion accents), one click to switch, preference remembered; first visits follow `prefers-color-scheme`
 - **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (spacing / type-size / line-height / font-weight), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits, chart libraries or font CDNs (the only runtime dependencies are Vue and Vue Router)
+- **Low-frequency under-plate** — beneath the trails sits a baked static plate (WebP, 19 / 31 KB, zero per-frame cost) that supplies haze, warmth and depth; it shares the dark band's geometry with the sky but uses its own dimming coefficient, so adding it costs no legibility (measured in-band text-1: 5.15:1). The artwork is machine-generated — provenance and licence are listed separately
 - **Graceful degradation** — when the API is unreachable (or times out) the site falls back to bundled seed data: still a complete offline plate
 - **Immersive cursor (off by default)** — enabled from the third header button and remembered; it only takes over the home page, so other pages keep the native pointer; after ~1.4s of stillness it eases off and parks its render loop
 - **Accessibility** — focus traps in the drawer and lightbox, route changes announced to screen readers, a focusable skip link and `#main`, touch targets ≥44px, and a full static fallback under `prefers-reduced-motion`
@@ -59,7 +60,7 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 
 <img src="docs/assets/readme/dark-band.svg" alt="Cross-section of the dark band: the middle 1120px of the viewport is dimmed to --sky-k, feathered back to full strength on both sides, with measured contrast before and after" width="920">
 
-The sky under body text on secondary pages is dimmed by **one** `mask-image` gradient on `StarTrails.vue`: the central `--sky-band` (aligned to the 1120px content column) drops to `--sky-k`, and each side feathers back to full strength over `--sky-feather`. Before this, only the article page had a legibility plate across 11 secondary pages, and the same text colour measured anywhere from 15.7:1 to 1.7:1 on its actual composited ground — that is the numeric shape of "hard to read, and it feels fragmented". The coefficient is solved against the **peak**, not the median, because the trails move and a given text pixel's ground brightens and dims over time. Derivation and trade-offs: [docs/design-neo.md §3.3](docs/design-neo.md#33-暗带契约天空与文字的位置协议) (Chinese).
+The sky under body text on secondary pages is dimmed by **one** `mask-image` gradient on `StarTrails.vue`: the central `--sky-band` (aligned to the 1120px content column) drops to `--sky-k`, and each side feathers back to full strength over `--sky-feather`. Before this, only the article page had a legibility plate across 11 secondary pages, and the same text colour measured anywhere from 15.7:1 to 1.7:1 on its actual composited ground — that is the numeric shape of "hard to read, and it feels fragmented". The coefficient is solved against the **peak**, not the median, because the trails move and a given text pixel's ground brightens and dims over time. Derivation and trade-offs: [docs/design.md §3.3](docs/design.md#33-暗带契约天空与文字的位置协议) (Chinese).
 
 ### One navigation = one shutter cycle
 
@@ -137,14 +138,16 @@ npm run preview        # preview dist/ locally
 ├── server/api.py          # Backend: content / auth / guestbook / RSS / OG injection / record sync
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── public/                # Static assets: favicon, robots.txt, og.png
-├── scripts/               # Build-time and content-refresh scripts
+├── scripts/               # Build-time and content-refresh scripts (verb families, see docs/design.md §9.7)
 │   ├── build_font.mjs     #   display-font subsetting (Node; needs the `subset-font` devDep)
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only)
-│   ├── build_readme_art.mjs#  the two plates above: recomputed from StarTrails' constants
+│   ├── build_readme_art.mjs # the two plates above: recomputed from StarTrails' constants
 │   ├── check_api_doc.py   #   docs/api.md ⇄ server/api.py route diff (with a --self negative control)
 │   ├── check_doc_refs.py  #   drift scan over doc references / § numbers / the README route table
-│   └── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
-├── docs/                  # design-neo.md design spec · manual.md handbook · api.md backend API contract
+│   ├── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
+│   ├── data/              #   script input data (the GB2312 level-1 character table used by build_font)
+│   └── lib/               #   modules shared between scripts (PNG encoder, used by build_seo and build_readme_art)
+├── docs/                  # design.md design spec · manual.md handbook · api.md backend API contract
 │   └── assets/readme/     # README figures (how they are made, and how to swap in real screenshots)
 └── src/
     ├── assets/fonts/      # Self-hosted subset font + OFL licence
@@ -152,7 +155,7 @@ npm run preview        # preview dist/ locally
     ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / shift / sky / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
-    └── views/             # 12 views: 9 under neo/ (home + content pages), plus AdminView / LoginView / RegisterView
+    └── views/             # 12 views, one file each, flat: 9 content pages + AdminView / LoginView / RegisterView
 ```
 
 ## Deployment
@@ -166,16 +169,17 @@ Full steps for all three targets (Vercel mirror / GitHub Pages mirror / self-hos
 
 ## Documentation
 
-- [docs/design-neo.md](docs/design-neo.md) — the single source of truth for the interface design (concept, colour system, component contracts, developer guide; Chinese)
+- [docs/design.md](docs/design.md) — the single source of truth for the interface design (concept, colour system, component contracts, developer guide; Chinese)
 - [docs/manual.md](docs/manual.md) — handbook for editing, adapting and deploying (Chinese)
 - [docs/api.md](docs/api.md) — backend API contract: endpoint table, auth and rate limits, status codes, storage / fail-closed boundary, known issues; ships with `npm run check:api`, which diffs the doc against `server/api.py` both ways (Chinese)
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) — where these four figures come from, how to re-run them, and what to do if you want real screenshots
+- [docs/assets/plate.md](docs/assets/plate.md) — the site under-plates (`src/assets/plate/`): provenance and licence, how the watermark was cropped out and the files compressed, and the contrast rule to re-measure whenever they are swapped
 
 ## License & Usage Terms
 
 1. **Nature** — This project (source code, design documents, visual and interaction design, and copy included) is the author's personal work for learning and practice, intended solely for individual study, research and non-commercial exchange.
 2. **No commercial use** — Without prior written permission, no part of this project may be used commercially or monetized in any way.
-3. **Originality protection** — The core original designs (the "Long-Exposure Star Trails" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission.
+3. **Originality protection** — The core original designs (the "Long-Exposure Star Trails" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission. What this clause claims is the metaphor, the design and the code; the two low-frequency under-plates in `src/assets/plate/` are **machine-generated assets**, not part of the author's original-design claim, and are freely replaceable (see [docs/assets/plate.md](docs/assets/plate.md)).
 4. **Citation** — Learning-purpose references must clearly credit the project and the author, and keep this notice.
 5. **Disclaimer** — The project is provided "as is", without warranty of any kind; the author is not liable for any loss arising from its use.
 6. **Licensing contact** — chunqi-yu@outlook.com.

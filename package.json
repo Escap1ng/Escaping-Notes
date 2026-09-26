@@ -16,6 +16,8 @@
     "seo:build": "node scripts/build_seo.mjs",
     "check:api": "python scripts/check_api_doc.py",
     "check:docs": "python scripts/check_doc_refs.py",
+    "check:naming": "python scripts/check_naming.py",
+    "check": "npm run check:api && npm run check:docs && npm run check:naming",
     "preview": "vite preview"
   },
   "dependencies": {
