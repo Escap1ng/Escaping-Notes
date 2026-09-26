@@ -33,7 +33,7 @@ EXAMPLES = {
 SECTIONS = re.compile(r'§([0-9]+(?:\.[0-9]+)*)')
 FILES = re.compile(r'([A-Za-z0-9_./-]+\.(?:md|py|mjs|cjs|vue|css|json|html|txt|xml|yaml|yml|woff2|png|ico|service|js))(?![a-z0-9])')
 NAMED = re.compile(r'([A-Za-z0-9_./-]+\.(?:md|css|py|js|vue))')
-RUNTIME = re.compile(r'(?:^|/)(?:server/)?data(?:/|$)|\brecords\.json$')   # 运行时数据，不进仓库
+RUNTIME = re.compile(r'(?:^|/)(?:server/)?data(?:/|$)|\b(?:records|users|sessions|messages|views|content|fragments)\.json$')   # 运行时数据，不进仓库
 
 
 def headings(text):
