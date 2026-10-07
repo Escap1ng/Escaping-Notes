@@ -309,7 +309,7 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 
 项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**——`build:pages` 只切换路由历史模式（hash，见 `src/router/index.js` 读 `VITE_DEPLOY`），`base` 与生产同为 `/`。
 
-镜像已绑自有域名 **`https://escaping.top/`**（裸域名给 Pages，`www` 留给 §4.3 的自建服务器）。绑域名后 GitHub 会把 `https://escap1ng.github.io/Escaping-Notes/` 自动 301 到域名根路径，**带仓库名前缀的那份不再单独服务**——这就是 `base` 不能写 `/Escaping-Notes/` 的原因。
+镜像已绑自有域名 **`https://escaping.top/`**（裸域名给 Pages，`www` 留给 §4.3 的自建服务器）。绑域名后 `https://escap1ng.github.io/Escaping-Notes` 会 301 到域名根路径，**带仓库名前缀的那份不再单独服务**——这就是 `base` 不能写 `/Escaping-Notes/` 的原因。
 
 1. 仓库 Settings → Pages → **Source** 选 **GitHub Actions**（仅首次）。
 2. DNS 记录（仅首次，华为云）：控制台 → **云解析服务 → 公网权威解析** → `escaping.top` → 添加记录集：主机记录 `@`、类型 A、TTL 300、记录值四行一次填完。
@@ -339,8 +339,25 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
    ```
 
    第二条是证明：返回 `escaping.top` 与 `true` 即绑定完成。
+
+   两个实测过的坑，别再试第二遍：
+
+   - **仓库里放 `public/CNAME` 不生效**。`build_type: workflow` 下 Pages 只认设置里的域名；CNAME 会被原样拷进 `dist`、部署也成功，但 `cname` 仍是 `null`。
+   - **上面那条 `gh api` 需要 fine-grained token 的 Pages: Read and write 权限**。`gh auth login` 默认拿到的凭据没有，表现很迷惑：`PATCH /pages` 一律回 404，连只改 `enforce_https` 的 no-op 也 404，而同一时刻 GET 该端点和 `git push` 都正常。用浏览器点 UI 最快。
+
+   绑完页面会出黄条 `www.escaping.top is improperly configured (InvalidDNSError)`：GitHub 自动把 `www` 当成裸域名的别名去查记录，而 `www` 是故意留给 §4.3 自建服务器的。**这条警告不用管**，判据是输入框下面那行 `DNS valid for primary`。
 5. 推送代码：`git push`。
 6. 等 Actions 跑完（约 1 分钟），访问 `https://escaping.top/`，F12 → Network 里 `index.html` 引的应是 `/assets/…`（不带 `/Escaping-Notes/`）。
+
+   证明证书已为该域名签好（而不是 `*.github.io` 兜底）：
+
+   ```bash
+   curl -s -o /dev/null -w "HTTP %{http_code} ssl_verify=%{ssl_verify_result}\n" https://escaping.top/
+   echo | openssl s_client -connect 185.199.110.153:443 -servername escaping.top 2>/dev/null | openssl x509 -noout -subject -issuer
+   ```
+
+   期望 `HTTP 200 ssl_verify=0` 与 `subject=CN=escaping.top`。
+   旧地址 `escap1ng.github.io/Escaping-Notes`（不带尾斜杠）会 301 到新域名；带尾斜杠的那份可能仍直接返回产物、资源 404——GitHub 的重定向表要等 Fastly 缓存过期，不用管，站内所有 canonical/OG/RSS 都已指向 `escaping.top`。
 
 Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不可用（无后端）。自建服务器（§4.3）上线后落在 `www.escaping.top`，Pages 保留作备份出口；两者内容不同源，届时 canonical/OG 指向哪一处要按 §2.6 一起改。
 
