@@ -9,7 +9,7 @@ __pycache__/
 *.pyc
 
 # ---------- 本地素材与一次性产物：不进仓库，别用 git add -A 扫进来 ----------
-# AI 生成的底片原图与探尺寸产物（~9MB，成品已压进 src/assets/plate/）
+# AI 生成的底片原图与探尺寸产物（~9MB）；底图层已撤回，可回退副本停在这里的 plate-park-*
 vibe_images/
 # 视觉方案的对照截图，只对当轮改稿有用，README 用的是可复算的 SVG/PNG（docs/assets/readme/）
 docs/assets/mock/

@@ -45,7 +45,6 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 - **Dual themes** — Deep Space (cold white / warm white / amber trails) and Paper (astronomical dry plate: ink trails + vermilion accents), one click to switch, preference remembered; first visits follow `prefers-color-scheme`
 - **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (spacing / type-size / line-height / font-weight), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits, chart libraries or font CDNs (the only runtime dependencies are Vue and Vue Router)
-- **Low-frequency under-plate** — beneath the trails sits a baked static plate (WebP, 19 / 31 KB, zero per-frame cost) that supplies haze, warmth and depth; it shares the dark band's geometry with the sky but uses its own dimming coefficient, so adding it costs no legibility (measured in-band text-1: 5.15:1). The artwork is machine-generated — provenance and licence are listed separately
 - **Graceful degradation** — when the API is unreachable (or times out) the site falls back to bundled seed data: still a complete offline plate
 - **Immersive cursor (off by default)** — enabled from the third header button and remembered; it only takes over the home page, so other pages keep the native pointer; after ~1.4s of stillness it eases off and parks its render loop
 - **Accessibility** — focus traps in the drawer and lightbox, route changes announced to screen readers, a focusable skip link and `#main`, touch targets ≥44px, and a full static fallback under `prefers-reduced-motion`
@@ -174,13 +173,12 @@ Full steps for all three targets (Vercel mirror / GitHub Pages mirror / self-hos
 - [docs/manual.md](docs/manual.md) — handbook for editing, adapting and deploying (Chinese)
 - [docs/api.md](docs/api.md) — backend API contract: endpoint table, auth and rate limits, status codes, storage / fail-closed boundary, known issues; ships with `npm run check:api`, which diffs the doc against `server/api.py` both ways (Chinese)
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) — where these four figures come from, how to re-run them, and what to do if you want real screenshots
-- [docs/assets/plate.md](docs/assets/plate.md) — the site under-plates (`src/assets/plate/`): provenance and licence, how the watermark was cropped out and the files compressed, and the contrast rule to re-measure whenever they are swapped
 
 ## License & Usage Terms
 
 1. **Nature** — This project (source code, design documents, visual and interaction design, and copy included) is the author's personal work for learning and practice, intended solely for individual study, research and non-commercial exchange.
 2. **No commercial use** — Without prior written permission, no part of this project may be used commercially or monetized in any way.
-3. **Originality protection** — The core original designs (the "Long-Exposure Star Trails" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission. What this clause claims is the metaphor, the design and the code; the two low-frequency under-plates in `src/assets/plate/` are **machine-generated assets**, not part of the author's original-design claim, and are freely replaceable (see [docs/assets/plate.md](docs/assets/plate.md)).
+3. **Originality protection** — The core original designs (the "Long-Exposure Star Trails" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission.
 4. **Citation** — Learning-purpose references must clearly credit the project and the author, and keep this notice.
 5. **Disclaimer** — The project is provided "as is", without warranty of any kind; the author is not liable for any loss arising from its use.
 6. **Licensing contact** — chunqi-yu@outlook.com.
