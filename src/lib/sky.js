@@ -8,7 +8,15 @@
 // 但两个相机若极点不同，导航后同心弧的圆心会跳 → "同一片天"当场穿帮。
 export const POLE_FX = 0.62
 export const POLE_FY = 0.38
-export const MAXPX = 4.6e6 // 底片像素预算（超出则自动降 DPR）
+export const MAXPX = 9e6 // 底片像素预算（超出则自动降 DPR）
+// 底片内部分辨率的下限。一条暗星轨只有 0.94 CSS px 宽（lw = 0.6 + z·1.2，中位数 0.96），
+// dpr=1 的屏上它连一个设备像素都不到 → 抗锯齿把它切成一串珠子：按面积重叠积分量过覆盖度
+// 沿弧的谷/峰比，0.94 设备 px 是 0.25（摆 3~4 倍），1.0 是 0.27（**抬到"正好一个像素"没用**），
+// 1.4 是 0.53，1.87 是 0.79 且无低覆盖采样。所以下限取 1.8。
+// 这不是把线画粗：屏幕上物理线宽仍是 0.94 CSS px（画布会降采样回 CSS 尺寸），多出来的只是
+// 内部栅格的表达力。代价是每帧全屏 destination-out + drawImage 的像素数——1920×1080 从 2.07MP
+// 变 6.2MP。1× 大屏（问题就出在这类屏）才会吃到这份代价，2× 屏与手机本来就在上限附近。
+export const MIN_DPR = 1.8
 
 export const sky = {
   acc: null, // 长曝光底片（离屏累积缓冲）
@@ -49,7 +57,9 @@ export function ensurePlate() {
   const w = innerWidth
   const h = innerHeight
   if (!w || !h) return false
-  const dpr = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(MAXPX / (w * h)))
+  // 想要的分辨率：设备 DPR 与"不串珠"的 1.8 里取大的；再被上限 2 与像素预算夹住
+  const want = Math.max(MIN_DPR, window.devicePixelRatio || 1)
+  const dpr = Math.min(2, want, Math.sqrt(MAXPX / (w * h)))
   if (sky.acc && sky.w === w && sky.h === h && sky.dpr === dpr) return false
   const prev = sky.acc // 旧底片：已感的光要带走，不能因为视口高了十几px 就整张倒掉
   const prevW = sky.w

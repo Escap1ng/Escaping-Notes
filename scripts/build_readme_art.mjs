@@ -37,14 +37,11 @@ const PLATE_FADE = num(ST, 'PLATE_FADE')
 const PLATE_OM = num(ST, 'PLATE_OM')
 const PLATE_STEPS = num(ST, 'PLATE_STEPS')
 const N_BIG = num(ST, 'N_BIG')
-const RND_R = num(ST, 'RND_R')
+const R_MIN = num(ST, 'R_MIN')
+const SLOT_JIT = num(ST, 'SLOT_JIT')
+const MID_BIAS = num(ST, 'MID_BIAS')
 const POLE_FX = num(SKY, 'POLE_FX')
 const POLE_FY = num(SKY, 'POLE_FY')
-
-const bands = [...ST.matchAll(/^\s*\[\s*([\d.]+)\s*,\s*([\d.]+)\s*\],$/gm)]
-  .map((m) => [+m[1], +m[2]])
-  .filter(([a, b]) => b > a && a >= 0 && b <= 1)
-if (bands.length !== 3) throw new Error(`读不到 BANDS 环带（拿到 ${bands.length} 段）`)
 
 /* ---------------- 两套主题的色，照抄 readColors() ---------------- */
 function h2rgb(h) {
@@ -97,24 +94,19 @@ const TAU = Math.PI * 2
 let seed = 20260920
 const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff)
 
-const BAND_TOT = bands.reduce((s, b) => s + (b[1] - b[0]), 0)
-function pickRn() {
-  if (rnd() < RND_R) return 0.02 + rnd() * 0.97
-  let u = rnd() * BAND_TOT
-  for (const b of bands) {
-    const w = b[1] - b[0]
-    if (u <= w) return b[0] + rnd() * w
-    u -= w
-  }
-  return 1
+// 半径：与 StarTrails.vue 的 pickRn 同一式（等距槽 + 槽内抖动 + 中段略密的单调弯折）
+function pickRn(i, n) {
+  const u = (i + 0.12 + rnd() * SLOT_JIT) / n
+  const g = u + (MID_BIAS / TAU) * Math.sin(TAU * u)
+  return R_MIN + (1 - R_MIN) * Math.min(1, Math.max(0, g))
 }
-function mkStar() {
+function mkStar(i, n) {
   let z = 0.16 + Math.pow(rnd(), 2.4) * 0.62
   if (rnd() < 0.07) z *= 2.1
   z = Math.min(1, z)
   const rr = rnd()
   return {
-    rn: pickRn(),
+    rn: pickRn(i, n),
     th: rnd() * TAU,
     z,
     tier: rr < 0.56 ? 0 : rr < 0.89 ? 1 : 2,
@@ -126,7 +118,7 @@ function mkStar() {
     shear: 0.06 + Math.pow(rnd(), 1.25) * 0.34,
   }
 }
-const stars = Array.from({ length: N_BIG }, mkStar)
+const stars = Array.from({ length: N_BIG }, (_, i) => mkStar(i, N_BIG))
 for (const s of stars) s.r = s.rn * maxR
 
 /* ---------------- 稳态底片 ---------------- */
@@ -252,5 +244,5 @@ for (const [name, theme] of [
   console.log(`art: docs/assets/readme/${name} (${W}×${H}, ${(png.length / 1024).toFixed(1)} KB)`)
 }
 console.log(
-  `art: 复算常数 OMEGA=${OMEGA} DEP=${DEP} HEAD_GAIN=${HEAD_GAIN} 底片=${PLATE_OM}/${PLATE_FADE}/${PLATE_STEPS} 星=${stars.length} RND_R=${RND_R} 天极=(${POLE_FX},${POLE_FY}) 环带=${JSON.stringify(bands)} | 显示端 超采样=${DPR}x 冲印增益=深空${DEV_DEEP}/纸面${DEV_PAPER}`
+  `art: 复算常数 OMEGA=${OMEGA} DEP=${DEP} HEAD_GAIN=${HEAD_GAIN} 底片=${PLATE_OM}/${PLATE_FADE}/${PLATE_STEPS} 星=${stars.length} 半径取样=槽抖动${SLOT_JIT}/中段偏密${MID_BIAS}/内空${R_MIN} 天极=(${POLE_FX},${POLE_FY}) | 显示端 超采样=${DPR}x 冲印增益=深空${DEV_DEEP}/纸面${DEV_PAPER}`
 )

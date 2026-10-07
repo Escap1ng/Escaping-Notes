@@ -32,16 +32,16 @@ const cvs = ref(null)
 const TAU = Math.PI * 2
 
 /* ---------------- 常量（手感/性能参数集中，便于调优） ---------------- */
-// 稳态亮度 ≈ 每帧沉积 DEP ÷ 每帧衰减 fade。这组值被调过两轮：1.1.0 的 0.0085/0.008 = 1.06
-// 被投诉"久了过饱和"，2026-09-17 收到 0.0072/0.0104 = 0.69 又被告知"不明显、不好看"。
-// 现在落在 0.98 —— **略低于**当初投诉过饱和的那一档，因为这一轮真正补回来的是**对比**
-// （星等分层 + 头部亮段，见 mkStar/accPass），不是单纯把整片提亮。两头一起动才同时满足
-// "更长更亮"和"留得住黑"。
+// 稳态亮度 ≈ 每帧沉积 DEP ÷ 每帧衰减 fade；因为沉积也乘了 step（见 accPass 的 sc），这条现在
+// 在任何刷新率上都成立（改之前只在 60fps 成立，见 §3.1 / §10 ⑫）。
+// 2026-10-07 这轮把星数收到 180/100、最深衰减抬到 0.0052：离线仿真（复刻 accPass 合成数学、
+// 3 seeds 均值）给出 1920×1080 最深档环间黑隙 27px→41px、顶到 α=1 的实心像素 0.72%→0.45%、
+// 可见亮线覆盖 7.8%→4.9%，页顶档几乎不动（黑隙 79px→105px）。DEP÷FADE_0 仍是 0.98。
 const OMEGA = 0.042 // 基础角速度 rad/s（刚体旋转，全场一致；越小天空转得越从容）
 const SMEAR = 0.12 // 每帧沉积的快门拖尾角长 rad（只用于变星）
-const DEP = 0.0084 // 沉积基准 alpha（深空）
+const DEP = 0.0084 // 沉积基准 alpha（深空，60fps 那一档）
 const FADE_0 = 0.0086 // 页顶衰减/帧：衰减窗口 ≈ 1/FADE 帧，越小尾迹越长
-const FADE_1 = 0.0038 // 最深衰减/帧
+const FADE_1 = 0.0052 // 最深衰减/帧（原 0.0038：那一档尾迹长到把环间黑隙压到 27px，读成一片密纹）
 const FLOW_MAX = 2.2 // 下潜最深处的时间流速加成
 const SETTLE_START = 0.8 // 转满前 20% 开始尾部渐隐（cycle∈[0.8,1] 平滑过渡）
 const SETTLE_DEPTH = 0.6 // 临近转满暗化多深；越大越不容易收成实心亮环，也越灰
@@ -50,8 +50,8 @@ const FEAT_MIN = 5200 // 独立尾部消失的最小间隔 ms（2026-09-17 加�
 const FEAT_MAX = 11000
 const FEAT_DUR = 4.2 // 独立尾部消失时长 s（量级与整体旋转周期协调，避免突兀）
 const LENS_R = 180 // 指针时间膨胀半径 px
-const N_BIG = 220 // 星数（宽屏）
-const N_SMALL = 110 // 星数（窄屏）
+const N_BIG = 180 // 星数（宽屏；原 220）
+const N_SMALL = 100 // 星数（窄屏；原 110）
 const METEOR_MIN = 6000 // 流星最短间隔 ms
 const METEOR_MAX = 9000
 const PLATE_STEPS = 380 // reduced-motion 静态底片快进步数
@@ -69,15 +69,16 @@ const SUB_FPS = 30
 // 不用首页那套 scrollY/(H*1.1)——长文章滚过一屏它就饱和了，读不出整篇的进度。
 const SUB_FADE_TOP = FADE_0 * 1.3 // 页顶衰减/帧（沿用原静默基线：更短尾迹）
 const SUB_FLOW = 1.1 // 最深处的流速加成（首页 FLOW_MAX 的一半，次级页保持克制）
-// 环带取样：只当"哪半径偏密"的倾向，不当栅栏。原先是 4 段互不重叠、中间留 3 条空隙，
-// 那几道空环把天空切成了人为的同心结构 —— 用户说的"不好看/太规整"主要就出在这里。
-const BANDS = [
-  [0.04, 0.42],
-  [0.3, 0.7],
-  [0.55, 1],
-]
-const BAND_TOT = BANDS.reduce((s, b) => s + (b[1] - b[0]), 0)
-const RND_R = 0.3 // 三成星的半径完全随机：打散环带残留的等距感
+/* 半径取样：等距槽 + 槽内抖动 + 单调弯折。
+ * 为什么不再用独立随机：180 条环自由落体必然结块——实测（12 次取均值）"最挤 10 条的跨度 ÷
+ * 最松 10 条的跨度"是 5.81，且最小间距 0.0px（两条环几乎重合，读起来就是一根粗线旁边一大片空）。
+ * 分层抖动保住槽内的随机（相邻间距仍有 ±76% 的摆动），把结块比压到 1.65、50 个半径桶里的空桶
+ * 从 3.3 个降到 1 个（那一个是天极附近，本来就该空）。
+ * 上一版的"3 段重叠环带 + 三成完全随机"是为了消灭更早那版"4 段互不重叠、中间留 3 道空隙 = 太规整"，
+ * 结果矫枉过正成了不均匀。中段略密的倾向由 MID_BIAS 继承（旧环带中段约比两端密 1.4 倍）。 */
+const R_MIN = 0.03 // 最内圈占 maxR 的比例
+const SLOT_JIT = 0.76 // 抖动占槽宽的比例：留 0.24 的缝，保证相邻环不重合
+const MID_BIAS = 0.2 // 中段偏密强度；g(u)=u+a·sin(2πu)/2π，|a|<1 才单调
 
 let ctx = null
 let W = 0 // 本相机的盒子尺寸（CSS px）；底片尺寸在 sky.w/h
@@ -200,18 +201,13 @@ function resize() {
   }
 }
 
-function pickRn() {
-  if (Math.random() < RND_R) return 0.02 + Math.random() * 0.97
-  let u = Math.random() * BAND_TOT
-  for (const b of BANDS) {
-    const w = b[1] - b[0]
-    if (u <= w) return b[0] + Math.random() * w
-    u -= w
-  }
-  return 1
+function pickRn(i, n) {
+  const u = (i + 0.12 + Math.random() * SLOT_JIT) / n
+  const g = u + (MID_BIAS / TAU) * Math.sin(TAU * u)
+  return R_MIN + (1 - R_MIN) * Math.min(1, Math.max(0, g))
 }
 
-function mkStar() {
+function mkStar(i, n) {
   // 星等：多数暗、极少数亮。原来是 0.22 + r^1.7·0.78，中位数就有 0.6，全场一样亮 →
   // 累积成一片没有层次的雾。真实长曝光照片读得出来的正是那几颗亮星的拖痕，所以这里
   // 用更强的幂把分布压向低端，再单独放一撮亮星出来。
@@ -219,7 +215,7 @@ function mkStar() {
   if (Math.random() < 0.07) z *= 2.1
   const rr = Math.random()
   return {
-    rn: pickRn(),
+    rn: pickRn(i, n),
     r: 0,
     th: Math.random() * TAU,
     z,
@@ -244,7 +240,7 @@ function seedStars() {
     for (const s of sky.stars) s.r = s.rn * sky.maxR // 数量未变 → 保留状态，仅重算半径
     return
   }
-  sky.stars = Array.from({ length: n }, mkStar)
+  sky.stars = Array.from({ length: n }, (_, i) => mkStar(i, n))
   for (const s of sky.stars) s.r = s.rn * sky.maxR
   sky.feat = [] // 星群重建：清空独立消失标记，索引已失效
   sky.featNext = 0
@@ -328,7 +324,11 @@ function onFlowScroll() {
 /* ---------------- 累积缓冲：衰减 + 沉积 ---------------- */
 
 // om: 角速度 rad/s；fd: 每帧衰减；dtS: 帧时长 s；tAbs: 绝对时间 s；dep: 沉积基准 alpha
-function accPass(om, fd, dtS, tAbs, dep) {
+// sc: 帧时长比例（update 里的 step = dt/16.7），**承重**。衰减乘了 step、星角走 dtS，沉积若也不乘
+// step，浓淡就随刷新率漂移：120Hz 上同一点每秒被叠两倍次数，未饱和处稳态亮度翻倍——最深档实测
+// 中位亮度 0.216→0.283、顶到 α=1 的实心像素 0.72%→1.95%、环间黑隙 27px→20px（读成一片密纹），
+// 那几轮"收参数没见轻"就是这个原因。乘上 step 后浓淡只由时间决定；60Hz 下 step=1，观感逐位不变。
+function accPass(om, fd, dtS, tAbs, dep, sc = 1) {
   // 逐帧热路径：把 sky 上的对象先绑成局部引用，省掉满屏循环里的重复属性查找
   const a = sky.accCtx
   const acc = sky.acc
@@ -375,7 +375,7 @@ function accPass(om, fd, dtS, tAbs, dep) {
       s.th += dth
       const dthLen = s.shear * boost + dth // 本帧沉积的弧长
       const tw = 1 - s.ta + s.ta * Math.sin(tAbs * s.tw + s.ph)
-      const al = Math.min(1, dep * s.z * ab * tw * (1 - vk * SETTLE_DEPTH))
+      const al = Math.min(1, dep * s.z * ab * tw * (1 - vk * SETTLE_DEPTH) * sc)
       a.globalAlpha = al
       a.lineWidth = s.lw
       a.beginPath()
@@ -384,7 +384,7 @@ function accPass(om, fd, dtS, tAbs, dep) {
       // 头部亮段：等亮的长弧只是一根光棒，前沿再叠一笔短而亮的弧才有"自尾向头递增"，
       // 读起来才是一颗正在划过的星。累积稳态的 头/尾 实测 1.3~1.6 倍（HEAD_GAIN 2.6 看着大，
       // 但每帧增量要走完 al/(al+fade) 才显现）——要更突出就同时动 HEAD_GAIN 和这里的 0.22。
-      // 只有 14.2% 的星走到这一支，220 星满打满算多约 31 次描边/帧，不是多 220 次。
+      // 只有 14.2% 的星走到这一支，180 星满打满算多约 26 次描边/帧，不是多 180 次。
       if (s.head) {
         a.globalAlpha = Math.min(1, al * HEAD_GAIN)
         a.lineWidth = s.lw * 0.72
@@ -402,7 +402,7 @@ function accPass(om, fd, dtS, tAbs, dep) {
     for (const v of vars) {
       const dth = om * dtS
       v.th += dth
-      a.globalAlpha = Math.min(1, dep * 2.4)
+      a.globalAlpha = Math.min(1, dep * 2.4 * sc)
       a.beginPath()
       a.arc(polx, poly, v.r, v.th - (SMEAR + dth), v.th)
       a.stroke()
@@ -462,7 +462,7 @@ function update(dt, now) {
     }
     if (sky.feat.length) sky.feat = sky.feat.filter((f) => tSec - f.t0 < FEAT_DUR + 0.6)
     const dep = DEP * (C.boost ? 1.5 : 1) * (props.interactive ? 1 : 0.75)
-    accPass(OMEGA * flow, fade * (C.boost ? 1.4 : 1) * step, dt / 1000, tSec, dep)
+    accPass(OMEGA * flow, fade * (C.boost ? 1.4 : 1) * step, dt / 1000, tSec, dep, step)
   }
   if (props.interactive) {
     const bk = 1 - Math.pow(0.93, step) // 绽放缓动（约 0.2s 半程）

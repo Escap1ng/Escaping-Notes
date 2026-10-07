@@ -254,6 +254,7 @@ export const site = {
 - **动画只动 `opacity` / `transform`**。不要**新增**整页或大面积的 `filter: blur()`——那会每帧重新栅格化整棵子树。唯一的例外是 `fall` 转场（换页时的下坠模糊），它是刻意保留的手感，新组件请勿照抄。
 - **不要给常驻悬在画布之上的元素加 `backdrop-filter`**。它会让浏览器在星轨每动一帧时重算背后模糊；全站只保留抽屉一处（模态、瞬时）。需要“玻璃感”时用 94% 不透明实底替代。
 - **`resize` 一律经 `src/lib/debounce.js` 去抖（150ms）**，因为大多数处理要重建画布或重新测量布局。
+- **往累积缓冲沉积的那笔 alpha 必须乘帧时长比例**（`StarTrails.vue` 的 `accPass(…, dep, step)`）。底片的浓淡只能由时间决定：漏乘会让高刷新率屏整体变亮变密——120Hz 最深档实测顶到 α=1 的实心像素 0.72%→1.95%、环与环之间的黑隙 27px→20px，而这种差别在 60Hz 的开发机上看不见，会让人误以为"口味常量改了没效"。推导与实测见 `docs/design.md` §3.1 与 `docs/design.md` §10 ⑫。
 - **不要各自写滚动监听**。滚动深度统一由 `App.vue` 写入 `--shift`（0..1），需要就 `var(--shift, 0)`；`scrollHeight` 会强制同步布局，绝不能每帧读。
 - **焦点与播报**：新增模态/浮层请用 `src/lib/focus.js` 的 `trapFocus()` 锁住 Tab 并在关闭时归还焦点；`#main` 带 `tabindex="-1"` 供「跳到内容」使用；路由切换由 `App.vue` 的 `aria-live` 区域播报 `route.meta.t`——新页面记得在 `src/router/index.js` 写上 `meta.t`。
 - **触控目标 ≥44px**：直接复用 `.neo-btn` / `.neo-chip` 就会自动满足（`neo.css` 的 `@media (pointer: coarse)` 已统一处理）；只有自己写控件时才需补 `min-height: 44px`。
