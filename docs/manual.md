@@ -484,8 +484,18 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
 
 ## 6. 当前进度与阶段说明
 
-本站已发布 **v1.0.0 正式版**（2026-09），其后发布 **v1.1.0**（阅读体验优化）、**v1.2.0**（运行时性能、无障碍与 SEO）与 **v1.3.0**（统一设计系统）。以下里程碑均已交付：
+本站已发布 **v1.0.0 正式版**（2026-09），其后发布 **v1.1.0**（阅读体验优化）、**v1.2.0**（运行时性能、无障碍与 SEO）、**v1.3.0**（统一设计系统）与 **v1.3.1**（连续曝光落地、取数与存储收口）。以下里程碑均已交付：
 
+- **v1.3.1 · 连续曝光落地、取数与存储收口**：
+  - 连续曝光——底片跨路由常驻，`src/lib/sky.js` 以单例接管画布（`claimPlate` / `ownsPlate` / `releasePlate` / `ensurePlate`），切页不再重置星轨；快门层 `.neo-shutter` 由 `App.vue` 的 `shot` 触发、`animationend` 自行收走，`reduced-motion` 下不起快门。滚动深度经 `src/lib/shift.js` 的 `shift.v` 交给样式消费，`.neo-glyph` 用它做脉动亮度。
+  - 转场与层次——`fall` 入场上层由实心条带改羽化暗场，曲线与 `scale` / `blur` 重调；星轨常量重标（`OMEGA` 0.05→0.042、`DEP` 0.0085→0.0072、`SETTLE_DEPTH` 0.55→0.72），画布宽由活动主机宽改视口宽，避免交互态与非交互态两套尺寸互串。
+  - 可读性暗带契约——文字底下的天空由 `StarTrails.vue` 一处 `--_sky-mask` 统一压低，不再外包给卡片背景；几何与羽化边上收为 `neo.css` 的 `--sky-band` / `--sky-feather`，压低系数按主题给 `--sky-k`。卡片同步调整（`--card-bg` 44%→52%、`--card-bg-hover` 72%→62%）。
+  - 存储层 fail-closed——`server/api.py` 新增 `CorruptJSON` 与 `MISSING` 哨兵，「读不出」不再被当成「未初始化」；数据损坏时建号返回 503 且**不写文件**，`needsSetup` 不再可能被损坏文件骗开注册。`save()` 改唯一临时名 + `fsync` + `replace`，整段进锁。部署路径改读 `SITE_DATA` / `SITE_DIST` 环境变量。
+  - 取数层收口——`src/lib/api.js` 新增 `tryApi()` 返回 `{ok,status,data,code,reason}`，失败原因不再塌成 `null`（`code` 取后端 `error`，网络不通为 `offline` 且 `status:0`；`reason` 查 `src/config/narrative.js` 的 `errors` 表）；上传走同一契约（`uploadFile()`，60s 超时）。
+  - 防护网——新增 `tests/`（`frontmatter.test.mjs`、`markdown.test.mjs`、`test_parsers.py`，零依赖），装上时即抓到两个真实缺陷：frontmatter 正则不认 CRLF（Windows 检出的稿子解析不出元数据）、markdown 放行 `javascript:` 链接。现由 `safeHref()` 只允许 `https?:` / `mailto:` / `tel:`，白名单外只留可见文字。
+  - 命名与文档对拍——九个视图从 `src/views/neo/` 拍平到 `src/views/`（文件名不变，目录少一层），`docs/design.md`（原 `docs/design-neo.md`）去掉老版本说法；规约写进 `docs/design.md` §9.7 并由 `scripts/check_naming.py` 把守。新增 `docs/api.md` 接口契约与 `scripts/check_api_doc.py`（端点表⇄`api.py` 路由双向对拍）、`scripts/check_doc_refs.py`（死引用 / 节号 / 路由表）。
+  - 部署——GitHub Pages 镜像绑裸域名 `escaping.top`，`vite.config.js` 的 `base` 固定为 `/`（镜像与生产同挂根路径，两种模式的差异只剩 hash 路由），`www` 留给自建服务器；步骤与踩过的两个坑见 §4.2。
+  - 内容渲染——`src/lib/markdown.js` 支持 GFM 管道表，标题层级收到 h2/h6（h1 让给文章标题）。
 - **v1.3.0 · 统一设计系统（界面一致性）**：
   - 建立刻度——间距 `--space-0…5`、字号 `--fs-3xs…4xl`（11 档）、行高 `--lh-*`（4 档）、字重 `--fw-*`（3 档）、卡片 `--card-*` 一组、次级页顶栏避让 `--page-top`；组件内不再写裸字号/裸间距。
   - 收敛组件——按钮从 6 套并为「2 尺寸 × 4 语义」；输入框从 2 套并为「单行下划线 / 多行发丝框」；卡片 3 套规格并为 `--card-*`；状态提示 5 种各自实现并为 `.neo-note-ok/err/info` 三态；图标统一为 `.neo-ico` 单字符符号（播放符号两套合并）。
