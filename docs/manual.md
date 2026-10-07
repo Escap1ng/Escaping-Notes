@@ -307,13 +307,42 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 
 ### 4.2 方式 B：GitHub Pages（免费，当前测试期主用）
 
-项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**——`build:pages` 会自动启用 `/Escaping-Notes/` 前缀与 hash 路由，本地 `dev`/`build` 始终是自有域名生产参数。
+项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**——`build:pages` 只切换路由历史模式（hash，见 `src/router/index.js` 读 `VITE_DEPLOY`），`base` 与生产同为 `/`。
+
+镜像已绑自有域名 **`https://escaping.top/`**（裸域名给 Pages，`www` 留给 §4.3 的自建服务器）。绑域名后 GitHub 会把 `https://escap1ng.github.io/Escaping-Notes/` 自动 301 到域名根路径，**带仓库名前缀的那份不再单独服务**——这就是 `base` 不能写 `/Escaping-Notes/` 的原因。
 
 1. 仓库 Settings → Pages → **Source** 选 **GitHub Actions**（仅首次）。
-2. 推送代码：`git push`。
-3. 等 Actions 跑完（约 1 分钟），访问 `https://escap1ng.github.io/Escaping-Notes/`。
+2. DNS 记录（仅首次，华为云）：控制台 → **云解析服务 → 公网权威解析** → `escaping.top` → 添加记录集：主机记录 `@`、类型 A、TTL 300、记录值四行一次填完。
 
-Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不可用（无后端）。域名就绪后按 §4.3 切自有服务器，Pages 可保留作备份镜像或关停。
+   ```
+   185.199.108.153
+   185.199.109.153
+   185.199.110.153
+   185.199.111.153
+   ```
+
+   四条都要：GitHub 按这四个 IP 轮转发证书，少一条会概率性拿到无证书节点。裸域名不能用 CNAME。
+   入口只认**云解析服务**；"域名注册"里那一排 tab（含"自定义 DNS Host"）是登记 NS 服务器与过户用的，没有解析记录。
+3. 验证解析生效。用境内可达的解析器，`dns.google` 在境内不通，别拿它下结论：
+
+   ```bash
+   nslookup escaping.top 223.5.5.5
+   curl -s -H 'accept: application/dns-json' "https://doh.pub/dns-query?name=escaping.top&type=A"
+   ```
+
+   第一条证明 AliDNS 缓存里已是这 4 个 IP；第二条 `Answer` 数组证明对外公共解析已生效（`TTL` 从 300 往下倒数正常）。PowerShell 里 `curl` 是 `Invoke-WebRequest` 的别名，要用 Git Bash 或改写 `curl.exe`。
+4. 把域名登记到 Pages（**必须等第 3 步通了再做**，否则 GitHub 签不出证书）：Settings → Pages → Custom domain 填 `escaping.top` → Save → 勾 **Enforce HTTPS**。命令行等价：
+
+   ```bash
+   gh api -X PATCH repos/Escap1ng/Escaping-Notes/pages -f custom_domain=escaping.top -F enforce_https=true
+   gh api repos/Escap1ng/Escaping-Notes/pages --jq '{cname:.cname,https:.https_enforced}'
+   ```
+
+   第二条是证明：返回 `escaping.top` 与 `true` 即绑定完成。
+5. 推送代码：`git push`。
+6. 等 Actions 跑完（约 1 分钟），访问 `https://escaping.top/`，F12 → Network 里 `index.html` 引的应是 `/assets/…`（不带 `/Escaping-Notes/`）。
+
+Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不可用（无后端）。自建服务器（§4.3）上线后落在 `www.escaping.top`，Pages 保留作备份出口；两者内容不同源，届时 canonical/OG 指向哪一处要按 §2.6 一起改。
 
 ### 4.3 方式 C：自有轻量服务器（nginx，适用 2核2G）
 
@@ -332,7 +361,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
    ```nginx
    server {
        listen 80;
-       server_name escaping.top;
+       server_name www.escaping.top;
        root /var/www/escaping-notes;
        index index.html;
 
@@ -360,7 +389,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
 4. 裸 nginx 执行 `nginx -t ; nginx -s reload` 校验并重载；宝塔保存配置即生效。
 5. 验证：浏览器打开 `http://服务器IP`，刷新 `/blog` 等子页面不 404 即成功。
 6. 域名绑定与备案：
-   - 域名注册完成后，在域名商后台添加 A 记录：`@` 与 `www` 都指向服务器 IP。
+   - 在域名商后台为 `www` 添加 A 记录指向服务器 IP。**裸域名 `@` 已绑给 Pages 镜像**（§4.2 第 2 步），要用它做生产得先把 Pages 迁到子域名。
    - **大陆服务器：域名必须完成 ICP 备案**（走服务器厂商的备案系统），否则 80/443 端口会被拦截；不想备案就选香港/海外服务器。
    - 把配置里的 `server_name` 改成你的域名；宝塔保存即生效。
 7. HTTPS（涉及登录后必启）：certbot 或宝塔 SSL 一键申请；启用后把 `src/config/site.js` 的 `url` 字段改成你的 https 域名（RSS/OG/canonical 用），重新构建上传。
