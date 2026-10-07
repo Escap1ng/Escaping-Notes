@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#license--usage-terms)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
 
-**[Live Demo · escaping.top](https://escaping.top)**
+**[Live Demo](https://escaping.top)**
 
 [中文](README.md) · **English**
 
