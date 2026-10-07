@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#许可与使用声明)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
 
-**[在线体验](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
+**[在线体验 · escaping.top](https://escaping.top)**
 
 [中文](README.md) · [English](README.en.md)
 
@@ -162,6 +162,7 @@ npm run preview        # 本地预览 dist/
 
 三种方式（Vercel 只读镜像 / GitHub Pages 只读镜像 / 自有服务器 + nginx + systemd）的完整步骤、nginx 配置与备案注意事项见 **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)**。要点：
 
+- GitHub Pages 镜像已绑裸域名 `escaping.top`（`www` 留给自建服务器），DNS 记录、验证命令与证书步骤见手册 §4.2
 - 登录、发文、留言墙、全网计数依赖后端，只有自有服务器能跑完整版；两个免费平台是只读镜像
 - 涉及登录务必启用 HTTPS
 - 自建服务器需设 `SITE_DIST` 与 `SITE_DATA` 两个环境变量（与手册的 /opt + /var/www 布局对齐），否则服务端 meta 注入与 `/rss.xml` 会 404

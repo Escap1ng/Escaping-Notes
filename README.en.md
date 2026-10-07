@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#license--usage-terms)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
 
-**[Live Demo](https://escap1ng.github.io/Escaping-Notes/)** · **[escaping.top](https://escaping.top)**
+**[Live Demo · escaping.top](https://escaping.top)**
 
 [中文](README.md) · **English**
 
@@ -162,6 +162,7 @@ npm run preview        # preview dist/ locally
 
 Full steps for all three targets (Vercel mirror / GitHub Pages mirror / self-hosted nginx + systemd), including the nginx config and ICP filing notes, live in **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)** (Chinese). Key points:
 
+- The GitHub Pages mirror is bound to the apex domain `escaping.top` (`www` is reserved for the self-hosted server); DNS records, verification commands and the certificate steps are in the handbook §4.2
 - Login, publishing, the guestbook and cross-device view counts need the backend — only a self-hosted server runs the full version; both free platforms are read-only mirrors
 - Always enable HTTPS once login is involved
 - Self-hosting requires the `SITE_DIST` and `SITE_DATA` environment variables (to match the /opt + /var/www layout in the handbook); without them server-side meta injection and `/rss.xml` return 404
