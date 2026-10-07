@@ -46,7 +46,6 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 - **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距/字号/行高/字重）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入「单行下划线 / 多行发丝框」、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
 - **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制；无第三方 UI 库、图表库或字体 CDN（运行时依赖只有 Vue 与 Vue Router）
 - **优雅降级**：API 不可达（或超时）时自动切换本地种子数据，站点仍是完整的离线底片
-- **沉浸光标（默认关闭）**：顶栏第三枚按钮开启并记忆；只在首页接管，其余页面保留系统光标；指针静止约 1.4s 后平滑收力并停帧
 - **无障碍**：抽屉与灯箱有焦点陷阱、路由切换向读屏播报、跳转链接与 `#main` 可聚焦、触控目标 ≥44px、`prefers-reduced-motion` 下有完整静态降级
 - **性能**：次级页活背景限帧 30fps、resize 去抖 150ms、`--shift` 缓存不每帧读 `scrollHeight`、常驻表面不用 `backdrop-filter`、透镜光斑走 transform
 - **阅读可读性**：文字底下的天空由全站一处的「暗带」压低（自适应、分主题定强），不靠每张卡片各自蒙一层；文章页另有磨砂玻璃底板做长时间阅读隔离，前景对比度达 WCAG AA
@@ -150,9 +149,9 @@ npm run preview        # 本地预览 dist/
 │   └── assets/readme/     # README 配图（含生成方式与换真截图的步骤）
 └── src/
     ├── assets/fonts/      # 自托管子集字体 + OFL 许可
-    ├── components/        # neo/ 下 StarTrails 星轨装置 · HorizonHero · NeoSiteHeader · NeoCursor …；MusicPlayer.vue 在上一层
+    ├── components/        # neo/ 下 StarTrails 星轨装置 · HorizonHero · NeoSiteHeader …；MusicPlayer.vue 在上一层
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子（records.js 由脚本生成，勿手改）
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / shift / sky / debounce / focus
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
     └── views/             # 12 个视图平铺，一页一个文件：9 张内容页 + AdminView / LoginView / RegisterView
 ```

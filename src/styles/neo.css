@@ -204,17 +204,6 @@ html[data-skin='neo'] [contenteditable='true'] {
   caret-color: var(--cold);
 }
 
-/* 沉浸光标生效时（NeoCursor 画出首帧后才写 data-cursor）：隐藏原生指针，输入区保留文本光标 */
-html[data-skin='neo'][data-cursor='on'] :where(:not(input):not(textarea):not([contenteditable='true'])) {
-  cursor: none;
-}
-html[data-skin='neo'][data-cursor='on'] a[href],
-html[data-skin='neo'][data-cursor='on'] button,
-html[data-skin='neo'][data-cursor='on'] label,
-html[data-skin='neo'][data-cursor='on'] summary {
-  cursor: none;
-}
-
 html[data-skin='neo'] ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

@@ -46,7 +46,6 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 - **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (spacing / type-size / line-height / font-weight), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits, chart libraries or font CDNs (the only runtime dependencies are Vue and Vue Router)
 - **Graceful degradation** — when the API is unreachable (or times out) the site falls back to bundled seed data: still a complete offline plate
-- **Immersive cursor (off by default)** — enabled from the third header button and remembered; it only takes over the home page, so other pages keep the native pointer; after ~1.4s of stillness it eases off and parks its render loop
 - **Accessibility** — focus traps in the drawer and lightbox, route changes announced to screen readers, a focusable skip link and `#main`, touch targets ≥44px, and a full static fallback under `prefers-reduced-motion`
 - **Performance** — the secondary-page backdrop is frame-capped at 30fps, resize listeners are debounced by 150ms, `--shift` is cached instead of reading `scrollHeight` per frame, persistent surfaces avoid `backdrop-filter`, and the lens glow moves by transform
 - **Reading readability** — the sky under body text is dimmed by one site-wide adaptive "dark band" (strength set per theme) instead of every card wearing its own scrim; the article page adds a frosted-glass plate for long reads, and foreground contrast meets WCAG AA
@@ -150,9 +149,9 @@ npm run preview        # preview dist/ locally
 │   └── assets/readme/     # README figures (how they are made, and how to swap in real screenshots)
 └── src/
     ├── assets/fonts/      # Self-hosted subset font + OFL licence
-    ├── components/        # under neo/: StarTrails device · HorizonHero · NeoSiteHeader · NeoCursor …; MusicPlayer.vue sits one level up
+    ├── components/        # under neo/: StarTrails device · HorizonHero · NeoSiteHeader …; MusicPlayer.vue sits one level up
     ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / cursor / shift / sky / debounce / focus
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
     └── views/             # 12 views, one file each, flat: 9 content pages + AdminView / LoginView / RegisterView
 ```

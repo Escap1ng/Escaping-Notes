@@ -8,7 +8,6 @@ const PREFIX = 'en-'
 export const KEYS = {
   token: `${PREFIX}token`, // 登录令牌，api.js 每次请求随 Authorization 头带上
   theme: `${PREFIX}theme`, // 主题：'well' 深空 / 'out' 纸面
-  cursor: `${PREFIX}cursor`, // 沉浸光标开关：'on' / 'off'，默认关
   volume: `${PREFIX}vol`, // 播放器音量 0–1
   wall: `${PREFIX}wall`, // 后端缺席时留言墙的本地副本（降级用）
   views: `${PREFIX}views-`, // 阅读数回退（累计），实际键 = 该前缀 + slug

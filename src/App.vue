@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 import MusicPlayer from './components/MusicPlayer.vue'
 import NeoSiteHeader from './components/neo/NeoSiteHeader.vue'
 import NeoSiteFooter from './components/neo/NeoSiteFooter.vue'
-import NeoCursor from './components/neo/NeoCursor.vue'
 import StarTrails from './components/neo/StarTrails.vue'
 import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
@@ -100,7 +99,6 @@ onUnmounted(() => {
   <div v-if="shot" :key="shot" class="neo-shutter" aria-hidden="true" @animationend="shot = 0"></div>
   <NeoSiteFooter />
   <MusicPlayer />
-  <NeoCursor />
   <!-- 路由播报：SPA 换页不刷新文档，读屏用户需要被告知当前页面 -->
   <p class="sr-only" role="status" aria-live="polite">{{ announced }}</p>
 </template>

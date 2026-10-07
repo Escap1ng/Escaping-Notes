@@ -34,7 +34,6 @@ EXEMPT = {
     # components/neo/ 的前缀去重与 .neo-* 类名改名同属一次原子改动（改一半会全站掉样式），
     # 待底片那轮落地后一起做。见 docs/design.md §10 与本次改动的待办清单。
     'no-dir-marker-dup': {
-        'src/components/neo/NeoCursor.vue',
         'src/components/neo/NeoSiteFooter.vue',
         'src/components/neo/NeoSiteHeader.vue',
     },

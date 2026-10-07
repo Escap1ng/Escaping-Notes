@@ -6,7 +6,6 @@ import { content } from '../../lib/content.js'
 import { auth, logout } from '../../lib/auth.js'
 import { theme, toggleTheme } from '../../lib/theme.js'
 import { music, requestMusicToggle } from '../../lib/music.js'
-import { cursor, toggleCursor } from '../../lib/cursor.js'
 import { debounce } from '../../lib/debounce.js'
 import { trapFocus } from '../../lib/focus.js'
 import { N } from '../../config/narrative.js'
@@ -68,13 +67,6 @@ onUnmounted(() => {
 })
 
 const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.theme.light))
-const cursorHint = computed(() =>
-  cursor.capable
-    ? cursor.on
-      ? '光标：关闭沉浸光标'
-      : '光标：开启沉浸光标'
-    : '光标：本设备不支持（需精细指针且未开启减弱动效）'
-)
 </script>
 
 <template>
@@ -124,20 +116,6 @@ const cursorHint = computed(() =>
       >
         <span class="neo-ico" aria-hidden="true">{{ theme.mode === 'well' ? '☾' : '☀' }}</span>
         <span class="txt">{{ themeLabel }}</span>
-      </button>
-
-      <button
-        class="ico-btn"
-        type="button"
-        :disabled="!cursor.capable"
-        :aria-pressed="cursor.on"
-        :aria-label="cursorHint"
-        :title="cursor.capable ? `${cursorHint}（仅首页生效）` : cursorHint"
-        @click="toggleCursor"
-      >
-        <!-- ✦ 实心=开 · ✧ 空心=关 -->
-        <span class="neo-ico" aria-hidden="true">{{ cursor.on ? '✦' : '✧' }}</span>
-        <span class="txt">光标</span>
       </button>
 
       <div class="auth neo-mono">
@@ -390,7 +368,7 @@ const cursorHint = computed(() =>
   border-color: color-mix(in srgb, var(--hot) 45%, transparent);
 }
 
-/* 不可用的图标按钮（音乐歌单为空 / 本设备不支持沉浸光标）：置灰 */
+/* 不可用的图标按钮（音乐歌单为空）：置灰 */
 .ico-btn:disabled {
   opacity: 0.45;
   cursor: default;
