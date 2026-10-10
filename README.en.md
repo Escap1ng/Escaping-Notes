@@ -24,12 +24,12 @@
 
 ## About
 
-Escaping Notes is a personal blog and journal that treats writing as a long exposure of the night sky — the camera set up on the landing screen keeps the exposure for me: posts, updates, records, projects and guestbook entries all land on the same plate. All four devices below grow out of that one camera —
+Escaping Notes is a personal blog and journal that treats writing as a long exposure of the night sky — the camera set up on the landing screen keeps the exposure for me: posts, updates, records and projects all land on the same plate. All four devices below grow out of that one camera —
 
 - **Posts as variable stars** — every article is a pulsing fixed star; hover unfolds a conical diffraction cross, click to fall into the prose
 - **Scroll as time** — the deeper you dive, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
 - **Pointer as time dilation** — star trails inside the cursor radius locally accelerate and curl
-- **Easter eggs as narrative** — meteors occasionally cross the plate; click a variable star to fall into an article; a giant ghost glyph rests on every page
+- **Easter eggs as narrative** — meteors occasionally cross the plate; click a variable star to fall into an article
 
 <table>
   <tr>
@@ -50,7 +50,7 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 - **Performance** — the secondary-page backdrop is frame-capped at 30fps, resize listeners are debounced by 150ms, `--shift` is cached instead of reading `scrollHeight` per frame, persistent surfaces avoid `backdrop-filter`, and the lens glow moves by transform
 - **Reading readability** — the sky under body text is dimmed by one site-wide adaptive "dark band" (strength set per theme) instead of every card wearing its own scrim; the article page adds a frosted-glass plate for long reads, and foreground contrast meets WCAG AA
 - **Feedback loop** — skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and search/tag filters stored in the URL (shareable, survives reload)
-- **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the Records page can be refreshed from a public QQ Music playlist in one click; three role tiers; guestbook and RSS included
+- **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the Records page can be refreshed from a public QQ Music playlist in one click; two role tiers (owner / admin); RSS included
 
 ## Two load-bearing designs, in figures
 
@@ -122,9 +122,8 @@ npm run preview        # preview dist/ locally
 | `/updates` | Activity | Pulse log |
 | `/records` | Records | String table of tracks |
 | `/projects` | Projects | Payload bay |
-| `/wall` | Guestbook | Echo wall |
 | `/about` | About | Writing "me" beyond the horizon |
-| `/login` `/register` | Log in / Sign up | utility pages, no metaphor |
+| `/login` | Log in | utility page, no metaphor |
 | `/admin` | Console | Backyard of the observatory |
 
 > Any unmatched route renders the 404 page, titled 此星不在星图 ("this star is not on the chart") — site copy is Chinese-only.
@@ -133,7 +132,7 @@ npm run preview        # preview dist/ locally
 
 ```text
 ├── index.html             # Shell: theme bootstrap script, SEO/OG metadata
-├── server/api.py          # Backend: content / auth / guestbook / RSS / OG injection / record sync
+├── server/api.py          # Backend: content / auth / RSS / OG injection / record sync
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── public/                # Static assets: favicon, robots.txt, og.png
 ├── scripts/               # Build-time and content-refresh scripts (verb families, see docs/design.md §9.7)
@@ -153,7 +152,7 @@ npm run preview        # preview dist/ locally
     ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
-    └── views/             # 12 views, one file each, flat: 9 content pages + AdminView / LoginView / RegisterView
+    └── views/             # 10 views, one file each, flat: 8 content pages + AdminView / LoginView
 ```
 
 ## Deployment
@@ -161,7 +160,7 @@ npm run preview        # preview dist/ locally
 Full steps for all three targets (Vercel mirror / GitHub Pages mirror / self-hosted nginx + systemd), including the nginx config and ICP filing notes, live in **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)** (Chinese). Key points:
 
 - The GitHub Pages mirror is bound to the apex domain `escaping.top` (`www` is reserved for the self-hosted server); DNS records, verification commands and the certificate steps are in the handbook §4.2
-- Login, publishing, the guestbook and cross-device view counts need the backend — only a self-hosted server runs the full version; both free platforms are read-only mirrors
+- Login, publishing and cross-device view counts need the backend — only a self-hosted server runs the full version; both free platforms are read-only mirrors
 - Always enable HTTPS once login is involved
 - Self-hosting requires the `SITE_DIST` and `SITE_DATA` environment variables (to match the /opt + /var/www layout in the handbook); without them server-side meta injection and `/rss.xml` return 404
 - Backup = copy the server's `data/` directory

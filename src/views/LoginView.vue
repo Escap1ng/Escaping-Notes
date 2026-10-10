@@ -44,7 +44,7 @@ async function submit() {
 
     <form class="auth-form" @submit.prevent="submit">
       <label class="readout">
-        USERNAME · 用户名（注册后不可修改）
+        USERNAME · 用户名（建号后不可修改）
         <input v-model="form.username" class="field" autocomplete="username" required />
       </label>
       <label v-if="needsSetup" class="readout">
@@ -60,10 +60,6 @@ async function submit() {
         {{ needsSetup ? '点火 · 初始化' : '入轨 · 登录' }}
       </button>
     </form>
-
-    <p v-if="!needsSetup" class="readout alt">
-      没有账号？<RouterLink to="/register">注册访客</RouterLink>
-    </p>
   </section>
 </template>
 
@@ -86,13 +82,5 @@ async function submit() {
   display: flex;
   flex-direction: column;
   gap: var(--space-0);
-}
-
-.alt {
-  margin-top: var(--space-3);
-}
-
-.alt a {
-  color: var(--signal);
 }
 </style>

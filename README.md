@@ -24,12 +24,12 @@
 
 ## 关于项目
 
-Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜空的长曝光——首页那台架好的相机替我数着时间：文章、动态、歌单、项目、留言，都记在同一张底片上。下面四条设定都从这台相机长出来——
+Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜空的长曝光——首页那台架好的相机替我数着时间：文章、动态、歌单、项目，都记在同一张底片上。下面四条设定都从这台相机长出来——
 
 - **文章即变星**：每篇文章是一枚定点脉动的亮星，驻目绽开锥形衍射十字芒，点击坠入正文
 - **滚动即时间**：下潜越深，曝光窗口越长、天空转得越快；页首到页尾是一整次夜拍
 - **指针即时间膨胀**：光标半径内星轨局部加速卷曲
-- **彩蛋即叙事**：偶有流星划过曝光底片；点击变星坠入文章；每页沉着一枚巨型幽灵汉字签名
+- **彩蛋即叙事**：偶有流星划过曝光底片；点击变星坠入文章
 
 <table>
   <tr>
@@ -50,7 +50,7 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 - **性能**：次级页活背景限帧 30fps、resize 去抖 150ms、`--shift` 缓存不每帧读 `scrollHeight`、常驻表面不用 `backdrop-filter`、透镜光斑走 transform
 - **阅读可读性**：文字底下的天空由全站一处的「暗带」压低（自适应、分主题定强），不靠每张卡片各自蒙一层；文章页另有磨砂玻璃底板做长时间阅读隔离，前景对比度达 WCAG AA
 - **反馈闭环**：文章列表有骨架屏，「本来没有内容」与「筛选无结果」分文案，搜索/标签筛选状态写入 URL（可分享、刷新不丢）
-- **全功能后台**：`/admin` 网页端编辑文章、动态、歌单、站点信息；歌单可一键同步 QQ 音乐公开歌单；三角色权限；留言墙与 RSS
+- **全功能后台**：`/admin` 网页端编辑文章、动态、歌单、站点信息；歌单可一键同步 QQ 音乐公开歌单；站长/管理员两档权限；RSS
 
 ## 读图：两处承重设计
 
@@ -122,9 +122,8 @@ npm run preview        # 本地预览 dist/
 | `/updates` | 动态 | 脉冲记录 |
 | `/records` | 歌单 | 曲目弦表 |
 | `/projects` | 项目 | 载荷舱 |
-| `/wall` | 留言 | 回声墙 |
 | `/about` | 关于 | 夜幕尽头写「我」 |
-| `/login` `/register` | 登录 / 注册 | 功能页，不套隐喻 |
+| `/login` | 登录 | 功能页，不套隐喻 |
 | `/admin` | 管理 | 观测台后场 |
 
 > 任何未匹配路由落到 404 ——「此星不在星图」。
@@ -133,7 +132,7 @@ npm run preview        # 本地预览 dist/
 
 ```text
 ├── index.html             # 壳层：主题预置脚本、SEO/OG 元信息
-├── server/api.py          # 后端：内容 / 鉴权 / 留言 / RSS / OG 注入 / 歌单同步
+├── server/api.py          # 后端：内容 / 鉴权 / RSS / OG 注入 / 歌单同步
 ├── content/posts/         # Markdown 文章（frontmatter）
 ├── public/                # 静态资源：favicon、robots.txt、og.png
 ├── scripts/               # 构建期与内容刷新脚本（命名按动词分族，见 docs/design.md §9.7）
@@ -153,7 +152,7 @@ npm run preview        # 本地预览 dist/
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子（records.js 由脚本生成，勿手改）
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
-    └── views/             # 12 个视图平铺，一页一个文件：9 张内容页 + AdminView / LoginView / RegisterView
+    └── views/             # 10 个视图平铺，一页一个文件：8 张内容页 + AdminView / LoginView
 ```
 
 ## 部署
@@ -161,7 +160,7 @@ npm run preview        # 本地预览 dist/
 三种方式（Vercel 只读镜像 / GitHub Pages 只读镜像 / 自有服务器 + nginx + systemd）的完整步骤、nginx 配置与备案注意事项见 **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)**。要点：
 
 - GitHub Pages 镜像已绑裸域名 `escaping.top`（`www` 留给自建服务器），DNS 记录、验证命令与证书步骤见手册 §4.2
-- 登录、发文、留言墙、全网计数依赖后端，只有自有服务器能跑完整版；两个免费平台是只读镜像
+- 登录、发文、全网计数依赖后端，只有自有服务器能跑完整版；两个免费平台是只读镜像
 - 涉及登录务必启用 HTTPS
 - 自建服务器需设 `SITE_DIST` 与 `SITE_DATA` 两个环境变量（与手册的 /opt + /var/www 布局对齐），否则服务端 meta 注入与 `/rss.xml` 会 404
 - 备份 = 复制服务器 `data/` 目录

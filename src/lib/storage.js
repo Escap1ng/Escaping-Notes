@@ -1,5 +1,5 @@
 // 浏览器存储键的唯一定义处。
-// 为什么要收口：这 5 个键此前散在 6 个文件里，同一个键被两处拼成不同名字时不会报错，
+// 为什么要收口：这些键此前散在 6 个文件里，同一个键被两处拼成不同名字时不会报错，
 // 只会"用户设置静默丢失"。收口之后 check:naming 能查出字面量漂移，改名也只需改这里。
 // 命名口径见 docs/design.md §9.7：统一 `en-` 前缀 + 概念名。
 
@@ -7,9 +7,10 @@ const PREFIX = 'en-'
 
 export const KEYS = {
   token: `${PREFIX}token`, // 登录令牌，api.js 每次请求随 Authorization 头带上
-  theme: `${PREFIX}theme`, // 主题：'well' 深空 / 'out' 纸面
+  theme: `${PREFIX}theme`, // 主题：'well' 深色 / 'out' 浅色
   volume: `${PREFIX}vol`, // 播放器音量 0–1
-  wall: `${PREFIX}wall`, // 后端缺席时留言墙的本地副本（降级用）
+  blur: `${PREFIX}plate-blur`, // 底片模糊 0–12px（0 = 清晰）。index.html 的首帧内联脚本按同样
+  // 的字面量读它，改这里必须同步改那边，否则进页会先清晰一闪。
   views: `${PREFIX}views-`, // 阅读数回退（累计），实际键 = 该前缀 + slug
   viewed: `${PREFIX}viewed-`, // 本次会话是否已计过数，只活到关标签页，所以放 sessionStorage
 }

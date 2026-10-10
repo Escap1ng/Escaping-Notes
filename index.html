@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Escaping Notes —— 一座手工建造的逃逸笔记：长曝光星轨即导航，文章是定点脉动的变星，滚动即向深渊下潜。记录技术思考、设计实践与生活片段。" />
+    <meta name="description" content="Escaping Notes · 逃逸笔记：一个把博客做成相机长曝光的网站——滚动就是这一夜在加速，文章、动态、音乐、映像、项目都记在同一张底片上。记录技术思考、设计实践与生活片段。" />
     <meta name="theme-color" content="#020204" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
 
@@ -21,22 +21,32 @@
     <meta property="og:image" content="https://escaping.top/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="深空底片上的同心星轨长曝光" />
+    <meta property="og:image:alt" content="深色底片上的同心星轨长曝光" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Escaping Notes · 逃逸笔记" />
     <meta name="twitter:description" content="掷墨入渊，星惊不复；藏光于页，潮退犹闻。" />
     <meta name="twitter:image" content="https://escaping.top/og.png" />
     <title>Escaping Notes · 逃逸笔记</title>
     <script>
-      // 首帧前应用主题，避免切换后闪一下。已存偏好优先；首次访问不设默认主题，直接跟随系统偏好。
+      // 首帧前应用主题，避免切换后闪一下。已存偏好优先；**首次访问默认亮色**（out），
+      // 不再读 prefers-color-scheme——首屏现在是一张亮底照片，跟着系统翻到深色会让它变成
+      // 一张压在黑底上的暗图，观感与配色都不成立。想要系统跟随，得先让首屏照片也分两版。
       // 这段逻辑是主题默认值的唯一来源，theme.js 直接读已写入的 data-theme，勿在此之外重复实现。
       const stored = localStorage.getItem('en-theme')
-      document.documentElement.dataset.theme =
-        stored === 'well' || stored === 'out'
-          ? stored
-          : matchMedia('(prefers-color-scheme: light)').matches
-            ? 'out'
-            : 'well'
+      document.documentElement.dataset.theme = stored === 'well' || stored === 'out' ? stored : 'out'
+
+      // 底片模糊（0–12px）必须在首帧前落好，否则进页会先是一种糊度、store 挂上后再跳成另一种。
+      // **没存过 = 12（拉满）**，这是作者的默认口味；存过 0 就真的不挂 filter
+      // （App.vue 用 html[data-plate-blur] 门控，缺这个属性等于零开销）。
+      // 键名与 src/lib/storage.js 的 KEYS.blur 同口径；0–12 与默认值与 lib/plate.js 的
+      // BLUR_MIN/MAX/DEFAULT 同口径，由 tests/plate-blur.test.mjs 钉住。手改过的 999 要夹住，
+      // 否则直接变成 blur(999px)。
+      const storedBlur = parseInt(localStorage.getItem('en-plate-blur'), 10)
+      const blur = Number.isFinite(storedBlur) ? Math.min(12, Math.max(0, storedBlur)) : 12
+      if (blur > 0) {
+        document.documentElement.style.setProperty('--plate-blur', blur + 'px')
+        document.documentElement.dataset.plateBlur = String(blur)
+      }
     </script>
   </head>
   <body>

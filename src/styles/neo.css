@@ -1,10 +1,10 @@
 /* ==========================================================================
-   Escaping Notes · neo 皮肤「多普勒坠入 DOPPLER DESCENT」
-   概念：首页是可交互黑洞；滚动 = 向事件视界下潜并持续红移。
-   色彩系统取自多普勒效应，语义严格分工：
-     --cold  蓝移 = 交互（hover / 链接 / 焦点 / 轨道节点）
-     --hot   红移 = 深度（进度 / 强调 / 当前项）
-     --white 白热 = 仅光子环与 ≤2px 高光
+   Escaping Notes · neo 皮肤「长曝光星轨 STAR-TRAILS EXPOSURE」
+   概念：首页是一台架好的相机在长曝光；滚动 = 这一夜的曝光在加速（晕影收紧、天空转快）。
+   色彩取自夜空的两副面孔，语义严格分工：
+     --cold  冷 = 交互（hover / 链接 / 焦点 / 星轨节点）
+     --hot   热 = 深度（进度 / 强调 / 当前项）
+     --white 高光 = 仅星核与 ≤2px 高光
    仅当 <html data-skin="neo"> 生效（由 index.html 硬编码，本站唯一样式网关）。
    特异性：html[data-skin='neo'] (0,1,1) > :root (0,1,0)
            html[data-skin='neo']:not([data-theme='out']) / [data-theme='out'] (0,2,1)
@@ -27,7 +27,6 @@
 html[data-skin='neo'] {
   --r-sm: 8px;
   --r-md: 14px;
-  --r-lg: 20px;
   --r-pill: 999px;
 
   /* 标题用衬线：黑洞叙事需要碑刻感。
@@ -35,12 +34,16 @@ html[data-skin='neo'] {
   --font-display: 'EN Display Serif', var(--font-serif);
 
   --measure: 68ch;
+  /* 长文正文字号（.neo-prose）：随视口在 --fs-lg 与 --fs-xl 两档之间插值，两端都是刻度上的档，
+     不新造字号。宽屏上 17px 相对屏宽偏小，但栏宽不能单独放——汉字一行超过 ~44 字就读着累，
+     所以让字号和栏宽一起长（栏宽在 §6c 按这枚字号算）。 */
+  --prose-size: clamp(var(--fs-lg), 0.6vw + 11.4px, var(--fs-xl));
   --space-5: 96px;
   /* 次级页内容顶部留白：所有 .neo-shell 页面共用，避开固定顶栏 */
   --page-top: 120px;
 
-  /* 品牌色：顶栏吸积环签名专用。跨主题固定为深空三档色温——
-     它是全站的视觉锚点，纸面主题下也保持同一枚环，故不放进主题块。 */
+  /* 品牌色：顶栏吸积环签名专用。跨主题固定为深色三档色温——
+     它是全站的视觉锚点，浅色主题下也保持同一枚环，故不放进主题块。 */
   --brand-cold: #8ec9ff;
   --brand-hot: #ff5c39;
   --brand-white: #fff7ed;
@@ -58,7 +61,7 @@ html[data-skin='neo'] {
      余量可留给天空），不是漏算；大气感由首页那台不加遮罩的相机负责。 */
   --sky-feather: calc((100% - var(--sky-band)) / 2);
 
-  /* 卡片：全站唯一规格（文章卡 / 留言卡 / 图片格 / 后台面板都从这里取）。
+  /* 卡片：全站唯一规格（文章卡 / 图片格 / 后台面板都从这里取）。
      **填充只负责"这是一组"，不负责可读性**——那是暗带的活。实测填充相对带内天空底
      只有 1.04~1.14:1 的表面比（肉眼几乎看不出），卡片认得出边界靠的是 --card-brd
      那根发丝线；44%→72% 这一档 hover 变化更是只有 1.05:1，等于没有。
@@ -71,11 +74,22 @@ html[data-skin='neo'] {
   --card-pad: var(--space-2);
   --card-pad-lg: var(--space-3);
 
+  /* 底片（.sub-plate）的两枚可调参数。
+     --plate-blur  初值 = 12px（拉满，作者的默认口味），运行时由设置面板的滑杆以行内样式覆盖
+                   <html>。用户拖到 0 时 App.vue 那条 filter 规则整个不匹配（门控是
+                   html[data-plate-blur]），那一档才真的不建渲染面。三处默认值必须同口径：
+                   这里、lib/plate.js 的 BLUR_DEFAULT、index.html 首帧内联，由测试钉住。
+     --plate-cycle 轮播一整圈的时长 = 5 张 × 每张 10s。每张占其中一格，关键帧只有一条
+                   （见 App.vue 的 plate-slot），逐层用 animation-delay 错开，所以加一张就是
+                   这里 +10s、再加一层 <i>。要改节奏只改这里，别去动 @keyframes。 */
+  --plate-blur: 12px;
+  --plate-cycle: 50s;
+
   /* 运行时由 App.vue 写入：滚动深度 0..1 */
   --shift: 0;
 }
 
-/* ---------- 2. 深空（默认） ---------- */
+/* ---------- 2. 深色（默认） ---------- */
 html[data-skin='neo']:not([data-theme='out']) {
   --ink-0: #020204;
   --ink-1: #0a0a10;
@@ -85,7 +99,7 @@ html[data-skin='neo']:not([data-theme='out']) {
   --text-1: #8f8c96;
   --line: rgba(244, 241, 234, 0.13);
 
-  /* 多普勒双色 */
+  /* 冷暖双色 */
   --cold: #8ec9ff;
   --hot: #ff5c39;
   --white: #fff7ed;
@@ -94,15 +108,25 @@ html[data-skin='neo']:not([data-theme='out']) {
   --signal: #8ec9ff;
   --signal-dim: rgba(142, 201, 255, 0.36);
 
-  /* 抬升阴影：深空下即近黑。纸面主题必须换成暖深色，
-     否则用 --ink-2（浅色）当阴影会在纸上晕出一圈浅色光斑 */
+  /* 抬升阴影：深色主题下即近黑。浅色主题必须换成底色同族的深色，
+     否则直接拿 --ink-2 当阴影会在浅底上晕出一圈浅淡的光斑 */
   --shadow: rgba(0, 0, 0, 0.62);
+  /* 映像柜的拍立得：白框在深色下是一块冷灰石板（照片本身亮，框再亮就抢了图），
+     胶带是压住框边的那条美纹纸——全站唯一一处暖色表面，它讲的是材料不是强调色 */
+  --polar: #1e2733;
+  --tape: rgba(252, 211, 77, 0.22);
   --void-a: rgba(2, 2, 4, 0.34); /* 运动模糊覆盖色 */
-  --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬：左下渐隐，保证压在盘面上可读 */
+  --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬色：当前零消费方。首屏那条压在照片带上的白纱已删——它把山脚抬到和天空同亮度，是"上下割裂"的一半。留着是因为跟随底色的语义色必须两套主题各自定义，只删一套会让使用处整条失效；要退役就连下面那行一起删。 */
+  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 暗色不轮播：五档指向同一张压暗底，避免夜里换景跳变 */
+  --plate-img-2: url('/plates/plate-bg-deep.jpg');
+  --plate-img-3: url('/plates/plate-bg-deep.jpg');
+  --plate-img-4: url('/plates/plate-bg-deep.jpg');
+  --plate-img-5: url('/plates/plate-bg-deep.jpg');
+  --hero-img: url('/plates/plate-bg-deep.jpg'); /* 首屏的地景底：暗色下用同一张压暗版，星轨以 lighter 叠在它上面 */
 
-  /* 阅读玻璃底板（文章页）：半透明页面色 + 背景模糊，隔离星轨、提升前景对比（60–80%） */
-  --panel-bg: rgba(2, 2, 4, 0.55);
-  --panel-frost-bg: rgba(2, 2, 4, 0.78); /* 无 backdrop-filter 时的兜底 */
+  /* 阅读玻璃底板（文章页）：页面底色按比例半透 + 背景模糊，隔离星轨、提升前景对比（60–80%） */
+  --panel-bg: color-mix(in srgb, var(--ink-0) 55%, transparent);
+  --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
   /* 暗带压低系数（§3.3）。解法：取最差那一档星轨色（琥珀 tier2 #ff977d）在峰值
      alpha 0.753 下的天光底，要求最小的次要文字 text-1 也过 AA 4.5 —— k ≤ 0.2，
@@ -111,33 +135,53 @@ html[data-skin='neo']:not([data-theme='out']) {
   --sky-k: 0.15;
 }
 
-/* ---------- 3. 白矮纸面（浅色） ---------- */
+/* ---------- 3. 白矮冷调（浅色） ---------- */
 html[data-skin='neo'][data-theme='out'] {
-  --ink-0: #f5f2ea;
-  --ink-1: #efeadd;
-  --ink-2: #e4dcc9;
+  --ink-0: #f2f5f9;
+  --ink-1: #e7ecf3;
+  --ink-2: #d9e1eb;
 
-  --text-0: #17150f;
-  --text-1: #6b675e;
-  --line: rgba(23, 21, 15, 0.16);
+  --text-0: #0e141d;
+  --text-1: #55606f;
+  --line: rgba(14, 20, 29, 0.15);
 
-  --cold: #2563eb;
-  --hot: #c2410c;
-  --white: #7c2d12;
+  /* 两枚强调色按 scripts/check_contrast.mjs 的浅色判据定（对 --ink-0 必须 ≥5.5:1）：
+     旧值 #2563eb / #c2410c 各自只有 4.73:1 与 4.74:1，差半档——不是口味偏亮，是不达标。
+     各往深一档取同族色，观感仍是鲜蓝 / 焦橙，实测 6.13:1 与 6.68:1，余量 0.6 以上。
+     --hot 同时是 ::selection 的底色、压的是 --ink-0 浅字，加深只会更好读。 */
+  --cold: #1d4ed8;
+  --hot: #9a3412;
+  --white: #24405f;
 
-  --signal: #2563eb;
-  --signal-dim: rgba(37, 99, 235, 0.3);
+  /* --signal 是旧组件借用的蓝移，必须与 --cold 同值——深色那侧也是配对的 */
+  --signal: #1d4ed8;
+  --signal-dim: rgba(29, 78, 216, 0.3);
 
-  /* 纸面上的阴影必须走暖深色（不能复用深空的纯黑，也不可用浅色 --ink-2） */
-  --shadow: rgba(23, 21, 15, 0.22);
+  /* 浅色主题的阴影必须走底色同族的深色（不能复用深色主题那枚近黑，也不可用偏亮的 --ink-2）。
+     (14,20,29) 就是 --text-0 的字节值——旧值 (23,21,15) 是冷色化之前的旧墨色，跟着一起收冷。 */
+  --shadow: rgba(14, 20, 29, 0.22);
+  /* 映像柜的拍立得：浅色下一张真白框（相纸就是白的，压成灰反而像没加载完） */
+  --polar: #ffffff;
+  --tape: rgba(253, 230, 138, 0.55);
   --void-a: rgba(245, 242, 234, 0.34);
-  --scrim: rgba(245, 242, 234, 0.78); /* 文字底衬：纸面同族浅色，洗去轨迹、保证压在星轨上的文字可读 */
+  --scrim: rgba(242, 245, 249, 0.78); /* 文字底衬色：当前零消费方，理由见深色那一条——要退役就两处一起删 */
+  /* 折线以下轮播的五张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
+     里的那张 jpg），不是第几张：paper2 空着——它搬去当第三篇《怎么写、怎么发》的封面了。
+     别为了序号连贯重烘改名，映像柜与 build_plate_bg.ps1 都按源图号认它。 */
+  --plate-img: url('/plates/plate-bg-paper1.jpg');
+  --plate-img-2: url('/plates/plate-bg-paper3.jpg');
+  --plate-img-3: url('/plates/plate-bg-paper4.jpg');
+  --plate-img-4: url('/plates/plate-bg-paper5.jpg');
+  --plate-img-5: url('/plates/plate-bg-paper6.jpg');
+  --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面 */
 
-  /* 阅读玻璃底板（文章页）：半透明纸色 + 背景模糊，隔离星轨、提升前景对比（60–80%） */
-  --panel-bg: rgba(245, 242, 234, 0.6);
-  --panel-frost-bg: rgba(245, 242, 234, 0.78); /* 无 backdrop-filter 时的兜底 */
+  /* 阅读玻璃底板（文章页）：跟随 --ink-0 的半透冷色 + 背景模糊，隔离星轨、提升前景对比。
+     写成 color-mix 而非抄字面量：这块底板的语义就是"底色的 60% / 78%"。首页 .sheet 在冷色化时
+     已改成跟随 ink-0，文章页却留着旧的 rgba(245,242,234)——同一件表面分叉成两处，靠抄死值追不平。 */
+  --panel-bg: color-mix(in srgb, var(--ink-0) 60%, transparent);
+  --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
-  /* 暗带压低系数：纸面比深空**更严**。这里的星轨是深色墨迹（tier1 #51240e），
+  /* 暗带压低系数：浅色主题比深色主题**更严**。这里的星轨是接近纯黑的墨迹（tier1 #51240e），
      压的是接近纯黑的 text-0 与中性的 text-1；同一套算法解到 text-1 ≥ 4.5 要 k ≤ 0.06
      （实测 4.65:1），k=0.1 只有 4.40 —— 不达标。两套主题差 2.5 倍，所以这个值必须分主题定。 */
   --sky-k: 0.06;
@@ -235,27 +279,6 @@ html[data-skin='neo'] main.neo-sub {
   .neo-shell {
     padding: var(--space-4) var(--space-2);
   }
-}
-
-/* 幽灵汉字：每页一枚个人签名 */
-.neo-glyph {
-  position: absolute;
-  z-index: 0;
-  font-family: var(--font-serif);
-  font-size: clamp(200px, 34vw, 520px);
-  line-height: 0.9;
-  font-weight: 700;
-  color: transparent;
-  -webkit-text-stroke: 1px var(--text-1);
-  /* 显影：签名随下潜由 0.07 提到 0.13 并缓缓下沉。挂 --shift（零 JS、零监听），
-     且只动 opacity / translate，符合 §9.5 红线。
-     用独立的 `translate` 属性而不是 `transform`：HorizonHero 与 NeoNotFoundView 的
-     scoped `.glyph` 拿 transform 做 translate(-50%,-50%) 居中，共用一个属性会互相顶掉
-     （它们顶不到下沉、减弱动效那条又会连居中一起清掉）。两者可叠加，各管各的。 */
-  opacity: calc(0.07 + var(--shift, 0) * 0.06);
-  translate: 0 calc(var(--shift, 0) * 4vh);
-  pointer-events: none;
-  user-select: none;
 }
 
 .neo-eyebrow {
@@ -706,8 +729,8 @@ textarea.neo-field:hover {
   transform: scaleX(1);
 }
 
-/* 衍射十字芒：把画布上"变星 hover 缓绽锥形芒"的语言搬到 DOM。
-   芒臂 ≤2px 且只用冷色（§5.3①：冷=交互方向；白热只留给光子核心）。
+/* 衍射十字芒：把首屏星轨的锥形衍射芒语言搬到 DOM（画布侧的变星装置 2026-10-09 已撤，
+   芒形留在卡片上）。芒臂 ≤2px 且只用冷色（§5.3①：冷=交互方向；白热只留给光子核心）。
    纯装饰：不接指针事件，调用处须带 aria-hidden。 */
 .neo-spike {
   position: absolute;
@@ -746,33 +769,30 @@ button:hover > .neo-spike,
   transform: scale(1) rotate(45deg);
 }
 
-/* ---------- 6c. 阅读底板（磨砂玻璃基元；§5.4 列为全站可用） ----------
-   隔离星轨背景 + 提升前景对比。四边 mask 羽化，让磨砂从边缘平滑褪去、不产生硬截断面。 */
+/* ---------- 6c. 阅读底板（玻璃面板；与首页抽屉 .sheet 同一套表面语言） ----------
+   隔离星轨背景 + 提升前景对比。描边、圆角、模糊三项与首页 .sheet 逐字相同——两处表面
+   是同一件东西，不该一个有羽化一个没有。原先的四边羽化 mask 已撤：它把 1px 描边从左右
+   各吃掉 120px、上下各 40px，剩下的读起来是一圈被裁切的调试外框，而不是一块底板。 */
 html[data-skin='neo'] .neo-glass {
   position: relative;
   z-index: 1;
-  --fx: 120px; /* 左右羽化：磨砂/底色向两侧渐隐 */
-  --fy: 40px; /* 上下羽化：与内容留白配合，标题不落在渐隐区（保对比） */
-  --measure: 78ch; /* 放宽文章阅读栏，提高文字占屏比例 */
-  /* 底板贴近屏幕（≤1240px 或 94vw），大屏下占据更多宽度；正文栏居中于 --measure */
-  max-width: min(1240px, 94vw);
+  /* 栏宽 = 正文 44 字，按 §1 的 --prose-size 算成绝对长度。
+     不用 ch：ch 随消费元素自身字号漂移，同一枚 --measure 在 16px 的 .head 与 20px 的
+     正文里会算出两个宽度，两栏就错开了。
+     上限受 §3.3 暗带契约约束：44 × 20px = 880px < --sky-band 1120px，正文整块仍落在带内；
+     底板比带宽，多出来的那一截是玻璃边，不吃文字。 */
+  --measure: calc(var(--prose-size) * 44);
+  /* 底板贴近屏幕（≤1280px 或 94vw），大屏下占据更多宽度；正文栏居中于 --measure */
+  max-width: min(1280px, 94vw);
   margin: var(--space-3) auto;
   padding: var(--space-4) var(--space-3) var(--space-3);
-  border-radius: var(--r-lg);
-  border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--text-0) 12%, transparent);
   background: var(--panel-bg, rgba(2, 2, 4, 0.64));
-  -webkit-backdrop-filter: blur(22px) saturate(1.08);
-  backdrop-filter: blur(22px) saturate(1.08);
-  /* 抬升阴影走 --shadow：纸面下用浅色 --ink-2 会晕出一圈浅色光斑，而非阴影 */
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  backdrop-filter: blur(22px) saturate(1.35);
+  /* 抬升阴影走 --shadow：浅色主题下若拿 --ink-2 当阴影，晕出的是一圈浅淡光斑而非阴影 */
   box-shadow: 0 22px 60px -34px var(--shadow, rgba(0, 0, 0, 0.6));
-  -webkit-mask:
-    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
-    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask:
-    linear-gradient(to right, transparent 0, #000 var(--fx), #000 calc(100% - var(--fx)), transparent 100%),
-    linear-gradient(to bottom, transparent 0, #000 var(--fy), #000 calc(100% - var(--fy)), transparent 100%);
-  mask-composite: intersect;
   animation: neo-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
 }
 
@@ -796,12 +816,111 @@ html[data-skin='neo'] .neo-glass {
 
 @media (max-width: 720px) {
   html[data-skin='neo'] .neo-glass {
-    --fx: 24px;
-    --fy: 16px;
     max-width: 100%;
     padding: var(--space-3) var(--space-2);
-    border-radius: var(--r-md);
   }
+}
+
+/* ---------- 6d. 卡片基元（全站唯一的卡片表面） ----------
+   从 BlogView 的 .card 提上来：动态 / 歌单 / 项目 / 关于 / 首页精选 / 文章列表共用这一组，
+   页面里只留各自的内部排版，不再各写一套边、角、底、hover。
+   配方是 `class="neo-card neo-lens"` + 一个 `<span class="bar">` 子元素（光带属 .neo-lens，见 §6b）。
+   带封面的那张再加 `neo-flush`（收掉卡面内边距，让图贴边，内边距交给卡内的信息体）。
+
+   **本节刻意不带 `html[data-skin='neo']` 前缀**（与 .neo-shell / .neo-lens / .neo-cards 同一档）。
+   加上它就是 (0,2,1)，而各页 scoped 的 `.head[data-v-x]` 只有 (0,2,0)——页面想扳回基元的
+   flex-direction / padding / gap / min-height 会**静默失效**：不报错、不红，只是那一行白写。
+   实测曾同时压着五处这样的死规则（首页精选的封面格、歌单头卡与曲目卡、动态卡、文章卡）。
+   `.neo-*` 类只存在于 neo 视图里，皮肤网关对这个基元是多余的。 */
+.neo-card {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 210px;
+  padding: var(--card-pad-lg) var(--card-pad-lg) var(--card-pad);
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-md);
+  background: var(--card-bg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.28s,
+    background 0.28s;
+}
+
+.neo-card:hover,
+.neo-card:focus-visible {
+  border-color: var(--card-brd-hover);
+  background: var(--card-bg-hover);
+}
+
+/* 封面贴边的卡：图占第一格、自己顶到卡边，留白由卡内的信息体给 */
+.neo-card.neo-flush {
+  padding: 0;
+}
+
+/* 占位卡：同一张卡面，但它不是链接。基元的 hover（边框冷移 + 提亮底）会骗人去点，
+   所以把这两态原样按回常态值。首页精选与文章列表共用（各写一份的话，
+   将来只会有一处记得按回去）。 */
+.neo-card.neo-pending {
+  color: var(--text-1);
+}
+
+.neo-card.neo-pending:hover,
+.neo-card.neo-pending:focus-visible {
+  border-color: var(--card-brd);
+  background: var(--card-bg);
+}
+
+/* 占位卡里那一枚读数：字号走仪器最小档，竖着居中——父格是 flex 列，
+   一枚子元素上下 auto 外边距即居中，不需要各页再写一条 justify-content。 */
+.neo-pending-label {
+  margin: auto 0;
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.16em;
+}
+
+/* 卡片栅格：宽屏两列，窄屏单列。列数只在这里定，页面不再各写一遍 */
+.neo-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 880px) {
+  .neo-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 封面格：卡片带照片时的第一格，3:2 定比 + 居中裁切。
+   没配图时给一格等高的斜纹空版——卡片高度不齐比"没有图"更难看。
+   首页精选与文章列表共用这一份（原先两处各写一套，改比例要改两个文件）。 */
+.neo-shot {
+  display: block;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+}
+
+.neo-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.neo-shot.blank {
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 9px,
+    color-mix(in srgb, var(--line) 60%, transparent) 9px 10px
+  );
 }
 
 /* ---------- 7. 晕影与深度 ---------- */
@@ -862,70 +981,12 @@ html[data-skin='neo'] .neo-glass {
   }
 }
 
-/* ---------- 8.5 快门：一次导航 = 一次曝光 ---------- */
-/* 底片全站共享后，换页不再是"重铺一张"，语义上就只剩一次快门开合。
-   形态是**羽化暗场呼吸**，不是闸门：`--ink-0` 就是页面底色，所以实心条带扫过时
-   等于用背景色把星轨和 fall 的虚化一起糊掉——2026-09-17 用户反馈"切换生硬、不如
-   之前的虚化"，元凶在此。改法：条带加高到 58%，实心段只留外侧 18%，其余一路渐隐到
-   透明，朝心的前沿不再有硬边（硬边才是"擦"，渐隐才是"化"）；整层压到 6 成不透明，
-   底片透过帘幕仍然在场；时长放到 0.52s，合拢峰值落在 46%（≈0.24s），正好对上 fall
-   中段两页都最糊的那一瞬——这一句是实测对齐，不再是"盖住"，中间始终盖不满。
-   两片帘幕必须**同时长同曲线**：animationend 会冒泡两次，先到那次就把整层摘掉，
-   异长会让另一片在半途被硬切（想错落开合得先把 App.vue 的摘除改成计数）。 */
-.neo-shutter {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
-  overflow: hidden;
-  opacity: 0.6;
-}
-
-.neo-shutter::before,
-.neo-shutter::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 58%;
-}
-
-.neo-shutter::before {
-  top: 0;
-  transform-origin: top;
-  background:
-    linear-gradient(to bottom, var(--ink-0) 0%, var(--ink-0) 18%, transparent 78%),
-    linear-gradient(to bottom, transparent 26%, color-mix(in srgb, var(--hot) 22%, transparent) 58%, transparent 84%);
-  animation: neo-blind 0.52s cubic-bezier(0.33, 0, 0.2, 1) both;
-}
-
-.neo-shutter::after {
-  bottom: 0;
-  transform-origin: bottom;
-  background:
-    linear-gradient(to top, var(--ink-0) 0%, var(--ink-0) 18%, transparent 78%),
-    linear-gradient(to top, transparent 26%, color-mix(in srgb, var(--hot) 22%, transparent) 58%, transparent 84%);
-  animation: neo-blind 0.52s cubic-bezier(0.33, 0, 0.2, 1) both;
-}
-
-@keyframes neo-blind {
-  0% {
-    transform: scaleY(0);
-  }
-  46% {
-    transform: scaleY(0.86);
-  }
-  100% {
-    transform: scaleY(0);
-  }
-}
-
 /* ---------- 9. 正文排版（命中 v-html，放全局） ---------- */
 html[data-skin='neo'] .neo-prose {
   max-width: var(--measure);
   margin: var(--space-3) auto 0;
   font-family: var(--font-serif);
-  font-size: var(--fs-lg);
+  font-size: var(--prose-size);
   font-weight: var(--fw-normal);
   line-height: var(--lh-relaxed);
   color: var(--text-0);
@@ -1044,8 +1105,12 @@ html[data-skin='neo'] .neo-prose blockquote {
 }
 
 html[data-skin='neo'] .neo-prose img {
+  display: block; /* 行内图会在下沿留一条基线缝，压不满圆角时看得更清楚 */
   width: 100%;
   border: 1px solid var(--line);
+  /* 与卡面、封面格同一档圆角：列表页的封面与文章里的那张是同一张照片，
+     一边圆一边方，翻页时会读出"换了个东西" */
+  border-radius: var(--r-md);
   cursor: zoom-in;
 }
 
@@ -1085,7 +1150,7 @@ html[data-skin='neo'] .neo-prose th {
 }
 
 /* ---------- 10. 沿用旧组件页面的协调化 ----------
-   功能页（/login /register /admin）复用 tokens.css 的通用类，这里只做"换成 neo 语言"的
+   功能页（/login /admin）复用 tokens.css 的通用类，这里只做"换成 neo 语言"的
    最小调整。表单（.field）与按钮已统一为 .neo-* 的同一套规格，不再需要覆盖——
    新增功能页时请直接用 .neo-btn / .neo-field / .neo-note-*，不要再写页面私有样式。 */
 html[data-skin='neo'] .page {
@@ -1123,23 +1188,11 @@ html[data-skin='neo'] .page-title {
     animation: none;
   }
 
-  /* 幽灵汉字的显影/下沉是滚动驱动的，减弱动效下钉回静态基线。
-     只钉 translate：居中用的 transform 是各页 scoped 自己的，不该被这里连带清掉 */
-  html[data-skin='neo'] .neo-glyph {
-    opacity: 0.07;
-    translate: none;
-  }
-
   /* 衍射芒的绽开靠 transform：减弱动效下两态都钉成 none，只留淡入淡出 */
   .neo-spike,
   a:hover > .neo-spike,
   button:hover > .neo-spike,
   .neo-spike.on {
     transform: none;
-  }
-
-  /* 快门整层移除：只写 animation: none 的话帘幕会退回未变换的 scaleY(1)，把页面永久盖住 */
-  .neo-shutter {
-    display: none;
   }
 }

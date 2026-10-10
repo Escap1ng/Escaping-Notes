@@ -5,9 +5,11 @@ import { useRoute } from 'vue-router'
 import { content } from '../../lib/content.js'
 import { auth, logout } from '../../lib/auth.js'
 import { theme, toggleTheme } from '../../lib/theme.js'
-import { music, requestMusicToggle } from '../../lib/music.js'
+import { music } from '../../lib/music.js'
 import { debounce } from '../../lib/debounce.js'
 import { trapFocus } from '../../lib/focus.js'
+import MusicCard from '../MusicCard.vue'
+import SettingsCard from '../SettingsCard.vue'
 import { N } from '../../config/narrative.js'
 
 const route = useRoute()
@@ -27,6 +29,27 @@ const drawer = ref(false)
 const drawerEl = ref(null)
 let trap = null // 焦点陷阱的释放函数
 
+/* 播放器卡片：顶栏「音乐」按钮点开的那一张（播放控制面全站只此一处） */
+const player = ref(false)
+/* 设置卡片：顶栏「设置」按钮点开的那一张（目前只有底片模糊滑杆） */
+const settings = ref(false)
+// 三张面板都挂在顶栏下沿同一条线上，任何时刻只开一张
+function togglePlayer() {
+  drawer.value = false
+  settings.value = false
+  player.value = !player.value
+}
+function toggleDrawer() {
+  player.value = false // 两张面板都是右上角的下层，不叠着开
+  settings.value = false
+  drawer.value = !drawer.value
+}
+function toggleSettings() {
+  drawer.value = false
+  player.value = false
+  settings.value = !settings.value
+}
+
 function closeDrawer() {
   drawer.value = false
 }
@@ -43,9 +66,9 @@ watch(drawer, async (open) => {
     trap = null
   }
 })
-// 视口回到宽屏时收起抽屉。阈值与 CSS 的导航折叠断点（1200px）必须一致
+// 视口回到宽屏时收起抽屉。阈值与 CSS 的导航折叠断点（1280px）必须一致
 const onResize = debounce(() => {
-  if (innerWidth > 1200) closeDrawer()
+  if (innerWidth > 1280) closeDrawer()
 }, 150)
 
 onMounted(() => {
@@ -91,19 +114,12 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     </nav>
 
     <div class="right">
-      <button
-        class="ico-btn music-btn"
-        :class="{ on: music.playing }"
-        type="button"
-        :disabled="!music.available"
-        :aria-pressed="music.playing"
-        :aria-label="music.available ? (music.playing ? '音乐：暂停' : '音乐：播放') : '音乐：歌单为空'"
-        :title="music.available ? (music.playing ? '音乐：暂停' : '音乐：播放') : '音乐：歌单为空'"
-        @click="requestMusicToggle"
-      >
-        <!-- 播放符号全站唯一：▶ 播放 / ❚ 暂停（与底部播放器同源） -->
-        <span class="neo-ico" aria-hidden="true">{{ music.playing ? '❚' : '▶' }}</span>
-        <span class="txt">音乐</span>
+      <!-- 右上角四枚：搜索 / 主题 / 音乐 / 设置。搜索暂只摆位，未接任何行为 -->
+      <button class="ico-btn" type="button" aria-label="搜索" title="搜索">
+        <svg class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.6" />
+          <path d="M15.7 15.7 20.4 20.4" />
+        </svg>
       </button>
 
       <button
@@ -114,17 +130,52 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         :title="`主题：${themeLabel}`"
         @click="toggleTheme"
       >
-        <span class="neo-ico" aria-hidden="true">{{ theme.mode === 'well' ? '☾' : '☀' }}</span>
-        <span class="txt">{{ themeLabel }}</span>
+        <svg v-if="theme.mode === 'well'" class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 14.2A8.4 8.4 0 1 1 9.8 4 6.8 6.8 0 0 0 20 14.2Z" />
+        </svg>
+        <svg v-else class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5" />
+        </svg>
       </button>
 
-      <div class="auth neo-mono">
-        <template v-if="auth.user">
-          <RouterLink to="/admin" class="auth-link">ADMIN</RouterLink>
-          <span class="auth-name">{{ auth.user.nickname }}</span>
-          <button class="auth-link" type="button" @click="logout">登出</button>
-        </template>
-        <RouterLink v-else to="/login" class="auth-link">登录/注册</RouterLink>
+      <button
+        class="ico-btn music-btn"
+        :class="{ on: music.playing }"
+        type="button"
+        :disabled="!music.available"
+        :aria-expanded="player"
+        :aria-label="music.available ? (player ? '播放器：收起' : '播放器：展开') : '播放器：暂无曲目'"
+        :title="music.available ? (player ? '收起播放器' : '打开播放器') : '暂无曲目可播'"
+        @click="togglePlayer"
+      >
+        <svg class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 17.4V5.9l9-1.8v11.4" />
+          <circle cx="6.6" cy="17.4" r="2.4" />
+          <circle cx="15.6" cy="15.5" r="2.4" />
+        </svg>
+      </button>
+
+      <button
+        class="ico-btn settings-btn"
+        type="button"
+        :aria-expanded="settings"
+        aria-controls="neo-settings"
+        :aria-label="settings ? '设置：收起' : '设置：展开'"
+        :title="settings ? '收起设置' : '设置'"
+        @click="toggleSettings"
+      >
+        <svg class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 8h8.8M17.2 8h2.8M4 16h2.8M11.2 16h8.8" />
+          <circle cx="15" cy="8" r="2.2" />
+          <circle cx="9" cy="16" r="2.2" />
+        </svg>
+      </button>
+
+      <div v-if="auth.user" class="auth neo-mono">
+        <RouterLink to="/admin" class="auth-link">ADMIN</RouterLink>
+        <span class="auth-name">{{ auth.user.nickname }}</span>
+        <button class="auth-link" type="button" @click="logout">登出</button>
       </div>
 
       <button
@@ -133,11 +184,19 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         :aria-expanded="drawer"
         aria-controls="neo-drawer"
         :aria-label="drawer ? '关闭菜单' : '打开菜单'"
-        @click="drawer = !drawer"
+        @click="toggleDrawer"
       >
         <span class="neo-ico" aria-hidden="true">{{ drawer ? '✕' : '≡' }}</span>
       </button>
     </div>
+
+    <Transition name="pop">
+      <MusicCard v-if="player" @close="player = false" />
+    </Transition>
+
+    <Transition name="pop">
+      <SettingsCard v-if="settings" @close="settings = false" />
+    </Transition>
 
     <Transition name="drawer">
       <div
@@ -169,15 +228,10 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
           </RouterLink>
         </nav>
 
-        <div class="drawer-auth neo-mono">
-          <template v-if="auth.user">
-            <RouterLink to="/admin" class="neo-btn neo-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
-            <span class="drawer-name">{{ auth.user.nickname }}</span>
-            <button class="neo-btn neo-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
-          </template>
-          <RouterLink v-else to="/login" class="neo-btn neo-btn-quiet" @click="closeDrawer">
-            登录/注册
-          </RouterLink>
+        <div v-if="auth.user" class="drawer-auth neo-mono">
+          <RouterLink to="/admin" class="neo-btn neo-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
+          <span class="drawer-name">{{ auth.user.nickname }}</span>
+          <button class="neo-btn neo-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
         </div>
 
         <p class="drawer-foot neo-mono">// Escap1ng · 仍在坠入</p>
@@ -241,23 +295,20 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  /* 光子环：用品牌令牌（跨主题固定深空配色），避免纸面主题下发色黯淡 */
+  /* 光子环：用品牌令牌（跨主题固定深色配色），避免浅色主题下发色黯淡。
+     去掉了原来 20% 处那一段 --brand-white——白色止点在浅色标签页/顶栏背景上等于
+     把四分之一环擦掉，这就是它看着"糊、缺一段"的原因；现在全程饱和，冷蓝占主导。 */
   background: conic-gradient(
     from 210deg,
-    var(--brand-hot),
-    var(--brand-white) 20%,
-    var(--brand-cold) 46%,
-    var(--brand-hot) 82%,
-    var(--brand-hot)
+    var(--brand-cold),
+    var(--brand-hot) 34%,
+    color-mix(in srgb, var(--brand-hot) 55%, var(--brand-cold)) 64%,
+    var(--brand-cold)
   );
   -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 53%);
   mask: radial-gradient(closest-side, transparent 50%, #000 53%);
-  filter: saturate(1.35) brightness(1.15);
-  animation: spin 14s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  filter: saturate(1.2);
+  /* 不再旋转：这是一枚标识，不是一段动画；转起来只会让它一直停在运动模糊里看不清 */
 }
 
 .brand-name {
@@ -282,7 +333,10 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--text-1);
   text-decoration: none;
   white-space: nowrap;
-  font-size: var(--fs-sm);
+  /* 衬线体走 --font-serif 而不是 --font-display：展示层那枚是 build_font.mjs 按用到的字
+     子集化出来的，导航里出现没裁进去的字就会掉回系统字体，一行字两种字形比无衬线还难看。 */
+  font-family: var(--font-serif);
+  font-size: var(--fs-md);
   line-height: var(--lh-snug);
   transition: color 0.22s;
 }
@@ -296,8 +350,9 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--cold);
 }
 
+/* 选中态不再用红：全站舍弃红蓝撞色，冷蓝是唯一强调色（--hot 的去处见令牌层） */
 .nav-link.active {
-  color: var(--hot);
+  color: var(--cold);
 }
 
 /* 下划线由左向右画出（左右内缩 = 文字两侧的内边距） */
@@ -308,7 +363,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   right: var(--space-1);
   bottom: 0;
   height: 2px;
-  background: var(--hot);
+  background: var(--cold);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -348,11 +403,22 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   transition: color 0.22s, border-color 0.22s, transform 0.22s;
 }
 
-/* 图标按钮：固定最小宽度并居中，防止各字形宽度差异导致切换时按钮跳动
-   （图标本身的等宽由 .neo-ico 保证） */
+/* 图标按钮：32px 正方形等大一枚（右上角三枚与汉堡/关闭共用这一档）。
+   描边 SVG 的着色走 currentColor，所以 hover/播放中的变色规则与文字按钮同一条 */
 .ico-btn {
-  min-width: 80px;
+  width: 32px;
+  padding: 0;
   justify-content: center;
+}
+
+.neo-svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .ico-btn:hover,
@@ -481,7 +547,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--cold);
 }
 
-/* 抽屉内的登录入口（移动端顶栏隐藏 auth 时的兜底）：复用 .neo-btn-quiet */
+/* 抽屉内的管理入口（移动端顶栏隐藏 auth 时的兜底）：复用 .neo-btn-quiet */
 .drawer-auth {
   display: flex;
   align-items: center;
@@ -520,33 +586,35 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   transform: translateY(14px);
 }
 
-/* ---- 响应式 ---- */
-/* 图标按钮只留图标（4 枚 32px 圆形）：带文字时「品牌 + 整条导航 + 4 枚按钮 + 登录」
-   在 ≤1400px 会超出视口宽度，而 html 的 overflow-x: clip 会静默裁掉——导航优先级高于按钮文字 */
-@media (max-width: 1400px) {
-  .ico-btn .txt {
-    display: none;
-  }
-  .ico-btn {
-    /* 图标按钮：固定正方形（圆形），各枚严格等大 */
-    padding: 0;
-    width: 32px;
-    min-width: 32px;
-    justify-content: center;
-  }
+/* 播放器卡片：从顶栏下沿展开。位移比抽屉收敛一档——它只有 320px 宽，
+   且锚在按钮正下方，跑太远会看不出"是哪枚按钮开的" */
+.pop-enter-active,
+.pop-leave-active {
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ---- 响应式 ---- */
+/* 右上角三枚自 2026-10-09 起就是纯图标 32px 方（不再有文字档），
+   所以原先"≤1400px 收起文字"那一档已无消费者，删掉 */
+
 /* 昵称是顶栏唯一宽度不可控的元素：1240px 以下先收起，
-   否则会把「登录/管理」挤出可视区（html 的 overflow-x: clip 会静默裁掉，用户无从发现） */
+   否则会把「管理/登出」挤出可视区（html 的 overflow-x: clip 会静默裁掉，用户无从发现） */
 @media (max-width: 1240px) {
   .auth-name {
     display: none;
   }
 }
 
-/* 导航整条约需 490px，与品牌 / 4 枚按钮 / 登录相加超过 1200px，
-   故导航折叠与登录入口收进抽屉的断点定在 1200px */
-@media (max-width: 1200px) {
+/* 导航整条实测 497px（「映像」进来之后是 7 枚 × 67.6px + 6 × 4px 间距，本机 Chrome 量的），
+   与品牌 / 右上角三枚 / 登录后的管理入口相加超过 1280px，故折叠断点从 1200 抬到 1280。
+   加一枚导航实打实要 72px——这个数别凭感觉估，估小了就是 1201~1279px 那一段整条溢出被裁 */
+@media (max-width: 1280px) {
   .neo-header {
     padding: var(--space-1) var(--space-2);
   }
@@ -556,7 +624,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   .burger {
     display: inline-flex;
   }
-  /* 顶栏容不下登录/管理：入口移到抽屉（.drawer-auth） */
+  /* 顶栏容不下管理入口：移到抽屉（.drawer-auth） */
   .auth {
     display: none;
   }

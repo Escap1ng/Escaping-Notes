@@ -9,7 +9,6 @@ import { loadPosts } from '../lib/posts.js'
 const router = useRouter()
 const tab = ref('users')
 const users = ref([])
-const msgs = ref([])
 const posts = ref([])
 const notice = ref('')
 const noticeErr = ref(false)
@@ -28,10 +27,7 @@ const playlistForm = ref('')
 const uploadUrl = ref('')
 
 const tabs = computed(() => {
-  const t = [
-    { id: 'users', label: '用户' },
-    { id: 'wall', label: '留言墙' },
-  ]
+  const t = [{ id: 'users', label: '用户' }]
   if (isOwner()) t.push({ id: 'posts', label: '文章' }, { id: 'settings', label: '设置' })
   return t
 })
@@ -51,7 +47,6 @@ function fillForms() {
 
 async function refresh() {
   users.value = (await api('/api/users')) || []
-  msgs.value = ((await api('/api/messages')) || []).slice().reverse()
   posts.value = await loadPosts()
   fillForms()
   if (isOwner()) loadImages()
@@ -84,10 +79,6 @@ async function setBan(u, ban) {
 }
 async function delUser(u) {
   await api(`/api/users/${u.id}`, { method: 'DELETE' })
-  refresh()
-}
-async function delMsg(ts) {
-  await api(`/api/messages/${ts}`, { method: 'DELETE' })
   refresh()
 }
 
@@ -274,10 +265,8 @@ async function onFile(e) {
             <td class="readout">{{ u.role }}</td>
             <td class="readout">{{ u.ban ? '已禁用' : '正常' }}</td>
             <td class="acts">
-              <template v-if="isOwner() && u.role !== 'owner'">
-                <button class="neo-btn neo-btn-sm neo-btn-ghost" @click="setRole(u, u.role === 'admin' ? 'visitor' : 'admin')">
-                  {{ u.role === 'admin' ? '降为访客' : '任为管理' }}
-                </button>
+              <template v-if="isOwner() && u.role !== 'owner' && u.role !== 'admin'">
+                <button class="neo-btn neo-btn-sm neo-btn-ghost" @click="setRole(u, 'admin')">任为管理</button>
               </template>
               <button v-if="u.role !== 'owner'" class="neo-btn neo-btn-sm neo-btn-ghost" @click="setBan(u, !u.ban)">
                 {{ u.ban ? '解禁' : '禁用' }}
@@ -288,18 +277,6 @@ async function onFile(e) {
         </tbody>
       </table>
       </div>
-    </div>
-
-    <!-- 留言墙 -->
-    <div v-if="tab === 'wall'">
-      <ul class="mini-list">
-        <li v-for="m in msgs" :key="m.ts" class="mini-row">
-          <span class="readout">{{ m.name }} · {{ new Date(m.ts * 1000).toLocaleDateString('zh-CN') }}</span>
-          <span class="mini-text">{{ m.text }}</span>
-          <button class="neo-btn neo-btn-sm neo-btn-danger" @click="delMsg(m.ts)">删除</button>
-        </li>
-        <li v-if="!msgs.length" class="readout">// 无留言</li>
-      </ul>
     </div>
 
     <!-- 文章（站长） -->
@@ -486,7 +463,7 @@ async function onFile(e) {
   gap: var(--space-2);
 }
 
-/* 图片格：卡片规范（--card-*），与文章卡 / 留言卡同一套令牌 */
+/* 图片格：卡片规范（--card-*），与文章卡同一套令牌 */
 .img-cell {
   display: flex;
   flex-direction: column;

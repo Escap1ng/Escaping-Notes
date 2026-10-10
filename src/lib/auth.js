@@ -16,5 +16,4 @@ export function logout() {
   auth.user = null
 }
 
-export const isAdmin = () => auth.user && (auth.user.role === 'admin' || auth.user.role === 'owner')
 export const isOwner = () => auth.user && auth.user.role === 'owner'

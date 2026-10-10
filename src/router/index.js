@@ -41,11 +41,6 @@ const router = createRouter({
       meta: { t: `载荷舱 · ${T}` },
     },
     {
-      path: '/wall',
-      component: () => import('../views/WallView.vue'),
-      meta: { t: `留言墙 · ${T}` },
-    },
-    {
       path: '/about',
       component: () => import('../views/AboutView.vue'),
       meta: { t: `关于 · ${T}` },
@@ -54,11 +49,6 @@ const router = createRouter({
       path: '/login',
       component: () => import('../views/LoginView.vue'),
       meta: { t: `登录 · ${T}` },
-    },
-    {
-      path: '/register',
-      component: () => import('../views/RegisterView.vue'),
-      meta: { t: `注册 · ${T}` },
     },
     {
       path: '/admin',

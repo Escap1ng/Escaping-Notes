@@ -17,3 +17,22 @@ docs/assets/mock/
 /*.jpg
 /*.jpeg
 /*.png
+# 风景原图投递目录：单张 2.6MB 级别的原图不进仓库，仓库只收 npm run bg:build 烘出的派生素材
+/1/
+
+# ASCII 化的底图源图（从 1/ 复制改名而来）：.ps1 按 ANSI 解码，中文文件名不能进脚本
+plates-src/
+
+# 音乐原曲投递目录（带中文文件名、~9.9MB）：与 /1/ 同一条口径，原曲不进仓库，
+# 仓库只收播放器真正对外服务的那一份 public/audio/
+music/
+
+# ---------- 反向记一条：这三个生成物目录不在忽略之列，且必须进仓库 ----------
+#   public/plates/  ← npm run bg:build      （首屏地景 + 抽屉五张轮播 + 深空压暗底）
+#   public/posts/   ← scripts/build_post_covers.ps1（文章封面，卡片与正文同一张）
+#   public/audio/   ← 播放器自托管 mp3，src/config/music.js 的曲单直接指向它
+# 它们都是"跑一条命令就能重烘出来"的派生物，但**不能**按生成物处理：那两条 bake 脚本跑在
+# Windows PowerShell 5.1 + System.Drawing 上，Pages 的 ubuntu runner 执行不了，CI 里也装不了
+# PIL/sharp；音频没有构建步骤可再生。仓库里这一份就是唯一的一份。
+# 给它们加忽略规则的后果是静默的：构建不报错，线上每张 /plates/*.jpg、/posts/*.jpg 与每段
+# /audio/*.mp3 都是 404。改这块之前先看 docs/manual.md 的部署一节。

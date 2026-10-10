@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Escaping Notes · 极简后端 v2（零依赖，仅 Python3 标准库）
 
-能力：注册/登录/会话/三角色（访客/管理员/站长）、文章 CRUD、留言墙、计数、
+能力：登录/会话/两档角色（管理员/站长）、文章 CRUD、计数、
 meta 注入（/ 与 /blog/:slug 服务端改写 index.html 的 title/OG/canonical）、RSS。
 - 存储：JSON 文件 + data/posts/*.md，无数据库
 - 监听：仅 127.0.0.1:8787，由 nginx 反代 /api/、/、/blog/、/rss.xml
@@ -48,7 +48,6 @@ POSTS_DIR.mkdir(parents=True, exist_ok=True)
 
 USERS_F = DATA / 'users.json'
 SESS_F = DATA / 'sessions.json'
-MSG_F = DATA / 'messages.json'
 VIEW_F = DATA / 'views.json'
 CONTENT_F = DATA / 'content.json'
 FRAG_F = DATA / 'fragments.json'
@@ -62,7 +61,7 @@ CTYPES = {'.mp3': 'audio/mpeg', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpe
 UPLOAD_EXTS = set(CTYPES)
 IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'}
 
-LOCK = threading.RLock()  # 可重入：setup/register 外层持锁时 new_session 需再入
+LOCK = threading.RLock()  # 可重入：setup 外层持锁时 new_session 需再入
 RATE = {}
 SLUG_RE = re.compile(r'^[a-z0-9-]{1,60}$')
 USER_RE = re.compile(r'^[a-z0-9_-]{3,20}$')
@@ -100,8 +99,8 @@ def load(path, default):
 
     原先这里是一句 `except Exception: return default`，把"文件损坏"和"文件还不在"
     合并成同一个返回值。后果不只是丢数据：`load(USERS_F, [])` 读到空列表会被判成
-    "这个站点从未初始化"，于是任何人都能 POST /api/setup 把自己注册成站长（fail-open）。
-    普通读侧（留言、计数、歌单…）损坏时降级为空仍可接受，但必须留下痕迹；
+    "这个站点从未初始化"，于是任何人都能 POST /api/setup 把自己建成站长（fail-open）。
+    普通读侧（计数、歌单…）损坏时降级为空仍可接受，但必须留下痕迹；
     涉及权限的那两处不走这条路径，见 owner_gate()。
     """
     try:
@@ -117,12 +116,12 @@ def owner_gate():
 
     **fail-closed**：只有在确实读得出用户表时才判断"有没有站长"。文件损坏、或内容
     不是数组，一律返回 (False, None)——宁可让部署者去查文件，也绝不能把"损坏"当成
-    "还没有人注册"而把建立站长的口子重新打开。
+    "还没有站长"而把建立站长的口子重新打开。
     """
     try:
         users = read_json(USERS_F)
     except CorruptJSON as e:
-        log(f'users.json 损坏，拒绝按未初始化处理（否则任何人都能来注册站长）：{e}')
+        log(f'users.json 损坏，拒绝按未初始化处理（否则任何人都能来初始化站长）：{e}')
         return False, None
     if users is MISSING:
         return True, []
@@ -394,9 +393,6 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 meta, body = parse_post(f)
                 self._json(200, {'meta': {**meta, 'slug': m.group(1)}, 'body': body})
-        elif path == '/api/messages':
-            with LOCK:
-                self._json(200, load(MSG_F, [])[-100:])
         elif path == '/api/stats':
             with LOCK:
                 self._json(200, load(VIEW_F, {}))
@@ -413,7 +409,7 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 self._json(200, load(CONTENT_F, {}))
         elif path == '/api/fragments':
-            # 公开只读（同留言墙语义）：碎片无草稿/私密态，读公开、写/删 owner
+            # 公开只读：碎片无草稿/私密态，读公开、写/删 owner
             with LOCK:
                 self._json(200, load(FRAG_F, [])[-200:])
         elif path == '/api/uploads':
@@ -484,11 +480,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not needs:
                     self._json(409, {'error': 'already setup'})
                     return
-                ok, resp = self._create_user(data, 'owner')
-            self._json(ok, resp)
-        elif path == '/api/register':
-            with LOCK:
-                ok, resp = self._create_user(data, 'visitor')
+                ok, resp = self._create_user(data)
             self._json(ok, resp)
         elif path == '/api/login':
             uname = str(data.get('username', '')).strip().lower()
@@ -508,17 +500,6 @@ class Handler(BaseHTTPRequestHandler):
                     s = load(SESS_F, {})
                     s.pop(h[7:], None)
                     save(SESS_F, s)
-            self._json(200, {'ok': True})
-        elif path == '/api/messages':
-            name = (u['nickname'] if u else str(data.get('name', ''))[:24].strip()) or '匿名逃逸者'
-            text = str(data.get('text', ''))[:200].strip()
-            if not text:
-                self._json(400, {'error': 'empty'})
-                return
-            with LOCK:
-                msgs = load(MSG_F, [])
-                msgs.append({'name': name, 'text': text, 'ts': int(time.time())})
-                save(MSG_F, msgs[-500:])
             self._json(200, {'ok': True})
         elif path == '/api/view':
             slug = str(data.get('slug', ''))
@@ -618,7 +599,6 @@ class Handler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         path = urlparse(self.path).path
         u = self._user()
-        admin = u and u['role'] in ('admin', 'owner')
         if (m := re.match(r'^/api/posts/([a-z0-9-]+)$', path)):
             if not u or u['role'] != 'owner':
                 self._json(403, {'error': 'owner only'})
@@ -626,15 +606,6 @@ class Handler(BaseHTTPRequestHandler):
                 f = POSTS_DIR / f'{m.group(1)}.md'
                 if f.exists():
                     f.unlink()
-                self._json(200, {'ok': True})
-        elif (m := re.match(r'^/api/messages/(\d+)$', path)):
-            if not admin:
-                self._json(403, {'error': 'forbidden'})
-            else:
-                ts = int(m.group(1))
-                with LOCK:
-                    msgs = load(MSG_F, [])
-                    save(MSG_F, [x for x in msgs if x['ts'] != ts])
                 self._json(200, {'ok': True})
         elif (m := re.match(r'^/api/users/([a-z0-9]+)$', path)):
             self._user_delete(u, m.group(1))
@@ -659,7 +630,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(404, {'error': 'not found'})
 
     # ---------- 业务子程序 ----------
-    def _create_user(self, data, role):
+    # 建号只剩 /api/setup 一条路（自助注册已随留言墙一起下线），所以这里落库的恒为站长。
+    def _create_user(self, data):
         uname = str(data.get('username', '')).strip().lower()
         nick = str(data.get('nickname', ''))[:24].strip() or uname
         pw = str(data.get('password', ''))
@@ -667,9 +639,8 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {'error': 'bad username'}
         if len(pw) < 6:
             return 400, {'error': 'weak password'}
-        # 这里是 /api/setup 与 /api/register 共同的落库点，所以也是 owner_gate 之外
-        # 真正必须收口的一处：若 users.json 损坏而这里退回 `[]`，紧接着的 save()
-        # 就会用"只有一个新账号"的数组覆盖整张旧表 —— 静默毁掉现有站长账号。
+        # 这里也是 owner_gate 之外真正必须收口的一处：若 users.json 损坏而这里退回
+        # `[]`，紧接着的 save() 就会用"只有一个新账号"的数组覆盖整张旧表 —— 静默毁掉现有站长账号。
         try:
             users = read_json(USERS_F)
         except CorruptJSON as e:
@@ -683,7 +654,7 @@ class Handler(BaseHTTPRequestHandler):
         if any(x['username'] == uname for x in users):
             return 409, {'error': 'taken'}
         user = {'id': secrets.token_hex(6), 'username': uname, 'nickname': nick,
-                'pass': hash_pw(pw), 'role': role, 'ban': False, 'created': int(time.time())}
+                'pass': hash_pw(pw), 'role': 'owner', 'ban': False, 'created': int(time.time())}
         users.append(user)
         save(USERS_F, users)
         return 200, {'token': new_session(user['id']), 'user': self._pub(user)}
@@ -716,7 +687,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(403, {'error': 'owner only'})
             return
         role = data.get('role')
-        if role not in ('admin', 'visitor'):
+        # 两档角色：站长全站唯一且不可授予，所以这里唯一的合法迁移就是任命管理员。
+        # 撤销任命没有中间档可回落——禁用或删号即收回权限。
+        if role != 'admin':
             self._json(400, {'error': 'bad role'})
             return
         with LOCK:

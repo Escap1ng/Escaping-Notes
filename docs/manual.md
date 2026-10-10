@@ -11,23 +11,25 @@
 ```
 BLOG/
 ├── content/posts/        ← 文章种子/回退；上线后发文主路径是 /admin 网页编辑器
-├── public/               ← 静态资源：favicon.svg、robots.txt、og.png（分享卡片）
-├── server/               ← 后端 api.py（登录/发文/留言墙/上传/内容/歌单同步 API）
-├── scripts/              ← 构建期脚本（Node 侧零依赖）；命名按动词分族，见 docs/design.md §9.7
+├── public/               ← 静态资源：favicon.svg、robots.txt、og.png（分享卡片）、audio/（自托管 mp3）
+├── server/               ← 后端 api.py（登录/发文/上传/内容/歌单同步 API）
+├── scripts/              ← 构建期脚本（Node 侧零依赖）；命名按动词分族
 │   ├── build_font.mjs    ←   展示层子集字体裁切（依赖 devDep subset-font）
 │   ├── build_seo.mjs     ←   dist/rss.xml、dist/sitemap.xml、public/og.png
 │   ├── build_readme_art.mjs ← README 配图：按 StarTrails 常数离线复算
 │   ├── check_api_doc.py  ←   docs/api.md ⇄ server/api.py 端点对拍
+│   ├── check_contrast.mjs ←  双主题文字/强调色对比度审计（WCAG 比值 + 绝对级差两把尺）
 │   ├── check_doc_refs.py ←   文档引用 / § 节号 / 路由表漂移扫描
+│   ├── check_naming.py   ←   跟踪文件的命名规约对拍（动词分族、目录前缀去重、存储键字面量）
 │   ├── sync_records.py   ←   抓 QQ 公开歌单 → 生成 src/config/records.js
 │   ├── data/             ←   脚本输入数据（GB2312 一级字表）
 │   └── lib/              ←   脚本间共用的内部模块（PNG 编码器）
 ├── src/
 │   ├── assets/fonts/     ← 自托管子集字体 + OFL 许可
-│   ├── config/           ← 内容种子（站点信息/动态/项目/歌单/records 快照），改内容主路径是 /admin
+│   ├── config/           ← 内容种子（站点信息/动态/项目/播放器曲单/records 快照/映像底片清单），改内容主路径是 /admin
 │   ├── lib/              ← API/内容/会话等前端客户端（自动维护，无需手改）
-│   ├── components/       ← 公共组件：`neo/` 内为星空与壳层装置，`MusicPlayer.vue` 在上一层
-│   ├── views/            ← 12 个页面各一个文件，平铺（含 /admin /login /register）
+│   ├── components/       ← 公共组件：`neo/` 内为星空与壳层装置，`MusicCard.vue` 在上一层
+│   ├── views/            ← 11 个页面各一个文件，平铺（含 /admin /login）
 │   ├── router/           ← 网址路由与页面标题
 │   └── styles/           ← 改外观只碰这两个文件：
 │       ├── tokens.css    ←   基线令牌（灰阶/间距/字体栈）
@@ -81,6 +83,7 @@ export const site = {
   email: '...',
   url: 'https://你的域名', // 站点公开地址（RSS/OG/canonical 用）；域名就绪后填写
   socials: [ { label: 'GitHub', url: 'https://github.com/你的用户名' } ],
+  gear: [ { name: 'Vue 3', note: '视图层与响应式；运行时只依赖它和 vue-router' } ], // 技术栈：关于页每项一枚卡
 }
 ```
 
@@ -141,16 +144,24 @@ export const site = {
 { date: '2026-09-01', text: '今天做了什么……' },
 ```
 
-### 2.4 歌单 / 碎片 / 友情链接
+### 2.4 音乐 / 碎片 / 友情链接
 
-- **歌单 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名/艺术家/逐行跳转）。站长登录后点页面上的「同步歌单」，后端即调用 QQ 接口拉取并缓存到 `server/data/records.json`（默认歌单 ID 可用环境变量 `QQ_DISSTID` 覆盖）；无后端/离线镜像时回退打包的 `src/config/records.js` 静态快照（可由 `python scripts/sync_records.py` 重新生成）。前提是歌单设为公开。
+- **音乐 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名/艺术家/逐行跳转；表内两列，默认折到前 8 首，点表头「展开其余 N 首」看全）。站长登录后点曲目表表头的「同步歌单」，后端即调用 QQ 接口拉取并缓存到 `server/data/records.json`（默认歌单 ID 可用环境变量 `QQ_DISSTID` 覆盖）；无后端/离线镜像时回退打包的 `src/config/records.js` 静态快照（可由 `python scripts/sync_records.py` 重新生成）。前提是歌单设为公开。
+- **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），显示在自述卡左侧、≤720px 收到正文上方。要换人就换 QQ 那张歌单封面再同步；离线/镜像用的是 `src/config/records.js` 快照里的 URL。
 - **碎片（已随旧版下线，代码保留参考）**：`/fragments` 不占导航位、非 1.0.0 对外功能；接口 `GET/POST/DELETE /api/fragments` 仍保留。
 - **图片管理**：`/admin` 文章页签可「上传图片并插入」正文光标处，下方 IMAGES 列表可插入/删除已上传图片；接口 `GET /api/uploads`、`DELETE /api/uploads/:文件名`（均仅站长）。上传白名单：png/jpg/jpeg/webp/gif/svg/mp3，≤8MB。
-- **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页 SOCIAL 下方展示）。
+- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记：文章的封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏地平线、抽屉那五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `neo.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
 
-### 2.5 音乐播放器
+### 2.5 播放器
 
-顶栏「音乐」按钮播放本地 mp3 曲目（无需外部音乐 API）。曲目清单与音频上传见 `/admin` 的「歌单」设置块（`title|artist|/uploads/文件名.mp3`），音频文件经 `/admin` 上传至 `/uploads/`；种子与离线回退见 `src/config/music.js`。
+全站只有一台播放器：`<audio>` 与全部状态收在 `src/lib/music.js`，界面上是它的两张脸。
+
+- **顶栏「音乐」按钮 → 播放器卡片**（`src/components/MusicCard.vue`，锚在顶栏下沿、右对齐）：上一首 / 播放暂停 / 下一首 / 进度 / 音量 / 曲目队列。点卡外或按 Esc 收起，焦点回按钮；没有曲目时按钮置灰。左上那枚绕极旋转的弧是星轨符号占位（本地曲目无封面数据），播放时才转。
+- **`/records` 的「在线听歌」卡**：满宽一张、卡内两列，只放曲目表、不放进度条——点一行即播，再点当前曲即暂停；当前曲红移，与顶栏按钮播放中同一个记号。没按下之前没有任何一行是「当前曲」（`music.started` 把关），否则第一行会一直红着、看着像已经在播。原先它上面还有一张专辑头卡（歌单封面 + 名字），已撤：既不能播又只指向站外，夹在两张表中间没有位置——那张封面图改作关于页自述卡的头像（`records.cover`，`--r-md` 圆角、不吃 hover）。也别把听歌卡与别的卡并排：曲目会一首首加上去，第 5 首起就会把整行拉高。
+- **QQ 曲目表默认折叠**：只列前 8 首，表头右侧「展开其余 N 首 ↓」点开、「收起 ↑」收回（`aria-expanded`）。几十首时它是档案，不该把整页拖长压住真正能播的那一张。
+
+曲目清单来自 `content.playlist`：主路径是 `/admin` 的 PLAYLIST 设置块（`title|artist|/uploads/文件名.mp3`，音频经 `/admin` 上传至 `/uploads/`）；种子与离线/只读镜像回退见 `src/config/music.js`，其音频是仓库内的 `public/audio/*.mp3`（构建后落在 `dist/audio/`，Pages 镜像不接后端也能播）。
 
 ### 2.6 改网页标题 / 搜索描述 / 分享卡片
 
@@ -163,19 +174,22 @@ export const site = {
 
 ### 2.7 账号与角色
 
-- 首次部署后打开登录页：尚无任何账号时，系统会引导你**初始化站长账号**（用户名/昵称/密码）。
-- 普通注册得到**访客**身份；**管理员**由站长在 `/admin` 任命，不能自行注册。
+- 首次部署后**直接访问 `/login`**（顶栏没有登录入口，2026-10-09 起已撤）：尚无任何账号时，系统会引导你**初始化站长账号**（用户名/昵称/密码）。
+- **自助注册已于 2026-10-09 下线**：除了站长初始化，后端没有任何端点能创建账号。要增设管理员，
+  先手工往 `data/users.json` 里加一条账号（或把已有账号的 `role` 写成 `admin`），再在 `/admin` 任命。
 - 权限速览：
 
 | 身份 | 权限 |
 | --- | --- |
-| 游客（未登录） | 浏览全部、留言墙匿昵称投递 |
-| 访客（注册） | 具名留言 |
-| 管理员 | 访客权限 + 管理界面：用户管理（改角色/禁用/删除）、留言墙管理（删除留言）；**不能发文章** |
+| 游客（未登录） | 浏览全部 |
+| 管理员 | 用户管理（任命 / 禁用 / 删除）；**不能发文章** |
 | 站长 | 管理员权限 + 文章发布/编辑/删除 + 任命管理员 |
 
-- 管理界面在 `/admin`，仅管理员/站长可见；站长比管理员多一个“文章”页签。
-- 忘密码应急：到服务器编辑 `data/users.json`（删除对应账号后重新注册/初始化），操作前先备份该文件。
+- 管理界面在 `/admin`，仅管理员/站长可见；站长比管理员多「文章」「设置」两个页签。
+- **撤销任命没有中间档可回落**（旧的"降为访客"随注册一起没了）：要收权就用**禁用**，要撤号就**删除**。
+- 忘密码应急：到服务器编辑 `data/users.json`，操作前先备份该文件。注意初始化闸门看的是
+  **"表里有没有账号"而不是"有没有站长"**（`owner_gate()` 判的是 `len(users) == 0`）——只删掉站长那一条、
+  表里还剩别的账号时，登录页不会重新进入初始化；要重设就把整个文件删掉或清成 `[]`。
 - **`users.json` 损坏 ≠ 没有账号（fail-closed）**。以前"文件读不出"会被当成"站点从未初始化"，
   于是任何人都能重开站长注册——那是安全洞，而且全程没有任何日志。现在的行为：
   文件**不存在** = 合法的首次运行，正常引导建站长；文件**存在但 JSON 写坏 / 不是数组**
@@ -197,21 +211,21 @@ export const site = {
   - `--fs-3xs…4xl` 字号（11.5 → 34px，共 11 档）
   - `--lh-tight/snug/normal/relaxed` 行高（1.35 / 1.6 / 1.75 / 1.9）
   - `--fw-normal/medium/bold` 字重（400 / 600 / 700）
-- `src/styles/neo.css` 的两套主题块：真正生效的配色 —— `--cold`（交互/蓝移）、`--hot`（深度/红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--scrim`（文字底衬）、`--panel-*`（文章页玻璃底板）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白，以及**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`。
+- `src/styles/neo.css` 的两套主题块：真正生效的配色 —— `--cold`（交互/蓝移）、`--hot`（深度/红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--scrim`（文字底衬色，**当前零消费方**，见 `docs/design.md` 的「首页」条）、`--panel-*`（文章页玻璃底板）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白，以及**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`。
 
 改完保存即生效。三条约定：
 
 1. **冷暖严格分工**：`--cold` 只用于 hover/链接/焦点/选中项，`--hot` 只用于进度/主动作/当前项/破坏性动作；不要给不同按钮各配一种颜色。
-2. **改刻度，不要逐处替换**。比如觉得全站字太小，改 `--fs-sm` 一处即可；觉得整站太挤，改 `--space-*`。卡片质感改 `--card-*` 一组，文章卡/留言卡/图片格/后台面板会同时跟随。
+2. **改刻度，不要逐处替换**。比如觉得全站字太小，改 `--fs-sm` 一处即可；觉得整站太挤，改 `--space-*`。卡片质感改 `--card-*` 一组，文章卡/图片格/后台面板会同时跟随。
 3. **不要写裸 `px`**。新样式里的字号、间距、行高、字重都从上面取；只有控件高度、封面边长、图标盒这类“结构性尺寸”才写字面量。
 
 ### 3.1.1 组件库：新页面该用哪些类
 
-全站只有一套组件，都在 `src/styles/neo.css`：**按钮**（`neo-btn` + `neo-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义）、**筛选与页签**（`neo-chip`）、**标签**（`neo-tag` / `neo-tag-quiet`）、**输入**（`neo-field`，多行长文用 `textarea.neo-field`）、**状态提示**（`neo-note-ok` / `neo-note-err` / `neo-note-info`）、**图标**（`neo-ico`，只用 `▶ ❚ » ✦ ✧ ≡ ✕ → ↗` 这类单字符符号）。
+全站只有一套组件，都在 `src/styles/neo.css`：**按钮**（`neo-btn` + `neo-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义）、**筛选与页签**（`neo-chip`）、**标签**（`neo-tag` / `neo-tag-quiet`）、**输入**（`neo-field`，多行长文用 `textarea.neo-field`）、**状态提示**（`neo-note-ok` / `neo-note-err` / `neo-note-info`）、**卡片**（`neo-card` 一张卡面 + `neo-cards` 两列栅格，动态/音乐/项目/关于/首页精选/文章列表都用它；带封面的再加 `neo-flush`（图贴边）与一格 `neo-shot`（3:2 封面，没图时加 `blank` 给斜纹空版），占位卡加 `neo-pending` + 一枚 `neo-pending-label`）、**图标**（`neo-ico`，只用 `▶ ❚ « » ✦ ✧ ≡ ✕ → ↗` 这类单字符符号——`«` 是播放器「上一首」新增的，与既有的 `»` 成对；**例外**只有描边 SVG `.neo-svg`：顶栏右上角那三枚，加播放器卡片里那枚星轨符号）。
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。1.3.0 之前 `/login` `/register` `/admin` 各自写过一套，现已全部并入上面这些类。
-- 功能页（`/login` `/register` `/admin`）用 `tokens.css` 的 `.page` / `.readout` / `.field` 打底，交互元素同样用上面的 `.neo-*`。
-- 规则与理由的完整版见 `docs/design.md` §5.3。
+- 唯一一处**故意不用** `.neo-card` 的是 `/gallery` 那面拍立得墙（`.wall` / `.shot` / `.frame` / `.tape` / `.cap`，全在 `GalleryView.vue` 的 scoped 里）：一张照片被胶带钉在桌面上的相纸感，与"这是一组卡片"不是同一件事。它的颜色仍走令牌（`--polar` 白框 / `--tape` 胶带 / `--shadow` 框影），页面里没有写死的色值，别把它当"另造了一套卡面"合并回去。
+- 功能页（`/login` `/admin`）用 `tokens.css` 的 `.page` / `.readout` / `.field` 打底，交互元素同样用上面的 `.neo-*`。
 
 ### 3.2 设备适配（响应式）
 
@@ -219,12 +233,11 @@ export const site = {
 
 | 断点 | 变化 |
 | --- | --- |
-| `1400px` | 顶栏四枚图标按钮收起文字，只留图标 |
 | `1240px` | 顶栏收起昵称（昵称宽度不可控，最先收） |
-| `1200px` | 顶栏收起整条导航与登录入口，改由汉堡抽屉承载 |
-| `900px` | 歌单曲目 2 列 → 1 列 |
-| `880px` | 文章卡片 / 留言回声卡 2 列 → 1 列 |
-| `720px` | 手机版：页边距收窄、输入框字号 ≥16px（防 iOS 聚焦放大）、首页「现在」栏改竖排并显示内容 |
+| `1280px` | 顶栏收起整条导航（登录后还有管理/登出），改由汉堡抽屉承载。**加一枚导航就要往上抬约 72px**：单枚实测 67.6px + 4px 间距，同时改 `NeoSiteHeader.vue` 的 CSS 与 `onResize` 两处 |
+| `900px` | 音乐页两张曲目表（在线听歌 / QQ 曲目）2 列 → 1 列；关于页三枚读数 3 列 → 1 列；首页精选 3 列 → 1 列；文章列表 `.cards` 3 列 → 2 列；映像墙 3 列 → 2 列 |
+| `880px` | 共用的卡片栅格 `.neo-cards` 2 列 → 1 列（动态 / 项目 / 关于） |
+| `720px` | 手机版：页边距收窄、输入框字号 ≥16px（防 iOS 聚焦放大）、文章列表 `.cards` 收到单列、映像墙收到单列（灯箱翻页箭头隐去，改横滑） |
 | `480px` | 顶栏隐藏品牌文字，只留吸积环图标 |
 
 另外有两类与宽度无关的媒体查询：
@@ -242,19 +255,22 @@ export const site = {
 
 自测方法：浏览器按 `F12` → 点左上角“设备工具栏”图标（或 `Ctrl+Shift+M`）→ 选 iPhone / Pixel 等机型预览。
 
-### 3.3 双主题（深空 / 纸面）与“减弱动态效果”
+### 3.3 双主题（深色 / 浅色）与“减弱动态效果”
 
-- 头部主题开关切换，选择会自动记住。深空=近纯黑夜空（默认），纸面=纸感暖白档案风；**首次访问跟随系统 `prefers-color-scheme`**，之后以你的手动选择为准。切换是设计叙事的一部分（夜拍 / 显影），不是普通明暗切换。
+- 头部主题开关切换，选择会自动记住。深色=近纯黑夜空，浅色=纸感暖白档案风，**默认浅色**；**首帧不读系统 `prefers-color-scheme`**——`index.html` 只认「存储值 → 否则浅色」，因为首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上。切换是设计叙事的一部分（夜拍 / 显影），不是普通明暗切换。
 - 主题默认值只在 `index.html` 的首帧内联脚本里决定一次（避免首屏闪一下），`src/lib/theme.js` 只读取结果——不要在别处再写一遍默认逻辑。
-- 改纸面配色：`src/styles/neo.css` 的 `html[data-skin='neo'][data-theme='out']` 变量块；改深空配色：「深空（默认）」块。**两套都要改**，尤其新增颜色令牌时不要只定义一套（历史上 `--scrim` 漏定义就导致纸面首页文字底衬整条失效）。
+- 改浅色配色：`src/styles/neo.css` 的 `html[data-skin='neo'][data-theme='out']` 变量块；改深色配色：「深色（默认）」块。**两套都要改**，尤其新增颜色令牌时不要只定义一套（历史上 `--scrim` 漏定义就导致浅色首页文字底衬整条失效）。
 - 当访客系统开启“减弱视觉效果”（prefers-reduced-motion）时，全站动画自动关停、`fall` 转场与晕影取消，星轨装置降级为一次性快进的静态底片，无需手动处理。
 
 ### 3.4 性能与无障碍约定（改代码时请遵守）
 
-- **动画只动 `opacity` / `transform`**。不要**新增**整页或大面积的 `filter: blur()`——那会每帧重新栅格化整棵子树。唯一的例外是 `fall` 转场（换页时的下坠模糊），它是刻意保留的手感，新组件请勿照抄。
+- **动画只动 `opacity` / `transform`**。不要**新增**整页或大面积的 `filter: blur()`——那会每帧重新栅格化整棵子树。两处例外：`fall` 转场（换页时的下坠模糊，刻意保留的手感），以及底片的 `--plate-blur`（作者要的运行时可调参数，见 `docs/design.md` §8「首页折线以下」条）。后者的边界条件写清楚：**初值 12px = 拉满**（作者的默认口味，2026-10-10 定），所以**默认就会建这层渲染面**，只有用户把滑杆拖回 0 时 `html[data-plate-blur]` 才不匹配、filter 整条消失。素材一律出清晰版（`BLUR_DRAWER=1`），滑杆两端才都有实义：0 是真清晰，12 是拿细节换柔，不是"糊到看不出细节所以随便烘"。开了之后，`.sub-plate` 是带 filter 的层，它内部那五层底片（父层 + 四个 `.sub-plate > i`）的 `opacity` 交叉淡入会让这层面**在交叉的那几段里逐帧重栅格化**——按 50s 一圈里**五段各 1s** 的交叉窗算（每张交接处一张淡出与下一张淡入同窗，只算一次），仍是约 10% 的时间。**这个占比是算出来的，不是量出来的**：量它需要页面在前台（后台 `requestAnimationFrame` 不跑），谁改这块请先把数补上。新组件仍请勿照抄大面积 blur。
 - **不要给常驻悬在画布之上的元素加 `backdrop-filter`**。它会让浏览器在星轨每动一帧时重算背后模糊；全站只保留抽屉一处（模态、瞬时）。需要“玻璃感”时用 94% 不透明实底替代。
 - **`resize` 一律经 `src/lib/debounce.js` 去抖（150ms）**，因为大多数处理要重建画布或重新测量布局。
-- **往累积缓冲沉积的那笔 alpha 必须乘帧时长比例**（`StarTrails.vue` 的 `accPass(…, dep, step)`）。底片的浓淡只能由时间决定：漏乘会让高刷新率屏整体变亮变密——120Hz 最深档实测顶到 α=1 的实心像素 0.72%→1.95%、环与环之间的黑隙 27px→20px，而这种差别在 60Hz 的开发机上看不见，会让人误以为"口味常量改了没效"。推导与实测见 `docs/design.md` §3.1 与 `docs/design.md` §10 ⑫。
+- **往累积缓冲沉积的那笔 alpha 必须乘帧时长比例**（`StarTrails.vue` 的 `accPass(…, dep, step)`）。底片的浓淡只能由时间决定：漏乘会让高刷新率屏整体变亮变密——120Hz 最深档实测顶到 α=1 的实心像素 0.72%→1.95%、环与环之间的黑隙 27px→20px，而这种差别在 60Hz 的开发机上看不见，会让人误以为"口味常量改了没效"。推导与实测见 `docs/design.md` §3.1。
+- **`DEP` 与 `FADE_*` 是一对，只能同倍率一起动，且 `fd` 不许低于 ~0.1**。底片是 RGBA8：每帧 `destination-out` 的衰减量 `round(fd·255)` 与被衰减像素的 α 相乘后取整，**`α·fd < 0.5 LSB` 的那一档永远掉不下去**，于是地板高度 = `0.5/(255·fd)`，而星轨 150 秒扫过的一整圈就永久留在底片上（旧值 fd=0.012 → 地板 α≈0.17、浅色 Δ灰 32 的实线同心环）。要更长的尾迹不能靠调小 `fd`——那等于把永久残留一起抬高，"越收越浓"就是这么来的；尾迹长度走 `accPass` 的 `len`（弧长倍率 = `(flow·FADE_0/fade)^LEN_POW`，基数是 `SHEAR_MIN/SHEAR_SPAN`）。要改浓淡就 `DEP` 与 `FADE_*` 同倍率缩放，稳态亮度 `al/(al+fd)` 才不变。改完必须用**逐帧 8 位**模型验（闭式稳态里没有"取整"这一项，看不见这个缺陷），判据是"盖上镜头空转 10s 之后底片还剩多少墨"。
+- **改线宽必须同倍率反向改 `DEP`（等墨）**。canvas 的 `lineWidth` 不摊薄 alpha：**单位弧长的墨 = α·lw**，加粗 1.55 倍就是把墨加 1.55 倍，会直接把刚压下去的"脏灰"还回来。所以 `LW_BASE/LW_SPAN` 与 `DEP` 是第二对联动常量（第一对是 `DEP`↔`FADE_*`）。同理，**任何复刻这条管线的脚本都不许把落笔按周长归一**（`(1−d²/r²)²/norm` 那种写法只在 lw≈1 时恰好等价，且会把"加粗有用"这件事从模型里抹掉），必须写成 `像素 α = 笔画 α × 与笔带的面积重叠`。
+- **天空的口味常量按主题分档，不许两主题共用一个数**。深色是 `lighter` 加在 2.2 级的近黑底上，浅色是墨压在 245 级的干版上——同一个 α 的对比度差着一个数量级（α=0.037：浅色 3% 看不见，深色 320% 读成"脏灰"）。所以星数是 `N_DEEP_K=0.65`（深色 182 根 / 浅色 280 根），沉积与衰减也各带一个主题倍率（浅色 ×1.5 / ×1.4）。新增这一类常量时**两档都要各测各的**，报结论也要报两遍。
 - **不要各自写滚动监听**。滚动深度统一由 `App.vue` 写入 `--shift`（0..1），需要就 `var(--shift, 0)`；`scrollHeight` 会强制同步布局，绝不能每帧读。
 - **焦点与播报**：新增模态/浮层请用 `src/lib/focus.js` 的 `trapFocus()` 锁住 Tab 并在关闭时归还焦点；`#main` 带 `tabindex="-1"` 供「跳到内容」使用；路由切换由 `App.vue` 的 `aria-live` 区域播报 `route.meta.t`——新页面记得在 `src/router/index.js` 写上 `meta.t`。
 - **触控目标 ≥44px**：直接复用 `.neo-btn` / `.neo-chip` 就会自动满足（`neo.css` 的 `@media (pointer: coarse)` 已统一处理）；只有自己写控件时才需补 `min-height: 44px`。
@@ -264,7 +280,7 @@ export const site = {
 
 ## 4. 上传方法（部署上线）
 
-主推荐：**自有服务器 + 域名（方式 C，§4.3）**——登录/留言墙/全网计数依赖后端，只有自有服务器能跑完整版。方式 A/B（Vercel/GitHub Pages）定位为**只读镜像**：能看文章，登录/发文/留言自动禁用，用作备份出口。**当前测试期先用方式 B（GitHub Pages）**，域名备案就绪后切方式 C。
+主推荐：**自有服务器 + 域名（方式 C，§4.3）**——登录/发文/全网计数依赖后端，只有自有服务器能跑完整版。方式 A/B（Vercel/GitHub Pages）定位为**只读镜像**：能看文章，登录/发文自动禁用，用作备份出口。**当前测试期先用方式 B（GitHub Pages）**，域名备案就绪后切方式 C。
 
 ### 4.0 上传前自检
 
@@ -272,11 +288,11 @@ export const site = {
 npm run build       # 生成 dist/ 目录（含 rss.xml / sitemap.xml），无报错即合格
 npm run check:api   # docs/api.md 的端点表 vs server/api.py 的路由，双向对拍
 npm run check:docs  # 文档里的文件引用与 § 节号是否还指得到东西 + README 路由表 vs src/router 是否一致
+npm run check:contrast  # 双主题的文字与强调色对比度审计，任一项不达标即退出码非 0
 npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 ```
 
-后两条查的是**文档有没有开始说谎**（漂移即退出码非 0）。脚本里写的是 `python`；只有 `python3`
-的机器上直接跑 `python3 scripts/check_api_doc.py` 与 `python3 scripts/check_doc_refs.py`。
+后四条查的是**代码与文档有没有开始说谎**（漂移即退出码非 0），已串进 `npm run check`。其中两条要 `python`：脚本里写的是 `python`，只有 `python3` 的机器上直接跑 `python3 scripts/check_api_doc.py` 等对应脚本。`check:contrast` 是纯 Node，无 Python 依赖。
 
 构建会顺带跑 `scripts/build_seo.mjs` 产出 `dist/rss.xml` 与 `dist/sitemap.xml`：自有服务器上这两条路由会被 nginx 转给后端（动态、含后台上传的文章），构建产物只是 GitHub Pages 镜像的兜底。
 
@@ -353,7 +369,7 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
    期望 `HTTP 200 ssl_verify=0` 与 `subject=CN=escaping.top`。
    旧地址 `escap1ng.github.io/Escaping-Notes`（不带尾斜杠）会 301 到新域名；带尾斜杠的那份可能仍直接返回产物、资源 404——GitHub 的重定向表要等 Fastly 缓存过期，不用管，站内所有 canonical/OG/RSS 都已指向 `escaping.top`。
 
-Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不可用（无后端）。自建服务器（§4.3）上线后落在 `www.escaping.top`，Pages 保留作备份出口；两者内容不同源，届时 canonical/OG 指向哪一处要按 §2.6 一起改。
+Pages 版是只读测试镜像：文章用打包版，登录/发文不可用（无后端）。自建服务器（§4.3）上线后落在 `www.escaping.top`，Pages 保留作备份出口；两者内容不同源，届时 canonical/OG 指向哪一处要按 §2.6 一起改。
 
 ### 4.3 方式 C：自有轻量服务器（nginx，适用 2核2G）
 
@@ -404,7 +420,7 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
    - **大陆服务器：域名必须完成 ICP 备案**（走服务器厂商的备案系统），否则 80/443 端口会被拦截；不想备案就选香港/海外服务器。
    - 把配置里的 `server_name` 改成你的域名；宝塔保存即生效。
 7. HTTPS（涉及登录后必启）：certbot 或宝塔 SSL 一键申请；启用后把 `src/config/site.js` 的 `url` 字段改成你的 https 域名（RSS/OG/canonical 用），重新构建上传。
-8. 部署极简后端（登录/发文/跨设备留言必需；零依赖、仅 Python3 标准库，服务器一般预装，无需 pip/npm），内存约 20MB：
+8. 部署极简后端（登录/发文必需；零依赖、仅 Python3 标准库，服务器一般预装，无需 pip/npm），内存约 20MB：
 
    ```powershell
    scp server/api.py 用户名@服务器IP:/opt/escaping-notes/api.py
@@ -452,9 +468,9 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
 注意：
 
 - 服务器**不需要安装 Node**——静态托管与 Node 无关。
-- 不部署后端时站点仍可只读浏览（文章用打包版、留言/计数走本地模式），但登录/发文/跨设备留言不可用。
+- 不部署后端时站点仍可只读浏览（文章用打包版、计数走本地模式），但登录/发文不可用。
 - **涉及登录后务必启用 HTTPS**（§4.3 第 7 步），避免密码明文传输。
-- 备份=复制服务器 `data/` 目录（文章/用户/留言/计数全在里面），建议定期拷走。
+- 备份=复制服务器 `data/` 目录（文章/用户/计数全在里面），建议定期拷走。
 
 ### 4.4 以后更新内容的流程
 
@@ -479,13 +495,13 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
 本站已发布 **v1.0.0 正式版**（2026-09），其后发布 **v1.1.0**（阅读体验优化）、**v1.2.0**（运行时性能、无障碍与 SEO）、**v1.3.0**（统一设计系统）与 **v1.3.1**（连续曝光落地、取数与存储收口）。以下里程碑均已交付：
 
 - **v1.3.1 · 连续曝光落地、取数与存储收口**：
-  - 连续曝光——底片跨路由常驻，`src/lib/sky.js` 以单例接管画布（`claimPlate` / `ownsPlate` / `releasePlate` / `ensurePlate`），切页不再重置星轨；快门层 `.neo-shutter` 由 `App.vue` 的 `shot` 触发、`animationend` 自行收走，`reduced-motion` 下不起快门。滚动深度经 `src/lib/shift.js` 的 `shift.v` 交给样式消费，`.neo-glyph` 用它做脉动亮度。
+  - 连续曝光——底片跨路由常驻，`src/lib/sky.js` 以单例接管画布（`claimPlate` / `ownsPlate` / `releasePlate` / `ensurePlate`），切页不再重置星轨。滚动深度经 `src/lib/shift.js` 的 `shift.v` 交给样式消费。
   - 转场与层次——`fall` 入场上层由实心条带改羽化暗场，曲线与 `scale` / `blur` 重调；星轨常量重标（`OMEGA` 0.05→0.042、`DEP` 0.0085→0.0072、`SETTLE_DEPTH` 0.55→0.72），画布宽由活动主机宽改视口宽，避免交互态与非交互态两套尺寸互串。
   - 可读性暗带契约——文字底下的天空由 `StarTrails.vue` 一处 `--_sky-mask` 统一压低，不再外包给卡片背景；几何与羽化边上收为 `neo.css` 的 `--sky-band` / `--sky-feather`，压低系数按主题给 `--sky-k`。卡片同步调整（`--card-bg` 44%→52%、`--card-bg-hover` 72%→62%）。
   - 存储层 fail-closed——`server/api.py` 新增 `CorruptJSON` 与 `MISSING` 哨兵，「读不出」不再被当成「未初始化」；数据损坏时建号返回 503 且**不写文件**，`needsSetup` 不再可能被损坏文件骗开注册。`save()` 改唯一临时名 + `fsync` + `replace`，整段进锁。部署路径改读 `SITE_DATA` / `SITE_DIST` 环境变量。
   - 取数层收口——`src/lib/api.js` 新增 `tryApi()` 返回 `{ok,status,data,code,reason}`，失败原因不再塌成 `null`（`code` 取后端 `error`，网络不通为 `offline` 且 `status:0`；`reason` 查 `src/config/narrative.js` 的 `errors` 表）；上传走同一契约（`uploadFile()`，60s 超时）。
   - 防护网——新增 `tests/`（`frontmatter.test.mjs`、`markdown.test.mjs`、`test_parsers.py`，零依赖），装上时即抓到两个真实缺陷：frontmatter 正则不认 CRLF（Windows 检出的稿子解析不出元数据）、markdown 放行 `javascript:` 链接。现由 `safeHref()` 只允许 `https?:` / `mailto:` / `tel:`，白名单外只留可见文字。
-  - 命名与文档对拍——九个视图从 `src/views/neo/` 拍平到 `src/views/`（文件名不变，目录少一层），`docs/design.md`（原 `docs/design-neo.md`）去掉老版本说法；规约写进 `docs/design.md` §9.7 并由 `scripts/check_naming.py` 把守。新增 `docs/api.md` 接口契约与 `scripts/check_api_doc.py`（端点表⇄`api.py` 路由双向对拍）、`scripts/check_doc_refs.py`（死引用 / 节号 / 路由表）。
+  - 命名与文档对拍——九个视图从 `src/views/neo/` 拍平到 `src/views/`（文件名不变，目录少一层），`docs/design.md`（原 `docs/design-neo.md`）去掉老版本说法；改名规约由 `scripts/check_naming.py` 把守。新增 `docs/api.md` 接口契约与 `scripts/check_api_doc.py`（端点表⇄`api.py` 路由双向对拍）、`scripts/check_doc_refs.py`（死引用 / 节号 / 路由表）。
   - 部署——GitHub Pages 镜像绑裸域名 `escaping.top`，`vite.config.js` 的 `base` 固定为 `/`（镜像与生产同挂根路径，两种模式的差异只剩 hash 路由），`www` 留给自建服务器；步骤与踩过的两个坑见 §4.2。
   - 内容渲染——`src/lib/markdown.js` 支持 GFM 管道表，标题层级收到 h2/h6（h1 让给文章标题）。
 - **v1.3.0 · 统一设计系统（界面一致性）**：
@@ -494,15 +510,15 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文/留言墙不
   - 功能页并入——`/login` `/register` `/admin` 的私有类（`.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn`）全部删除，改用 `.neo-*`；后台页签选中态由热色改冷色，与全站 `.neo-chip` 一致。
   - 修正——`.field` 显式声明 `font-family` / `text-transform`，避免嵌在 `.readout` 标签里被带成等宽大写；修复本次重构一度造成的提交按钮无样式、错误提示无颜色。
 - **v1.2.0 · 运行时性能 / 无障碍 / SEO**：
-  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留，见 `docs/design.md` §10。）
+  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留。）
   - 无障碍——抽屉与灯箱加焦点陷阱并在关闭时归还焦点；路由切换向读屏播报；`#main` 可聚焦供「跳到内容」；触控目标 ≥44px；最小字号下限 11.5px。
   - 反馈——文章列表骨架屏；「本来没有内容」与「筛选无结果」分文案；搜索/标签筛选写入 URL（可分享、刷新不丢）。
   - SEO——`og:image` / `og:url` / `canonical` / `twitter:*` 补全；构建期生成 `rss.xml` 与 `sitemap.xml`；新增 `robots.txt`。
 - **v1.1.0 · 阅读体验优化**：文章页磨砂玻璃阅读底板（半透明页面色 + 背景模糊，四边羽化无硬边，对比达 WCAG AA）；星轨"防饱和尾部渐隐 + 拉长尾迹 + 随机尾迹起点"使圆环连续、弧端错落无断口；阅读栏加宽（78ch）并提高底板透明度、加大底板宽度。
-- **核心装置**：长曝光星轨（变星/流星/指针时间膨胀）、星图目录导航、`fall` 转场。
-- **后端 v2**：注册/登录/三角色、文章 CRUD、meta 注入、RSS、留言墙、上传、计数；歌单支持运行时同步 QQ 音乐公开歌单。
+- **核心装置**：长曝光星轨（流星/指针时间膨胀）、顶栏编号导航、`fall` 转场。
+- **后端 v2**：注册/登录/三角色、文章 CRUD、meta 注入、RSS、留言墙、上传、计数；歌单支持运行时同步 QQ 音乐公开歌单。（注册与留言墙已于 2026-10-09 下线，见文末"已下线"。）
 - **管理界面 `/admin`**：用户/留言管理、文章发布与编辑、站点设置（动态/项目/歌单/装备/上传）、图片管理与插图；动态与项目支持「＋ 新增」与按需保存。
-- **内容与页面**：文章列表与阅读闭环、动态时间线、歌单（QQ 同步）、项目载荷舱、留言墙、关于、404；双语 eyebrow 与「现在」读数栏。
-- **体验与性能**：双主题（深空/纸面，默认深空并跟随系统）、音乐播放器、移动端适配、`prefers-reduced-motion` 降级、像素预算封顶、次级页限帧、全站 resize 去抖。
+- **内容与页面**：文章列表与阅读闭环、动态时间线、歌单（QQ 同步）、项目、映像墙、关于、404；双语 eyebrow。
+- **体验与性能**：双主题（深色/浅色，默认浅色）、音乐播放器、移动端适配、`prefers-reduced-motion` 降级、像素预算封顶、次级页限帧、全站 resize 去抖。
 - **SEO 与分享**：文章页由后端注入 `title`/`description`/`og`/`canonical`；`rss.xml`、`sitemap.xml`、`robots.txt`、分享卡片 `og.png`。
-- **已下线**：低语（井外随机浮现）与 `/fragments` 碎片功能（接口保留，见 §2.4）；沉浸光标（`NeoCursor` 与顶栏开关，现用系统默认光标）。
+- **已下线**：低语（井外随机浮现）与 `/fragments` 碎片功能（接口保留，见 §2.4）；沉浸光标（`NeoCursor` 与顶栏开关，现用系统默认光标）；**注册与留言墙**（2026-10-09：`/register` 与 `/wall` 两张页面、`/api/register` 及 `/api/messages` 的读/写/删三个端点、`data/messages.json` 全部删除，角色随之由三档收敛为站长+管理员两档，见 §2.7）。上面几条在更早的里程碑条目里仍按"当时交付了什么"记着，那是历史，不是现状。

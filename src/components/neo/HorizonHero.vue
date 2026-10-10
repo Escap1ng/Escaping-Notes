@@ -1,18 +1,39 @@
 <script setup>
-// HorizonHero · 首页首屏排版层：幽灵汉字 + 宣言 + 「现在」三栏
-// 长曝光星轨装置由 StarTrails(interactive) 提供，本组件只负责叙事排版与读数
+// HorizonHero · 首页首屏排版层：站名打字机 + 十六字宣言
+// 长曝光星轨装置由 StarTrails(interactive) 提供，本组件只负责叙事排版
 import { onMounted, onUnmounted, ref } from 'vue'
 import StarTrails from './StarTrails.vue'
-import { onLens } from '../../lib/lens.js'
 import { N } from '../../config/narrative.js'
 
-const props = defineProps({
-  posts: { type: Array, default: () => [] },
-  now: { type: Object, default: () => ({}) },
-})
-const emit = defineEmits(['select'])
-
 const textEl = ref(null)
+
+/* 站名打字机：逐字打出，打完才放行宣言两行（.ln 的动画在 ready 前是暂停的）。
+   光标只在打字期间存在——打满后再留一枚永久闪烁的竖线，读起来像没加载完，不像标题。 */
+const typed = ref('')
+const ready = ref(false)
+const caret = ref(true)
+let twTimer = 0
+
+function typeTitle() {
+  const title = N.heroTitle
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    typed.value = title
+    ready.value = true
+    caret.value = false // 没有打字过程，也就不该有光标
+    return
+  }
+  let i = 0
+  const tick = () => {
+    typed.value = title.slice(0, ++i)
+    if (i >= title.length) {
+      ready.value = true
+      twTimer = setTimeout(() => (caret.value = false), 1500) // 再闪一会儿退场，别在最后一字上硬切
+    } else {
+      twTimer = setTimeout(tick, 82)
+    }
+  }
+  twTimer = setTimeout(tick, 260)
+}
 
 /* 首屏视差：文字随滚动下沉并淡出 */
 let raf = 0
@@ -28,52 +49,37 @@ function onScroll() {
   })
 }
 
-onMounted(() => addEventListener('scroll', onScroll, { passive: true }))
+onMounted(() => {
+  addEventListener('scroll', onScroll, { passive: true })
+  typeTitle()
+})
 onUnmounted(() => {
   if (raf) cancelAnimationFrame(raf)
+  clearTimeout(twTimer)
   removeEventListener('scroll', onScroll)
 })
 </script>
 
 <template>
   <section class="hero">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.home }}</span>
+    <!-- 首屏地景：DOM 排在 canvas 之前，所以星轨画在它上面。装饰层，读屏跳过 -->
+    <div class="hero-plate" aria-hidden="true"></div>
 
-    <!-- StarTrails 仍对外发 @hover；首屏的悬停读数已按反馈移除（§10），这里不再挂空监听 -->
-    <StarTrails interactive :posts="posts" @select="emit('select', $event)" />
+    <!-- StarTrails 不再对外发事件：变星（文章节点）装置 2026-10-09 整体撤除，
+         首屏不再有点击入口，文章归折线以下的精选卡 -->
+    <StarTrails interactive />
 
-    <div ref="textEl" class="hero-text">
-      <p class="neo-eyebrow">{{ N.heroEyebrow }}</p>
-      <h1 class="manifesto">
+    <div ref="textEl" class="hero-text" :class="{ ready }">
+      <h1 class="title" :aria-label="N.heroTitle"
+        ><span class="tw" aria-hidden="true">{{ typed }}</span
+        ><span class="caret" :class="{ gone: !caret }" aria-hidden="true"></span
+      ></h1>
+      <p class="manifesto">
         <span class="ln ln1">{{ N.manifesto[0] }}</span>
         <span class="ln ln2">{{ N.manifesto[1] }}</span>
-      </h1>
-      <p class="sub">{{ N.manifestoSub }}</p>
+      </p>
     </div>
 
-    <div class="now">
-      <div class="now-cell neo-lens" @pointermove="onLens">
-        <span class="k neo-mono">{{ N.now.writing }}</span>
-        <RouterLink v-if="now.writing" class="v" :to="`/blog/${now.writing.slug}`">
-          {{ now.writing.title }}
-        </RouterLink>
-        <span v-else class="v dim">--</span>
-      </div>
-      <div class="now-cell neo-lens" @pointermove="onLens">
-        <span class="k neo-mono">{{ N.now.listening }}</span>
-        <RouterLink v-if="now.listening" class="v" to="/records">
-          {{ now.listening.title }}<template v-if="now.listening.artist"> · {{ now.listening.artist }}</template>
-        </RouterLink>
-        <span v-else class="v dim">--</span>
-      </div>
-      <div class="now-cell neo-lens" @pointermove="onLens">
-        <span class="k neo-mono">{{ N.now.building }}</span>
-        <a v-if="now.building" class="v" :href="now.building.url" target="_blank" rel="noopener noreferrer">
-          {{ now.building.name }}<span aria-hidden="true">↗</span>
-        </a>
-        <span v-else class="v dim">--</span>
-      </div>
-    </div>
   </section>
 </template>
 
@@ -83,6 +89,10 @@ onUnmounted(() => {
   height: 100vh;
   height: 100svh;
   overflow: hidden;
+  /* 不透明底：挡掉挂在 App 上那层 fixed 抽屉底片。
+     它铺满整个视口，首屏若不给自己铺底，抽屉那张图就会从折线处渗进来，
+     和首屏那张山叠在一起。有了这层底，两张图只在折线**相接**，不互相透出。 */
+  background: var(--ink-0);
   display: flex;
   flex-direction: column;
 }
@@ -93,26 +103,24 @@ onUnmounted(() => {
   }
 }
 
-/* 幽灵汉字置于天极附近：中段被星轨掩过 */
-.glyph {
-  top: 42%;
-  left: 68%;
-  transform: translate(-50%, -50%);
-  font-size: clamp(240px, 40vw, 620px);
-  z-index: 0;
-}
-
-/* 文字底衬：左下渐隐柔光，压在盘面上仍可读（z 同 canvas，DOM 在其后 → 盖盘不盖字） */
-.hero::after {
-  content: '';
+/* 首屏地景：不做满屏壁纸，做成一条**地平线横带**——照片只占下沿 54%，
+   上半屏整片空出来给标题与星轨。留白是这么来的，不是把字缩小让位。
+   淡出不在 CSS 里，烘在素材里：build_plate_bg.ps1 给 plate-hero.jpg 的山脊以上盖了一层
+   竖向天空纱，顶端正好压在 --ink-0（实测与 #F2F5F9 差 1/765 通道和），到峰顶收敛为 0——
+   山一寸没被遮。于是 `50% 0` 把素材第 0 行钉死在横带顶边，边界两侧同色，任何视口下都没有缝。
+   原来的 mask 是把照片落在边上的 #9FB4CB 在 105px 内插到 #F2F5F9：两端颜色不等，边界处从
+   一片全平（0.910）直接接上每 20px 掉 0.098 的陡坡——那个折角就是横杠。把渐变拉长只是摊开
+   同一段色差，"两端不等"这件事不变；现在两端实测差 1/765 通道和，边界那一档降到 0.021。
+   横带高度是这里的 top，画面取哪一段是 bake 里的 700/1120/2560。
+   暗色下 --hero-img 是抽屉那张压暗版，顶端 #090E14 对 #020204 只差 1.07:1，本就看不见缝。 */
+.hero-plate {
   position: absolute;
-  left: 0;
+  top: 46%;
   bottom: 0;
-  width: 68%;
-  height: 78%;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(130% 115% at 0% 100%, var(--scrim), transparent 66%);
+  left: 0;
+  right: 0;
+  z-index: 0;
+  background: var(--hero-img) no-repeat 50% 0 / cover;
 }
 
 .hero-text {
@@ -122,9 +130,14 @@ onUnmounted(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: var(--space-1);
-  padding: 0 var(--space-3) var(--space-3);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3); /* 站名与联句之间留一口气：--space-2 时两行贴成一个块，锁不住也分不开 */
+  /* 整块上提：峰顶占视口 ≈62%，文字居中时宣言几乎贴到山尖。底部垫 19vh 把块心
+     抬到天空的重心处，联句与峰顶之间留出一口气（13vh→16vh→19vh 是他逐版要求再提）。
+     视差 translateY 照旧随滚动下沉。 */
+  padding: 0 var(--space-3) clamp(64px, 19vh, 210px);
+  text-align: center;
   pointer-events: none;
   will-change: transform, opacity;
 }
@@ -133,23 +146,73 @@ onUnmounted(() => {
   pointer-events: auto;
 }
 
-.manifesto {
-  margin: var(--space-0) 0 0;
+/* 站名：打字机逐字打出，光标是「还在曝光」的信号 */
+/* 中英主次：站名是第一眼，但那十六个字才是有分量的句——两行要读成一个 lockup，
+   而不是"大标题 + 小副标"。比例收到 ≈1.6:1（60/38），并让两行**宽度接近**：
+   英文 14 字 ×(0.72+0.18)em ≈ 12.6em ≈ 756px，中文 17 字 ×1.08em ≈ 18.4em ≈ 700px。
+   旧的 70/34（2.1:1）就是"大小不协调"的来源：中文被压成了副标。 */
+.title {
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(26px, 5.6vw, 80px);
+  font-size: clamp(22px, 4.2vw, 60px);
   font-weight: var(--fw-bold);
-  line-height: 1.18; /* 展示级标题：行高刻意脱离四档刻度（同 .neo-title/.neo-h2） */
-  /* 字距随下潜被潮汐拉长 */
-  letter-spacing: calc(-0.02em + var(--shift, 0) * 0.04em);
+  line-height: 1.1; /* 展示级标题：行高刻意脱离四档刻度（同 .neo-title/.neo-h2） */
+  letter-spacing: 0.18em; /* 全大写小字号要靠字距撑开，0.06em 在 20px 上会挤成一团 */
+  white-space: nowrap;
   text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);
 }
 
-/* 联句不断行：每半句恒为一行，字号随视口连续缩放 */
+.caret {
+  display: inline-block;
+  width: max(2px, 0.06em);
+  height: 0.86em;
+  margin-left: 0.1em;
+  vertical-align: -0.06em;
+  background: var(--cold); /* 光标属交互，只准用冷色 */
+  animation: caret-blink 1.05s steps(1, end) infinite;
+}
+
+/* 打满后淡出退场，不是硬切：transition 走 opacity，动画本身已经不再改它 */
+.caret.gone {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.manifesto {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 3.0vw, 38px); /* 与站名 60 成 ≈1.6:1：再小就读成副标，lockup 散掉 */
+  font-weight: var(--fw-bold);
+  line-height: 1.9; /* 联句行距：1.7 时两行粗宋贴得太近，读成一坨；1.9 才有联的呼吸 */
+  /* 字距随下潜被潮汐拉长。基线从 -0.02em 抬到 +0.08em：负字距是英文排版的遗留，
+     汉字粗宋 34px 挤在一起笔画会互相咬；正字距才读得出碑帖味。潮汐项同比加长。 */
+  letter-spacing: calc(0.08em + var(--shift, 0) * 0.06em);
+  text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);
+}
+
+/* 联句不断行：每半句恒为一行，字号随视口连续缩放。
+   打完站名才放行（.hero-text.ready）——paused 期间连 animation-delay 的钟都不走 */
 .ln {
   display: block;
   white-space: nowrap;
   clip-path: inset(0 0 100% 0);
   animation: ln-reveal 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-play-state: paused;
+}
+
+.hero-text.ready .ln {
+  animation-play-state: running;
 }
 
 .ln2 {
@@ -162,165 +225,10 @@ onUnmounted(() => {
   }
 }
 
-.sub {
-  margin: 0;
-  max-width: 38ch;
-  color: var(--text-1);
-  font-size: clamp(var(--fs-xs), 1.6vw, var(--fs-lg));
-  line-height: var(--lh-normal);
-  animation: fade 0.8s 0.5s ease both;
-}
-
-.note {
-  margin-top: var(--space-0);
-  animation: fade 0.8s 0.72s ease both;
-}
-
-@keyframes fade {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* 「现在」三栏：竖排读数条，长文列占宽（流内贴底，任何比例下都不与宣言重叠） */
-.now {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
-  border-top: 1px solid var(--line);
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--ink-0) 94%, transparent),
-    color-mix(in srgb, var(--ink-0) 40%, transparent)
-  );
-}
-
-/* 顶端热区标线：细红移线分隔首屏与「现在」读数 */
-.now::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--hot) 55%, transparent), transparent);
-}
-
-.now-cell {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  border-left: 1px solid var(--line);
-  min-width: 0;
-  transition: background-color 0.3s ease;
-}
-
-.now-cell:first-child {
-  border-left: 0;
-}
-
-.now-cell:hover {
-  background: color-mix(in srgb, var(--ink-1) 40%, transparent);
-}
-
-.now-cell .k {
-  display: flex;
-  align-items: center;
-  gap: var(--space-0);
-  /* 全站最小字号 = --fs-3xs（11.5px）：再小在大写等宽 + 宽字距下不可读 */
-  font-size: var(--fs-3xs);
-  color: var(--text-1);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-/* 红移信号点：此栏为「正在发生」 */
-.now-cell .k::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--hot);
-  box-shadow: 0 0 9px var(--hot);
-  animation: now-pulse 2.6s ease-in-out infinite;
-}
-
-@keyframes now-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
-.now-cell .v {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-serif);
-  font-size: var(--fs-md);
-  color: var(--text-0);
-  text-decoration: none;
-  transition: color 0.22s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.now-cell:hover .v {
-  transform: translateX(var(--space-0));
-}
-
-.now-cell a.v:hover {
-  color: var(--cold);
-}
-
-.now-cell .v.dim {
-  color: var(--text-1);
-}
-
 @media (max-width: 720px) {
+  /* 窄屏也要保住上提的那口气，只是垫得少一点（手机视口矮，16vh 会顶到顶栏） */
   .hero-text {
-    padding: 0 var(--space-2) var(--space-3);
-  }
-  .hero::after {
-    width: 100%;
-    height: 72%;
-  }
-  .glyph {
-    left: 50%;
-    top: 38%;
-  }
-  /* 窄屏改为竖排读数（标签左 · 内容右）。
-     旧版三列等分下把内容整条隐藏，只留三个空标签，「现在」栏等于失效。 */
-  .now {
-    grid-template-columns: 1fr;
-  }
-  .now-cell {
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-2);
-    border-left: 0;
-    border-top: 1px solid var(--line);
-    padding: var(--space-1) var(--space-2);
-  }
-  .now-cell:first-child {
-    border-top: 0;
-  }
-  .now-cell .k {
-    flex: none;
-  }
-  .now-cell .v {
-    display: block;
-    min-width: 0;
-    font-size: var(--fs-sm);
+    padding: 0 var(--space-2) clamp(44px, 12vh, 110px);
   }
 }
 
@@ -329,14 +237,9 @@ onUnmounted(() => {
     clip-path: none;
     animation: none;
   }
-  .sub,
-  .note {
+  .caret {
     animation: none;
     opacity: 1;
-    transform: none;
-  }
-  .now-cell .k::before {
-    animation: none;
   }
 }
 </style>
