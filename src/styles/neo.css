@@ -89,7 +89,9 @@ html[data-skin='neo'] {
   --shift: 0;
 }
 
-/* ---------- 2. 深色（默认） ---------- */
+/* ---------- 2. 深色（也是 data-theme 缺失时的兜底块） ---------- */
+/* 选择器写成 :not([data-theme='out']) 而不是 [data-theme='well']，所以属性没写上时
+   这里就是渲染结果。首开默认浅色由 index.html 决定，与此无关。 */
 html[data-skin='neo']:not([data-theme='out']) {
   --ink-0: #020204;
   --ink-1: #0a0a10;

@@ -73,7 +73,7 @@ const onResize = debounce(() => {
 
 onMounted(() => {
   // 此处不再 applyTheme：首帧已由 index.html 写入 data-theme，
-  // 挂载时重复写入会把「跟随系统」得到的结果当成用户选择永久固化。
+  // 挂载时重复写入会把兜底值当成用户选择永久固化，访客再也改不回"没选过"。
   addEventListener('scroll', onScroll, { passive: true })
   addEventListener('resize', onResize)
   addEventListener('keydown', onKey)

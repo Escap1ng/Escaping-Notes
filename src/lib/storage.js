@@ -7,17 +7,14 @@ const PREFIX = 'en-'
 
 export const KEYS = {
   token: `${PREFIX}token`, // 登录令牌，api.js 每次请求随 Authorization 头带上
-  theme: `${PREFIX}theme`, // 主题：'well' 深色 / 'out' 浅色
+  theme: `${PREFIX}theme`, // 主题：'well' 深色 / 'out' 浅色。index.html 的首帧内联脚本按同样的
+  // 字面量读它，并在没存过时直接写 'out'——首开浅色的默认值只在那一处决定；改键名必须同步改那边。
   volume: `${PREFIX}vol`, // 播放器音量 0–1
   blur: `${PREFIX}plate-blur`, // 底片模糊 0–12px（0 = 清晰）。index.html 的首帧内联脚本按同样
   // 的字面量读它，改这里必须同步改那边，否则进页会先清晰一闪。
   views: `${PREFIX}views-`, // 阅读数回退（累计），实际键 = 该前缀 + slug
   viewed: `${PREFIX}viewed-`, // 本次会话是否已计过数，只活到关标签页，所以放 sessionStorage
 }
-
-// index.html 首帧内联脚本要按同样的键预置主题，防闪烁；那边只能写字面量，
-// 所以这里把口径写成一条注释并由 tests 之外的人核对——改值时必须同步改 index.html。
-export const THEME_DEFAULT = 'well'
 
 export function read(key, fallback = null, area = localStorage) {
   try {

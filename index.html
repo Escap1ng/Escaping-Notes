@@ -31,7 +31,8 @@
       // 首帧前应用主题，避免切换后闪一下。已存偏好优先；**首次访问默认亮色**（out），
       // 不再读 prefers-color-scheme——首屏现在是一张亮底照片，跟着系统翻到深色会让它变成
       // 一张压在黑底上的暗图，观感与配色都不成立。想要系统跟随，得先让首屏照片也分两版。
-      // 这段逻辑是主题默认值的唯一来源，theme.js 直接读已写入的 data-theme，勿在此之外重复实现。
+      // 这段逻辑是主题默认值的唯一来源，theme.js 直接读已写入的 data-theme，勿在此之外重复实现
+      //（它只在属性压根没写上的异常路径补 'out'，不写存储）。这条口径由 tests/theme-default.test.mjs 钉住。
       const stored = localStorage.getItem('en-theme')
       document.documentElement.dataset.theme = stored === 'well' || stored === 'out' ? stored : 'out'
 
