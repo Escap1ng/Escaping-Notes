@@ -150,7 +150,7 @@ export const site = {
 - **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），显示在自述卡左侧、≤720px 收到正文上方。要换人就换 QQ 那张歌单封面再同步；离线/镜像用的是 `src/config/records.js` 快照里的 URL。
 - **碎片（已随旧版下线，代码保留参考）**：`/fragments` 不占导航位、非 1.0.0 对外功能；接口 `GET/POST/DELETE /api/fragments` 仍保留。
 - **图片管理**：`/admin` 文章页签可「上传图片并插入」正文光标处，下方 IMAGES 列表可插入/删除已上传图片；接口 `GET /api/uploads`、`DELETE /api/uploads/:文件名`（均仅站长）。上传白名单：png/jpg/jpeg/webp/gif/svg/mp3，≤8MB。
-- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记：文章的封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏地平线、抽屉那五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `neo.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记：文章的封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏地平线的亮/暗两版、抽屉那五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `neo.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
 - **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
 
 ### 2.5 播放器

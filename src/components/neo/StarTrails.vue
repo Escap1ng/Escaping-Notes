@@ -200,7 +200,7 @@ function readColors() {
     sky.theme = theme
     resetPlate() // 两台相机各挂一个 MutationObserver，先跑的那个改 sky.theme、后跑的走早返回
     seedStars() // 底片反正要重铺，星数按新主题重定（深色/浅色差 N_DEEP_K 倍）
-    rebuildRidge() // 两个主题的地景是两张不同的照片，山脊折线各一套
+    rebuildRidge() // 首屏地景随主题换底（同一取景的压暗版），折线复算一遍
   }
   // 但 reduced-motion 没有 rAF 循环，重绘只能挂在这一串事件上：若把它留在上面的分支里，
   // 观察器竞争失败的那台会永远显示旧配色那一帧。重绘是幂等的，每台都刷自己这一份。

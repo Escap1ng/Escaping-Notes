@@ -7,10 +7,11 @@
 // 再往上 ALT_K 个视口高度由 ALT_FLOOR 回升到 1。后半段是大气透视——贴近地平线的
 // 星轨本来就该比天顶淡，顺带把"山体上不要星轨"的边界做成梯度而不是剪纸边。
 //
-// 轮廓是在 bake 产物的网格叠图上手工描的（u/v 归一、每列单值），两套：
-//   out  = plate-hero.jpg  6000x1860（源 hero.jpg 的 700..2560 行）
-//   deep = plate-bg-deep.jpg 1600x1067（**另一张照片** plate1.jpg 全幅虚化）
-// 换 bake 源（scripts/build_plate_bg.ps1 的 SRC_HERO / SRC_PLATE）就必须重描这两条折线。
+// 轮廓是在 bake 产物的网格叠图上手工描的（u/v 归一、每列单值）。
+// 两套主题的首屏现在共用同一张取景：build_plate_bg.ps1 用同一个 $full 烘出
+// plate-hero.jpg 与 plate-hero-deep.jpg，只差调色，所以 deep 复用 out 这条折线。
+// 换 bake 源（SRC_HERO）就必须重描。plate-bg-deep.jpg 是另一张照片（plate1.jpg 全幅）
+// 做的夜景阅读底，只当抽屉背景，首屏不用它，故不再单独描线。
 export const RIDGE_BIAS = 10 // px：遮罩边界整体上移，给描线误差与脊尖留余量
 export const RIDGE_FEATHER = 26 // px：0 → ALT_FLOOR 的羽化带
 export const RIDGE_ALT_K = 0.22 // 高度衰减带占视口高的比例
@@ -30,15 +31,9 @@ const OUT = [
   0.85, 0.645, 0.875, 0.672, 0.9, 0.685, 0.925, 0.69, 0.95, 0.7, 0.975, 0.705,
   1.0, 0.71,
 ]
-const DEEP = [
-  0.0, 0.492, 0.1, 0.492, 0.18, 0.47, 0.2, 0.44, 0.25, 0.4, 0.3, 0.36,
-  0.33, 0.32, 0.36, 0.34, 0.41, 0.29, 0.45, 0.36, 0.5, 0.38, 0.55, 0.4,
-  0.6, 0.38, 0.66, 0.35, 0.7, 0.39, 0.75, 0.45, 0.8, 0.492, 0.9, 0.5,
-  1.0, 0.5,
-]
 export const RIDGES = {
   out: { ar: 6000 / 1860, pts: OUT },
-  deep: { ar: 1600 / 1067, pts: DEEP },
+  deep: { ar: 6000 / 1860, pts: OUT },
 }
 
 function ridgeV(pts, u) {

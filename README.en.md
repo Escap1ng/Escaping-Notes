@@ -37,11 +37,12 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
   </tr>
 </table>
 
-> Left dark / right light: both are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain, so **the site itself is darker**.
+> Left dark / right light: both are **star-trail plates recomputed from the site's own constants** (`npm run art:build`), not screenshots — **they draw the trail layer only**; the live landing screen also carries a band of photo landscape along the bottom, star trails occluded along the ridge, and a title typed out character by character. They were lifted by a ×2.8 / ×1.6 developing gain, so **the site itself is darker**.
 
 ## Features
 
 - **Dual themes** — dark (cold white / warm white / amber trails) and light (astronomical dry plate: slate/graphite trails + vermilion accents); trail colour temperature follows magnitude (dim stars cool, a few bright stars warm). One click to switch, preference remembered; the default is light and the first frame deliberately ignores `prefers-color-scheme`, because the landing screen is a bright photograph
+- **Hero and backdrops** — the landing screen pairs a band of photo landscape along the bottom (the upper half stays open for the title) with star trails occluded along the ridge and a title typed out character by character; below the fold the drawer lays a five-slot backdrop carousel (10s each), and how blurred those plates are is a runtime parameter — a 0–12px slider in the settings card, defaulted to full
 - **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (spacing / type-size / line-height / font-weight), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits, chart libraries or font CDNs (the only runtime dependencies are Vue and Vue Router)
 - **Graceful degradation** — when the API is unreachable (or times out) the site falls back to bundled seed data: still a complete offline plate
@@ -49,6 +50,7 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 - **Performance** — the secondary-page backdrop is frame-capped at 30fps, resize listeners are debounced by 150ms, `--shift` is cached instead of reading `scrollHeight` per frame, persistent surfaces avoid `backdrop-filter`, and the lens glow moves by transform
 - **Reading readability** — the sky under body text is dimmed by one site-wide adaptive "dark band" (strength set per theme) instead of every card wearing its own scrim; the article page adds a frosted-glass plate for long reads, and foreground contrast meets WCAG AA
 - **Feedback loop** — skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and search/tag filters stored in the URL (shareable, survives reload)
+- **Gallery** — `/gallery` pins every image the site has used (article covers plus the site's own backdrops) to one wall of Polaroids at their native aspect ratio; each opens into a lightbox with ←/→ paging and Esc to close
 - **Full-featured admin** — edit posts, updates, playlist and site info from `/admin`; the Music page can be refreshed from a public QQ Music playlist in one click; two role tiers (owner / admin); RSS included
 
 ## Two load-bearing designs, in figures
@@ -107,7 +109,7 @@ npm run preview        # preview dist/ locally
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml`, `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, generated with Node only, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read from the source, so re-run after touching star-trail parameters) |
-| `npm run bg:build` | Re-bake the site backdrops in `public/plates/*.jpg` (hero ridge + five-slot drawer carousel + dark scrim; originals live in `plates-src/`, needs local PowerShell; commit the output) |
+| `npm run bg:build` | Re-bake the site backdrops in `public/plates/*.jpg` (hero ridge, light + dark + five-slot drawer carousel + dark drawer scrim; originals live in `plates-src/`, needs local PowerShell; commit the output) |
 | `npm run cover:build` | Re-bake the article covers in `public/posts/*.jpg` (originals live in `plates-src/`, which is not committed; re-run after changing them, and commit the output) |
 | `npm run font:build` | Re-subset the display font (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
 | `npm run check` | Runs the four gates below in sequence (api / docs / naming / contrast) — the one command to run before committing |
@@ -118,18 +120,18 @@ npm run preview        # preview dist/ locally
 
 ## Route Map
 
-| Route | Page | Metaphor |
+| Route | Page | What it is |
 | --- | --- | --- |
-| `/` | Home · long-exposure star trails | A camera shooting the night |
-| `/blog` | Articles | Cabinet of plates |
-| `/blog/:slug` | Article | Examining one plate |
-| `/updates` | Activity | Pulse log |
-| `/records` | Music | String table of tracks |
-| `/gallery` | Gallery | Every plate the site has used, pinned to one wall |
-| `/projects` | Projects | Things still turning |
-| `/about` | About | Writing "me" beyond the horizon |
-| `/login` | Log in | utility page, no metaphor |
-| `/admin` | Console | Backyard of the observatory |
+| `/` | Home · long-exposure star trails | Photo landscape band + star trails + title |
+| `/blog` | Articles | Article archive |
+| `/blog/:slug` | Article | A single post |
+| `/updates` | Activity | Short-log feed |
+| `/records` | Music | Self-hosted track list |
+| `/gallery` | Gallery | Wall of every image the site has used |
+| `/projects` | Projects | Projects and their state |
+| `/about` | About | Bio · stats · archive |
+| `/login` | Log in | utility page |
+| `/admin` | Console | Editing back end |
 
 > Any unmatched route renders the 404 page, titled 这里没有页面 ("there is no page here") — site copy is Chinese-only.
 

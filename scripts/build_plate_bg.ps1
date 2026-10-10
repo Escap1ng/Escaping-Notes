@@ -20,6 +20,7 @@
 #         public/plates/plate-bg-paper{1,3,4,5,6}.jpg
 #                                             (paper reading surface: sharp, graded, NO veil)
 #         public/plates/plate-hero.jpg        (FIRST SCREEN base: cropped to sky+ridge, sky veiled into the page colour)
+#         public/plates/plate-hero-deep.jpg   (FIRST SCREEN base, dark: the SAME hero frame graded down; see $HERO_DEEP)
 # The original never enters the repo: 1/ is gitignored, only the derived assets are kept.
 #
 # ColorMatrix gotcha, written down so nobody re-walks it: GDI+ is ROW = source channel,
@@ -229,6 +230,21 @@ $HERO = @(
   0.01, 0.03, 0.06, 0, 1
 )
 
+# Dark first screen. It used to reuse plate-bg-deep.jpg -- the drawer's plate1-derived night
+# surface -- so the two themes showed two DIFFERENT mountains, and the dark strip's top edge
+# only "almost" matched --ink-0 (the note claimed #090E14, 1.07:1; after a re-bake it drifted
+# to #101922 / 1.17:1, and with no ramp under it that hard edge reads as a horizon bar).
+# Now it is the SAME frame as the light hero: one source ($full), one crop, one sky dissolve,
+# only the grade and the veil colour differ. Keeping $HERO's hue keeps the ridge readable and
+# the mountain recognisable; scaling the offset as well puts pure black back on --ink-0
+# (#020204) instead of the #030810 an offset left behind. Retune:  DEEP_HERO_K=0.4 npm run bg:build
+$DEEP_HERO_K = 0.32
+if ($env:DEEP_HERO_K) { $DEEP_HERO_K = [double]$env:DEEP_HERO_K }
+$HERO_DEEP = Scale-Color $HERO $DEEP_HERO_K
+$HERO_DEEP[20] = [double]$HERO[20] * $DEEP_HERO_K
+$HERO_DEEP[21] = [double]$HERO[21] * $DEEP_HERO_K
+$HERO_DEEP[22] = [double]$HERO[22] * $DEEP_HERO_K
+
 # First-screen frame, in source rows of the hero original (6000x3470). Measured, not guessed:
 # the summit tip sits at row 1120 (read off a gridded render at 25px), the dark cloud band ends
 # near row 250, and the car park starts below row 2600.
@@ -322,6 +338,13 @@ try {
   Bake $full (Join-Path $OutDir 'plate-hero.jpg') $HERO ([System.Drawing.Color]::FromArgb(0, 0, 0)) 0.0 1 `
     -w $full.Width -keep ($HERO_BOTTOM / $full.Height) -cropTop ($HERO_TOP / $full.Height) `
     -veilTop (($HERO_SUMMIT - $HERO_TOP) / [double]($HERO_BOTTOM - $HERO_TOP))
+  # The dark first screen: identical source, crop and sky dissolve. veilTopColor must be the
+  # dark --ink-0 (#020204) here, not the $INK_LIGHT default, or row 0 lands on the light page
+  # colour and the strip pops. One $full, so the ridge polyline in src/lib/ridge.js is shared.
+  Bake $full (Join-Path $OutDir 'plate-hero-deep.jpg') $HERO_DEEP ([System.Drawing.Color]::FromArgb(0, 0, 0)) 0.0 1 `
+    -w $full.Width -keep ($HERO_BOTTOM / $full.Height) -cropTop ($HERO_TOP / $full.Height) `
+    -veilTop (($HERO_SUMMIT - $HERO_TOP) / [double]($HERO_BOTTOM - $HERO_TOP)) `
+    -veilTopColor ([System.Drawing.Color]::FromArgb(2, 2, 4))
   $ep.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
     [System.Drawing.Imaging.Encoder]::Quality, [long]$QUALITY)
 }

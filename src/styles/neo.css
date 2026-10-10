@@ -124,7 +124,7 @@ html[data-skin='neo']:not([data-theme='out']) {
   --plate-img-3: url('/plates/plate-bg-deep.jpg');
   --plate-img-4: url('/plates/plate-bg-deep.jpg');
   --plate-img-5: url('/plates/plate-bg-deep.jpg');
-  --hero-img: url('/plates/plate-bg-deep.jpg'); /* 首屏的地景底：暗色下用同一张压暗版，星轨以 lighter 叠在它上面 */
+  --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
 
   /* 阅读玻璃底板（文章页）：页面底色按比例半透 + 背景模糊，隔离星轨、提升前景对比。
      深浅两档各自定：深色 55% / 78%，浅色 60% / 78%（浅色背后是亮底照片，要多透一档才压得住）。 */
@@ -180,7 +180,7 @@ html[data-skin='neo'][data-theme='out'] {
   --plate-img-3: url('/plates/plate-bg-paper4.jpg');
   --plate-img-4: url('/plates/plate-bg-paper5.jpg');
   --plate-img-5: url('/plates/plate-bg-paper6.jpg');
-  --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面 */
+  --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面。暗色是同一张取景的压暗版（plate-hero-deep），两套共用一条山脊折线 */
 
   /* 阅读玻璃底板（文章页）：跟随 --ink-0 的半透冷色 + 背景模糊，隔离星轨、提升前景对比。
      写成 color-mix 而非抄字面量：这块底板的语义就是"底色的 60% / 78%"。首页 .sheet 在冷色化时

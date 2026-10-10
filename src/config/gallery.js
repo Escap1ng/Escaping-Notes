@@ -5,6 +5,7 @@
 // 换底片时漏改这里，映像柜就会挂着已经不在用的那张。
 export const sitePlates = [
   { src: '/plates/plate-hero.jpg', title: '首屏的地平线' },
+  { src: '/plates/plate-hero-deep.jpg', title: '首屏的地平线 · 夜色' },
   // 「其一…其五」是墙上的顺序，不是文件名里的号：paper2 那一档空着——那张图搬去当
   // 第三篇《怎么写、怎么发》的封面了（见 scripts/build_post_covers.ps1）。
   { src: '/plates/plate-bg-paper1.jpg', title: '浅色底片 · 其一' },
