@@ -547,7 +547,8 @@ html[data-skin='neo'] main.neo-sub {
   letter-spacing: 0.06em;
 }
 
-/* 中性标签：只是"标记"，不带交互语义（如"本地读数"） */
+/* 中性标签：只是"标记"，不带交互语义。它唯一的消费方是文章页那枚"本地读数"，
+   2026-10-10 随本地回退计数一起撤走 → 现在零消费方，退役与否等他定 */
 .neo-tag-quiet {
   background: color-mix(in srgb, var(--text-1) 14%, transparent);
   color: var(--text-1);

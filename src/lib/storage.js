@@ -12,7 +12,6 @@ export const KEYS = {
   volume: `${PREFIX}vol`, // 播放器音量 0–1
   blur: `${PREFIX}plate-blur`, // 底片模糊 0–12px（0 = 清晰）。index.html 的首帧内联脚本按同样
   // 的字面量读它，改这里必须同步改那边，否则进页会先清晰一闪。
-  views: `${PREFIX}views-`, // 阅读数回退（累计），实际键 = 该前缀 + slug
   viewed: `${PREFIX}viewed-`, // 本次会话是否已计过数，只活到关标签页，所以放 sessionStorage
 }
 
@@ -31,15 +30,11 @@ export function write(key, value, area = localStorage) {
     if (value === null || value === undefined) area.removeItem(key)
     else area.setItem(key, String(value))
   } catch {
-    /* 写不进去就不写：这些都只是偏好与回退计数，丢了不影响内容可读 */
+    /* 写不进去就不写：这些都只是偏好与会话标记，丢了不影响内容可读 */
   }
 }
 
 // 只有这一处需要按 slug 拼键，所以拼法也收在这里，调用点不出现前缀字面量
-export function viewsKey(slug) {
-  return `${KEYS.views}${slug}`
-}
-
 export function viewedKey(slug) {
   return `${KEYS.viewed}${slug}`
 }

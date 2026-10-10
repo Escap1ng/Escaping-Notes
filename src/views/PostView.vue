@@ -7,7 +7,7 @@ import { loadPost, loadPosts } from '../lib/posts.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { api } from '../lib/api.js'
 import { trapFocus } from '../lib/focus.js'
-import { read, viewedKey, viewsKey, write } from '../lib/storage.js'
+import { read, viewedKey, write } from '../lib/storage.js'
 import { N } from '../config/narrative.js'
 
 const route = useRoute()
@@ -16,7 +16,6 @@ const missing = ref(false)
 const htmlBody = ref('')
 const all = ref([])
 const views = ref(null)
-const viewsLocal = ref(false)
 const copied = ref(false)
 const lightbox = ref('')
 const lightboxEl = ref(null)
@@ -78,16 +77,10 @@ onMounted(async () => {
     write(seen, '1', sessionStorage)
     await api('/api/view', { method: 'POST', body: { slug } })
   }
+  // 读数只有服务端那一份：后端缺席（Pages 镜像）时显示 `--`。原先那笔落 localStorage 的
+  // 累计数 2026-10-10 撤除——它每次进页自增、只有本机看得见，摆在 VIEWS 后面就是冒充全站读数。
   const stats = await api('/api/stats')
-  if (stats && typeof stats[slug] === 'number') {
-    views.value = stats[slug]
-  } else {
-    viewsLocal.value = true
-    const key = viewsKey(slug)
-    const local = (Number(read(key)) || 0) + 1
-    write(key, local)
-    views.value = local
-  }
+  if (stats && typeof stats[slug] === 'number') views.value = stats[slug]
 
   addEventListener('keydown', onKey)
 })
@@ -116,7 +109,6 @@ onUnmounted(() => {
           <h1 class="title">{{ post.title }}</h1>
           <p class="meta neo-mono">
             {{ post.words }} 字 · {{ post.minutes }} 分钟 ·
-            <i v-if="viewsLocal" class="neo-tag neo-tag-quiet">本地读数</i>
             VIEWS {{ views ?? '--' }}
             <button class="neo-btn neo-btn-sm neo-btn-quiet" type="button" @click="copyLink">
               {{ copied ? N.reader.copied : N.reader.copy }}
