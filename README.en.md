@@ -107,10 +107,14 @@ npm run preview        # preview dist/ locally
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml`, `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, generated with Node only, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read from the source, so re-run after touching star-trail parameters) |
+| `npm run bg:build` | Re-bake the site backdrops in `public/plates/*.jpg` (hero ridge + five-slot drawer carousel + dark scrim; originals live in `plates-src/`, needs local PowerShell; commit the output) |
 | `npm run cover:build` | Re-bake the article covers in `public/posts/*.jpg` (originals live in `plates-src/`, which is not committed; re-run after changing them, and commit the output) |
 | `npm run font:build` | Re-subset the display font (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
+| `npm run check` | Runs the four gates below in sequence (api / docs / naming / contrast) — the one command to run before committing |
 | `npm run check:api` | Diffs the endpoint table in `docs/api.md` against the routes in `server/api.py`, both ways; non-zero exit on drift |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the README route table matches `src/router` |
+| `npm run check:naming` | Naming-convention scan; non-zero exit on a violation |
+| `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `neo.css`; non-zero exit if a text token fails |
 
 ## Route Map
 
@@ -135,13 +139,17 @@ npm run preview        # preview dist/ locally
 ├── index.html             # Shell: theme bootstrap script, SEO/OG metadata
 ├── server/api.py          # Backend: content / auth / RSS / OG injection / record sync
 ├── content/posts/         # Markdown posts (frontmatter)
-├── public/                # Static assets: favicon, robots.txt, og.png
+├── public/                # Static assets: favicon, robots.txt, og.png, plus three derived-asset dirs that **must be committed**
+│                          #   plates/ (backdrops) · posts/ (covers) · audio/ (self-hosted tracks) — see "Scripts" for the bake commands
 ├── scripts/               # Build-time and content-refresh scripts (verb families)
 │   ├── build_font.mjs     #   display-font subsetting (Node; needs the `subset-font` devDep)
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only)
 │   ├── build_readme_art.mjs # the two plates above: recomputed from StarTrails' constants
+│   ├── build_plate_bg.ps1 / build_post_covers.ps1 # backdrop & cover baking (PowerShell + System.Drawing; cannot run on CI)
 │   ├── check_api_doc.py   #   docs/api.md ⇄ server/api.py route diff (with a --self negative control)
 │   ├── check_doc_refs.py  #   drift scan over doc references / § numbers / the README route table
+│   ├── check_naming.py    #   naming-convention scan
+│   ├── check_contrast.mjs #   theme-token WCAG contrast audit
 │   ├── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
 │   ├── data/              #   script input data (the GB2312 level-1 character table used by build_font)
 │   └── lib/               #   modules shared between scripts (PNG encoder, used by build_seo and build_readme_art)
@@ -149,9 +157,9 @@ npm run preview        # preview dist/ locally
 │   └── assets/readme/     # README figures (how they are made, and how to swap in real screenshots)
 └── src/
     ├── assets/fonts/      # Self-hosted subset font + OFL licence
-    ├── components/        # under neo/: StarTrails device · HorizonHero · NeoSiteHeader …; MusicCard.vue (the player card the header opens) sits one level up
+    ├── components/        # under neo/: StarTrails device · HorizonHero · NeoSiteHeader …; one level up are MusicCard.vue (the player card the header opens) and SettingsCard.vue (theme settings)
     ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / ridge / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
     └── views/             # 11 views, one file each, flat: 9 content pages + AdminView / LoginView
 ```

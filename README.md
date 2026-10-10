@@ -107,10 +107,14 @@ npm run preview        # 本地预览 dist/
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml`、`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 生成，需提交） |
 | `npm run art:build` | 重绘本页顶部那两张底片图（常数从源码里读，改星轨参数后要重跑） |
+| `npm run bg:build` | 重烘站点底图 `public/plates/*.jpg`（首屏地景 + 抽屉五张轮播 + 深色压暗底；原图在 `plates-src/`，需本机 PowerShell；产物需提交） |
 | `npm run cover:build` | 重烘文章封面 `public/posts/*.jpg`（原图放在不进仓库的 `plates-src/`，改图后重跑；产物需提交） |
 | `npm run font:build` | 重切展示层子集字体（需要本机装有 Noto Serif SC；产物已提交，日常不用跑） |
+| `npm run check` | 下面四道门禁连跑（api / docs / naming / contrast），提交前跑这一条 |
 | `npm run check:api` | `docs/api.md` 的端点表与 `server/api.py` 的路由双向对拍，漂移即退出码非 0 |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对 README 路由表与 `src/router` 一致 |
+| `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
+| `npm run check:contrast` | 从 `neo.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
 
 ## 页面地图
 
@@ -135,13 +139,17 @@ npm run preview        # 本地预览 dist/
 ├── index.html             # 壳层：主题预置脚本、SEO/OG 元信息
 ├── server/api.py          # 后端：内容 / 鉴权 / RSS / OG 注入 / 歌单同步
 ├── content/posts/         # Markdown 文章（frontmatter）
-├── public/                # 静态资源：favicon、robots.txt、og.png
+├── public/                # 静态资源：favicon、robots.txt、og.png，以及三个**必须入库**的派生素材目录
+│                          #   plates/（底图）· posts/（封面）· audio/（自托管音轨）——重烘命令见「常用脚本」
 ├── scripts/               # 构建期与内容刷新脚本（命名按动词分族）
 │   ├── build_font.mjs     #   展示层子集字体裁切（Node，依赖 devDep `subset-font`）
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块）
 │   ├── build_readme_art.mjs # 本页顶部两张底片图：按 StarTrails 常数离线复算
+│   ├── build_plate_bg.ps1 / build_post_covers.ps1 # 底图与封面烘图（PowerShell + System.Drawing，CI 上跑不了）
 │   ├── check_api_doc.py   #   docs/api.md ⇄ server/api.py 端点对拍（带 --self 负向对照）
 │   ├── check_doc_refs.py  #   文档引用 / § 节号 / README 路由表 的漂移扫描
+│   ├── check_naming.py    #   命名规约扫描
+│   ├── check_contrast.mjs #   主题令牌 WCAG 对比度审计
 │   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
 │   ├── data/              #   脚本输入数据（GB2312 一级字表，build_font 用）
 │   └── lib/               #   脚本间共用模块（PNG 编码器，build_seo 与 build_readme_art 共用）
@@ -149,9 +157,9 @@ npm run preview        # 本地预览 dist/
 │   └── assets/readme/     # README 配图（含生成方式与换真截图的步骤）
 └── src/
     ├── assets/fonts/      # 自托管子集字体 + OFL 许可
-    ├── components/        # neo/ 下 StarTrails 星轨装置 · HorizonHero · NeoSiteHeader …；MusicCard.vue（顶栏点开的播放器卡）在上一层
+    ├── components/        # neo/ 下 StarTrails 星轨装置 · HorizonHero · NeoSiteHeader …；上一层是 MusicCard.vue（顶栏点开的播放器卡）与 SettingsCard.vue（主题设置）
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子（records.js 由脚本生成，勿手改）
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
+    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / ridge / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
     └── views/             # 11 个视图平铺，一页一个文件：9 张内容页 + AdminView / LoginView
 ```
