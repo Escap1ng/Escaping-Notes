@@ -225,8 +225,8 @@ function rebuildRidge() {
     return
   }
   // 地景横带的几何取 .hero-plate 自己的盒子：cover + 顶边钉死由 buildRidgeMask 复算，
-  // 这里只交盒子。量盒子而不是按 H 的 46%/54% 算，因为 .hero 是 100svh，手机上与
-  // innerHeight 不一致（canvas 尺寸已经踩过这个差）。
+  // 这里只交盒子。量盒子而不是按 H 的固定比例算——横带高度现在跟着照片走（HorizonHero 的
+  // --band-h），而且 .hero 是 100svh，手机上与 innerHeight 不一致（canvas 尺寸已经踩过这个差）。
   const el = cvs.value.parentElement?.querySelector('.hero-plate')
   if (!el) {
     ridgeMask = null
