@@ -6,9 +6,9 @@
 | 文件 | 怎么来的 | 改动后要不要重跑 |
 | --- | --- | --- |
 | `plate-deep-space.png` | `npm run art:build` 按 `StarTrails.vue` 的常数离线复算稳态底片 | 要 |
-| `plate-paper.png` | 同上，纸面主题（墨压干版，`source-over`） | 要 |
+| `plate-paper.png` | 同上，浅色主题（墨压干版，`source-over`） | 要 |
 | `dark-band.svg` | 手写；数字取自 `neo.css` §1/§2/§3 与 `design.md` §3.3 | 改令牌/改实测值时手改 |
-| `fall-timing.svg` | 手写；时长与缓动取自 `neo.css` §8/§8.5 | 改转场时手改 |
+| `fall-timing.svg` | 手写；时长与缓动取自 `neo.css` §8 | 改转场时手改 |
 
 ## 底片两张（PNG）
 
@@ -23,7 +23,7 @@ ART_DEV_DEEP=1 ART_DEV_PAPER=1 npm run art:build  # 关掉冲印增益，看底�
 ```
 
 **必须知道的一处加工**：底片按星等幂分布压向暗端，原样出图在 README 的缩略尺寸下几乎看不见，
-所以出图时乘了一档显示增益（当前 深空 ×2.8 / 纸面 ×1.6，见脚本末尾的 `冲印增益=` 日志）。
+所以出图时乘了一档显示增益（当前 深色 ×2.8 / 浅色 ×1.6，见脚本末尾的 `冲印增益=` 日志）。
 **站点实际观感比图更暗**，README 的图注里也这么写着。要换倍数就改 `ART_DEV_DEEP` / `ART_DEV_PAPER`
 并重跑，然后同步图注。
 

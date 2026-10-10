@@ -14,7 +14,7 @@ const notice = ref('')
 const noticeErr = ref(false)
 
 // 文章编辑器
-const ed = ref({ slug: '', title: '', date: '', tags: '', summary: '', body: '' })
+const ed = ref({ slug: '', title: '', date: '', tags: '', summary: '', image: '', imagePos: '', body: '' })
 const bodyRef = ref(null)
 const imgInputRef = ref(null)
 const images = ref([])
@@ -41,7 +41,7 @@ function flash(s, err = false) {
 function fillForms() {
   updatesForm.value = content.updates.map((u) => `${u.date} | ${u.text}`).join('\n')
   projectsForm.value = content.projects.map((p) => `${p.name}|${p.desc}|${p.year}|${p.url}`).join('\n')
-  gearForm.value = content.gear.join('\n')
+  gearForm.value = content.gear.map((g) => (g.note ? `${g.name}|${g.note}` : g.name)).join('\n')
   playlistForm.value = content.playlist.map((p) => `${p.title}|${p.artist}|${p.file}`).join('\n')
 }
 
@@ -84,7 +84,16 @@ async function delUser(u) {
 
 // ---------- 文章 ----------
 function newPost() {
-  ed.value = { slug: '', title: '', date: new Date().toISOString().slice(0, 10), tags: '', summary: '', body: '' }
+  ed.value = {
+    slug: '',
+    title: '',
+    date: new Date().toISOString().slice(0, 10),
+    tags: '',
+    summary: '',
+    image: '',
+    imagePos: '',
+    body: '',
+  }
 }
 async function editPost(p) {
   const r = await api(`/api/posts/${p.slug}`)
@@ -95,6 +104,8 @@ async function editPost(p) {
       date: r.meta.date,
       tags: (r.meta.tags || []).join(', '),
       summary: r.meta.summary,
+      image: r.meta.image || '',
+      imagePos: r.meta.imagePos || '',
       body: r.body,
     }
   }
@@ -105,6 +116,8 @@ async function savePost() {
     date: ed.value.date,
     tags: ed.value.tags.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
     summary: ed.value.summary,
+    image: ed.value.image.trim(),
+    imagePos: ed.value.imagePos.trim(),
     content: ed.value.body,
   }
   const r = ed.value.slug
@@ -177,6 +190,11 @@ function insertImage(x) {
   flash('已插入正文光标处')
 }
 
+function setCover(x) {
+  ed.value.image = x.url
+  flash('已设为封面，保存后生效')
+}
+
 async function loadImages() {
   const list = (await api('/api/uploads')) || []
   images.value = list.filter((x) => x.kind === 'image')
@@ -213,7 +231,11 @@ async function saveProjects() {
   await saveContent('projects', arr, '项目已保存')
 }
 async function saveGear() {
-  await saveContent('gear', lines(gearForm.value), '装备已保存')
+  const arr = lines(gearForm.value).map((l) => {
+    const [name, note] = l.split('|')
+    return { name: name || '', note: note || '' }
+  })
+  await saveContent('gear', arr, '装备已保存')
 }
 async function savePlaylist() {
   const arr = lines(playlistForm.value).map((l) => {
@@ -298,6 +320,10 @@ async function onFile(e) {
           <input v-model="ed.tags" class="field" placeholder="标签, 逗号分隔" />
         </div>
         <input v-model="ed.summary" class="field" placeholder="摘要（列表与分享卡用）" />
+        <div class="ed-row">
+          <input v-model="ed.image" class="field mono" placeholder="封面 /uploads/… 或 https://…" />
+          <input v-model="ed.imagePos" class="field mono" placeholder="焦点 object-position，如 50% 30%" />
+        </div>
         <textarea ref="bodyRef" v-model="ed.body" class="field mono" rows="14" placeholder="Markdown 正文 *" required></textarea>
         <div class="ed-row">
           <input ref="imgInputRef" type="file" accept="image/*" hidden @change="onImgFile" />
@@ -313,6 +339,7 @@ async function onFile(e) {
           <span class="readout img-name">{{ x.name }}</span>
           <span class="acts">
             <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" @click="insertImage(x)">插入</button>
+            <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" @click="setCover(x)">设为封面</button>
             <button class="neo-btn neo-btn-sm neo-btn-danger" type="button" @click="delImage(x)">删除</button>
           </span>
         </li>
@@ -339,7 +366,7 @@ async function onFile(e) {
         </div>
       </div>
       <div class="set-block">
-        <h3 class="readout">// GEAR · 每行一项</h3>
+        <h3 class="readout">// GEAR · 每行 name|说明</h3>
         <textarea v-model="gearForm" class="field mono" rows="5"></textarea>
         <button class="neo-btn neo-btn-primary" @click="saveGear">保存装备</button>
       </div>

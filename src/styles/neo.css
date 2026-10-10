@@ -117,14 +117,15 @@ html[data-skin='neo']:not([data-theme='out']) {
   --tape: rgba(252, 211, 77, 0.22);
   --void-a: rgba(2, 2, 4, 0.34); /* 运动模糊覆盖色 */
   --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬色：当前零消费方。首屏那条压在照片带上的白纱已删——它把山脚抬到和天空同亮度，是"上下割裂"的一半。留着是因为跟随底色的语义色必须两套主题各自定义，只删一套会让使用处整条失效；要退役就连下面那行一起删。 */
-  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 暗色不轮播：五档指向同一张压暗底，避免夜里换景跳变 */
+  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 深色不轮播：五档指向同一张压暗底，避免夜里换景跳变 */
   --plate-img-2: url('/plates/plate-bg-deep.jpg');
   --plate-img-3: url('/plates/plate-bg-deep.jpg');
   --plate-img-4: url('/plates/plate-bg-deep.jpg');
   --plate-img-5: url('/plates/plate-bg-deep.jpg');
   --hero-img: url('/plates/plate-bg-deep.jpg'); /* 首屏的地景底：暗色下用同一张压暗版，星轨以 lighter 叠在它上面 */
 
-  /* 阅读玻璃底板（文章页）：页面底色按比例半透 + 背景模糊，隔离星轨、提升前景对比（60–80%） */
+  /* 阅读玻璃底板（文章页）：页面底色按比例半透 + 背景模糊，隔离星轨、提升前景对比。
+     深浅两档各自定：深色 55% / 78%，浅色 60% / 78%（浅色背后是亮底照片，要多透一档才压得住）。 */
   --panel-bg: color-mix(in srgb, var(--ink-0) 55%, transparent);
   --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
@@ -163,7 +164,11 @@ html[data-skin='neo'][data-theme='out'] {
   /* 映像柜的拍立得：浅色下一张真白框（相纸就是白的，压成灰反而像没加载完） */
   --polar: #ffffff;
   --tape: rgba(253, 230, 138, 0.55);
-  --void-a: rgba(245, 242, 234, 0.34);
+  /* 运动模糊覆盖色。这枚是浅色主题里最后一个字面量米黄，跟着底色收冷。
+     它**必须留字面量**而不是 color-mix：StarTrails.vue 用 getPropertyValue 读原始串直接当
+     canvas 的 fillStyle，canvas 不解析 color-mix()，写进去会整条静默失效（画错但不报错）。
+     (242,245,249) = --ink-0 的字节值，改底色时这两处要一起动。 */
+  --void-a: rgba(242, 245, 249, 0.34);
   --scrim: rgba(242, 245, 249, 0.78); /* 文字底衬色：当前零消费方，理由见深色那一条——要退役就两处一起删 */
   /* 折线以下轮播的五张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
      里的那张 jpg），不是第几张：paper2 空着——它搬去当第三篇《怎么写、怎么发》的封面了。
@@ -788,7 +793,7 @@ html[data-skin='neo'] .neo-glass {
   padding: var(--space-4) var(--space-3) var(--space-3);
   border-radius: var(--r-md);
   border: 1px solid color-mix(in srgb, var(--text-0) 12%, transparent);
-  background: var(--panel-bg, rgba(2, 2, 4, 0.64));
+  background: var(--panel-bg);
   -webkit-backdrop-filter: blur(22px) saturate(1.35);
   backdrop-filter: blur(22px) saturate(1.35);
   /* 抬升阴影走 --shadow：浅色主题下若拿 --ink-2 当阴影，晕出的是一圈浅淡光斑而非阴影 */
@@ -799,7 +804,7 @@ html[data-skin='neo'] .neo-glass {
 /* 无 backdrop-filter 的旧浏览器：抬高底板不透明度（≤80%），仍能隔离背景与保证对比 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html[data-skin='neo'] .neo-glass {
-    background: var(--panel-frost-bg, var(--panel-bg, rgba(2, 2, 4, 0.8)));
+    background: var(--panel-frost-bg);
   }
 }
 
@@ -860,27 +865,6 @@ html[data-skin='neo'] .neo-glass {
 /* 封面贴边的卡：图占第一格、自己顶到卡边，留白由卡内的信息体给 */
 .neo-card.neo-flush {
   padding: 0;
-}
-
-/* 占位卡：同一张卡面，但它不是链接。基元的 hover（边框冷移 + 提亮底）会骗人去点，
-   所以把这两态原样按回常态值。首页精选与文章列表共用（各写一份的话，
-   将来只会有一处记得按回去）。 */
-.neo-card.neo-pending {
-  color: var(--text-1);
-}
-
-.neo-card.neo-pending:hover,
-.neo-card.neo-pending:focus-visible {
-  border-color: var(--card-brd);
-  background: var(--card-bg);
-}
-
-/* 占位卡里那一枚读数：字号走仪器最小档，竖着居中——父格是 flex 列，
-   一枚子元素上下 auto 外边距即居中，不需要各页再写一条 justify-content。 */
-.neo-pending-label {
-  margin: auto 0;
-  font-size: var(--fs-3xs);
-  letter-spacing: 0.16em;
 }
 
 /* 卡片栅格：宽屏两列，窄屏单列。列数只在这里定，页面不再各写一遍 */

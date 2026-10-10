@@ -1,22 +1,24 @@
 <script setup>
-// 新版脉冲：等宽时间戳 + 文本双列，脉冲点冷/热交替
+// 新版脉冲：卡片栅格（卡面走共用基元 .neo-card），脉冲点冷/热交替
 import { content } from '../lib/content.js'
-import { N } from '../config/narrative.js'
+import { N, navLabel } from '../config/narrative.js'
 </script>
 
 <template>
   <section class="neo-shell">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.updates }}</span>
-
     <p class="neo-eyebrow">{{ N.sections.updates }}</p>
-    <h2 class="neo-h2">动态</h2>
+    <h2 class="neo-h2">{{ navLabel('/updates') }}</h2>
     <p class="neo-lede">{{ N.hints.updates }}</p>
 
-    <ol class="pulses">
-      <li v-for="(u, i) in content.updates" :key="u.date + u.text" class="pulse">
-        <span class="dot" :class="i % 2 ? 'hot' : 'cold'" aria-hidden="true"></span>
-        <span class="when neo-mono">{{ u.date }}</span>
-        <p class="what">{{ u.text }}</p>
+    <ol class="neo-cards">
+      <li v-for="(u, i) in content.updates" :key="u.date + u.text">
+        <div class="neo-card pulse">
+          <span class="head">
+            <span class="dot" :class="i % 2 ? 'hot' : 'cold'" aria-hidden="true"></span>
+            <span class="when neo-mono">{{ u.date }}</span>
+          </span>
+          <p class="what">{{ u.text }}</p>
+        </div>
       </li>
       <li v-if="!content.updates.length" class="empty neo-mono">{{ N.empty.updates }}</li>
     </ol>
@@ -28,52 +30,20 @@ import { N } from '../config/narrative.js'
   padding-top: 120px;
 }
 
-.glyph {
-  top: 30px;
-  right: -7vw;
-}
-
-.pulses {
-  position: relative;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-/* 时间线导轨：贯通各脉冲点的垂直线 */
-.pulses::before {
-  content: '';
-  position: absolute;
-  left: 2.5px;
-  top: 14px;
-  bottom: 14px;
-  width: 1px;
-  background: color-mix(in srgb, var(--line) 70%, transparent);
-}
-
+/* 动态是一句话，撑到基元那个 210px 只会露空——卡面共用，高度各自定 */
 .pulse {
-  --lh: 24px; /* 日期行盒：圆点按此行盒垂直居中 */
-  position: relative;
-  display: grid;
-  grid-template-columns: 12ch 1fr;
-  gap: var(--space-2);
-  padding: var(--space-2) 0 var(--space-2) var(--space-2);
-  border-top: 1px solid var(--line);
-  transition: background-color 0.25s ease;
+  min-height: 0;
+  gap: var(--space-1);
 }
 
-.pulse:hover {
-  background: color-mix(in srgb, var(--cold) 5%, transparent);
-}
-
-.pulse:last-child {
-  border-bottom: 1px solid var(--line);
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .dot {
-  position: absolute;
-  left: 0;
-  top: calc(var(--space-2) + var(--lh) / 2 - 5px); /* 行盒中心 − 半径 − 2px 光学补偿（数字无降部） */
+  flex: none;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -95,7 +65,7 @@ import { N } from '../config/narrative.js'
 .when {
   color: var(--text-1);
   font-size: var(--fs-sm);
-  line-height: var(--lh);
+  line-height: var(--lh-tight);
   transition: color 0.24s;
 }
 
@@ -105,7 +75,6 @@ import { N } from '../config/narrative.js'
 
 .what {
   margin: 0;
-  max-width: var(--measure);
   font-family: var(--font-serif);
   font-size: var(--fs-md);
   line-height: var(--lh-relaxed);
@@ -117,14 +86,17 @@ import { N } from '../config/narrative.js'
 }
 
 .empty {
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--line);
+  grid-column: 1 / -1;
+  padding: var(--space-3);
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-md);
+  color: var(--text-1);
 }
 
-@media (max-width: 720px) {
-  .pulse {
-    grid-template-columns: 1fr;
-    gap: var(--space-0);
+@media (prefers-reduced-motion: reduce) {
+  .pulse:hover .dot,
+  .pulse:hover .what {
+    transform: none;
   }
 }
 </style>

@@ -1,10 +1,11 @@
 <script setup>
 // 新版共振：歌单快照（运行时零外部请求）+ 谱线扫光曲目行
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { records, loadRecords, syncRecords } from '../lib/records.js'
+import { music, tracks, playIndex, toggleMusic } from '../lib/music.js'
 import { onLens } from '../lib/lens.js'
 import { isOwner } from '../lib/auth.js'
-import { N } from '../config/narrative.js'
+import { N, navLabel } from '../config/narrative.js'
 
 const syncing = ref(false)
 const syncMsg = ref('')
@@ -24,56 +25,95 @@ async function onSync() {
   syncing.value = false
 }
 onMounted(loadRecords)
+
+// 再点当前曲 = 暂停/继续，点别的行 = 换曲；与顶栏那张卡走同一条通道
+function onSong(i) {
+  if (isCur(i)) toggleMusic()
+  else playIndex(i)
+}
+// 没按下过之前没有"当前曲"：否则第一行会一直红着，看着像已经在播
+function isCur(i) {
+  return music.started && i === music.idx
+}
+
+/* QQ 曲目表默认折到前 PREVIEW 首：这一张是档案不是播放列表，
+   几十首时它会把整页拖长，压住上面真正能播的那一张 */
+const PREVIEW = 8
+const listOpen = ref(false)
+const foldable = computed(() => records.songs.length > PREVIEW)
+const shownSongs = computed(() =>
+  listOpen.value || !foldable.value ? records.songs : records.songs.slice(0, PREVIEW)
+)
 </script>
 
 <template>
   <section class="neo-shell">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.records }}</span>
-
     <p class="neo-eyebrow">{{ N.sections.records }}</p>
-    <h2 class="neo-h2">歌单</h2>
+    <h2 class="neo-h2">{{ navLabel('/records') }}</h2>
     <p class="neo-lede">{{ N.hints.records }}</p>
 
-    <div class="head">
-      <!-- 封面是外链：显式声明宽高，浏览器在图片到达前就留好位置，避免加载时撑动布局 -->
-      <img
-        v-if="records.cover"
-        class="cover"
-        :src="records.cover"
-        :alt="records.name"
-        width="132"
-        height="132"
-        loading="lazy"
-        decoding="async"
-      />
-      <div class="info">
-        <h3 class="name">{{ records.name }}</h3>
-        <p v-if="records.desc" class="desc">{{ records.desc }}</p>
-        <p class="neo-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
-        <div class="info-actions">
+    <!-- 在线听歌：站内自托管的 mp3，整页唯一能播的那一张，所以不折。
+         进度与音量收在顶栏「音乐」点开的卡里，两处共用 lib/music.js 那台引擎，当前曲同时亮 -->
+    <div v-if="tracks.length" class="neo-card local">
+      <p class="neo-eyebrow">// LISTEN · 在线听歌</p>
+      <ol class="songs">
+        <li v-for="(t, i) in tracks" :key="t.file">
+          <button
+            class="song"
+            :class="{ on: isCur(i) }"
+            type="button"
+            :aria-current="isCur(i) ? 'true' : undefined"
+            @click="onSong(i)"
+          >
+            <span class="s-no neo-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="s-st neo-ico" aria-hidden="true">{{ isCur(i) && music.playing ? '❚' : '▶' }}</span>
+            <span class="s-tt">{{ t.title }}</span>
+            <span class="s-ar neo-mono">{{ t.artist }}</span>
+          </button>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 曲目是长列表：整张表进一张卡，而不是 200 首歌各占一张 210px 的卡 -->
+    <div class="neo-card tracklist">
+      <div class="fold-head">
+        <div class="fh-label">
+          <p class="neo-eyebrow">// SOURCE · QQ 音乐</p>
+          <p class="neo-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
+        </div>
+        <div class="fh-acts">
           <template v-if="isOwner()">
-            <button class="neo-btn neo-btn-ghost open" type="button" :disabled="syncing" @click="onSync">
+            <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" :disabled="syncing" @click="onSync">
               {{ syncing ? '同步中…' : '同步歌单' }}
             </button>
           </template>
-          <a class="neo-btn neo-btn-ghost open" :href="records.url" target="_blank" rel="noopener noreferrer">
+          <a class="neo-btn neo-btn-sm neo-btn-ghost" :href="records.url" target="_blank" rel="noopener noreferrer">
             在 QQ 音乐打开<span aria-hidden="true">↗</span>
           </a>
+          <button
+            v-if="foldable"
+            class="neo-btn neo-btn-sm neo-btn-quiet"
+            type="button"
+            :aria-expanded="listOpen"
+            aria-controls="qq-tracks"
+            @click="listOpen = !listOpen"
+          >
+            {{ listOpen ? '收起 ↑' : `展开其余 ${records.songs.length - PREVIEW} 首 ↓` }}
+          </button>
           <span v-if="syncMsg" :class="syncErr ? 'neo-note-err' : 'neo-note-ok'">{{ syncMsg }}</span>
         </div>
       </div>
+      <ol id="qq-tracks" class="tracks">
+        <li v-for="(s, i) in shownSongs" :key="s.url">
+          <a class="track neo-lens" :href="s.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
+            <span class="bar" aria-hidden="true"></span>
+            <span class="no neo-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="tt">{{ s.title }}</span>
+            <span class="ar neo-mono">{{ s.artist }}</span>
+          </a>
+        </li>
+      </ol>
     </div>
-
-    <ol class="tracks">
-      <li v-for="(s, i) in records.songs" :key="s.url">
-        <a class="track neo-lens" :href="s.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
-          <span class="bar" aria-hidden="true"></span>
-          <span class="no neo-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-          <span class="tt">{{ s.title }}</span>
-          <span class="ar neo-mono">{{ s.artist }}</span>
-        </a>
-      </li>
-    </ol>
   </section>
 </template>
 
@@ -82,75 +122,112 @@ onMounted(loadRecords)
   padding-top: 120px;
 }
 
-.glyph {
-  top: 40px;
-  left: -8vw;
-}
-
-.head {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--line);
-}
-
-.cover {
-  width: 132px;
-  height: 132px;
-  aspect-ratio: 1; /* 与 HTML 的 width/height 一致：任何取值下都保持正方形 */
-  flex-shrink: 0;
-  object-fit: cover;
-  border: 1px solid var(--line);
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.head:hover .cover {
-  transform: rotate(2deg) scale(1.02);
-}
-
-.info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+/* 曲目表整张进一张卡：卡内只留列表自己的分隔线。
+   表头一行负责说清"这是哪份表、多少首、什么时候同步的"，
+   右边三个动作（同步 / 去 QQ / 折叠）全部是对这张表的操作，所以不放头卡 */
+.tracklist {
+  min-height: 0;
   gap: var(--space-1);
-  min-width: 0;
+  padding: var(--card-pad) var(--card-pad) var(--space-1);
 }
 
-.name {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3.4vw, 34px);
-  font-weight: var(--fw-bold);
-  letter-spacing: -0.015em;
+.fold-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
-.desc {
-  margin: 0;
-  color: var(--text-1);
-  font-size: var(--fs-sm);
+.fh-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.fh-acts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
 }
 
 .meta {
   margin: 0;
 }
 
-.open {
-  margin-top: var(--space-0);
+/* ---- 在线听歌卡（满宽，页内唯一能播的那一张）----
+   行语法与下面那张 QQ 表同构（发丝分隔 + 序号 + 曲名 + 艺术家），两列并排；
+   差别只在它是按钮、播的是站内文件，且艺术家紧跟曲名不顶到右边缘。
+   左右内边距与 .tracklist 取同一个值，两张表的发丝线与序号列因此对得齐 */
+.local {
+  min-height: 0;
+  padding: var(--card-pad) var(--card-pad) var(--space-1);
+  margin-bottom: var(--space-2);
 }
 
-/* 头部操作行：同步（左）· 在 QQ 打开（右），同一套按钮语言 */
-.info-actions {
+.songs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-0) var(--space-3);
+}
+
+.song {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  margin-top: var(--space-0);
+  align-items: baseline;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-1) var(--space-0);
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
 }
 
-.info-actions .open {
-  margin-top: 0;
+.song:hover {
+  background: color-mix(in srgb, var(--cold) 5%, transparent);
+}
+
+.s-no,
+.s-st {
+  flex-shrink: 0;
+  font-size: var(--fs-3xs);
+  color: var(--text-1);
+}
+
+.s-tt {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.s-ar {
+  flex-shrink: 0;
+  font-size: var(--fs-3xs);
+}
+
+.s-ar::before {
+  content: '·';
+  margin-right: var(--space-1);
+  color: var(--text-1);
+}
+
+/* 当前曲红移——与顶栏按钮播放中（.music-btn.on）同一个记号 */
+.song.on .s-tt,
+.song.on .s-st {
+  color: var(--hot);
 }
 
 .tracks {
@@ -227,27 +304,13 @@ onMounted(loadRecords)
 }
 
 @media (max-width: 900px) {
-  .tracks {
+  .tracks,
+  .songs {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 720px) {
-  .head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-  .cover {
-    width: 104px;
-    height: 104px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .head:hover .cover {
-    transform: none;
-  }
   .track:hover .tt,
   .track:hover .no {
     transform: none;

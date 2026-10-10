@@ -101,7 +101,6 @@ onUnmounted(() => {
 
 <template>
   <section class="neo-shell post">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.post }}</span>
     <div class="progress" aria-hidden="true"></div>
 
     <div v-if="missing" class="lost">
@@ -119,7 +118,9 @@ onUnmounted(() => {
             {{ post.words }} 字 · {{ post.minutes }} 分钟 ·
             <i v-if="viewsLocal" class="neo-tag neo-tag-quiet">本地读数</i>
             VIEWS {{ views ?? '--' }}
-            <button class="neo-btn neo-btn-sm neo-btn-quiet" type="button" @click="copyLink">{{ copied ? '已复制 ✓' : '复制链接' }}</button>
+            <button class="neo-btn neo-btn-sm neo-btn-quiet" type="button" @click="copyLink">
+              {{ copied ? N.reader.copied : N.reader.copy }}
+            </button>
           </p>
           <p v-if="post.tags && post.tags.length" class="tags">
             <span v-for="t in post.tags" :key="t" class="neo-tag">{{ t }}</span>
@@ -128,9 +129,7 @@ onUnmounted(() => {
 
         <div class="neo-prose" v-html="htmlBody" @click="onProseClick"></div>
 
-        <p class="neo-note dilation">{{ N.dilation }}</p>
-
-        <nav class="ends" aria-label="上下篇与出口">
+        <nav class="ends" :aria-label="N.reader.endsAria">
           <RouterLink v-if="neighbors.prev" :to="`/blog/${neighbors.prev.slug}`" class="end">
             <span class="neo-spike" aria-hidden="true"></span>
             <span class="neo-mono">{{ N.postPrev }}</span>
@@ -145,7 +144,7 @@ onUnmounted(() => {
         </nav>
 
         <div class="exit">
-          <RouterLink class="neo-btn neo-btn-primary" to="/blog">{{ N.postEnd.escape }}</RouterLink>
+          <RouterLink class="neo-btn neo-btn-primary" to="/blog">{{ N.postEnd.back }}</RouterLink>
         </div>
       </article>
     </template>
@@ -156,29 +155,24 @@ onUnmounted(() => {
       class="lightbox"
       role="dialog"
       aria-modal="true"
-      aria-label="图片预览"
+      :aria-label="N.lightbox.aria"
       tabindex="-1"
       @click="lightbox = ''"
     >
-      <img :src="lightbox" alt="文章插图，点按关闭预览" />
+      <img :src="lightbox" :alt="N.reader.imgAlt" />
     </div>
   </section>
 </template>
 
 <style scoped>
 .post {
+  /* 骨架默认 1120px，会把 §6c 那块 1280px 的阅读底板夹回 1056px。
+     只有文章页需要比骨架更宽：1344 = 底板 1280 + .neo-shell 左右各 32 的内边距。 */
+  max-width: 1344px;
   padding-top: var(--page-top);
 }
 
 /* .neo-glass（阅读底板）已上移到 neo.css §6c：它是 §5.4 列出的全站基元，不该锁在本页 scoped 里 */
-
-.glyph {
-  top: var(--space-4);
-  left: -8vw;
-  /* 「坠」字面意义地随阅读下坠，比全站基线（4vh）更深。
-     写在 translate 上：它只覆写"下沉"，不碰定位用的 transform */
-  translate: 0 calc(var(--shift, 0) * 14vh);
-}
 
 /* 顶部进度线（冷 → 热）：--shift 直接喂给 scaleX，零 JS、零滚动监听。
    必须是 transform 而非 width：--shift 每个滚动帧都在变，改宽度等于每帧一次布局。
@@ -228,11 +222,6 @@ onUnmounted(() => {
   gap: var(--space-1);
   flex-wrap: wrap;
   margin-top: var(--space-1);
-}
-
-.dilation {
-  max-width: var(--measure);
-  margin: var(--space-3) auto 0;
 }
 
 .ends {

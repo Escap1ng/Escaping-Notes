@@ -1,7 +1,5 @@
 <template>
   <section class="neo-shell nf">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.nf }}</span>
-
     <div class="plate" aria-hidden="true">
       <span class="star"></span>
       <span class="beam cross"></span>
@@ -31,12 +29,6 @@ import { N } from '../config/narrative.js'
   text-align: center;
   min-height: 78vh;
   padding-top: 120px;
-}
-
-.glyph {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -58%);
 }
 
 /* 长曝光取景框：环带星轨弧残卷 + 一颗不在编的暗星（锥形衍射芒） */

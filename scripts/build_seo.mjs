@@ -77,7 +77,7 @@ function rfc822(date) {
 const DESC = '日常是引力，把我拉回井底；笔记是逃逸，送我抵达井外。'
 
 /* ---------------- sitemap ---------------- */
-const STATIC_ROUTES = ['/', '/blog', '/updates', '/records', '/projects', '/about']
+const STATIC_ROUTES = ['/', '/blog', '/updates', '/records', '/gallery', '/projects', '/about']
 
 function sitemapXml(base, posts) {
   const urls = [

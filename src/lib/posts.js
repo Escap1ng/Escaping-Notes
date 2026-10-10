@@ -2,6 +2,13 @@
 import { api } from './api.js'
 import { parseFrontmatter, stats } from './frontmatter.js'
 
+// 封面焦点（frontmatter 的 imagePos）：它会被写进 style 属性，所以只放行取值字符，
+// 其余一律回落 center。首页精选与文章列表共用这一份——两处各写一条正则，
+// 将来只会有一条被修。
+const POS_OK = /^[-\d.%a-z ]{1,24}$/i
+export const coverPos = (p) =>
+  typeof p.imagePos === 'string' && POS_OK.test(p.imagePos) ? p.imagePos : 'center'
+
 const bundled = import.meta.glob('/content/posts/*.md', { query: '?raw', import: 'default' })
 
 async function bundledPosts() {

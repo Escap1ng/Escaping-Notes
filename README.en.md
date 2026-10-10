@@ -2,7 +2,7 @@
 
 # Escaping Notes
 
-**DOPPLER DESCENT · A Long-Exposure Notebook under Star Trails**
+**STAR TRAILS · A Long-Exposure Notebook**
 
 > Ink cast into the abyss, the stars startle and never return; light hoarded in these pages, the tide recedes yet the echo remains.
 
@@ -24,25 +24,24 @@
 
 ## About
 
-Escaping Notes is a personal blog and journal that treats writing as a long exposure of the night sky — the camera set up on the landing screen keeps the exposure for me: posts, updates, records and projects all land on the same plate. All four devices below grow out of that one camera —
+Escaping Notes is a personal blog and journal that treats writing as a long exposure of the night sky — the camera set up on the landing screen keeps the exposure for me: posts, updates, music, images and projects all land on the same plate. All three devices below grow out of that one camera —
 
-- **Posts as variable stars** — every article is a pulsing fixed star; hover unfolds a conical diffraction cross, click to fall into the prose
-- **Scroll as time** — the deeper you dive, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
+- **Scroll as time** — the further down you go, the longer the exposure and the faster the sky turns; header to footer is one full night shoot
 - **Pointer as time dilation** — star trails inside the cursor radius locally accelerate and curl
-- **Easter eggs as narrative** — meteors occasionally cross the plate; click a variable star to fall into an article
+- **Easter eggs as narrative** — meteors occasionally cross the plate, their bright heads flaring conical diffraction crosses
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="Deep Space plate: hundreds of concentric star-trail arcs accumulating around an offset celestial pole" title="Deep Space"></td>
-    <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="The same plate on the Paper theme: ink trails laid over a dry plate, vermilion accents" title="Paper"></td>
+    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="Dark theme plate: hundreds of concentric star-trail arcs accumulating around an offset celestial pole" title="Dark"></td>
+    <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="The same plate on the light theme: slate/graphite trails laid over a dry plate, vermilion only on the brightest few" title="Light"></td>
   </tr>
 </table>
 
-> Left Deep Space / right Paper: both are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain, so **the site itself is darker**.
+> Left dark / right light: both are **plates recomputed from the site's own constants** (`npm run art:build`), not screenshots; they were lifted by a ×2.8 / ×1.6 developing gain, so **the site itself is darker**.
 
 ## Features
 
-- **Dual themes** — Deep Space (cold white / warm white / amber trails) and Paper (astronomical dry plate: ink trails + vermilion accents), one click to switch, preference remembered; first visits follow `prefers-color-scheme`
+- **Dual themes** — dark (cold white / warm white / amber trails) and light (astronomical dry plate: slate/graphite trails + vermilion accents); trail colour temperature follows magnitude (dim stars cool, a few bright stars warm). One click to switch, preference remembered; the default is light and the first frame deliberately ignores `prefers-color-scheme`, because the landing screen is a bright photograph
 - **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (spacing / type-size / line-height / font-weight), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — star trails are drawn frame by frame with an offscreen accumulation buffer; no third-party UI kits, chart libraries or font CDNs (the only runtime dependencies are Vue and Vue Router)
 - **Graceful degradation** — when the API is unreachable (or times out) the site falls back to bundled seed data: still a complete offline plate
@@ -50,7 +49,7 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 - **Performance** — the secondary-page backdrop is frame-capped at 30fps, resize listeners are debounced by 150ms, `--shift` is cached instead of reading `scrollHeight` per frame, persistent surfaces avoid `backdrop-filter`, and the lens glow moves by transform
 - **Reading readability** — the sky under body text is dimmed by one site-wide adaptive "dark band" (strength set per theme) instead of every card wearing its own scrim; the article page adds a frosted-glass plate for long reads, and foreground contrast meets WCAG AA
 - **Feedback loop** — skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and search/tag filters stored in the URL (shareable, survives reload)
-- **Full-featured admin** — edit posts, updates, records and site info from `/admin`; the Records page can be refreshed from a public QQ Music playlist in one click; two role tiers (owner / admin); RSS included
+- **Full-featured admin** — edit posts, updates, playlist and site info from `/admin`; the Music page can be refreshed from a public QQ Music playlist in one click; two role tiers (owner / admin); RSS included
 
 ## Two load-bearing designs, in figures
 
@@ -60,11 +59,11 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 
 The sky under body text on secondary pages is dimmed by **one** `mask-image` gradient on `StarTrails.vue`: the central `--sky-band` (aligned to the 1120px content column) drops to `--sky-k`, and each side feathers back to full strength over `--sky-feather`. Before this, only the article page had a legibility plate across 11 secondary pages, and the same text colour measured anywhere from 15.7:1 to 1.7:1 on its actual composited ground — that is the numeric shape of "hard to read, and it feels fragmented". The coefficient is solved against the **peak**, not the median, because the trails move and a given text pixel's ground brightens and dims over time. Derivation and trade-offs: [docs/design.md §3.3](docs/design.md#33-暗带契约天空与文字的位置协议) (Chinese).
 
-### One navigation = one shutter cycle
+### The `fall` afterimage — two pages on screen for 260ms
 
-<img src="docs/assets/readme/fall-timing.svg" alt="Timing diagram of the fall transition and the shutter layer: enter and leave overlap for 260ms, both shutter blades run 0.52s with the same duration and curve" width="920">
+<img src="docs/assets/readme/fall-timing.svg" alt="Timing diagram of the fall transition: the 0.44s enter and the 0.26s leave run in parallel and overlap for 260ms" width="920">
 
-Once the plate persists across routes, a page change is semantically only a shutter opening and closing. The `fall` enter and leave overlap by 260ms, and during those 260ms both cameras are looking at **the same plate, still being exposed** — `src/lib/sky.js` locks deposition only (`claimPlate`), never redraw, otherwise the camera handing over the plate freezes mid-frame, which is exactly where the "stutter on switch" came from. The two shutter blades must share duration and curve: `animationend` bubbles twice and the first one removes the layer.
+Now that the plate persists across routes, `fall` is the only transition left: the enter runs 0.44s and the leave 0.26s in parallel, and for the **260ms** they overlap both pages are on screen, both blurred — that overlap is the afterimage. During those 260ms both cameras are looking at **the same plate, still being exposed**: `src/lib/sky.js` locks deposition only (`claimPlate`), never redraw, otherwise the camera handing over the plate freezes mid-frame, which is exactly where the "stutter on switch" came from.
 
 ## Tech Stack
 
@@ -108,6 +107,7 @@ npm run preview        # preview dist/ locally
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml`, `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, generated with Node only, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read from the source, so re-run after touching star-trail parameters) |
+| `npm run cover:build` | Re-bake the article covers in `public/posts/*.jpg` (originals live in `plates-src/`, which is not committed; re-run after changing them, and commit the output) |
 | `npm run font:build` | Re-subset the display font (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
 | `npm run check:api` | Diffs the endpoint table in `docs/api.md` against the routes in `server/api.py`, both ways; non-zero exit on drift |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the README route table matches `src/router` |
@@ -118,15 +118,16 @@ npm run preview        # preview dist/ locally
 | --- | --- | --- |
 | `/` | Home · long-exposure star trails | A camera shooting the night |
 | `/blog` | Articles | Cabinet of plates |
-| `/blog/:slug` | Article | Falling into a variable star |
+| `/blog/:slug` | Article | Examining one plate |
 | `/updates` | Activity | Pulse log |
-| `/records` | Records | String table of tracks |
-| `/projects` | Projects | Payload bay |
+| `/records` | Music | String table of tracks |
+| `/gallery` | Gallery | Every plate the site has used, pinned to one wall |
+| `/projects` | Projects | Things still turning |
 | `/about` | About | Writing "me" beyond the horizon |
 | `/login` | Log in | utility page, no metaphor |
 | `/admin` | Console | Backyard of the observatory |
 
-> Any unmatched route renders the 404 page, titled 此星不在星图 ("this star is not on the chart") — site copy is Chinese-only.
+> Any unmatched route renders the 404 page, titled 这里没有页面 ("there is no page here") — site copy is Chinese-only.
 
 ## Project Structure
 
@@ -135,7 +136,7 @@ npm run preview        # preview dist/ locally
 ├── server/api.py          # Backend: content / auth / RSS / OG injection / record sync
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── public/                # Static assets: favicon, robots.txt, og.png
-├── scripts/               # Build-time and content-refresh scripts (verb families, see docs/design.md §9.7)
+├── scripts/               # Build-time and content-refresh scripts (verb families)
 │   ├── build_font.mjs     #   display-font subsetting (Node; needs the `subset-font` devDep)
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only)
 │   ├── build_readme_art.mjs # the two plates above: recomputed from StarTrails' constants
@@ -148,11 +149,11 @@ npm run preview        # preview dist/ locally
 │   └── assets/readme/     # README figures (how they are made, and how to swap in real screenshots)
 └── src/
     ├── assets/fonts/      # Self-hosted subset font + OFL licence
-    ├── components/        # under neo/: StarTrails device · HorizonHero · NeoSiteHeader …; MusicPlayer.vue sits one level up
+    ├── components/        # under neo/: StarTrails device · HorizonHero · NeoSiteHeader …; MusicCard.vue (the player card the header opens) sits one level up
     ├── config/            # narrative.js copy layer · site.js site info · content seeds (records.js is generated — don't hand-edit)
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / music / records / lens / shift / sky / debounce / focus
     ├── styles/            # tokens.css token baseline · neo.css the site skin
-    └── views/             # 10 views, one file each, flat: 8 content pages + AdminView / LoginView
+    └── views/             # 11 views, one file each, flat: 9 content pages + AdminView / LoginView
 ```
 
 ## Deployment

@@ -68,15 +68,15 @@
   --measure: 68ch;
 }
 
-/* 井外主题：逃逸完成后的纸质档案（头部 LOC 开关切换，localStorage 记忆）
+/* 井外主题：逃逸完成后的冷灰蓝档案（头部 LOC 开关切换，localStorage 记忆）
    改井外配色 → 只改这个块，见 docs/manual.md §3.3 */
 :root[data-theme='out'] {
-  --ink-0: #f5f2ea;
-  --ink-1: #ede8dc;
-  --ink-2: #e3dccb;
-  --line: rgba(30, 34, 42, 0.28);
-  --text-0: #1c212b;
-  --text-1: #596273;
+  --ink-0: #f2f5f9;
+  --ink-1: #e7ecf3;
+  --ink-2: #d9e1eb;
+  --line: rgba(14, 20, 29, 0.26);
+  --text-0: #0e141d;
+  --text-1: #55606f;
   --signal: #b45309;
   --signal-dim: rgba(180, 83, 9, 0.4);
 }

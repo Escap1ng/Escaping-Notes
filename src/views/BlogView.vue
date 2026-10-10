@@ -1,10 +1,10 @@
 <script setup>
-// 归档页：大框体卡片列表，窗口足够时两列、不够时一列，带搜索与标签筛选
+// 归档页：三列封面卡，宽屏一行三篇、依次收到两列与一列，带搜索与标签筛选
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { loadPosts } from '../lib/posts.js'
+import { loadPosts, coverPos } from '../lib/posts.js'
 import { onLens } from '../lib/lens.js'
-import { N } from '../config/narrative.js'
+import { N, navLabel } from '../config/narrative.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -52,14 +52,13 @@ const filtered = computed(() =>
     return [p.title, p.summary, ...(p.tags || [])].join(' ').toLowerCase().includes(k)
   })
 )
+
 </script>
 
 <template>
   <section class="neo-shell">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.blog }}</span>
-
     <p class="neo-eyebrow">{{ N.sections.blog }}</p>
-    <h2 class="neo-h2">文章</h2>
+    <h2 class="neo-h2">{{ navLabel('/blog') }}</h2>
     <p class="neo-lede">{{ N.notes.archive }}</p>
 
     <div class="tools">
@@ -88,20 +87,35 @@ const filtered = computed(() =>
     <ul class="cards" :aria-busy="loading">
       <template v-if="loading">
         <!-- 骨架屏：列表从服务器拉取，空等一片黑会让人以为「没有文章」 -->
-        <li v-for="i in 4" :key="`skel-${i}`" class="skeleton" aria-hidden="true"></li>
+        <li v-for="i in 3" :key="`skel-${i}`" class="skeleton" aria-hidden="true">
+          <span class="neo-shot"></span>
+          <span class="body"></span>
+        </li>
       </template>
       <template v-else>
         <li v-for="p in filtered" :key="p.slug">
-          <RouterLink :to="`/blog/${p.slug}`" class="card neo-lens" @pointermove="onLens">
+          <RouterLink :to="`/blog/${p.slug}`" class="neo-card neo-flush card neo-lens" @pointermove="onLens">
             <span class="bar" aria-hidden="true"></span>
             <span class="neo-spike" aria-hidden="true"></span>
-            <span class="date neo-mono">{{ p.date }}</span>
-            <h3 class="title">{{ p.title }}</h3>
-            <p v-if="p.summary" class="summary">{{ p.summary }}</p>
-            <span class="foot">
-              <span class="meta neo-mono">{{ p.words }} 字 · {{ p.minutes }} 分钟</span>
-              <span v-if="p.tags && p.tags.length" class="tags neo-mono">{{ p.tags.join('/') }}</span>
+            <span class="neo-shot" :class="{ blank: !p.image }">
+              <img
+                v-if="p.image"
+                :src="p.image"
+                :alt="p.title"
+                :style="{ objectPosition: coverPos(p) }"
+                loading="lazy"
+                decoding="async"
+              />
             </span>
+            <div class="body">
+              <span class="date neo-mono">{{ p.date }}</span>
+              <h3 class="title">{{ p.title }}</h3>
+              <p v-if="p.summary" class="summary">{{ p.summary }}</p>
+              <span class="foot">
+                <span class="meta neo-mono">{{ p.words }} 字 · {{ p.minutes }} 分钟</span>
+                <span v-if="p.tags && p.tags.length" class="tags neo-mono">{{ p.tags.join('/') }}</span>
+              </span>
+            </div>
           </RouterLink>
         </li>
       </template>
@@ -116,11 +130,6 @@ const filtered = computed(() =>
 <style scoped>
 .neo-shell {
   padding-top: var(--page-top);
-}
-
-.glyph {
-  top: var(--space-3);
-  right: -6vw;
 }
 
 .tools {
@@ -142,17 +151,27 @@ const filtered = computed(() =>
   padding-bottom: var(--space-0);
 }
 
-/* 大框体卡片：窗口足够时两列，不够时一列 */
+/* 三列封面卡：宽屏一行三篇，≤900px 两篇，≤720px 一篇 */
 .cards {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* 行高取最高那一行，跨行一致：单列时每张卡各占一行，不写这条，长短不一的卡
+     （以及取数期间那三格骨架）会在窄屏错落成锯齿。
+     卡内标题两行截断、摘要三行截断，行间本来就差不了几十像素。 */
+  grid-auto-rows: 1fr;
   gap: var(--space-2);
 }
 
-@media (max-width: 880px) {
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
   .cards {
     grid-template-columns: 1fr;
   }
@@ -163,31 +182,22 @@ const filtered = computed(() =>
   display: flex;
 }
 
-/* 卡片规格全部取自 --card-*（与留言卡、图片格同源），只额外声明内容型卡片的密度 */
+/* 卡面（边/角/底/hover/最小高）、封面格（.neo-shot）与"贴边"（.neo-flush）都在 neo.css §6d；
+   这里只留栅格内的撑满与卡内排版 */
 .card {
   flex: 1;
-  position: relative;
-  z-index: 0;
+  min-width: 0;
+}
+
+.body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  min-height: 210px;
-  padding: var(--card-pad-lg) var(--card-pad-lg) var(--card-pad);
-  border: 1px solid var(--card-brd);
-  border-radius: var(--r-md);
-  background: var(--card-bg);
-  overflow: hidden;
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 0.28s, background 0.28s;
+  padding: var(--card-pad);
 }
 
-.card:hover {
-  border-color: var(--card-brd-hover);
-  background: var(--card-bg-hover);
-}
-
-/* 衍射芒落在卡面右上角：hover 时"这颗星被点亮"。形态与绽放在 neo.css §6b，这里只管位置 */
+/* 衍射芒落在封面右上角：hover 时"这颗星被点亮"。形态与绽放在 neo.css §6b，这里只管位置 */
 .card .neo-spike {
   top: var(--space-2);
   right: var(--space-2);
@@ -206,7 +216,7 @@ const filtered = computed(() =>
   z-index: 1;
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(var(--fs-lg), 2.2vw, var(--fs-xl));
+  font-size: clamp(var(--fs-lg), 1.5vw, var(--fs-xl));
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: -0.01em;
@@ -253,9 +263,11 @@ const filtered = computed(() =>
   color: var(--cold);
 }
 
-/* 骨架卡：尺寸与真实卡片一致（min-height 210px），内容到位时不产生位移 */
+/* 骨架卡：与真卡同一套格子（封面格 + 信息体），扫光走 li 自己的背景、两格透明，
+   所以列宽一变高度就跟着变，内容到位时不会产生位移 */
 .skeleton {
-  min-height: 210px;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--card-brd);
   border-radius: var(--r-md);
   background: linear-gradient(
@@ -266,6 +278,12 @@ const filtered = computed(() =>
   );
   background-size: 220% 100%;
   animation: skel 1.5s ease-in-out infinite;
+}
+
+/* 229px = 真卡信息体在桌面三列下的实测高（日期行 + 两行标题 + 三行摘要 + 脚线 + 上下 16px）。
+   窄屏列更宽、折行更少，骨架会比真卡高几十像素——加载态不值得为此复刻一套文字。 */
+.skeleton .body {
+  min-height: 229px;
 }
 
 @keyframes skel {

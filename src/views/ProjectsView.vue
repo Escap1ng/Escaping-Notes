@@ -1,26 +1,26 @@
 <script setup>
-// 新版载荷：单列宽行 + 冷色光带
+// 新版项目页：卡片栅格（卡面走共用基元 .neo-card）+ 冷色光带
 import { content } from '../lib/content.js'
 import { onLens } from '../lib/lens.js'
-import { N } from '../config/narrative.js'
+import { N, navLabel } from '../config/narrative.js'
 </script>
 
 <template>
   <section class="neo-shell">
-    <span class="neo-glyph glyph" aria-hidden="true">{{ N.glyph.projects }}</span>
-
     <p class="neo-eyebrow">{{ N.sections.projects }}</p>
-    <h2 class="neo-h2">项目</h2>
+    <h2 class="neo-h2">{{ navLabel('/projects') }}</h2>
     <p class="neo-lede">{{ N.hints.projects }}</p>
 
-    <ul class="rows">
+    <ul class="neo-cards">
       <li v-for="p in content.projects" :key="p.name">
-        <a class="row neo-lens" :href="p.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
+        <a class="neo-card neo-lens" :href="p.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
           <span class="bar" aria-hidden="true"></span>
           <span class="year neo-mono">{{ p.year }}</span>
-          <span class="name">{{ p.name }}</span>
-          <span class="desc">{{ p.desc }}</span>
-          <span class="link neo-mono">LINK<span class="arrow" aria-hidden="true">↗</span></span>
+          <h3 class="name">{{ p.name }}</h3>
+          <p class="desc">{{ p.desc }}</p>
+          <span class="link neo-mono">
+            LINK<span class="arrow" aria-hidden="true">↗</span>
+          </span>
         </a>
       </li>
       <li v-if="!content.projects.length" class="empty neo-mono">{{ N.empty.projects }}</li>
@@ -33,66 +33,47 @@ import { N } from '../config/narrative.js'
   padding-top: 120px;
 }
 
-.glyph {
-  top: 30px;
-  right: -7vw;
-}
-
-.rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.row {
-  position: relative;
-  display: grid;
-  grid-template-columns: 6ch minmax(0, auto) 1fr auto;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-1);
-  border-top: 1px solid var(--line);
-  overflow: hidden;
-  text-decoration: none;
-  color: inherit;
-}
-
-.rows li:last-child .row {
-  border-bottom: 1px solid var(--line);
-}
-
+/* 卡面（边/角/底/hover/内边距）全在 .neo-card 里，这里只留卡内排版 */
 .year {
   color: var(--hot);
   font-size: var(--fs-3xs);
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.row:hover .year {
+.neo-card:hover .year {
   transform: scale(1.08);
 }
 
 .name {
+  margin: 0;
   font-family: var(--font-display);
   font-size: clamp(20px, 2.8vw, 26px);
   font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
-  transition: color 0.24s, transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  line-height: var(--lh-tight);
+  transition:
+    color 0.24s,
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.row:hover .name {
+.neo-card:hover .name {
   color: var(--cold);
   transform: translateX(var(--space-1));
 }
 
 .desc {
+  margin: 0;
   color: var(--text-1);
   font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
 }
 
 .link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-0);
+  margin-top: auto;
+  padding-top: var(--space-1);
   color: var(--cold);
   font-size: var(--fs-3xs);
 }
@@ -101,27 +82,22 @@ import { N } from '../config/narrative.js'
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.row:hover .arrow {
+.neo-card:hover .arrow {
   transform: translate(3px, -3px);
 }
 
 .empty {
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--line);
-}
-
-@media (max-width: 720px) {
-  .row {
-    grid-template-columns: 6ch 1fr auto;
-    gap: var(--space-0) var(--space-2);
-  }
-  .desc {
-    grid-column: 2 / -1;
-  }
+  grid-column: 1 / -1;
+  padding: var(--space-3);
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-md);
+  color: var(--text-1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .row:hover .arrow {
+  .neo-card:hover .year,
+  .neo-card:hover .name,
+  .neo-card:hover .arrow {
     transform: none;
   }
 }

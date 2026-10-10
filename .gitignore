@@ -28,7 +28,7 @@ plates-src/
 music/
 
 # ---------- 反向记一条：这三个生成物目录不在忽略之列，且必须进仓库 ----------
-#   public/plates/  ← npm run bg:build      （首屏地景 + 抽屉五张轮播 + 深空压暗底）
+#   public/plates/  ← npm run bg:build      （首屏地景 + 抽屉五张轮播 + 深色压暗底）
 #   public/posts/   ← scripts/build_post_covers.ps1（文章封面，卡片与正文同一张）
 #   public/audio/   ← 播放器自托管 mp3，src/config/music.js 的曲单直接指向它
 # 它们都是"跑一条命令就能重烘出来"的派生物，但**不能**按生成物处理：那两条 bake 脚本跑在

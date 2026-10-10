@@ -1,4 +1,4 @@
-// 载荷舱种子数据：阶段三起可在 /admin 设置页签网页修改
+// 项目页种子数据：阶段三起可在 /admin 设置页签网页修改
 export const projects = [
   { name: 'Escaping Notes', desc: '本站：一张逃逸轨迹图', year: '2026', url: 'https://github.com/Escap1ng/Escaping-Notes' },
   { name: 'mathmodel-kit', desc: '数学建模竞赛一站式智能体技能集：分析 / 建模 / 算法 / 绘图 / 论文', year: '2026', url: 'https://github.com/Escap1ng/mathmodel-kit' },

@@ -33,12 +33,17 @@ const router = createRouter({
     {
       path: '/records',
       component: () => import('../views/RecordsView.vue'),
-      meta: { t: `歌单 · ${T}` },
+      meta: { t: `音乐 · ${T}` },
+    },
+    {
+      path: '/gallery',
+      component: () => import('../views/GalleryView.vue'),
+      meta: { t: `映像 · ${T}` },
     },
     {
       path: '/projects',
       component: () => import('../views/ProjectsView.vue'),
-      meta: { t: `载荷舱 · ${T}` },
+      meta: { t: `项目 · ${T}` },
     },
     {
       path: '/about',
@@ -58,7 +63,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       component: () => import('../views/NotFoundView.vue'),
-      meta: { t: `信号丢失 · ${T}` },
+      meta: { t: `这里没有页面 · ${T}` },
     },
   ],
   scrollBehavior() {

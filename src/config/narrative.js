@@ -1,83 +1,100 @@
 // 新版（neo · 长曝光星轨）全部界面文案（站点信息配置见 src/config/site.js）
-// 文风取向：古诗词气韵 + 对偶句式；改新版文案 → 只改这个文件
+// 分工：**界面只说人话**。按钮、眉标、提示、空态一律直陈其物，不借隐喻；
+// 隐喻只留在两处文学位（首屏 `manifesto`、关于页 `aboutBio`）。主题名同样直白为「深色 / 浅色」，
+// 「夜拍 / 显影」的说法留在 docs/design.md §2.2 讲概念，不进界面。
+// 改新版文案 → 只改这个文件
 export const N = {
-  // 每页一枚幽灵汉字（个人签名）：渊→藏→坠→息→弦→掷→响→我→无
-  glyph: {
-    home: '渊',
-    blog: '藏',
-    post: '坠',
-    updates: '息',
-    records: '弦',
-    projects: '掷',
-    wall: '响',
-    about: '我',
-    nf: '无',
-  },
-
   nav: [
     { to: '/', label: '首页', code: '00' },
     { to: '/blog', label: '文章', code: '01' },
     { to: '/updates', label: '动态', code: '02' },
-    { to: '/records', label: '歌单', code: '03' },
-    { to: '/projects', label: '项目', code: '04' },
-    { to: '/wall', label: '留言', code: '05' },
+    { to: '/records', label: '音乐', code: '03' },
+    { to: '/gallery', label: '映像', code: '04' },
+    { to: '/projects', label: '项目', code: '05' },
     { to: '/about', label: '关于', code: '06' },
   ],
 
-  // 首屏宣言：对偶联
+  // 首屏：站名（打字机进入）+ 对偶联宣言（十六字）
+  heroTitle: 'ESCAPING NOTES',
   manifesto: ['掷墨入渊，星惊不复；', '藏光于页，潮退犹闻。'],
-  manifestoSub: '把写下的每一行，都推过事件视界。',
-  heroEyebrow: '// 逃逸笔记 · Escap1ng',
 
-  now: { writing: 'WRITING', listening: 'LISTENING', building: 'BUILDING' },
-  descentHead: '下潜目录 · 由浅及深',
+  // 首屏之下的抽屉：一枚读数 + 精选/最近动态的眉标
+  drawer: {
+    clock: '此刻 · LOCAL',
+    featured: '精选 · SELECTED',
+    recent: '最近动态 · RECENT',
+  },
 
   notes: {
     archive: '按时间倒序，越往下越早。',
-    wall: '匿名也可以，无需署名。',
   },
 
   sections: {
     blog: '// 文章 · JOURNAL',
     updates: '// 动态 · UPDATES',
-    records: '// 歌单 · PLAYLIST',
+    records: '// 音乐 · PLAYLIST',
+    gallery: '// 映像 · GALLERY',
     projects: '// 项目 · WORKS',
-    wall: '// 留言 · ECHOES',
     about: '// 关于 · ABOUT',
     post: '// 阅读 · READING',
   },
 
   hints: {
-    updates: '随手所记，皆成信号。',
-    records: '听过的歌，收藏于此。',
-    projects: '做出的东西，还在转动着。',
-    wall: '留言不会消失，只会沉到更深。',
+    updates: '短的、不成篇的记录。',
+    records: '曲目表，点一行就能听。',
+    gallery: '这一面墙收的是全站用过的图片。',
+    projects: '做过的东西，和它们现在的状态。',
   },
 
-  aboutBio:
-    'Escap1ng。写代码，也写杂记。此站是一次漫长的下潜：把日子投进渊里，在盘上聚成光，在视界上留下回声——最后在这一切的底端，写一个「我」。',
-  dilation: '你在此处停留的光阴，比人间慢一拍。',
+  // 映像柜（/gallery）：墙上那行的计数与放大提示。照片的歪斜角不在这里，
+  // 它按 src 哈希算出（src/lib/gallery.js），同一张图永远同一个姿态
+  gallery: {
+    count: '共 {n} 张图片',
+    open: '点按放大',
+  },
 
-  postEnd: { escape: '上浮 · 回归文章' },
-  postPrev: '← 更浅处',
-  postNext: '更深处 →',
+  // 看片灯箱：/gallery 的轮播框与 /blog/:slug 的单图框共用这一组标签
+  //（两处各写一份的话，将来只会有一处被改）
+  lightbox: {
+    aria: '图片预览',
+    close: '关闭',
+    prev: '上一张',
+    next: '下一张',
+    keys: '← / → 翻页 · Esc 关闭',
+  },
+
+  // 文学位之二：关于页自述。允许意象，但不借已退役的概念（下潜 / 深渊 / 视界 / 回声）说话
+  aboutBio:
+    'Escap1ng。写代码，也写杂记。这个站是一台一直开着快门的相机：写下的东西按时间落在同一张底片上，新的亮一些，旧的暗一些。',
+
+  // 文章页：页尾出口、上下篇、复制链接与插图 alt。
+  // 原先正文末尾那枚「时间膨胀」手记已删——字数与时长本来就在页眉读着，那行只是把同一件事说成诗
+  reader: {
+    copy: '复制链接',
+    copied: '已复制 ✓',
+    endsAria: '上下篇与返回目录',
+    imgAlt: '文章插图，点按关闭预览',
+  },
+  postEnd: { back: '返回文章列表' },
+  postPrev: '← 上一篇',
+  postNext: '下一篇 →',
 
   nf: {
-    title: '此星不在星图',
-    text: '你循着的那道弧，并未落入这一夜的取景框。夜色仍长，请回身另寻他径。',
+    title: '这里没有页面',
+    text: '你访问的地址没有对应的页面，也许链接已经过期。可以从首页或文章列表继续。',
     home: '回到首页',
     blog: '查看文章',
   },
 
-  footer: { line: '// Escap1ng · BLOG', thanks: '曝光将尽，谢你停驻至此。', top: '回到顶部 ↑' },
-  theme: { dark: '深空', light: '纸面' },
+  footer: { line: '// Escap1ng · BLOG', thanks: '谢谢你读到这里。', top: '回到顶部 ↑' },
+  theme: { dark: '深色', light: '浅色' },
 
   empty: {
-    posts: '// 底片无光',
-    search: '// 此范围内无星', // 「筛选后为空」≠「本来就没有内容」
-    updates: '// 暂无脉冲',
-    wall: '// 尚无回声落于此',
-    projects: '// 载荷舱空',
+    posts: '// 还没有文章',
+    search: '// 没有符合条件的结果', // 「筛选后为空」≠「本来就没有内容」
+    updates: '// 还没有动态',
+    gallery: '// 还没有图片',
+    projects: '// 还没有项目',
   },
 
   // 后端机器码 → 给人看的一句话。键必须与 server/api.py 各分支返回的 error 值逐字对上
@@ -93,7 +110,7 @@ export const N = {
     'weak password': '密码至少 6 位',
     taken: '该用户名已被占用',
     exists: '已存在同标识符的文章',
-    'bad role': '角色不合法（仅 admin / visitor）',
+    'bad role': '角色不合法（只能任命为管理员）',
     'bad json': '请求内容格式不正确',
     'already setup': '站长已初始化，请直接登录',
     'too fast': '操作过于频繁，请稍候再试',
@@ -109,3 +126,7 @@ export const N = {
     unknown: '请求未成功',
   },
 }
+
+// 各页的 <h2> 就是导航里那枚标签，不再各抄一份字面量：两处各写一遍的话，改名只会改到一处，
+// 另一处静默留着旧词（顶栏说「音乐」、页面大标题说「歌单」就是这么来的）。
+export const navLabel = (to) => N.nav.find((n) => n.to === to)?.label ?? ''

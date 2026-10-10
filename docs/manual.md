@@ -221,7 +221,7 @@ export const site = {
 
 ### 3.1.1 组件库：新页面该用哪些类
 
-全站只有一套组件，都在 `src/styles/neo.css`：**按钮**（`neo-btn` + `neo-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义）、**筛选与页签**（`neo-chip`）、**标签**（`neo-tag` / `neo-tag-quiet`）、**输入**（`neo-field`，多行长文用 `textarea.neo-field`）、**状态提示**（`neo-note-ok` / `neo-note-err` / `neo-note-info`）、**卡片**（`neo-card` 一张卡面 + `neo-cards` 两列栅格，动态/音乐/项目/关于/首页精选/文章列表都用它；带封面的再加 `neo-flush`（图贴边）与一格 `neo-shot`（3:2 封面，没图时加 `blank` 给斜纹空版），占位卡加 `neo-pending` + 一枚 `neo-pending-label`）、**图标**（`neo-ico`，只用 `▶ ❚ « » ✦ ✧ ≡ ✕ → ↗` 这类单字符符号——`«` 是播放器「上一首」新增的，与既有的 `»` 成对；**例外**只有描边 SVG `.neo-svg`：顶栏右上角那三枚，加播放器卡片里那枚星轨符号）。
+全站只有一套组件，都在 `src/styles/neo.css`：**按钮**（`neo-btn` + `neo-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义）、**筛选与页签**（`neo-chip`）、**标签**（`neo-tag` / `neo-tag-quiet`）、**输入**（`neo-field`，多行长文用 `textarea.neo-field`）、**状态提示**（`neo-note-ok` / `neo-note-err` / `neo-note-info`）、**卡片**（`neo-card` 一张卡面 + `neo-cards` 两列栅格，动态/音乐/项目/关于/首页精选/文章列表都用它；带封面的再加 `neo-flush`（图贴边）与一格 `neo-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**图标**（`neo-ico`，只用 `▶ ❚ « » ✦ ✧ ≡ ✕ → ↗` 这类单字符符号——`«` 是播放器「上一首」新增的，与既有的 `»` 成对；**例外**只有描边 SVG `.neo-svg`：顶栏右上角那三枚，加播放器卡片里那枚星轨符号）。
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。1.3.0 之前 `/login` `/register` `/admin` 各自写过一套，现已全部并入上面这些类。
 - 唯一一处**故意不用** `.neo-card` 的是 `/gallery` 那面拍立得墙（`.wall` / `.shot` / `.frame` / `.tape` / `.cap`，全在 `GalleryView.vue` 的 scoped 里）：一张照片被胶带钉在桌面上的相纸感，与"这是一组卡片"不是同一件事。它的颜色仍走令牌（`--polar` 白框 / `--tape` 胶带 / `--shadow` 框影），页面里没有写死的色值，别把它当"另造了一套卡面"合并回去。
@@ -257,7 +257,7 @@ export const site = {
 
 ### 3.3 双主题（深色 / 浅色）与“减弱动态效果”
 
-- 头部主题开关切换，选择会自动记住。深色=近纯黑夜空，浅色=纸感暖白档案风，**默认浅色**；**首帧不读系统 `prefers-color-scheme`**——`index.html` 只认「存储值 → 否则浅色」，因为首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上。切换是设计叙事的一部分（夜拍 / 显影），不是普通明暗切换。
+- 头部主题开关切换，选择会自动记住。深色=近纯黑夜空，浅色=冷灰白档案风（2026-10-09 由米黄底冷色化，10-10 把文章页阅读底板也并回同一底色），**默认浅色**；**首帧不读系统 `prefers-color-scheme`**——`index.html` 只认「存储值 → 否则浅色」，因为首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上。切换是设计叙事的一部分（夜拍 / 显影），不是普通明暗切换。
 - 主题默认值只在 `index.html` 的首帧内联脚本里决定一次（避免首屏闪一下），`src/lib/theme.js` 只读取结果——不要在别处再写一遍默认逻辑。
 - 改浅色配色：`src/styles/neo.css` 的 `html[data-skin='neo'][data-theme='out']` 变量块；改深色配色：「深色（默认）」块。**两套都要改**，尤其新增颜色令牌时不要只定义一套（历史上 `--scrim` 漏定义就导致浅色首页文字底衬整条失效）。
 - 当访客系统开启“减弱视觉效果”（prefers-reduced-motion）时，全站动画自动关停、`fall` 转场与晕影取消，星轨装置降级为一次性快进的静态底片，无需手动处理。

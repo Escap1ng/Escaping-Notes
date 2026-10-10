@@ -64,6 +64,10 @@ IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'}
 LOCK = threading.RLock()  # 可重入：setup 外层持锁时 new_session 需再入
 RATE = {}
 SLUG_RE = re.compile(r'^[a-z0-9-]{1,60}$')
+# 文章配图：只收站内上传目录或 https 绝对地址。这两个值会进 frontmatter 再进 <img> 的
+# src / style 属性，所以宁可拒掉也不转义——换行会把 frontmatter 劈成两半。
+POST_IMG_RE = re.compile(r'^(?:/[\w./-]{1,200}|https://[\w./:%~+-]{1,200})$')
+POST_POS_RE = re.compile(r'^[\w.% -]{1,24}$')
 USER_RE = re.compile(r'^[a-z0-9_-]{3,20}$')
 # frontmatter：与 scripts/build_seo.mjs 的那份口径对齐，CRLF 也得认。
 # 本机 git core.autocrlf=true，content/posts/*.md 在 Windows 工作树里是 \r\n，
@@ -227,8 +231,14 @@ def list_posts():
 def write_post(slug, meta, body):
     tags = ', '.join(meta.get('tags', []))
     head = (f"---\ntitle: {meta['title']}\ndate: {meta.get('date', time.strftime('%Y-%m-%d'))}\n"
-            f"tags: [{tags}]\nsummary: {meta.get('summary', '')}\n---\n\n")
-    (POSTS_DIR / f'{slug}.md').write_text(head + body, 'utf-8')
+            f"tags: [{tags}]\nsummary: {meta.get('summary', '')}\n")
+    # image / imagePos 是可选字段：为空就不写这一行，别让每篇 frontmatter 挂两条废键。
+    # 少了这两行，后台保存一次就会把 frontmatter 里的配图静默丢掉（读路径是全量展开，本来就通）。
+    for k in ('image', 'imagePos'):
+        v = str(meta.get(k, '')).strip()
+        if v:
+            head += f"{k}: {v}\n"
+    (POSTS_DIR / f'{slug}.md').write_text(head + '---\n\n' + body, 'utf-8')
 
 
 # ---------- meta 注入 ----------
@@ -678,8 +688,16 @@ class Handler(BaseHTTPRequestHandler):
             self._json(409, {'error': 'exists'})
             return
         tags = [str(t).strip() for t in data.get('tags', []) if str(t).strip()][:8]
+        image = str(data.get('image', '')).strip()
+        if image and not POST_IMG_RE.match(image):
+            self._json(400, {'error': 'bad image'})
+            return
+        pos = str(data.get('imagePos', '')).strip()
+        if pos and not POST_POS_RE.match(pos):
+            pos = ''
         write_post(slug, {'title': title, 'date': str(data.get('date', time.strftime('%Y-%m-%d')))[:10],
-                          'tags': tags, 'summary': str(data.get('summary', ''))[:120]}, body)
+                          'tags': tags, 'summary': str(data.get('summary', ''))[:120],
+                          'image': image, 'imagePos': pos}, body)
         self._json(200, {'ok': True, 'slug': slug})
 
     def _user_role(self, u, uid, data):

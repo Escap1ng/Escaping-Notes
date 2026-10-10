@@ -1,24 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
     <linearGradient id="a" x1="8" y1="32" x2="32" y2="8" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#4da3ff"/>
-      <stop offset="1" stop-color="#ff4a1f"/>
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#5db2ff"/>
     </linearGradient>
     <linearGradient id="b" x1="32" y1="8" x2="56" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ff4a1f"/>
-      <stop offset="1" stop-color="#ff7a2e"/>
+      <stop offset="0" stop-color="#5db2ff"/>
+      <stop offset="1" stop-color="#ff5c39"/>
     </linearGradient>
     <linearGradient id="c" x1="56" y1="32" x2="32" y2="56" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ff7a2e"/>
-      <stop offset="1" stop-color="#ffffff"/>
+      <stop offset="0" stop-color="#ff5c39"/>
+      <stop offset="1" stop-color="#c2410c"/>
     </linearGradient>
     <linearGradient id="d" x1="32" y1="56" x2="8" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#4da3ff"/>
+      <stop offset="0" stop-color="#c2410c"/>
+      <stop offset="1" stop-color="#2563eb"/>
     </linearGradient>
   </defs>
-  <!-- 透明底 + 镂空中心：仅一枚高饱和彩色圆环，几何居中 -->
-  <g fill="none" stroke-width="15">
+  <!-- 透明底 + 镂空中心：一枚高饱和圆环，几何居中。
+       四段全部走实色渐变，不再有任何一段淡到 #ffffff——那正是它在 16px 标签页上
+       "糊、缺一段"的原因：浅色背景下白色止点等于把四分之一环擦掉了。 -->
+  <g fill="none" stroke-width="13" shape-rendering="geometricPrecision">
     <path d="M8 32 A24 24 0 0 1 32 8" stroke="url(#a)"/>
     <path d="M32 8 A24 24 0 0 1 56 32" stroke="url(#b)"/>
     <path d="M56 32 A24 24 0 0 1 32 56" stroke="url(#c)"/>
