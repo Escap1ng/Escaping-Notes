@@ -99,6 +99,17 @@ function New-Matrix([double[]]$v) {
   return $m
 }
 
+# Scale the 3x3 colour block of a matrix (indices 0-14 minus the offset column) and leave the
+# offsets and alpha alone. Used to trim ONE over-bright source without touching $PAPER, which
+# the other four plates share.
+function Scale-Color([double[]]$m, [double]$k) {
+  $r = [double[]]$m.Clone()
+  for ($i = 0; $i -lt 15; $i++) {
+    if (($i % 5) -ne 4) { $r[$i] = $m[$i] * $k }
+  }
+  return ,$r
+}
+
 function New-Bmp([int]$w, [int]$h) {
   $b = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
   $g = [System.Drawing.Graphics]::FromImage($b)
@@ -247,6 +258,16 @@ $PAPER = @(
   0.00, 0.00, 0.00, 0, 1
 )
 
+# Per-source brightness trim on top of $PAPER, for originals $PAPER's 1.15-1.25 gain cannot
+# serve. plate1 is mid-key (meanL 91.8 before grading -> 116.1 after) and wants that gain;
+# plate5 is a HIGH-KEY beach already at meanL 184.4, so the same matrix lands it at 227.4 with
+# 49.4% of sampled pixels at 250 or over -- a white hole both in the drawer and in its gallery
+# card. 0.70 measures meanL 161.5, std 22.3, 0.0% clipped: still the brightest of the five
+# (paper6 is 130.2), but the sun reads as a light source again instead of as the page colour.
+# Below that the photo loses its glow faster than its detail -- 0.62 is meanL 143.1 / std 19.7
+# and reads as dusk. Numbers come from sampling the baked jpgs; re-measure after editing one.
+$PAPER_TRIM = @{ 'plate5.jpg' = 0.70 }
+
 # The author asked for full resolution with no extra compression, so the hero is NOT downscaled
 # to $W -- it keeps the source's own width and only gets the grade above. blur=1 means the
 # shrink/scale pair is 1:1, i.e. no blur at all.
@@ -288,8 +309,12 @@ try {
   # One bake pass per source; the dark theme keeps the single $SourcePlate variant above.
   foreach ($n in @('plate1.jpg', 'plate3.jpg', 'plate4.jpg', 'plate5.jpg', 'plate6.jpg')) {
     $idx = $n.Substring(5, 1)
+    $trim = 1.0
+    if ($PAPER_TRIM.ContainsKey($n)) { $trim = $PAPER_TRIM[$n] }
     $imgN = [System.Drawing.Image]::FromFile((Join-Path $SrcDir $n))
-    Bake $imgN (Join-Path $OutDir ("plate-bg-paper{0}.jpg" -f $idx)) $PAPER ([System.Drawing.Color]::FromArgb(242, 245, 249)) 0.0
+    Write-Output ("paper{0} <- {1} trim {2:N2}" -f $idx, $n, $trim)
+    Bake $imgN (Join-Path $OutDir ("plate-bg-paper{0}.jpg" -f $idx)) (Scale-Color $PAPER $trim) `
+      ([System.Drawing.Color]::FromArgb(242, 245, 249)) 0.0
     $imgN.Dispose()
   }
   $ep.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
