@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate sinking into the page colour, five carousel slots staggered over a 50 second cycle, and the measured contrast of naked text versus text on a card">
+  <defs>
+    <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8ec9ff" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#8ec9ff" stop-opacity=".3"/>
+    </linearGradient>
+    <linearGradient id="sink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8ec9ff" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#020204" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8ec9ff" stop-opacity=".05"/>
+      <stop offset=".5" stop-color="#8ec9ff" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#8ec9ff" stop-opacity=".05"/>
+    </linearGradient>
+    <style>
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; fill: #f4f1ea; }
+      .t { font-size: 13px; }
+      .s { font-size: 11px; fill: #8f8c96; }
+      .h { font-size: 14px; fill: #8ec9ff; }
+      .line { stroke: #f4f1ea; stroke-opacity: .18; stroke-width: 1; fill: none; }
+      .lead { stroke: #f4f1ea; stroke-opacity: .22; stroke-width: 1; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="920" height="440" fill="#0a0a10"/>
+  <text class="h" x="40" y="30">site backdrop, vertical cross-section</text>
+  <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in neo.css §1 / §2 / §3</text>
+
+  <!-- A. 视口剖面 -->
+  <rect x="60" y="70" width="140" height="29" fill="url(#photo)"/>
+  <rect x="60" y="99" width="140" height="96" fill="url(#sink)"/>
+  <rect x="60" y="195" width="140" height="35" fill="#020204"/>
+  <rect x="60" y="70" width="140" height="160" class="line"/>
+  <path d="M60 88 H200" stroke="#f4f1ea" stroke-opacity=".3" stroke-dasharray="3 3" fill="none"/>
+  <text class="s" x="18" y="74">0svh</text>
+  <text class="s" x="12" y="234">100svh</text>
+
+  <path d="M200 84 H208 M200 147 H208 M200 212 H208" class="lead"/>
+  <text class="t" x="216" y="81">photo at full strength · 0 → 18%</text>
+  <text class="s" x="216" y="95">and masked in over the top 180px (the dashed line above)</text>
+  <text class="t" x="216" y="144">sinks into the page colour · 18% → 78%</text>
+  <text class="s" x="216" y="158">linear-gradient(to bottom, transparent 18%, var(--ink-0) 78%)</text>
+  <text class="s" x="216" y="172">every carousel slot carries its own copy — one on the parent</text>
+  <text class="s" x="216" y="186">and the next one fading up would cover the dimming</text>
+  <text class="t" x="216" y="209">solid --ink-0 · 78 → 100%</text>
+  <text class="s" x="216" y="223">footer territory: nothing of the photo survives here</text>
+
+  <!-- B. 轮播时序 -->
+  <text class="s" x="430" y="252">2% / 20% / 22% of 50s = 1s in · 9s hold · 1s out</text>
+  <text class="h" x="60" y="266">--plate-cycle: 50s = five plates × 10s</text>
+  <text class="s" x="430" y="266">one @keyframes (plate-slot); the four &lt;i&gt; layers differ only by delay</text>
+
+  <rect x="60" y="278" width="820" height="14" fill="url(#fade)"/>
+  <text class="s" x="66" y="289">parent .sub-plate — slot 1, exposed while all four sit at 0</text>
+  <rect x="208" y="298" width="180" height="14" fill="url(#fade)"/>
+  <rect x="372" y="298" width="180" height="14" fill="url(#fade)"/>
+  <rect x="536" y="298" width="180" height="14" fill="url(#fade)"/>
+  <rect x="699" y="298" width="181" height="14" fill="url(#fade)"/>
+  <text class="s" x="212" y="333">9s</text>
+  <text class="s" x="376" y="333">19s</text>
+  <text class="s" x="540" y="333">29s</text>
+  <text class="s" x="703" y="333">39s</text>
+  <path d="M60 320 H880" stroke="#f4f1ea" stroke-opacity=".25"/>
+  <g stroke="#f4f1ea" stroke-opacity=".12">
+    <path d="M60 316 V324 M224 316 V324 M388 316 V324 M552 316 V324 M716 316 V324 M880 316 V324"/>
+  </g>
+  <text class="s" x="56" y="347">0s</text>
+  <text class="s" x="216" y="347">10s</text>
+  <text class="s" x="380" y="347">20s</text>
+  <text class="s" y="347" x="544">30s</text>
+  <text class="s" x="708" y="347">40s</text>
+  <text class="s" x="866" y="347">50s</text>
+  <text class="s" x="60" y="363">deep theme: --plate-img … --plate-img-5 are one file, so the carousel runs and nothing visibly changes</text>
+
+  <!-- C. 对比度实测 -->
+  <text class="h" x="40" y="382">foreground contrast, measured</text>
+  <rect x="40" y="390" width="170" height="26" fill="#020204"/>
+  <rect x="40" y="390" width="170" height="26" fill="#ff5c39" fill-opacity=".55"/>
+  <text class="t" x="50" y="407">naked · 1.0-1.8:1</text>
+  <rect x="220" y="390" width="170" height="26" fill="#020204"/>
+  <rect x="220" y="390" width="170" height="26" fill="#8ec9ff" fill-opacity=".2"/>
+  <text class="t" x="230" y="407">on a card · 5.5:1 +</text>
+  <text class="s" x="410" y="401">A scrim-free photo cannot reach AA for naked text, whatever</text>
+  <text class="s" x="410" y="415">shape the gradient has — so the plate is scenery, and body</text>
+  <text class="s" x="410" y="429">copy belongs on .sheet / .neo-glass / .neo-card.</text>
+</svg>

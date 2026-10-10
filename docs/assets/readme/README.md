@@ -7,8 +7,10 @@
 | --- | --- | --- |
 | `plate-deep-space.png` | `npm run art:build` 按 `StarTrails.vue` 的常数离线复算稳态底片 | 要 |
 | `plate-paper.png` | 同上，浅色主题（墨压干版，`source-over`） | 要 |
-| `dark-band.svg` | 手写；数字取自 `neo.css` §1/§2/§3 与 `design.md` §3.3 | 改令牌/改实测值时手改 |
+| `plate-layer.svg` | 手写；数字取自 `src/App.vue`（`.sub-plate` 的三段渐变、轮播延迟、补边）与 `neo.css` 的 `--plate-*` / `--ink-0`，对比度两档实测取自 `App.vue` 注释与 `check_contrast` 输出 | 改底片层几何/节奏/实测值时手改 |
 | `fall-timing.svg` | 手写；时长与缓动取自 `neo.css` §8 | 改转场时手改 |
+
+> 前身 `dark-band.svg`（暗带契约剖面）已于 2026-10-10 随该机制退休一并撤下——星轨现在只由首页那台相机绘制，次级页文字底下是照片底片，`--sky-band` / `--sky-feather` / `--sky-k` 目前无消费方。要找回那张图：`git log --diff-filter=A -- docs/assets/readme/dark-band.svg`。
 
 ## 底片两张（PNG）
 
