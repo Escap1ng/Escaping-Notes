@@ -1,7 +1,7 @@
 // 浏览器存储键的唯一定义处。
 // 为什么要收口：这些键此前散在 6 个文件里，同一个键被两处拼成不同名字时不会报错，
 // 只会"用户设置静默丢失"。收口之后 check:naming 能查出字面量漂移，改名也只需改这里。
-// 命名口径见 docs/design.md §9.7：统一 `en-` 前缀 + 概念名。
+// 命名口径见 docs/design.md §5：统一 `en-` 前缀 + 概念名。
 
 const PREFIX = 'en-'
 
@@ -12,6 +12,10 @@ export const KEYS = {
   volume: `${PREFIX}vol`, // 播放器音量 0–1
   blur: `${PREFIX}plate-blur`, // 底片模糊 0–12px（0 = 清晰）。index.html 的首帧内联脚本按同样
   // 的字面量读它，改这里必须同步改那边，否则进页会先清晰一闪。
+  cardSurface: `${PREFIX}card-surface`, // 卡面档位：'solid' 不透底（**默认**）/ 'glass' 半透。同样被
+  // index.html 的首帧内联按字面量读——只有偏离默认档那一档（glass）需要写上属性。
+  // 四处口径（这里的键名、surface.js 的两档值、index.html、site.css 的 [data-card-surface]）
+  // 由 tests/card-surface.test.mjs 钉住。
   viewed: `${PREFIX}viewed-`, // 本次会话是否已计过数，只活到关标签页，所以放 sessionStorage
 }
 

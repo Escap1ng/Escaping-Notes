@@ -93,7 +93,7 @@ html {
   scroll-behavior: smooth;
   /* 预留滚动条槽位：长短页切换时视口宽度不变，消除横向抽搐 */
   scrollbar-gutter: stable;
-  /* 裁剪装饰性幽灵汉字等越界元素：避免横向滚动导致页面左右抖动/缩放 */
+  /* 裁剪越界的装饰层（满屏底片、光晕一类）：避免横向滚动导致页面左右抖动/缩放 */
   overflow-x: hidden;
   overflow-x: clip;
 }
@@ -172,7 +172,7 @@ a {
   font-size: var(--fs-md);
   line-height: var(--lh-snug);
   text-transform: none;
-  transition: border-color 0.24s;
+  transition: border-color var(--dur-fast);
 }
 
 .field::placeholder {
@@ -242,7 +242,7 @@ textarea.field:focus-visible {
   }
 }
 
-/* ---------- 以下小节编号 §0–§9 沿用合并前 neo.css 的编号，文档按它引用 ---------- */
+/* ---------- 以下小节编号沿用合并前 neo.css 的编号（实际到 §11，含 5b/5c/6b/6c/6d），文档按它引用 ---------- */
 
 /* ---------- 0. 展示层子集字体 ---------- */
 /* 仅 --font-display（标题 / 卡名 / 抽屉项）使用，正文继续走系统宋体栈。
@@ -274,6 +274,16 @@ html:root {
   /* 次级页内容顶部留白：所有 .en-shell 页面共用，避开固定顶栏 */
   --page-top: 120px;
 
+  /* 指针反馈两档时长：颜色 / 描边用 fast，位移 / 缩放用 dur。
+     只管"鼠标点到的东西怎么回应"这一件事——入场动画、打字机、光晕缓绽各有既定手感，不归这两档管。
+     站内原先飘着 0.22 / 0.24 / 0.25 / 0.28 / 0.3 / 0.32 / 0.5 七个值，读起来就是"不统一"。 */
+  --dur-fast: 0.22s;
+  --dur: 0.3s;
+  /* 指针反馈两档位移：nudge = 行内元素被指到时右移（卡内标题、曲名、抽屉箭头、↗ 箭头都算），
+     lift = 整枚控件抬起（按钮、图标钮、后台图片格）。原先同一手势有 8 / 5 / 4px 与 -1 / -2px 三个值。 */
+  --nudge: 4px;
+  --lift: -2px;
+
   /* 品牌色：顶栏吸积环签名专用。跨主题固定为深色三档色温——
      它是全站的视觉锚点，浅色主题下也保持同一枚环，故不放进主题块。 */
   --brand-cold: #8ec9ff;
@@ -293,13 +303,16 @@ html:root {
   --sky-feather: calc((100% - var(--sky-band)) / 2);
 
   /* 卡片：全站唯一规格（文章卡 / 图片格 / 后台面板都从这里取）。
-     **填充只负责"这是一组"，不负责可读性**——那是暗带的活。实测填充相对带内天空底
-     只有 1.04~1.14:1 的表面比（肉眼几乎看不出），卡片认得出边界靠的是 --card-brd
-     那根发丝线；44%→72% 这一档 hover 变化更是只有 1.05:1，等于没有。
-     所以这里收窄 hover 的填充跳幅（让边线与 .en-spike 承担悬停强调）， resting 抬一档
-     让它在变安静的带面上仍读得出是一块板。52/62 是**实测区间内的口味值**，不是算出来的。 */
-  --card-bg: color-mix(in srgb, var(--ink-1) 52%, transparent);
-  --card-bg-hover: color-mix(in srgb, var(--ink-1) 62%, transparent);
+     resting 档 = **不透底**：卡面取 --card-solid（浅色 #ffffff / 深色不透明的 --ink-1），
+     hover 只掺 6% 冷色——再亮就没得亮了。
+     **填充不负责可读性**这条在两个档位上都成立（那是暗带的活）；不透底只是把"这是一组"换成
+     "这是一块实板"，代价是底片被卡面完全挡掉，风景只剩卡片之间的缝隙。
+     另一档 'glass'（设置卡「卡片颜色 · 半透明」，见 §3 之后的门控块）是这套卡原本的样子：
+     52% / 62%。实测填充相对带内天空底只有 1.04~1.14:1 的表面比（肉眼几乎看不出），卡片认得出
+     边界靠的是 --card-brd 那根发丝线；原先 44%→72% 的 hover 跳幅更是只有 1.05:1，等于没有，
+     所以收窄成 62%（悬停强调交给边线与 .en-spike）。52/62 是**实测区间内的口味值**，不是算出来的。 */
+  --card-bg: var(--card-solid);
+  --card-bg-hover: color-mix(in srgb, var(--card-solid) 94%, var(--cold));
   --card-brd: var(--line);
   --card-brd-hover: color-mix(in srgb, var(--cold) 55%, transparent);
   --card-pad: var(--space-2);
@@ -362,6 +375,11 @@ html:root:not([data-theme='out']) {
   --panel-bg: color-mix(in srgb, var(--ink-0) 55%, transparent);
   --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
+  /* 卡面的 resting 色面（--card-bg 默认就取它，半透明那一档才绕开它）。深色刻意不给白：#fff 压在
+     --ink-0 的近黑页底上是一块块刺眼的白板，卡内文字还得跟着翻色。这里给本主题的不透底面板色，
+     比 52% 半透时略亮一档——语义是"卡片不透背景"，不是"卡片变白"。 */
+  --card-solid: var(--ink-1);
+
   /* 暗带压低系数（§3.3）。解法：取最差那一档星轨色（琥珀 tier2 #ff977d）在峰值
      alpha 0.753 下的天光底，要求最小的次要文字 text-1 也过 AA 4.5 —— k ≤ 0.2，
      取 0.15 留 22% 余量（实测 5.48:1）。按峰值而非中位数（0.247）算是必须的：
@@ -419,10 +437,25 @@ html:root[data-theme='out'] {
   --panel-bg: color-mix(in srgb, var(--ink-0) 60%, transparent);
   --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
+  /* 卡面的 resting 色面：浅色这里就是字面的纯白。语义与深色那枚相同（卡片不透背景），
+     色面各按主题给，见深色块那一条。 */
+  --card-solid: #ffffff;
+
   /* 暗带压低系数：浅色主题比深色主题**更严**。这里的星轨是接近纯黑的墨迹（tier1 #51240e），
      压的是接近纯黑的 text-0 与中性的 text-1；同一套算法解到 text-1 ≥ 4.5 要 k ≤ 0.06
      （实测 4.65:1），k=0.1 只有 4.40 —— 不达标。两套主题差 2.5 倍，所以这个值必须分主题定。 */
   --sky-k: 0.06;
+}
+
+/* ---------- 3b. 卡面档位：半透明 ----------
+   设置卡里「半透明」那一档，属性由 lib/surface.js 与 index.html 首帧内联写到
+   <html data-card-surface='glass'>。默认档（不透底）就是上面 `html:root` 那组卡片令牌自己的值——
+   **没有这个属性也照样成立**，所以这条只服务偏离默认的那一侧。
+   放在两套主题块之后是按层叠来的：这条与主题块同为 (0,2,1)，靠后写才扳得动 --card-bg。
+   只动填充，不动边线（--card-brd 仍是发丝线），也不动 hover 的强调分工。 */
+html:root[data-card-surface='glass'] {
+  --card-bg: color-mix(in srgb, var(--ink-1) 52%, transparent);
+  --card-bg-hover: color-mix(in srgb, var(--ink-1) 62%, transparent);
 }
 
 /* ---------- 4. 基线 ---------- */
@@ -617,7 +650,7 @@ html:root main.en-sub {
 /* ---------- 5c. 图标（全站唯一规范） ----------
    只用单字符几何符号，不引图标字体、不用 emoji：
      状态/开关：✦ 实心=开 · ✧ 空心=关      菜单：≡ 打开 · ✕ 关闭
-     媒体：▶ 播放 · ❚ 暂停 · » 下一首        方向：→ 站内 · ↗ 站外
+     媒体：▶ 播放 · ❚ 暂停 · » 下一首        方向：→ 站内 · ↗ 站外 · ↑ 回顶
    规则：① 图标一律 aria-hidden，语义由所在按钮的 aria-label 承担；
         ② 放在 .en-ico 的固定盒里（1.15em 宽 + 居中），避免不同字形宽窄不一致导致布局跳动；
         ③ 颜色不单独指定，跟随宿主：默认 --text-1、hover --cold、激活/播放中 --hot。 */
@@ -629,6 +662,16 @@ html:root main.en-sub {
   flex: none;
 }
 
+/* 方向图标（.en-ico-up = ↑）被指到时朝自己那个方向让一枚 --nudge——"回到顶部"这枚按钮的
+   位移方向就是它承诺的方向。媒体符号（« »）不在此列：它们不承诺方向，动了反而读成卡顿。 */
+.en-ico-up {
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.en-btn-quiet:hover .en-ico-up {
+  transform: translateY(calc(-1 * var(--nudge)));
+}
+
 /* ---------- 6. 按钮 / 胶囊 / 输入 ----------
    按钮体系（全站唯一）：两个尺寸 × 四种语义，其它形态都由此组合。
      尺寸  .en-btn（默认：表单提交、页面主/次动作）· .en-btn-sm（表格行、工具条里的密集操作）
@@ -637,6 +680,8 @@ html:root main.en-sub {
            .en-btn-danger （描边 + hover 转热色，破坏性动作：删除/禁用）
            .en-btn-quiet  （无框纯文字，附注动作：复制/回顶/退出登录）
    文字一律用 --font-sans；等宽只留给"仪器文字"（.readout/.en-mono/.en-chip）。
+   **唯一例外是 .en-btn-quiet**：它从不单独出现，总是嵌在等宽的元信息里（文章页眉、页脚、
+   抽屉底），按 sans 写就是在一行仪器文字中间夹进第三种字面。
    状态一律三态：hover 抬升、active 回落、disabled 置灰且不再抬升。 */
 .en-btn {
   display: inline-flex;
@@ -659,11 +704,11 @@ html:root main.en-sub {
   text-transform: none;
   cursor: pointer;
   transition:
-    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.24s ease,
-    border-color 0.24s ease,
-    color 0.24s ease,
-    background-color 0.24s ease;
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
 }
 
 .en-btn-sm {
@@ -673,7 +718,7 @@ html:root main.en-sub {
 }
 
 .en-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(var(--lift));
 }
 
 .en-btn:active {
@@ -717,10 +762,16 @@ html:root main.en-sub {
   color: var(--hot);
 }
 
-/* 附注动作：没有边框、没有底色，只有颜色变化 */
+/* 附注动作：没有边框、没有底色，只有颜色变化。字面走仪器那一档（与 .en-mono 同值同族）。 */
 .en-btn-quiet {
-  min-height: 0;
-  padding: var(--space-0) 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* 原先 min-height:0 + 上下 4px、横向 0，实测命中区约 23px 高、宽正好等于文字宽，
+     低于 WCAG 2.5.8 的 24×24 下限；横向各给一枚 space-1，让指尖有地方落 */
+  min-height: 24px;
+  padding: var(--space-0) var(--space-1);
   border: 0;
   color: var(--text-1);
 }
@@ -746,7 +797,9 @@ html:root main.en-sub {
   letter-spacing: 0.06em;
   cursor: pointer;
   background: none;
-  transition: color 0.22s, border-color 0.22s;
+  transition:
+    color var(--dur-fast),
+    border-color var(--dur-fast);
 }
 
 .en-chip:hover {
@@ -791,7 +844,7 @@ html:root main.en-sub {
   font-family: var(--font-sans);
   font-size: var(--fs-md);
   line-height: var(--lh-snug);
-  transition: border-color 0.24s;
+  transition: border-color var(--dur-fast);
 }
 
 .en-field::placeholder {
@@ -872,13 +925,16 @@ textarea.en-field:hover {
   z-index: 0;
   pointer-events: none;
   opacity: 0;
+  /* 那条 72% 才淡出的长尾就是"柔和"的来源。试过收到 circle 200px + 60% 让各卡可见范围一致，
+     当日被否：不柔和。剩下的差异是几何事实——宿主 overflow: hidden 会裁掉光斑，窄卡裁得多、
+     满宽卡整条尾巴露出来，同一枚透镜在两种卡上可见范围不同。要一致就得牺牲长尾，两头只能取一头。 */
   background: radial-gradient(
     circle 260px at 50% 50%,
     color-mix(in srgb, var(--cold) 13%, transparent),
     transparent 72%
   );
   transform: translate(var(--lx, 0px), var(--ly, 0px));
-  transition: opacity 0.35s ease;
+  transition: opacity var(--dur);
 }
 
 .en-lens:hover::after {
@@ -895,7 +951,7 @@ textarea.en-field:hover {
   width: 2px;
   background: var(--cold);
   transform: scaleY(0);
-  transition: transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
   pointer-events: none;
 }
 
@@ -952,7 +1008,7 @@ textarea.en-field:hover {
   background: color-mix(in srgb, var(--cold) 16%, transparent);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .en-chip:hover::before,
@@ -961,7 +1017,7 @@ textarea.en-field:hover {
 }
 
 /* 衍射十字芒：把首屏星轨的锥形衍射芒语言搬到 DOM（画布侧的变星装置 2026-10-09 已撤，
-   芒形留在卡片上）。芒臂 ≤2px 且只用冷色（§5.3①：冷=交互方向；白热只留给光子核心）。
+   芒形留在卡片上）。芒臂 ≤2px 且只用冷色（design.md §2 原则 1：冷=交互方向；白热只留给光子核心）。
    纯装饰：不接指针事件，调用处须带 aria-hidden。 */
 .en-spike {
   position: absolute;
@@ -1078,10 +1134,13 @@ html:root .en-glass {
   text-decoration: none;
   color: inherit;
   transition:
-    border-color 0.28s,
-    background 0.28s;
+    border-color var(--dur-fast),
+    background var(--dur-fast);
 }
 
+/* 卡面 hover 不分角色：试过只让 a / button 亮（21 张 <div> 卡因此静默），
+   整站读下来发白、单薄，作者当日改回。能点与否改由另外两条通道说：
+   cursor（default / pointer）与 .en-lens——透镜只挂在真能点的卡上。 */
 .en-card:hover,
 .en-card:focus-visible {
   border-color: var(--card-brd-hover);
@@ -1151,7 +1210,7 @@ html:root .en-glass {
 /* 说明：关键帧里的 filter: blur()/sepia() 是对整页子树生效的，每一帧都要重新栅格化，
    且离开方与进入方并行叠在一起时更甚——这是本站最贵的一处绘制。曾尝试换成
    "只动 opacity/transform + 独立红移覆盖层"，但叠影模糊正是"坍缩"的手感来源，
-   故按设计取舍保留原样。若日后要回收这部分开销，改法见 docs/design.md §10。 */
+   故按设计取舍保留原样。若日后要回收这部分开销，改法与代价见 docs/design.md §9 第 12 条。 */
 .fall-enter-active {
   animation: fall-in 0.44s cubic-bezier(0.52, 0.04, 0.24, 1);
 }
@@ -1263,7 +1322,7 @@ html:root .en-prose a {
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--cold) 40%, transparent);
   text-underline-offset: 3px;
-  transition: text-decoration-color 0.2s;
+  transition: text-decoration-color var(--dur-fast);
 }
 
 html:root .en-prose a:hover {

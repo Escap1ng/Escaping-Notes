@@ -37,11 +37,6 @@ import { N, navLabel } from '../config/narrative.js'
 .year {
   color: var(--hot);
   font-size: var(--fs-3xs);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.en-card:hover .year {
-  transform: scale(1.08);
 }
 
 .name {
@@ -52,13 +47,13 @@ import { N, navLabel } from '../config/narrative.js'
   letter-spacing: -0.01em;
   line-height: var(--lh-tight);
   transition:
-    color 0.24s,
-    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color var(--dur-fast),
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .en-card:hover .name {
   color: var(--cold);
-  transform: translateX(var(--space-1));
+  transform: translateX(var(--nudge));
 }
 
 .desc {
@@ -88,7 +83,6 @@ import { N, navLabel } from '../config/narrative.js'
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .en-card:hover .year,
   .en-card:hover .name {
     transform: none;
   }

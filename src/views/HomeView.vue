@@ -35,7 +35,7 @@ onMounted(async () => {
   tick()
   clk = setInterval(tick, 1000)
   posts.value = await loadPosts()
-  // 抽屉第一次进入视口时拉出一次，之后断开——它不是滚动监听，§9.5 那条禁令不适用。
+  // 抽屉第一次进入视口时拉出一次，之后断开——它不是滚动监听，docs/design.md §3.2 那条「不要各自写滚动监听」的禁令不适用。
   // 两道兜底都要：⑴ 没有 IntersectionObserver；⑵ 有，但页面是隐藏页，回调永远不来
   // （后台标签页打开、以及内置/无头 surfaces 都是这一类）。缺了第二道，内容会停在 opacity:0。
   if (!('IntersectionObserver' in window) || !drawerEl.value || document.visibilityState === 'hidden') {

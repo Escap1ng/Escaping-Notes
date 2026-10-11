@@ -1,6 +1,8 @@
-// 双主题对比度审计：从 site.css 的两个主题块读令牌，按 WCAG 比值 + 绝对级差两套尺子判。
-// 为什么两套尺子：近黑底上 WCAG 比值会压缩（bg 2.2 级时 1.48:1 已经是 Δ41 级），
-// 而浅色上比值才贴近观感——星轨那几轮（design.md §10 ⑮⑯）吃过这个亏，所以两把都打。
+// 双主题对比度审计：从 site.css 的两个主题块读令牌，按 WCAG 比值判。
+// 这里只有**一把**尺子：曾经还有一条"合成后绝对级差"（近黑底上比值会压缩，bg 2.2 级时 1.48:1
+// 已经是 Δ41 级——星轨那几轮 docs/design.md §9 第 8、10 条吃过这个亏），它唯一的消费者是
+// 每页一枚巨型空心汉字的那层签名，那件东西已整体删除（docs/design.md §9 第 19 条），
+// 尺子连同 levels/mixHex/dLevels 一起撤了。要再量发丝线级的绝对差，先把这套数学重新写回来并**当场**接上消费者。
 // 用法：node scripts/check_contrast.mjs          正常审计，不达标 exit 1
 //       node scripts/check_contrast.mjs --self   负向对照：喂一组故意不达标的假令牌，必须 exit 1
 import { readFileSync } from 'node:fs'
@@ -35,33 +37,20 @@ const lin = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : Math.p
 const lum = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2])
 // 只吃 hex 令牌；rgba()/color-mix() 的令牌由调用方先合成成 hex 再送进来
 const ratio = (a, b) => { const x = lum(px(a)), y = lum(px(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) }
-// 感知级：把亮度换算回"中性灰的 8 位字节值"，近黑底上的发丝线用这把尺（比值会压缩）
-const levels = (h) => Math.round(255 * (1.055 * Math.pow(lum(px(h)), 1 / 2.4) - 0.055))
-const mixHex = (bg, fg, a) => { const B = px(bg), F = px(fg); return '#' + B.map((b, i) => Math.round(b + (F[i] - b) * a).toString(16).padStart(2, '0')).join('') }
-const dLevels = (bg, fg, a) => Math.abs(levels(mixHex(bg, fg, a)) - levels(bg))
 
 /* ---------- 判据表 ----------
- * kind: ratio = WCAG 比值下限；dlev = 合成后绝对级差区间（近黑底上的发丝线/签名用这把） */
+ * 全部是 WCAG 比值下限。加一项就调 need()，别在调用点各写一套比较 */
 function checks(T, themeName) {
   const bg = T['--ink-0']
   const out = []
-  const need = (label, fg, kind, lo, hi) => {
-    const v = kind === 'ratio' ? ratio(fg, bg) : dLevels(bg, fg, 1)
-    const ok = kind === 'ratio' ? v >= lo : v >= lo && v <= hi
-    out.push({ theme: themeName, label, value: kind === 'ratio' ? v.toFixed(2) + ':1' : v + ' 级', ok, rule: kind === 'ratio' ? `≥${lo}:1` : `${lo}~${hi} 级` })
+  const need = (label, fg, lo) => {
+    const v = ratio(fg, bg)
+    out.push({ theme: themeName, label, value: v.toFixed(2) + ':1', ok: v >= lo, rule: `≥${lo}:1` })
   }
-  need('正文 --text-0', T['--text-0'], 'ratio', 7)
-  need('次文字 --text-1', T['--text-1'], 'ratio', 4.5)
-  if (T['--text-2']) need('编号字 --text-2', T['--text-2'], 'ratio', 4.5)
-  need('交互 --cold', T['--cold'], 'ratio', themeName === '浅色' ? 5.5 : 4.5)
-  need('深度 --hot', T['--hot'], 'ratio', themeName === '浅色' ? 5.5 : 4.5)
-  // 幽灵签名：取显影上限那一档的合成色，量它离底多少级
-  if (T['--glyph'] && T['--glyph-a1']) {
-    const a = parseFloat(T['--glyph-a1'])
-    const v = dLevels(bg, T['--glyph'], a)
-    const lo = themeName === '深色' ? 18 : 10, hi = themeName === '深色' ? 60 : 45
-    out.push({ theme: themeName, label: `幽灵签名 α=${a}`, value: v + ' 级', ok: v >= lo && v <= hi, rule: `${lo}~${hi} 级` })
-  }
+  need('正文 --text-0', T['--text-0'], 7)
+  need('次文字 --text-1', T['--text-1'], 4.5)
+  need('交互 --cold', T['--cold'], themeName === '浅色' ? 5.5 : 4.5)
+  need('深度 --hot', T['--hot'], themeName === '浅色' ? 5.5 : 4.5)
   return out
 }
 

@@ -1,5 +1,5 @@
 // src/lib/markdown.js 的行为钉子
-// 重点盯两类：① §10 ⑦ 那批"评审查出、自查全漏"的缺陷不许复活；② 渲染结果会进 v-html，
+// 重点盯两类：① docs/manual.md §2.2 记的那批"评审查出、自查全漏"的缺陷不许复活；② 渲染结果会进 v-html，
 // 而 /api/posts 的写权限是 admin 或 owner（api.py 的 _post_write），所以"作者=可信"不成立，
 // 链接与图片的 URL 口径必须当安全边界看。
 import { test } from 'node:test'
@@ -53,7 +53,7 @@ test('表头必须有分隔行，对齐只取 left/right/center', () => {
   assert.ok(!/style="text-align:(?!left|right|center)/.test(out), '对齐值不许来自用户文本')
 })
 
-// §10 ⑦：'>' / '-' / '1.' 三个分支曾漏 flushTable()，把表格排到后方法块之后
+// docs/manual.md §2.2 的表格判据：'>' / '-' / '1.' 三个分支曾漏 flushTable()，把表格排到后方法块之后
 test('表格后面接引用、列表、有序列表，表格仍在前', () => {
   for (const [name, block] of [
     ['引用', '> 引用'],

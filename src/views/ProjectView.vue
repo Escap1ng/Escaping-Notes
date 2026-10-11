@@ -19,9 +19,9 @@ useDetailExit('/projects')
 watch(
   p,
   (v) => {
-    // 站名走 content.site.name，不再抄第三份字面量：项目里恰好有一个与站同名的 Escaping Notes，
-    // 硬写 "Escaping Notes · Escaping Notes" 读起来像模板坏了
-    if (v) document.title = `${v.name} · ${content.site.name}`
+    if (!v) return
+    // 站名走 content.site.name，不抄第三份字面量；同名项目（本站自己）不去叠一遍
+    document.title = v.name === content.site.name ? v.name : `${v.name} · ${content.site.name}`
   },
   { immediate: true }
 )
@@ -118,11 +118,11 @@ watch(
 }
 
 .arrow {
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .exit a:hover .arrow {
-  transform: translate(3px, -3px);
+  transform: translate(var(--nudge), var(--lift));
 }
 
 @media (max-width: 720px) {

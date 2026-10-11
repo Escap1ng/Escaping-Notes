@@ -1,5 +1,5 @@
 // 首屏文案契约的钉子：N 里必须真有首屏要的那两样，且视图不引用不存在的字段。
-// 为什么要钉：§2.4 规定界面文案唯一来源是 narrative.js，而删字段是**静默失败**——
+// 为什么要钉：docs/design.md §2 原则 4 规定界面文案唯一来源是 narrative.js，而删字段是**静默失败**——
 // Vite 不会为 `N.heroEyebrow` 取不到而报错，它渲染成空文本，首屏少一行没人发现。
 // 跑法：npm test（Node 内置 test runner，零依赖）
 import { test } from 'node:test'

@@ -220,12 +220,12 @@ const filtered = computed(() =>
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: -0.01em;
-  transition: color 0.24s, transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: color var(--dur-fast), transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .card:hover .title {
   color: var(--cold);
-  transform: translateX(5px);
+  transform: translateX(var(--nudge));
 }
 
 .summary {

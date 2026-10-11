@@ -52,7 +52,7 @@ watch(lightbox, async (open) => {
 })
 
 /* 顶部曝光进度线不在这里算：直接消费 App.vue 写入的 --shift，
-   省掉一套重复的滚动监听与 scrollHeight 强制布局（见 design.md §9.4） */
+   省掉一套重复的滚动监听与 scrollHeight 强制布局（见 design.md §3.2） */
 
 async function copyLink() {
   try {
@@ -170,7 +170,7 @@ onUnmounted(() => {
   padding-top: var(--page-top);
 }
 
-/* .en-glass（阅读底板）已上移到 site.css §6c：它是 §5.4 列出的全站基元，不该锁在本页 scoped 里 */
+/* .en-glass（阅读底板）已上移到 site.css §6c：它是 docs/design.md §6.4 列出的全站基元，不该锁在本页 scoped 里 */
 
 /* 顶部进度线（冷 → 热）：--shift 直接喂给 scaleX，零 JS、零滚动监听。
    必须是 transform 而非 width：--shift 每个滚动帧都在变，改宽度等于每帧一次布局。
@@ -273,7 +273,7 @@ onUnmounted(() => {
   font-family: var(--font-display);
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
-  transition: color 0.24s;
+  transition: color var(--dur-fast);
 }
 
 .end:hover .end-title {

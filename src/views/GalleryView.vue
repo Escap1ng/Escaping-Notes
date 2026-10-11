@@ -186,10 +186,11 @@ onUnmounted(() => {
   background: none;
   color: inherit;
   font: inherit;
-  cursor: pointer;
+  /* 与文章页插图同一个指针：点开都是看大图 */
+  cursor: zoom-in;
   transform: rotate(var(--tilt, 0deg));
   transform-origin: center;
-  transition: transform 0.3s cubic-bezier(0.34, 0.6, 0.64, 1);
+  transition: transform var(--dur) cubic-bezier(0.34, 0.6, 0.64, 1);
 }
 
 /* 悬停把照片摆正、抬一点，像伸手去揭那张片子 */
@@ -212,7 +213,7 @@ onUnmounted(() => {
   box-shadow:
     0 1px 3px var(--shadow),
     0 6px 22px color-mix(in srgb, var(--shadow) 55%, transparent);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow var(--dur) ease;
 }
 
 .shot:hover .frame,
@@ -232,7 +233,7 @@ onUnmounted(() => {
   display: block;
   width: 100%;
   height: auto;
-  transition: transform 0.5s ease;
+  transition: transform var(--dur) ease;
 }
 
 .shot:hover .inner img,
@@ -267,7 +268,7 @@ onUnmounted(() => {
   line-height: var(--lh-snug);
   letter-spacing: 0.02em;
   text-align: center;
-  transition: color 0.2s ease;
+  transition: color var(--dur-fast) ease;
 }
 
 .shot:hover .cap,
@@ -330,7 +331,7 @@ onUnmounted(() => {
   font-size: var(--fs-md);
   line-height: 1;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
 }
 
 .lb-x:hover,

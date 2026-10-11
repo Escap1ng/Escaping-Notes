@@ -8,7 +8,7 @@ import sys
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-"""命名规约对拍：把 docs/design.md §9.7 写成的规则变成会红的检查。
+"""命名规约对拍：把 docs/design.md §5 写成的规则变成会红的检查。
 
 规则只有写进代码才算约束；写在文档里的那些，三周后一定有人违反。这里检查的是**跟踪文件**
 （git ls-files），未跟踪的临时素材与探针脚本不归它管——那类文件本该由 .gitignore 挡住。

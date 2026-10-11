@@ -1,12 +1,15 @@
-// 站点信息：改名字 / 简介 / 社交链接 → 只改这个文件，见 docs/manual.md §2.1
+// 站点信息：改名字 / 简介 / 社交链接 / 内容许可 → 只改这个文件，见 docs/manual.md §2.1
 export const site = {
   name: 'Escaping Notes',
-  author: 'Yu · Escap1ng',
+  author: 'Escap1ng',
   bio: 'China Jiliang University · Undergraduate',
   location: 'Hangzhou, Zhejiang',
   coords: '30.25°N 120.17°E',
   email: 'chunqi-yu@outlook.com',
   url: 'https://escaping.top', // 站点公开地址（RSS/OG/canonical 用）
+  // 内容许可：页脚那行「© 年份 作者 · 协议」里的协议名与它的网址。
+  // name 是要给人看的字面量，url 必须与它逐字对得上（写成 /by-sa/ 就是挂着 NC-SA 的名字链到别的条款）
+  license: { name: 'CC BY-NC-SA 4.0', url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' },
   socials: [
     { label: 'GitHub · Escap1ng', url: 'https://github.com/Escap1ng' },
     { label: 'Steam · Escap1ng', url: 'https://steamcommunity.com/id/escap1ng/' },

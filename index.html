@@ -63,6 +63,15 @@
         document.documentElement.style.setProperty('--plate-blur', blur + 'px')
         document.documentElement.dataset.plateBlur = String(blur)
       }
+
+      // 卡面档位（'solid' 不透底 = 默认 / 'glass' 半透）。默认档是 CSS 自己算出来的样子，
+      // 所以这里**只在偏离默认时写属性**——选过半透的访客要是不在首帧写上属性，进页就会先看到一排
+      // 纯白卡再集体变半透，跟底片模糊那类闪法同一条路。没存过时什么都不写。
+      // 键名与 src/lib/storage.js 的 KEYS.cardSurface 同口径，档位值与 lib/surface.js 同口径，
+      // 由 tests/card-surface.test.mjs 钉住。
+      if (localStorage.getItem('en-card-surface') === 'glass') {
+        document.documentElement.dataset.cardSurface = 'glass'
+      }
     </script>
   </head>
   <body>

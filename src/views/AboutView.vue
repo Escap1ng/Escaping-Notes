@@ -5,6 +5,7 @@ import { content } from '../lib/content.js'
 import { loadPosts } from '../lib/posts.js'
 import { records } from '../lib/records.js'
 import { friends } from '../config/friends.js'
+import { onLens } from '../lib/lens.js'
 import { N, navLabel } from '../config/narrative.js'
 
 const facts = [
@@ -45,7 +46,7 @@ const stats = computed(() => {
     <h2 class="en-h2">{{ navLabel('/about') }}</h2>
 
     <!-- 自述：头像 + 长段第一人称，满宽一张 -->
-    <div class="en-card wide">
+    <div class="en-card wide en-lens" @pointermove="onLens">
       <p class="en-eyebrow">// ABOUT · 自述</p>
       <div class="bio-row">
         <!-- 头像取歌单封面那张图（外链，与音乐页同源）：显式声明宽高，图到达前就占好位 -->
@@ -65,14 +66,14 @@ const stats = computed(() => {
 
     <!-- 三枚读数：文章表现算，没有新接口 -->
     <ul class="stats">
-      <li v-for="s in stats" :key="s.k" class="en-card stat">
+      <li v-for="s in stats" :key="s.k" class="en-card stat en-lens" @pointermove="onLens">
         <span class="sv">{{ s.v }}</span>
         <span class="sk en-mono">{{ s.k }}</span>
       </li>
     </ul>
 
     <div class="en-cards">
-      <div class="en-card">
+      <div class="en-card en-lens" @pointermove="onLens">
         <p class="en-eyebrow">// FACTS · 档案</p>
         <dl class="facts">
           <div v-for="f in facts" :key="f.k" class="fact">
@@ -86,7 +87,7 @@ const stats = computed(() => {
         </dl>
       </div>
 
-      <div class="en-card">
+      <div class="en-card en-lens" @pointermove="onLens">
         <p class="en-eyebrow">// SOCIAL</p>
         <ul class="links">
           <li v-for="s in content.site.socials" :key="s.label">
@@ -97,7 +98,7 @@ const stats = computed(() => {
         </ul>
       </div>
 
-      <div class="en-card wide">
+      <div class="en-card wide en-lens" @pointermove="onLens">
         <p class="en-eyebrow">// FRIENDS · 友链</p>
         <ul class="links">
           <li v-for="f in friends" :key="f.url">
@@ -113,7 +114,7 @@ const stats = computed(() => {
          一行放多枚（auto-fill 按 190px 起排），不锁两列——5 条锁两列就会落单 -->
     <p class="en-eyebrow sec">// GEAR · 技术栈</p>
     <div class="gears">
-      <div v-for="g in content.gear" :key="g.name" class="en-card gear">
+      <div v-for="g in content.gear" :key="g.name" class="en-card gear en-lens" @pointermove="onLens">
         <h3 class="gn">{{ g.name }}</h3>
         <p v-if="g.note" class="gno">{{ g.note }}</p>
       </div>
@@ -270,7 +271,7 @@ const stats = computed(() => {
   font-weight: var(--fw-bold);
   color: var(--text-0);
   text-decoration: none;
-  transition: color 0.22s;
+  transition: color var(--dur-fast);
 }
 
 /* 下划线由左向右画出 */
@@ -284,7 +285,7 @@ const stats = computed(() => {
   background: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .link:hover::after {
@@ -298,11 +299,11 @@ const stats = computed(() => {
 .arrow {
   font-size: var(--fs-xs);
   color: var(--text-1);
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s;
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1), color var(--dur-fast);
 }
 
 .link:hover .arrow {
-  transform: translate(3px, -3px);
+  transform: translate(var(--nudge), var(--lift));
   color: var(--cold);
 }
 

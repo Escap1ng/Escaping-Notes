@@ -284,7 +284,7 @@ onUnmounted(() => {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.24s ease, color 0.24s;
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast);
 }
 
 .q-row:hover {

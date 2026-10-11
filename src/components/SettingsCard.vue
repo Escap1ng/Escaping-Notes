@@ -1,16 +1,26 @@
 <script setup>
-// 设置卡：顶栏「设置」图标点开的那一张。目前只有底片模糊一枚滑杆。
+// 设置卡：顶栏「设置」图标点开的那一张。目前两枚控件——底片模糊滑杆、卡片颜色两档单选。
 // 与 MusicCard 同一模子——Escape 关、点卡外关、焦点陷阱、贴在顶栏下沿右对齐。
-// 值本身不住在这里：读写都在 src/lib/plate.js，这张卡只是个门面。
-import { onMounted, onUnmounted, ref } from 'vue'
+// 值本身不住在这里：读写分别在 src/lib/plate.js 与 src/lib/surface.js，这张卡只是个门面。
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { trapFocus } from '../lib/focus.js'
 import { plate, applyBlur, BLUR_MIN, BLUR_MAX } from '../lib/plate.js'
+import { cardSurface, applyCardSurface, CARD_GLASS, CARD_SOLID } from '../lib/surface.js'
+import { theme } from '../lib/theme.js'
 
 const emit = defineEmits(['close'])
 const cardEl = ref(null)
 
+// 不透底那一档在两套主题下是两个色面（浅色 = 纯白，深色 = 不透明墨底），
+// 所以标签跟着主题走：深色下写"纯白"是指着近黑的卡面说谎。
+// 这张卡开着时点顶栏的主题钮会先触发"点卡外即收"，所以标签不会在眼前翻色。
+const solidLabel = computed(() => (theme.mode === 'out' ? '纯白' : '实底'))
+
 function onSlide(e) {
   applyBlur(e.target.value)
+}
+function onMode(e) {
+  applyCardSurface(e.target.value)
 }
 function onKey(e) {
   if (e.key === 'Escape') emit('close')
@@ -62,6 +72,37 @@ onUnmounted(() => {
     />
 
     <p class="hint">0 即清晰。只作用于折线以下的风景底片，首屏不受影响。</p>
+
+    <div class="sep" role="presentation"></div>
+
+    <div class="row">
+      <span class="lab" id="card-surface-label">卡片颜色</span>
+    </div>
+
+    <div class="seg" role="radiogroup" aria-labelledby="card-surface-label">
+      <label class="opt">
+        <input
+          type="radio"
+          name="card-surface"
+          :value="CARD_SOLID"
+          :checked="cardSurface.mode === CARD_SOLID"
+          @change="onMode"
+        />
+        <span>{{ solidLabel }}</span>
+      </label>
+      <label class="opt">
+        <input
+          type="radio"
+          name="card-surface"
+          :value="CARD_GLASS"
+          :checked="cardSurface.mode === CARD_GLASS"
+          @change="onMode"
+        />
+        <span>半透明</span>
+      </label>
+    </div>
+
+    <p class="hint">默认是不透底：浅色主题下就是纯白，深色主题下是不透底的墨面，底下的照片被卡面挡住。另一档半透（52%）让风景透出来，卡片边界只剩那根发丝线。</p>
   </div>
 </template>
 
@@ -147,5 +188,38 @@ onUnmounted(() => {
   font-size: var(--fs-xs);
   line-height: 1.6;
   color: var(--text-1);
+}
+
+/* 两枚控件之间的一道发丝线：靠 flex gap 空出来的是空白，不是分隔 */
+.sep {
+  height: 1px;
+  background: var(--line);
+}
+
+/* 与上面那条滑杆同一个口径：原生控件 + accent-color，不自造 radio。
+   键盘方向键在 radiogroup 里天然可用，焦点环走全站那条 :focus-visible。 */
+.seg {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.opt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-sm);
+  color: var(--text-0);
+  cursor: pointer;
+}
+
+.opt input {
+  margin: 0;
+  accent-color: var(--cold);
+}
+
+@media (pointer: coarse) {
+  .opt {
+    min-height: 44px;
+  }
 }
 </style>

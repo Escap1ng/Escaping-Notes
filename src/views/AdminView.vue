@@ -426,7 +426,7 @@ async function onFile(e) {
 }
 
 .grid tbody tr {
-  transition: background-color 0.18s ease;
+  transition: background-color var(--dur-fast) ease;
 }
 
 .grid tbody tr:hover {
@@ -499,13 +499,13 @@ async function onFile(e) {
   border: 1px solid var(--card-brd);
   border-radius: var(--r-sm);
   background: var(--card-bg);
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur);
 }
 
 .img-cell:hover {
   border-color: var(--card-brd-hover);
   background: var(--card-bg-hover);
-  transform: translateY(-2px);
+  transform: translateY(var(--lift));
 }
 
 .img-cell img {

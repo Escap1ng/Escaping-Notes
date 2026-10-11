@@ -4,7 +4,7 @@
 //   · 星群与尾迹模型 = src/components/StarTrails.vue 的 mkStar / accPass
 //   · 快进步数与衰减 = 同文件 buildPlate() 用的 PLATE_STEPS / PLATE_OM / PLATE_FADE
 //     （即 prefers-reduced-motion 用户实际看到的那一张）
-//   · 弧长倍率 = 同处的 PLATE_LEN：尾迹长度由它承载，不再挂在衰减窗口上（§10 ⑭）
+//   · 弧长倍率 = 同处的 PLATE_LEN：尾迹长度由它承载，不再挂在衰减窗口上（docs/design.md §9 第 6 条）
 //   · 每根弧的角长 = 同处的 SHEAR_MIN / SHEAR_SPAN / SHEAR_POW（尾迹长度就等于它）
 //   · 天极位置 = src/lib/sky.js 的 POLE_FX / POLE_FY
 //   · 两套主题的色 = src/styles/site.css §2 / §3 的 --white / --cold / --hot / --text-0 / --ink-0

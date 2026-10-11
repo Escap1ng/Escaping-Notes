@@ -315,6 +315,12 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   font-size: var(--fs-2xs);
   letter-spacing: 0.14em;
   color: var(--text-0);
+  transition: color var(--dur-fast);
+}
+
+/* 站名是回首页的链接，原先 hover 什么都不变，与同排五枚图标钮不一致 */
+.brand:hover .brand-name {
+  color: var(--cold);
 }
 
 /* ---- 导航 ---- */
@@ -338,7 +344,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   font-family: var(--font-serif);
   font-size: var(--fs-md);
   line-height: var(--lh-snug);
-  transition: color 0.22s;
+  transition: color var(--dur-fast);
 }
 
 .nav-link .code {
@@ -366,7 +372,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   background: var(--cold);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .nav-link:hover::after,
@@ -400,7 +406,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   letter-spacing: 0.06em;
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.22s, border-color 0.22s, transform 0.22s;
+  transition: color var(--dur-fast), border-color var(--dur-fast), transform var(--dur);
 }
 
 /* 图标按钮：32px 正方形等大一枚（右上角三枚与汉堡/关闭共用这一档）。
@@ -425,7 +431,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 .auth-link:hover {
   color: var(--cold);
   border-color: var(--cold);
-  transform: translateY(-1px);
+  transform: translateY(var(--lift));
 }
 
 /* 播放中：红移标示；歌单为空：置灰 */
@@ -509,7 +515,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   padding: var(--space-1) var(--space-2);
   border-left: 2px solid transparent;
   text-decoration: none;
-  transition: border-color 0.24s, background-color 0.24s;
+  transition: border-color var(--dur-fast), background-color var(--dur-fast);
 }
 
 .drawer-link.active {
@@ -539,11 +545,11 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 .d-arrow {
   margin-left: auto;
   color: var(--text-1);
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s;
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1), color var(--dur-fast);
 }
 
 .drawer-link:hover .d-arrow {
-  transform: translateX(var(--space-0));
+  transform: translateX(var(--nudge));
   color: var(--cold);
 }
 

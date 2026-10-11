@@ -54,7 +54,7 @@ const shownSongs = computed(() =>
 
     <!-- 在线听歌：站内自托管的 mp3，整页唯一能播的那一张，所以不折。
          进度与音量收在顶栏「音乐」点开的卡里，两处共用 lib/music.js 那台引擎，当前曲同时亮 -->
-    <div v-if="tracks.length" class="en-card local">
+    <div v-if="tracks.length" class="en-card local en-lens" @pointermove="onLens">
       <p class="en-eyebrow">// LISTEN · 在线听歌</p>
       <ol class="songs">
         <li v-for="(t, i) in tracks" :key="t.file">
@@ -75,7 +75,7 @@ const shownSongs = computed(() =>
     </div>
 
     <!-- 曲目是长列表：整张表进一张卡，而不是 200 首歌各占一张 210px 的卡 -->
-    <div class="en-card tracklist">
+    <div class="en-card tracklist en-lens" @pointermove="onLens">
       <div class="fold-head">
         <div class="fh-label">
           <p class="en-eyebrow">// SOURCE · QQ 音乐</p>
@@ -189,7 +189,7 @@ const shownSongs = computed(() =>
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.25s ease;
+  transition: background-color var(--dur-fast) ease;
 }
 
 .song:hover {
@@ -250,7 +250,7 @@ const shownSongs = computed(() =>
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: background-color 0.25s ease;
+  transition: background-color var(--dur-fast) ease;
 }
 
 .track:hover {
@@ -267,7 +267,7 @@ const shownSongs = computed(() =>
   background: var(--cold);
   transform: scaleY(0);
   transform-origin: top;
-  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .track:hover::before {
@@ -277,7 +277,7 @@ const shownSongs = computed(() =>
 .no {
   color: var(--hot);
   font-size: var(--fs-3xs);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .track:hover .no {
@@ -291,12 +291,12 @@ const shownSongs = computed(() =>
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.24s, transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: color var(--dur-fast), transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .track:hover .tt {
   color: var(--cold);
-  transform: translateX(var(--space-0));
+  transform: translateX(var(--nudge));
 }
 
 .ar {
