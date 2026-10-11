@@ -43,7 +43,7 @@ export const N = {
     updates: '短的、不成篇的记录。',
     records: '曲目表，点一行就能听。',
     gallery: '这一面墙收的是全站用过的图片。',
-    projects: '做过的东西，和它们现在的状态。',
+    projects: '做过的东西，点开卡片看介绍。',
   },
 
   // 映像柜（/gallery）：墙上那行的计数与放大提示。照片的歪斜角不在这里，
@@ -51,6 +51,15 @@ export const N = {
   gallery: {
     count: '共 {n} 张图片',
     open: '点按放大',
+  },
+
+  // 项目页（/projects）：卡片点开的是介绍面板，仓库外链收进面板里那一枚按钮
+  projects: {
+    count: '共 {n} 个项目',
+    open: '查看介绍',
+    points: '// 要点 · HIGHLIGHTS',
+    stack: '// 技术栈 · STACK',
+    repo: '查看仓库',
   },
 
   // 看片灯箱：/gallery 的轮播框与 /blog/:slug 的单图框共用这一组标签

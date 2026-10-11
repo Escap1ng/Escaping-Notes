@@ -1,7 +1,78 @@
-// 项目页种子数据：阶段三起可在 /admin 设置页签网页修改
+// 项目页种子数据。
+// 卡面那四个字段（name / desc / year / url）阶段三起可在 /admin 设置页签按行编辑；
+// 介绍三件（detail 段落 / points 要点 / stack 一行技术栈）**只在这里改**——后台的行式编辑装不下
+// 多段正文。服务器里存的那份不带它们，lib/content.js 按 name 回贴，所以后台点保存不会抹掉介绍。
 export const projects = [
-  { name: 'Escaping Notes', desc: '本站：一张逃逸轨迹图', year: '2026', url: 'https://github.com/Escap1ng/Escaping-Notes' },
-  { name: 'mathmodel-kit', desc: '数学建模竞赛一站式智能体技能集：分析 / 建模 / 算法 / 绘图 / 论文', year: '2026', url: 'https://github.com/Escap1ng/mathmodel-kit' },
-  { name: 'math-modeling-skill', desc: '数学建模竞赛全流程 AI 辅助，PDF + Word 双格式交付', year: '2026', url: 'https://github.com/Escap1ng/math-modeling-skill' },
-  { name: 'VisualLaTeX', desc: '纯前端、零依赖、完全离线的 LaTeX 轻量编辑器', year: '2026', url: 'https://github.com/Escap1ng/VisualLaTeX' },
+  {
+    name: 'Escaping Notes',
+    desc: '本站：一张逃逸轨迹图',
+    year: '2026',
+    url: 'https://github.com/Escap1ng/Escaping-Notes',
+    detail: [
+      '一个个人博客与记录站，把写过的东西按时间落在同一张底片上。前端是 Vue 3 + Vite 的单页应用，11 条路由全部懒加载；文章用带 frontmatter 的 Markdown 存在仓库里，后端是 Python 3 标准库的单文件服务（server/api.py），不装任何第三方依赖。',
+      '首页架着一台一直开着快门的相机：星轨由 Canvas 2D 的离屏累积缓冲逐帧画出，滚动和光标都在改变它的曝光速度；沉积是全站累积的，换页不重铺，回到首页还是那圈越积越密的弧。首屏之下是一条照片地景横带，深色与浅色用的是同一取景，切主题不换山。',
+      '设计上能核的部分都写进了 docs/design.md——界面唯一依据。颜色、字号、间距全部走令牌，四个门禁脚本在提交前对拍：端点表与后端路由、文档里的引用与路由表、命名规约、主题令牌的 WCAG 对比度。测试用 Node 内置 test runner 加 python unittest，零测试框架。',
+    ],
+    points: [
+      '运行时依赖只有 Vue 与 Vue Router；展示字体是一枚自托管 woff2，全站不引 CDN',
+      '后端缺席时整站回落到本地种子数据，Pages 上那份只读镜像照样能读完全部内容',
+      '抽屉与三处灯箱都有焦点陷阱（关闭后焦点回到触发它的那一枚），减弱动效下有完整的静态降级',
+      'GitHub Pages 镜像已绑 escaping.top，带登录与计数的完整版留在自建服务器上',
+    ],
+    stack: 'Vue 3 · Vite 5 · Vue Router 4 · Canvas 2D · Python 3 标准库',
+  },
+  {
+    name: 'mathmodel-kit',
+    desc: '数学建模竞赛一站式智能体技能集：分析 / 建模 / 算法 / 绘图 / 论文',
+    year: '2026',
+    url: 'https://github.com/Escap1ng/mathmodel-kit',
+    detail: [
+      '把数学建模竞赛拆成五个环节——题目分析、模型建立、算法求解、图表绘制、论文写作——每个环节各做成一套能被智能体直接调用的技能：上一环的产出就是下一环的输入，中间不用人再转述一遍要求。',
+      '写进技能的是「这类活儿该怎么做」，而不是某道题的解法：图表的尺寸与线宽、论文的排版要求、参考文献格式，都在技能里固化一次。换一道题，这些交代不用再重说；要改规范，改的是那一份文件。',
+      '分成五套而不是串成一条流水线，是为了单独可查、单独可替换——某一环不满意就只换那一环，其余照旧。',
+    ],
+    points: [
+      '五个环节各一份技能，环节之间靠文件交接',
+      '交付规范只在技能里写一次，不靠每次向模型重复交代',
+      '绘图那一环按论文排版出图，不留「先画再缩放」这一步',
+      '仓库里是技能定义与配套规范，装进工作目录即可调用',
+    ],
+    stack: 'AI 智能体技能 · Markdown 规范文件',
+  },
+  {
+    name: 'math-modeling-skill',
+    desc: '数学建模竞赛全流程 AI 辅助，PDF + Word 双格式交付',
+    year: '2026',
+    url: 'https://github.com/Escap1ng/math-modeling-skill',
+    detail: [
+      '一道赛题进去，一篇排好版的论文出来。中间的分析、建模、求解、画图按顺序带着走完，最后同时交付 PDF 与 Word 两份——Word 那份是给需要手工微调、以及只收 Word 模板的场合留的出口。',
+      '双格式是这一套里最实在的一条：多数竞赛的提交口要的是 Word 或指定模板，纯 LaTeX 交付往往在最后一步才卡住，所以那一步直接在这套流程里补上。',
+      '它面向的是三天里一个人做完全部环节的场景：把重复劳动（排版、图表规范、参考文献格式）交给流程，人留在建模与写作判断上。',
+    ],
+    points: [
+      '全流程按顺序走完，不是只帮其中一环',
+      'PDF 与 Word 同时产出，交付口不需要再手动转换',
+      '图表与公式随正文一起排好，交前不再整篇调版式',
+      '与 mathmodel-kit 的分工：这一套管一条流程跑完，那一套管逐环节的技能集',
+    ],
+    stack: 'AI 技能流程 · LaTeX 与 Word 双出口',
+  },
+  {
+    name: 'VisualLaTeX',
+    desc: '纯前端、零依赖、完全离线的 LaTeX 轻量编辑器',
+    year: '2026',
+    url: 'https://github.com/Escap1ng/VisualLaTeX',
+    detail: [
+      '浏览器里打开就能用的 LaTeX 编辑器：不装 TeX 发行版、不搭服务端、没有构建步骤，编辑—预览—导出这一圈在页面里自己走完。',
+      '它没打算取代 Overleaf。目标是很窄的一件事：没网、没环境、只想改一段公式或凑一条表格的时候，有一个能立刻落地干活的入口。模板与符号表摆在编辑器内侧栏，写公式时不用另开一页文档。',
+      '轻量的代价也写在这里：它吃的是单篇小文档与片段编辑，大部头项目和复杂宏包不在设计目标里。',
+    ],
+    points: [
+      '打开即用：不装 TeX、不搭服务端、无构建步骤',
+      '导入 .tex、可视化编辑、再导出，文件始终在自己手里',
+      '常用模板与符号表在内侧栏，选中即插入',
+      '完全离线，断网也能跑完整流程',
+    ],
+    stack: '原生 JavaScript · 零依赖 · 无构建',
+  },
 ]

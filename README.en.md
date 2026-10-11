@@ -49,7 +49,7 @@ Trails are only painted inside the landing screen. But **the deposition is site-
 - **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (5 spacing / 11 type-size / 4 line-height / 3 weight steps), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — trails are drawn frame by frame with an offscreen accumulation buffer (280 stars, 140 on viewports ≤720px, and multiplied by 0.65 on the dark theme); no third-party UI kits, chart libraries or font CDNs — Vue and Vue Router are the only runtime dependencies, and the display face is one self-hosted subset woff2
 - **Graceful degradation** — if the API is unreachable or times out (10s reads, 60s uploads) the site falls back to the bundled seeds in `src/config/`: still a complete offline plate, readable end to end with no backend at all
-- **Accessibility** — focus traps in the drawer and in both lightboxes (focus returns to the element that opened them), route changes announced to screen readers (`role="status"`), a focusable skip link and `#main`, ≥44px touch targets for buttons / links / chips under `pointer: coarse`, and a full static fallback under `prefers-reduced-motion` (title appears complete, trails are pre-computed as one 380-step plate, the carousel stops on its first slot)
+- **Accessibility** — focus traps in the drawer, in both lightboxes and in the project detail panel (focus returns to the element that opened them), route changes announced to screen readers (`role="status"`), a focusable skip link and `#main`, ≥44px touch targets for buttons / links / chips under `pointer: coarse`, and a full static fallback under `prefers-reduced-motion` (title appears complete, trails are pre-computed as one 380-step plate, the carousel stops on its first slot)
 - **Performance** — the landscape plate lives on `App.vue`, not in each page, so routing never repaints it; the `--shift` scroll depth caches its extreme instead of reading `scrollHeight` per frame (which is a reflow per frame); resize is debounced 150ms; the drawer's `IntersectionObserver` disconnects after one pull; card glows move by transform; the persistent header surface avoids `backdrop-filter` — glass is reserved for the three surfaces that genuinely need isolating from the plate
 - **Reading legibility (stated plainly)** — a scrim-free landscape photo **cannot** reach WCAG AA for naked text: the worst measured point sits at 1.0–1.8:1 regardless of gradient shape (three shapes were tried — single vertical, double scrim top and bottom, fade-in from the top). So the work is divided: the plate is scenery, and body copy always lands on `.sheet` / `.neo-glass` / `.neo-card`, where the foreground starts at 5.5:1. `npm run check:contrast` recomputes the theme tokens against a flat ground before every commit (dark `--text-0` 18.38:1, light 16.90:1 against a 7:1 bar) — but that checks tokens against a solid colour, **not** the composited photo
 - **Feedback loop** — skeleton cards while the archive loads (3 of them), distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query (shareable, survives reload)
@@ -110,7 +110,7 @@ npm run preview        # preview dist/ locally
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` / `build:pages` | Production builds; both use `base: '/'` — the only difference is `VITE_DEPLOY=pages` (`.env.pages`) switching the router to hash mode |
 | `npm run preview` | Serve `dist/` the way production would |
-| `npm run test` | 7 test files (6 `.mjs` + 1 `.py`): frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the first-paint theme, and the gallery list matching the asset manifest |
+| `npm run test` | 8 test files (7 `.mjs` + 1 `.py`): frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the first-paint theme, the gallery list matching the asset manifest, and project write-ups surviving a save from `/admin` |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read out of the source by regex and it throws if they are gone, so re-run after touching star-trail parameters) |
@@ -135,7 +135,7 @@ All 11 routes are lazy-loaded and each carries `meta.t` for the document title a
 | `/updates` | Activity | Short-log feed |
 | `/records` | Music | Self-hosted track list + the player card |
 | `/gallery` | Gallery | Wall of every image the site has used |
-| `/projects` | Projects | Projects and their state |
+| `/projects` | Projects | Project cards, click one for the write-up |
 | `/about` | About | Bio · live counters · gear · friend links |
 | `/login` | Log in | utility page |
 | `/admin` | Console | Editing back end |

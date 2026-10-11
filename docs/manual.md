@@ -144,13 +144,14 @@ export const site = {
 { date: '2026-09-01', text: '今天做了什么……' },
 ```
 
-### 2.4 音乐 / 碎片 / 友情链接
+### 2.4 音乐 / 项目 / 碎片 / 友情链接
 
 - **音乐 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名/艺术家/逐行跳转；表内两列，默认折到前 8 首，点表头「展开其余 N 首」看全）。站长登录后点曲目表表头的「同步歌单」，后端即调用 QQ 接口拉取并缓存到 `server/data/records.json`（默认歌单 ID 可用环境变量 `QQ_DISSTID` 覆盖）；无后端/离线镜像时回退打包的 `src/config/records.js` 静态快照（可由 `python scripts/sync_records.py` 重新生成）。前提是歌单设为公开。
 - **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），显示在自述卡左侧、≤720px 收到正文上方。要换人就换 QQ 那张歌单封面再同步；离线/镜像用的是 `src/config/records.js` 快照里的 URL。
 - **碎片（已随旧版下线，代码保留参考）**：`/fragments` 不占导航位、非 1.0.0 对外功能；接口 `GET/POST/DELETE /api/fragments` 仍保留。
 - **图片管理**：`/admin` 文章页签可「上传图片并插入」正文光标处，下方 IMAGES 列表可插入/删除已上传图片；接口 `GET /api/uploads`、`DELETE /api/uploads/:文件名`（均仅站长）。上传白名单：png/jpg/jpeg/webp/gif/svg/mp3，≤8MB。
 - **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记：文章的封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏地平线的亮/暗两版、抽屉那五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `neo.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **项目 `/projects`（05 导航位）**：卡面那四样（`name|desc|year|url`）在 `/admin` 的 PROJECTS 块按行编辑，一行一个项目。点开卡片看到的那段介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）**只在 `src/config/projects.js` 里改**——行式编辑装不下多段正文。后台点保存不会把介绍抹掉（`src/lib/content.js` 按 `name` 把它贴回来），但**在后台改了项目名字就等于把它和介绍断开**，改名时同步改 `projects.js` 里那个 `name`。`npm test` 里 `tests/projects-intro.test.mjs` 钉着这条。
 - **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
 
 ### 2.5 播放器
