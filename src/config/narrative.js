@@ -53,13 +53,14 @@ export const N = {
     open: '点按放大',
   },
 
-  // 项目页（/projects）：卡片点开的是介绍面板，仓库外链收进面板里那一枚按钮
+  // 项目页（/projects）：卡片点进去是 /projects/:slug 那一页（与 /blog → /blog/:slug 同一套路），
+  // 所以这里只剩那一页上的两块眉标、仓库出口、返回与「名字对不上」那一态
   projects: {
-    count: '共 {n} 个项目',
-    open: '查看介绍',
     points: '// 要点 · HIGHLIGHTS',
     stack: '// 技术栈 · STACK',
     repo: '查看仓库',
+    back: '返回项目列表',
+    lost: '这里没有这个项目的介绍',
   },
 
   // 看片灯箱：/gallery 的轮播框与 /blog/:slug 的单图框共用这一组标签

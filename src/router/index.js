@@ -46,6 +46,12 @@ const router = createRouter({
       meta: { t: `项目 · ${T}` },
     },
     {
+      // 与 /blog/:slug 同一套路：列表点进去是一页正文，不是浮层
+      path: '/projects/:slug',
+      component: () => import('../views/ProjectView.vue'),
+      meta: { t: `项目 · ${T}` },
+    },
+    {
       path: '/about',
       component: () => import('../views/AboutView.vue'),
       meta: { t: `关于 · ${T}` },

@@ -7,6 +7,7 @@ import { loadPost, loadPosts } from '../lib/posts.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { api } from '../lib/api.js'
 import { trapFocus } from '../lib/focus.js'
+import { useDetailExit } from '../lib/exit.js'
 import { read, viewedKey, write } from '../lib/storage.js'
 import { N } from '../config/narrative.js'
 
@@ -21,6 +22,9 @@ const lightbox = ref('')
 const lightboxEl = ref(null)
 let trap = null
 
+// Esc / 点空白退回 /blog；灯箱开着时先让位给灯箱（它自己吃这两下）
+useDetailExit('/blog', () => !lightbox.value)
+
 const neighbors = computed(() => {
   const i = all.value.findIndex((p) => p.slug === route.params.slug)
   if (i < 0) return { prev: null, next: null }
@@ -31,7 +35,8 @@ const neighbors = computed(() => {
 function onProseClick(e) {
   if (e.target.tagName === 'IMG') lightbox.value = e.target.currentSrc || e.target.src
 }
-function onKey(e) {
+// Esc 关灯箱是这盏灯自己的事；「退回列表」不在这里写，走 lib/exit.js（与项目详情页同一处实现）
+function onLightboxKey(e) {
   if (e.key === 'Escape') lightbox.value = ''
 }
 
@@ -82,13 +87,14 @@ onMounted(async () => {
   const stats = await api('/api/stats')
   if (stats && typeof stats[slug] === 'number') views.value = stats[slug]
 
-  addEventListener('keydown', onKey)
+  addEventListener('keydown', onLightboxKey)
 })
 
 onUnmounted(() => {
-  removeEventListener('keydown', onKey)
+  removeEventListener('keydown', onLightboxKey)
   trap?.()
-  document.title = 'Escaping Notes · 逃逸笔记'
+  // 这里不复位 document.title：afterEach 与新页的挂载都排在本次卸载之后，
+  // 写上兜底值反而把「文章 · Escaping Notes」覆成站名（实测：从文章 Esc 退回列表，标签页说两句话）
 })
 </script>
 
