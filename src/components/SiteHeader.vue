@@ -2,15 +2,15 @@
 // 新版顶栏：无底色悬浮条 + 吸积环签名 + 等宽深度导航
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { content } from '../../lib/content.js'
-import { auth, logout } from '../../lib/auth.js'
-import { theme, toggleTheme } from '../../lib/theme.js'
-import { music } from '../../lib/music.js'
-import { debounce } from '../../lib/debounce.js'
-import { trapFocus } from '../../lib/focus.js'
-import MusicCard from '../MusicCard.vue'
-import SettingsCard from '../SettingsCard.vue'
-import { N } from '../../config/narrative.js'
+import { content } from '../lib/content.js'
+import { auth, logout } from '../lib/auth.js'
+import { theme, toggleTheme } from '../lib/theme.js'
+import { music } from '../lib/music.js'
+import { debounce } from '../lib/debounce.js'
+import { trapFocus } from '../lib/focus.js'
+import MusicCard from './MusicCard.vue'
+import SettingsCard from './SettingsCard.vue'
+import { N } from '../config/narrative.js'
 
 const route = useRoute()
 
@@ -93,12 +93,12 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 </script>
 
 <template>
-  <header class="neo-header" :class="{ stuck }">
+  <header class="en-header" :class="{ stuck }">
     <a class="skip-link" href="#main">跳到内容</a>
 
     <RouterLink to="/" class="brand" aria-label="返回首页">
       <span class="mark" aria-hidden="true"></span>
-      <span class="brand-name neo-mono">{{ content.site.name }}</span>
+      <span class="brand-name en-mono">{{ content.site.name }}</span>
     </RouterLink>
 
     <nav class="nav" aria-label="主导航">
@@ -106,7 +106,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         v-for="(item, i) in N.nav"
         :key="item.to"
         :to="item.to"
-        class="nav-link neo-mono"
+        class="nav-link en-mono"
         :class="{ active: i === activeIdx }"
       >
         <span class="code" aria-hidden="true">{{ item.code }}</span>{{ item.label }}
@@ -116,7 +116,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     <div class="right">
       <!-- 右上角四枚：搜索 / 主题 / 音乐 / 设置。搜索暂只摆位，未接任何行为 -->
       <button class="ico-btn" type="button" aria-label="搜索" title="搜索">
-        <svg class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="10.8" cy="10.8" r="6.6" />
           <path d="M15.7 15.7 20.4 20.4" />
         </svg>
@@ -130,10 +130,10 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         :title="`主题：${themeLabel}`"
         @click="toggleTheme"
       >
-        <svg v-if="theme.mode === 'well'" class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <svg v-if="theme.mode === 'well'" class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M20 14.2A8.4 8.4 0 1 1 9.8 4 6.8 6.8 0 0 0 20 14.2Z" />
         </svg>
-        <svg v-else class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <svg v-else class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5" />
         </svg>
@@ -149,7 +149,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         :title="music.available ? (player ? '收起播放器' : '打开播放器') : '暂无曲目可播'"
         @click="togglePlayer"
       >
-        <svg class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9 17.4V5.9l9-1.8v11.4" />
           <circle cx="6.6" cy="17.4" r="2.4" />
           <circle cx="15.6" cy="15.5" r="2.4" />
@@ -160,19 +160,19 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         class="ico-btn settings-btn"
         type="button"
         :aria-expanded="settings"
-        aria-controls="neo-settings"
+        aria-controls="en-settings"
         :aria-label="settings ? '设置：收起' : '设置：展开'"
         :title="settings ? '收起设置' : '设置'"
         @click="toggleSettings"
       >
-        <svg class="neo-svg" viewBox="0 0 24 24" aria-hidden="true">
+        <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 8h8.8M17.2 8h2.8M4 16h2.8M11.2 16h8.8" />
           <circle cx="15" cy="8" r="2.2" />
           <circle cx="9" cy="16" r="2.2" />
         </svg>
       </button>
 
-      <div v-if="auth.user" class="auth neo-mono">
+      <div v-if="auth.user" class="auth en-mono">
         <RouterLink to="/admin" class="auth-link">ADMIN</RouterLink>
         <span class="auth-name">{{ auth.user.nickname }}</span>
         <button class="auth-link" type="button" @click="logout">登出</button>
@@ -182,11 +182,11 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         class="burger ico-btn"
         type="button"
         :aria-expanded="drawer"
-        aria-controls="neo-drawer"
+        aria-controls="en-drawer"
         :aria-label="drawer ? '关闭菜单' : '打开菜单'"
         @click="toggleDrawer"
       >
-        <span class="neo-ico" aria-hidden="true">{{ drawer ? '✕' : '≡' }}</span>
+        <span class="en-ico" aria-hidden="true">{{ drawer ? '✕' : '≡' }}</span>
       </button>
     </div>
 
@@ -201,7 +201,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     <Transition name="drawer">
       <div
         v-if="drawer"
-        id="neo-drawer"
+        id="en-drawer"
         ref="drawerEl"
         class="drawer"
         role="dialog"
@@ -209,7 +209,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         aria-label="站点菜单"
       >
         <button class="drawer-close ico-btn" type="button" aria-label="关闭菜单" @click="closeDrawer">
-          <span class="neo-ico" aria-hidden="true">✕</span>
+          <span class="en-ico" aria-hidden="true">✕</span>
         </button>
 
         <nav class="drawer-nav" aria-label="移动端主导航">
@@ -222,26 +222,26 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
             :style="{ transitionDelay: `${60 + i * 45}ms` }"
             @click="closeDrawer"
           >
-            <span class="d-code neo-mono" aria-hidden="true">{{ item.code }}</span>
+            <span class="d-code en-mono" aria-hidden="true">{{ item.code }}</span>
             <span class="d-label">{{ item.label }}</span>
             <span class="d-arrow" aria-hidden="true">→</span>
           </RouterLink>
         </nav>
 
-        <div v-if="auth.user" class="drawer-auth neo-mono">
-          <RouterLink to="/admin" class="neo-btn neo-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
+        <div v-if="auth.user" class="drawer-auth en-mono">
+          <RouterLink to="/admin" class="en-btn en-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
           <span class="drawer-name">{{ auth.user.nickname }}</span>
-          <button class="neo-btn neo-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
+          <button class="en-btn en-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
         </div>
 
-        <p class="drawer-foot neo-mono">// Escap1ng · 仍在坠入</p>
+        <p class="drawer-foot en-mono">// Escap1ng · 仍在坠入</p>
       </div>
     </Transition>
   </header>
 </template>
 
 <style scoped>
-.neo-header {
+.en-header {
   position: fixed;
   top: 0;
   left: 0;
@@ -259,7 +259,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 
 /* 吸顶后覆盖在动画画布之上：用高不透明实底而非 backdrop-filter——
    后者会让浏览器在星轨每动一帧时都重算这条横带的背后模糊 */
-.neo-header.stuck {
+.en-header.stuck {
   padding-top: var(--space-1);
   padding-bottom: var(--space-1);
   background: color-mix(in srgb, var(--ink-0) 94%, transparent);
@@ -382,7 +382,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   flex-shrink: 0;
 }
 
-/* 右侧按钮统一：同高 32px 发丝胶囊框线（与 .neo-btn-sm 同语言，仅形态更紧凑） */
+/* 右侧按钮统一：同高 32px 发丝胶囊框线（与 .en-btn-sm 同语言，仅形态更紧凑） */
 .ico-btn,
 .auth-link {
   display: inline-flex;
@@ -411,7 +411,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   justify-content: center;
 }
 
-.neo-svg {
+.en-svg {
   width: 16px;
   height: 16px;
   fill: none;
@@ -547,7 +547,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--cold);
 }
 
-/* 抽屉内的管理入口（移动端顶栏隐藏 auth 时的兜底）：复用 .neo-btn-quiet */
+/* 抽屉内的管理入口（移动端顶栏隐藏 auth 时的兜底）：复用 .en-btn-quiet */
 .drawer-auth {
   display: flex;
   align-items: center;
@@ -615,7 +615,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
    与品牌 / 右上角三枚 / 登录后的管理入口相加超过 1280px，故折叠断点从 1200 抬到 1280。
    加一枚导航实打实要 72px——这个数别凭感觉估，估小了就是 1201~1279px 那一段整条溢出被裁 */
 @media (max-width: 1280px) {
-  .neo-header {
+  .en-header {
     padding: var(--space-1) var(--space-2);
   }
   .nav {

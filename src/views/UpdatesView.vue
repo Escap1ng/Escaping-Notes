@@ -1,32 +1,32 @@
 <script setup>
-// 新版脉冲：卡片栅格（卡面走共用基元 .neo-card），脉冲点冷/热交替
+// 新版脉冲：卡片栅格（卡面走共用基元 .en-card），脉冲点冷/热交替
 import { content } from '../lib/content.js'
 import { N, navLabel } from '../config/narrative.js'
 </script>
 
 <template>
-  <section class="neo-shell">
-    <p class="neo-eyebrow">{{ N.sections.updates }}</p>
-    <h2 class="neo-h2">{{ navLabel('/updates') }}</h2>
-    <p class="neo-lede">{{ N.hints.updates }}</p>
+  <section class="en-shell">
+    <p class="en-eyebrow">{{ N.sections.updates }}</p>
+    <h2 class="en-h2">{{ navLabel('/updates') }}</h2>
+    <p class="en-lede">{{ N.hints.updates }}</p>
 
-    <ol class="neo-cards">
+    <ol class="en-cards">
       <li v-for="(u, i) in content.updates" :key="u.date + u.text">
-        <div class="neo-card pulse">
+        <div class="en-card pulse">
           <span class="head">
             <span class="dot" :class="i % 2 ? 'hot' : 'cold'" aria-hidden="true"></span>
-            <span class="when neo-mono">{{ u.date }}</span>
+            <span class="when en-mono">{{ u.date }}</span>
           </span>
           <p class="what">{{ u.text }}</p>
         </div>
       </li>
-      <li v-if="!content.updates.length" class="empty neo-mono">{{ N.empty.updates }}</li>
+      <li v-if="!content.updates.length" class="empty en-mono">{{ N.empty.updates }}</li>
     </ol>
   </section>
 </template>
 
 <style scoped>
-.neo-shell {
+.en-shell {
   padding-top: 120px;
 }
 

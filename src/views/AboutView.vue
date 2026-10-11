@@ -40,13 +40,13 @@ const stats = computed(() => {
 </script>
 
 <template>
-  <section class="neo-shell">
-    <p class="neo-eyebrow">{{ N.sections.about }}</p>
-    <h2 class="neo-h2">{{ navLabel('/about') }}</h2>
+  <section class="en-shell">
+    <p class="en-eyebrow">{{ N.sections.about }}</p>
+    <h2 class="en-h2">{{ navLabel('/about') }}</h2>
 
     <!-- 自述：头像 + 长段第一人称，满宽一张 -->
-    <div class="neo-card wide">
-      <p class="neo-eyebrow">// ABOUT · 自述</p>
+    <div class="en-card wide">
+      <p class="en-eyebrow">// ABOUT · 自述</p>
       <div class="bio-row">
         <!-- 头像取歌单封面那张图（外链，与音乐页同源）：显式声明宽高，图到达前就占好位 -->
         <img
@@ -65,29 +65,29 @@ const stats = computed(() => {
 
     <!-- 三枚读数：文章表现算，没有新接口 -->
     <ul class="stats">
-      <li v-for="s in stats" :key="s.k" class="neo-card stat">
+      <li v-for="s in stats" :key="s.k" class="en-card stat">
         <span class="sv">{{ s.v }}</span>
-        <span class="sk neo-mono">{{ s.k }}</span>
+        <span class="sk en-mono">{{ s.k }}</span>
       </li>
     </ul>
 
-    <div class="neo-cards">
-      <div class="neo-card">
-        <p class="neo-eyebrow">// FACTS · 档案</p>
+    <div class="en-cards">
+      <div class="en-card">
+        <p class="en-eyebrow">// FACTS · 档案</p>
         <dl class="facts">
           <div v-for="f in facts" :key="f.k" class="fact">
-            <dt class="neo-mono">{{ f.k }}</dt>
+            <dt class="en-mono">{{ f.k }}</dt>
             <dd>{{ f.v() }}</dd>
           </div>
           <div class="fact">
-            <dt class="neo-mono">MAIL</dt>
+            <dt class="en-mono">MAIL</dt>
             <dd>{{ content.site.email }}</dd>
           </div>
         </dl>
       </div>
 
-      <div class="neo-card">
-        <p class="neo-eyebrow">// SOCIAL</p>
+      <div class="en-card">
+        <p class="en-eyebrow">// SOCIAL</p>
         <ul class="links">
           <li v-for="s in content.site.socials" :key="s.label">
             <a class="link" :href="s.url" target="_blank" rel="noopener noreferrer">
@@ -97,8 +97,8 @@ const stats = computed(() => {
         </ul>
       </div>
 
-      <div class="neo-card wide">
-        <p class="neo-eyebrow">// FRIENDS · 友链</p>
+      <div class="en-card wide">
+        <p class="en-eyebrow">// FRIENDS · 友链</p>
         <ul class="links">
           <li v-for="f in friends" :key="f.url">
             <a class="link" :href="f.url" target="_blank" rel="noopener noreferrer">
@@ -111,9 +111,9 @@ const stats = computed(() => {
 
     <!-- 技术栈：每项一枚卡，名字 + 它在这一站里干什么。
          一行放多枚（auto-fill 按 190px 起排），不锁两列——5 条锁两列就会落单 -->
-    <p class="neo-eyebrow sec">// GEAR · 技术栈</p>
+    <p class="en-eyebrow sec">// GEAR · 技术栈</p>
     <div class="gears">
-      <div v-for="g in content.gear" :key="g.name" class="neo-card gear">
+      <div v-for="g in content.gear" :key="g.name" class="en-card gear">
         <h3 class="gn">{{ g.name }}</h3>
         <p v-if="g.note" class="gno">{{ g.note }}</p>
       </div>
@@ -122,7 +122,7 @@ const stats = computed(() => {
 </template>
 
 <style scoped>
-.neo-shell {
+.en-shell {
   padding-top: var(--page-top);
 }
 
@@ -131,7 +131,7 @@ const stats = computed(() => {
   grid-column: 1 / -1;
 }
 
-.neo-card > .neo-eyebrow {
+.en-card > .en-eyebrow {
   margin-bottom: var(--space-1);
 }
 
@@ -186,7 +186,7 @@ const stats = computed(() => {
 }
 
 /* 读数一排三枚：与首页精选同一条断点（900px 折单列），不新造一档。
-   上下各留一档 16：自述卡是满宽的独立卡，不在栅格里，拿不到 .neo-cards 的 gap */
+   上下各留一档 16：自述卡是满宽的独立卡，不在栅格里，拿不到 .en-cards 的 gap */
 .stats {
   list-style: none;
   margin: var(--space-2) 0;

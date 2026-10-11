@@ -263,14 +263,14 @@ async function onFile(e) {
       <button
         v-for="t in tabs"
         :key="t.id"
-        class="neo-chip"
+        class="en-chip"
         :class="{ on: tab === t.id }"
         :aria-pressed="tab === t.id"
         @click="tab = t.id"
       >
         {{ t.label }}
       </button>
-      <span v-if="notice" :class="noticeErr ? 'neo-note-err' : 'neo-note-ok'">// {{ notice }}</span>
+      <span v-if="notice" :class="noticeErr ? 'en-note-err' : 'en-note-ok'">// {{ notice }}</span>
     </nav>
 
     <!-- 用户 -->
@@ -288,12 +288,12 @@ async function onFile(e) {
             <td class="readout">{{ u.ban ? '已禁用' : '正常' }}</td>
             <td class="acts">
               <template v-if="isOwner() && u.role !== 'owner' && u.role !== 'admin'">
-                <button class="neo-btn neo-btn-sm neo-btn-ghost" @click="setRole(u, 'admin')">任为管理</button>
+                <button class="en-btn en-btn-sm en-btn-ghost" @click="setRole(u, 'admin')">任为管理</button>
               </template>
-              <button v-if="u.role !== 'owner'" class="neo-btn neo-btn-sm neo-btn-ghost" @click="setBan(u, !u.ban)">
+              <button v-if="u.role !== 'owner'" class="en-btn en-btn-sm en-btn-ghost" @click="setBan(u, !u.ban)">
                 {{ u.ban ? '解禁' : '禁用' }}
               </button>
-              <button v-if="u.role !== 'owner'" class="neo-btn neo-btn-sm neo-btn-danger" @click="delUser(u)">删除</button>
+              <button v-if="u.role !== 'owner'" class="en-btn en-btn-sm en-btn-danger" @click="delUser(u)">删除</button>
             </td>
           </tr>
         </tbody>
@@ -307,8 +307,8 @@ async function onFile(e) {
         <li v-for="p in posts" :key="p.slug" class="mini-row">
           <span class="readout">{{ p.date }}</span>
           <span class="mini-text">{{ p.title }}</span>
-          <button class="neo-btn neo-btn-sm neo-btn-ghost" @click="editPost(p)">编辑</button>
-          <button class="neo-btn neo-btn-sm neo-btn-danger" @click="delPost(p.slug)">删除</button>
+          <button class="en-btn en-btn-sm en-btn-ghost" @click="editPost(p)">编辑</button>
+          <button class="en-btn en-btn-sm en-btn-danger" @click="delPost(p.slug)">删除</button>
         </li>
       </ul>
 
@@ -327,9 +327,9 @@ async function onFile(e) {
         <textarea ref="bodyRef" v-model="ed.body" class="field mono" rows="14" placeholder="Markdown 正文 *" required></textarea>
         <div class="ed-row">
           <input ref="imgInputRef" type="file" accept="image/*" hidden @change="onImgFile" />
-          <button class="neo-btn neo-btn-ghost" type="button" @click="imgInputRef?.click()">上传图片并插入</button>
+          <button class="en-btn en-btn-ghost" type="button" @click="imgInputRef?.click()">上传图片并插入</button>
         </div>
-        <button class="neo-btn neo-btn-primary" type="submit">保存文章</button>
+        <button class="en-btn en-btn-primary" type="submit">保存文章</button>
       </form>
 
       <h3 class="readout ed-head">// IMAGES · 已上传图片</h3>
@@ -338,9 +338,9 @@ async function onFile(e) {
           <img :src="x.url" :alt="x.name" loading="lazy" />
           <span class="readout img-name">{{ x.name }}</span>
           <span class="acts">
-            <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" @click="insertImage(x)">插入</button>
-            <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" @click="setCover(x)">设为封面</button>
-            <button class="neo-btn neo-btn-sm neo-btn-danger" type="button" @click="delImage(x)">删除</button>
+            <button class="en-btn en-btn-sm en-btn-ghost" type="button" @click="insertImage(x)">插入</button>
+            <button class="en-btn en-btn-sm en-btn-ghost" type="button" @click="setCover(x)">设为封面</button>
+            <button class="en-btn en-btn-sm en-btn-danger" type="button" @click="delImage(x)">删除</button>
           </span>
         </li>
       </ul>
@@ -353,27 +353,27 @@ async function onFile(e) {
         <h3 class="readout">// UPDATES · 每行 date | text</h3>
         <textarea v-model="updatesForm" class="field mono" rows="6"></textarea>
         <div class="ed-row">
-          <button class="neo-btn neo-btn-primary" type="button" @click="saveUpdates">保存动态</button>
-          <button class="neo-btn neo-btn-ghost" type="button" @click="newUpdate">＋ 新增动态</button>
+          <button class="en-btn en-btn-primary" type="button" @click="saveUpdates">保存动态</button>
+          <button class="en-btn en-btn-ghost" type="button" @click="newUpdate">＋ 新增动态</button>
         </div>
       </div>
       <div class="set-block">
         <h3 class="readout">// PROJECTS · 每行 name|desc|year|url</h3>
         <textarea v-model="projectsForm" class="field mono" rows="6"></textarea>
         <div class="ed-row">
-          <button class="neo-btn neo-btn-primary" type="button" @click="saveProjects">保存项目</button>
-          <button class="neo-btn neo-btn-ghost" type="button" @click="newProject">＋ 新增项目</button>
+          <button class="en-btn en-btn-primary" type="button" @click="saveProjects">保存项目</button>
+          <button class="en-btn en-btn-ghost" type="button" @click="newProject">＋ 新增项目</button>
         </div>
       </div>
       <div class="set-block">
         <h3 class="readout">// GEAR · 每行 name|说明</h3>
         <textarea v-model="gearForm" class="field mono" rows="5"></textarea>
-        <button class="neo-btn neo-btn-primary" @click="saveGear">保存装备</button>
+        <button class="en-btn en-btn-primary" @click="saveGear">保存装备</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// PLAYLIST · 每行 title|artist|file(/uploads/…)</h3>
         <textarea v-model="playlistForm" class="field mono" rows="4"></textarea>
-        <button class="neo-btn neo-btn-primary" @click="savePlaylist">保存歌单</button>
+        <button class="en-btn en-btn-primary" @click="savePlaylist">保存歌单</button>
       </div>
       <div class="set-block">
         <h3 class="readout">// UPLOAD · 图片/音乐 ≤8MB</h3>
@@ -395,9 +395,9 @@ async function onFile(e) {
   padding-bottom: var(--space-2);
 }
 
-/* 页签用 .neo-chip（等宽仪器文字）；通知贴右，颜色由 .neo-note-ok/err 承担 */
-.tabs .neo-note-ok,
-.tabs .neo-note-err {
+/* 页签用 .en-chip（等宽仪器文字）；通知贴右，颜色由 .en-note-ok/err 承担 */
+.tabs .en-note-ok,
+.tabs .en-note-err {
   margin-left: auto;
 }
 

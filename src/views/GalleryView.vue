@@ -73,11 +73,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="neo-shell gallery">
-    <p class="neo-eyebrow">{{ N.sections.gallery }}</p>
-    <h2 class="neo-h2">{{ navLabel('/gallery') }}</h2>
-    <p class="neo-lede">{{ N.hints.gallery }}</p>
-    <p class="tally neo-mono">{{ tally }} · {{ N.gallery.open }}</p>
+  <section class="en-shell gallery">
+    <p class="en-eyebrow">{{ N.sections.gallery }}</p>
+    <h2 class="en-h2">{{ navLabel('/gallery') }}</h2>
+    <p class="en-lede">{{ N.hints.gallery }}</p>
+    <p class="tally en-mono">{{ tally }} · {{ N.gallery.open }}</p>
 
     <ul v-if="shots.length" class="wall">
       <li v-for="(s, i) in shots" :key="s.src" :style="{ '--tilt': `${s.tilt}deg`, '--d': `${enterDelay(i)}ms` }">
@@ -99,12 +99,12 @@ onUnmounted(() => {
       <li v-for="k in 3" :key="k">
         <span class="shot">
           <span class="frame">
-            <span class="inner neo-shot blank"></span>
+            <span class="inner en-shot blank"></span>
           </span>
         </span>
       </li>
     </ul>
-    <p v-else class="empty neo-mono">{{ N.empty.gallery }}</p>
+    <p v-else class="empty en-mono">{{ N.empty.gallery }}</p>
 
     <!-- 灯箱必须 Teleport 出 main：main 是 z-index:2 的层叠上下文，框里的关闭/翻页按钮
          会被顶栏（z 60）压在下面点不到。PostView 那盏只有一张图、四角无按钮，才躲得过这件事 -->
@@ -129,8 +129,8 @@ onUnmounted(() => {
           <img :src="cur.src" :alt="cur.title" />
           <figcaption class="lb-cap">{{ cur.title }}</figcaption>
         </figure>
-        <p class="lb-count neo-mono">{{ idx + 1 }} / {{ shots.length }}</p>
-        <p class="lb-hint neo-mono">{{ N.lightbox.keys }}</p>
+        <p class="lb-count en-mono">{{ idx + 1 }} / {{ shots.length }}</p>
+        <p class="lb-hint en-mono">{{ N.lightbox.keys }}</p>
       </div>
     </Teleport>
   </section>

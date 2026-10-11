@@ -19,7 +19,7 @@
 
   <rect width="920" height="320" fill="#0a0a10"/>
   <text class="h" x="60" y="30">the fall transition — enter / leave overlap</text>
-  <text class="s" x="60" y="48">neo.css §8 &lt;Transition name="fall" mode="none"&gt; · 1px ≈ 0.65ms</text>
+  <text class="s" x="60" y="48">site.css §8 &lt;Transition name="fall" mode="none"&gt; · 1px ≈ 0.65ms</text>
 
   <!-- 轴 -->
   <path d="M60 250 H860" stroke="#f4f1ea" stroke-opacity=".25"/>

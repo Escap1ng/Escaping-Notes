@@ -19,11 +19,11 @@
 // 工程约定：像素预算封顶、rAF 单循环、三重停帧闸门（标签页隐藏 / 划出视口 / 取景权被接走）、
 //       reduced-motion 静态快进底片、颜色读 CSS 变量。
 import { onMounted, onUnmounted, ref } from 'vue'
-import { debounce } from '../../lib/debounce.js'
-import { music } from '../../lib/music.js'
-import { shift } from '../../lib/shift.js'
-import { claimPlate, ensurePlate, ownsPlate, plateSpace, releasePlate, resetPlate, sky } from '../../lib/sky.js'
-import { buildRidgeMask } from '../../lib/ridge.js'
+import { debounce } from '../lib/debounce.js'
+import { music } from '../lib/music.js'
+import { shift } from '../lib/shift.js'
+import { claimPlate, ensurePlate, ownsPlate, plateSpace, releasePlate, resetPlate, sky } from '../lib/sky.js'
+import { buildRidgeMask } from '../lib/ridge.js'
 
 // 取景权凭据：每个组件实例一份，fall 转场期间两机并存时只有最后挂载的那个往底片上画。
 const self = {}
@@ -808,7 +808,7 @@ onUnmounted(() => {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* 暗带契约（令牌在 neo.css §1 的 --sky-band / --sky-feather 与 §2/§3 各自的 --sky-k；
+  /* 暗带契约（令牌在 site.css §1 的 --sky-band / --sky-feather 与 §2/§3 各自的 --sky-k；
      设计说明见 docs/design.md §3.3）：视口正中 --sky-band 宽的一条天空被压到 --sky-k
      强度，两侧各 --sky-feather 羽化回全亮。整站一处生效——9 个次级页共用这块 fixed 画布
      （App.vue 的 isSub 是 path !== '/'，路由 10 条里除首页外全部命中，含 login/admin 与 404），

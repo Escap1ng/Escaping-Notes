@@ -49,7 +49,7 @@ $QUALITY = 72  # was 62 -- that was tuned for a blurred image, where block edges
 # The light theme's page colour, spelled out here because the hero's sky dissolve has to land
 # on it EXACTLY: HorizonHero paints the strip above the photo with var(--ink-0), and every
 # point of disagreement between the two shows up as a horizontal bar across the first screen.
-# Keep in step with src/styles/neo.css --ink-0 in the 'out' theme.
+# Keep in step with src/styles/site.css --ink-0 in the 'out' theme.
 $INK_LIGHT = [System.Drawing.Color]::FromArgb(242, 245, 249)
 
 # Two INDEPENDENT blur knobs: how blurry the drawer is must never move how blurry the hero is.

@@ -3,7 +3,7 @@
 // 所以滑杆从 0（真清晰）到 12（最糊）两端都有实义——糊的那一端不是把细节抹掉，是拿细节去换柔。
 //
 // 默认值 BLUR_DEFAULT = 12（作者 2026-10-10 定的口味：进站即柔）。
-// 这个数在三处出现：这里的 BLUR_DEFAULT、neo.css 的 --plate-blur 初值、index.html 首帧内联的
+// 这个数在三处出现：这里的 BLUR_DEFAULT、site.css 的 --plate-blur 初值、index.html 首帧内联的
 // 兜底。由 tests/plate-blur.test.mjs 钉住不许漂开——漂开的症状是"进页先糊一下再变清晰"或反之。
 //
 // 与 theme.js 同一模子：初始值从 localStorage 读，写回时同时改 <html> 的自定义属性与 data 属性。

@@ -47,15 +47,15 @@ const shownSongs = computed(() =>
 </script>
 
 <template>
-  <section class="neo-shell">
-    <p class="neo-eyebrow">{{ N.sections.records }}</p>
-    <h2 class="neo-h2">{{ navLabel('/records') }}</h2>
-    <p class="neo-lede">{{ N.hints.records }}</p>
+  <section class="en-shell">
+    <p class="en-eyebrow">{{ N.sections.records }}</p>
+    <h2 class="en-h2">{{ navLabel('/records') }}</h2>
+    <p class="en-lede">{{ N.hints.records }}</p>
 
     <!-- 在线听歌：站内自托管的 mp3，整页唯一能播的那一张，所以不折。
          进度与音量收在顶栏「音乐」点开的卡里，两处共用 lib/music.js 那台引擎，当前曲同时亮 -->
-    <div v-if="tracks.length" class="neo-card local">
-      <p class="neo-eyebrow">// LISTEN · 在线听歌</p>
+    <div v-if="tracks.length" class="en-card local">
+      <p class="en-eyebrow">// LISTEN · 在线听歌</p>
       <ol class="songs">
         <li v-for="(t, i) in tracks" :key="t.file">
           <button
@@ -65,34 +65,34 @@ const shownSongs = computed(() =>
             :aria-current="isCur(i) ? 'true' : undefined"
             @click="onSong(i)"
           >
-            <span class="s-no neo-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-            <span class="s-st neo-ico" aria-hidden="true">{{ isCur(i) && music.playing ? '❚' : '▶' }}</span>
+            <span class="s-no en-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="s-st en-ico" aria-hidden="true">{{ isCur(i) && music.playing ? '❚' : '▶' }}</span>
             <span class="s-tt">{{ t.title }}</span>
-            <span class="s-ar neo-mono">{{ t.artist }}</span>
+            <span class="s-ar en-mono">{{ t.artist }}</span>
           </button>
         </li>
       </ol>
     </div>
 
     <!-- 曲目是长列表：整张表进一张卡，而不是 200 首歌各占一张 210px 的卡 -->
-    <div class="neo-card tracklist">
+    <div class="en-card tracklist">
       <div class="fold-head">
         <div class="fh-label">
-          <p class="neo-eyebrow">// SOURCE · QQ 音乐</p>
-          <p class="neo-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
+          <p class="en-eyebrow">// SOURCE · QQ 音乐</p>
+          <p class="en-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
         </div>
         <div class="fh-acts">
           <template v-if="isOwner()">
-            <button class="neo-btn neo-btn-sm neo-btn-ghost" type="button" :disabled="syncing" @click="onSync">
+            <button class="en-btn en-btn-sm en-btn-ghost" type="button" :disabled="syncing" @click="onSync">
               {{ syncing ? '同步中…' : '同步歌单' }}
             </button>
           </template>
-          <a class="neo-btn neo-btn-sm neo-btn-ghost" :href="records.url" target="_blank" rel="noopener noreferrer">
+          <a class="en-btn en-btn-sm en-btn-ghost" :href="records.url" target="_blank" rel="noopener noreferrer">
             在 QQ 音乐打开<span aria-hidden="true">↗</span>
           </a>
           <button
             v-if="foldable"
-            class="neo-btn neo-btn-sm neo-btn-quiet"
+            class="en-btn en-btn-sm en-btn-quiet"
             type="button"
             :aria-expanded="listOpen"
             aria-controls="qq-tracks"
@@ -100,16 +100,16 @@ const shownSongs = computed(() =>
           >
             {{ listOpen ? '收起 ↑' : `展开其余 ${records.songs.length - PREVIEW} 首 ↓` }}
           </button>
-          <span v-if="syncMsg" :class="syncErr ? 'neo-note-err' : 'neo-note-ok'">{{ syncMsg }}</span>
+          <span v-if="syncMsg" :class="syncErr ? 'en-note-err' : 'en-note-ok'">{{ syncMsg }}</span>
         </div>
       </div>
       <ol id="qq-tracks" class="tracks">
         <li v-for="(s, i) in shownSongs" :key="s.url">
-          <a class="track neo-lens" :href="s.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
+          <a class="track en-lens" :href="s.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
             <span class="bar" aria-hidden="true"></span>
-            <span class="no neo-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="no en-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
             <span class="tt">{{ s.title }}</span>
-            <span class="ar neo-mono">{{ s.artist }}</span>
+            <span class="ar en-mono">{{ s.artist }}</span>
           </a>
         </li>
       </ol>
@@ -118,7 +118,7 @@ const shownSongs = computed(() =>
 </template>
 
 <style scoped>
-.neo-shell {
+.en-shell {
   padding-top: 120px;
 }
 

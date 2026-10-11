@@ -1,7 +1,6 @@
 // 站点信息：改名字 / 简介 / 社交链接 → 只改这个文件，见 docs/manual.md §2.1
 export const site = {
   name: 'Escaping Notes',
-  subtitle: '每一次书写，都是一次逃逸',
   author: 'Yu · Escap1ng',
   bio: 'China Jiliang University · Undergraduate',
   location: 'Hangzhou, Zhejiang',

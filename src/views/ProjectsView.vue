@@ -1,5 +1,5 @@
 <script setup>
-// 新版项目页：卡片栅格（卡面走共用基元 .neo-card）+ 冷色光带
+// 新版项目页：卡片栅格（卡面走共用基元 .en-card）+ 冷色光带
 // 卡片点开的是玻璃介绍面板（Teleport 出 main，与两处灯箱同一套模态规矩）；仓库外链收进面板里那枚按钮
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { content } from '../lib/content.js'
@@ -45,16 +45,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="neo-shell">
-    <p class="neo-eyebrow">{{ N.sections.projects }}</p>
-    <h2 class="neo-h2">{{ navLabel('/projects') }}</h2>
-    <p class="neo-lede">{{ N.hints.projects }}</p>
-    <p class="tally neo-mono">{{ tally }} · {{ N.projects.open }}</p>
+  <section class="en-shell">
+    <p class="en-eyebrow">{{ N.sections.projects }}</p>
+    <h2 class="en-h2">{{ navLabel('/projects') }}</h2>
+    <p class="en-lede">{{ N.hints.projects }}</p>
+    <p class="tally en-mono">{{ tally }} · {{ N.projects.open }}</p>
 
-    <ul class="neo-cards">
+    <ul class="en-cards">
       <li v-for="p in content.projects" :key="p.name">
         <button
-          class="neo-card neo-lens open"
+          class="en-card en-lens open"
           type="button"
           :aria-label="p.name"
           aria-haspopup="dialog"
@@ -63,13 +63,13 @@ onUnmounted(() => {
           @click="open(p)"
         >
           <span class="bar" aria-hidden="true"></span>
-          <span class="year neo-mono">{{ p.year }}</span>
+          <span class="year en-mono">{{ p.year }}</span>
           <span class="name">{{ p.name }}</span>
           <span class="desc">{{ p.desc }}</span>
-          <span v-if="p.stack" class="stack neo-mono">{{ p.stack }}</span>
+          <span v-if="p.stack" class="stack en-mono">{{ p.stack }}</span>
         </button>
       </li>
-      <li v-if="!content.projects.length" class="empty neo-mono">{{ N.empty.projects }}</li>
+      <li v-if="!content.projects.length" class="empty en-mono">{{ N.empty.projects }}</li>
     </ul>
 
     <!-- 面板必须 Teleport 出 main：main 是 z-index:2 的层叠上下文，框里的关闭按钮会被顶栏（z 60）
@@ -87,19 +87,19 @@ onUnmounted(() => {
         <span class="pj-bg" aria-hidden="true" @click="close"></span>
         <article class="pj-panel">
           <button class="pj-x" type="button" :aria-label="N.lightbox.close" @click="close">
-            <span class="neo-ico" aria-hidden="true">✕</span>
+            <span class="en-ico" aria-hidden="true">✕</span>
           </button>
-          <p class="neo-eyebrow">{{ cur.year }}</p>
-          <h3 class="neo-h2">{{ cur.name }}</h3>
-          <p class="neo-lede">{{ cur.desc }}</p>
+          <p class="en-eyebrow">{{ cur.year }}</p>
+          <h3 class="en-h2">{{ cur.name }}</h3>
+          <p class="en-lede">{{ cur.desc }}</p>
 
-          <div v-if="cur.detail" class="neo-prose">
+          <div v-if="cur.detail" class="en-prose">
             <p v-for="(d, i) in cur.detail" :key="i">{{ d }}</p>
           </div>
 
           <template v-if="cur.points && cur.points.length">
-            <p class="pj-eyebrow neo-eyebrow">{{ N.projects.points }}</p>
-            <div class="neo-prose">
+            <p class="pj-eyebrow en-eyebrow">{{ N.projects.points }}</p>
+            <div class="en-prose">
               <ul>
                 <li v-for="(pt, i) in cur.points" :key="i">{{ pt }}</li>
               </ul>
@@ -107,12 +107,12 @@ onUnmounted(() => {
           </template>
 
           <template v-if="cur.stack">
-            <p class="pj-eyebrow neo-eyebrow">{{ N.projects.stack }}</p>
+            <p class="pj-eyebrow en-eyebrow">{{ N.projects.stack }}</p>
             <p class="pj-stack">{{ cur.stack }}</p>
           </template>
 
           <a
-            class="neo-btn neo-btn-ghost pj-repo"
+            class="en-btn en-btn-ghost pj-repo"
             :href="cur.url"
             target="_blank"
             rel="noopener noreferrer"
@@ -126,7 +126,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.neo-shell {
+.en-shell {
   padding-top: 120px;
 }
 
@@ -137,7 +137,7 @@ onUnmounted(() => {
   letter-spacing: 0.16em;
 }
 
-/* 卡面（边/角/底/hover/内边距）全在 .neo-card 里，这里只留卡内排版。
+/* 卡面（边/角/底/hover/内边距）全在 .en-card 里，这里只留卡内排版。
    卡从 <a> 换成 <button> 之后要扳回三件事：按钮不继承字体、不自带左对齐、不撑满 li。 */
 .open {
   width: 100%;
@@ -160,7 +160,7 @@ onUnmounted(() => {
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.neo-card:hover .year {
+.en-card:hover .year {
   transform: scale(1.08);
 }
 
@@ -176,7 +176,7 @@ onUnmounted(() => {
     transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.neo-card:hover .name {
+.en-card:hover .name {
   color: var(--cold);
   transform: translateX(var(--space-1));
 }
@@ -199,11 +199,11 @@ onUnmounted(() => {
 /* ---------- 介绍面板 ----------
    皮三处全取自站内既有的东西，一处不新造：
      遮罩 = 顶栏抽屉那套（--ink-0 88% + blur 24）
-     板面 = .neo-card 的边与底（--card-brd / --card-bg）+ §6c 阅读底板那枚阴影
-     正文 = 直接挂 .neo-eyebrow / .neo-h2 / .neo-lede / .neo-prose，栏宽沿用 §6c 的 --measure 算法
+     板面 = .en-card 的边与底（--card-brd / --card-bg）+ §6c 阅读底板那枚阴影
+     正文 = 直接挂 .en-eyebrow / .en-h2 / .en-lede / .en-prose，栏宽沿用 §6c 的 --measure 算法
    原先这里套的是 /gallery 灯箱那套（78% 糊底 + 55% 玻璃板 + 框底一行按键提示），那是看照片的皮：
    浅色主题下 --ink-0 是近白，糊底成了奶白雾、板子与它同色到读不出边；而面板自己是内滚容器，
-   会被 neo.css 那条不限容器的 ::-webkit-scrollbar-thumb 套上第二条朱砂滚动条，正贴在卡的右边缘。
+   会被 site.css 那条不限容器的 ::-webkit-scrollbar-thumb 套上第二条朱砂滚动条，正贴在卡的右边缘。
    所以滚动交给浮层本身——满屏只有视口右缘那一条热色滚动条，与平时浏览时看到的是同一根。 */
 .pj {
   position: fixed;
@@ -283,7 +283,7 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
-/* 面板里的两块眉标：站在 .neo-prose 外面，才不用与它的 `p { margin }` 抢层叠
+/* 面板里的两块眉标：站在 .en-prose 外面，才不用与它的 `p { margin }` 抢层叠
    （那条规则带皮肤前缀，是 (0,3,1)，页面 scoped 抢不过） */
 .pj-eyebrow {
   margin: var(--space-4) 0 0;
@@ -316,8 +316,8 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .neo-card:hover .year,
-  .neo-card:hover .name,
+  .en-card:hover .year,
+  .en-card:hover .name,
   .pj-repo:hover .arrow {
     transform: none;
   }

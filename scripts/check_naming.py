@@ -30,14 +30,9 @@ SCRIPT_FAMILIES = ('build_', 'check_', 'sync_')
 SCRIPT_DIRS = ('lib', 'data')
 
 # 已知待办（批次落地后必须删除对应条目）
-EXEMPT = {
-    # components/neo/ 的前缀去重与 .neo-* 类名改名同属一次原子改动（改一半会全站掉样式），
-    # 待底片那轮落地后一起做。见 docs/design.md §10 与本次改动的待办清单。
-    'no-dir-marker-dup': {
-        'src/components/neo/NeoSiteFooter.vue',
-        'src/components/neo/NeoSiteHeader.vue',
-    },
-}
+# 2026-10-11 清空：components/neo/ 已拍平、Neo{SiteHeader,SiteFooter} 已去前缀、
+# .neo-* 类名已整体换成 .en-* 命名空间，那批原子改动不再有待续方。
+EXEMPT = {}
 
 # 法律/惯例要求大写的文件，不算 kebab 违规
 ASSET_ALLOW = re.compile(r'^(LICENSE|COPYING|README)([.-]|$)')

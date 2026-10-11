@@ -1,7 +1,7 @@
 <script setup>
 // 首页：星轨首屏 + 风景底片 + 下滑拉出的抽屉（读数 / 精选 / 最近动态）
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import HorizonHero from '../components/neo/HorizonHero.vue'
+import HorizonHero from '../components/HorizonHero.vue'
 import { loadPosts, coverPos } from '../lib/posts.js'
 import { updates } from '../config/updates.js'
 import { onLens } from '../lib/lens.js'
@@ -72,22 +72,22 @@ onUnmounted(() => {
 
         <div class="dials">
           <div class="dial">
-            <span class="dial-k neo-mono">{{ N.drawer.clock }}</span>
-            <span class="dial-v neo-mono">{{ clock }}</span>
+            <span class="dial-k en-mono">{{ N.drawer.clock }}</span>
+            <span class="dial-v en-mono">{{ clock }}</span>
             <span class="dial-s">{{ day }}</span>
           </div>
         </div>
 
-        <h2 class="neo-eyebrow sec">{{ N.drawer.featured }}</h2>
+        <h2 class="en-eyebrow sec">{{ N.drawer.featured }}</h2>
         <div class="picks">
           <RouterLink
             v-for="p in featured"
             :key="p.slug"
             :to="`/blog/${p.slug}`"
-            class="neo-card neo-flush pick neo-lens"
+            class="en-card en-flush pick en-lens"
             @pointermove="onLens"
           >
-            <span class="neo-shot" :class="{ blank: !p.image }">
+            <span class="en-shot" :class="{ blank: !p.image }">
               <img
                 v-if="p.image"
                 :src="p.image"
@@ -98,17 +98,17 @@ onUnmounted(() => {
               />
             </span>
             <span class="pick-body">
-              <span class="pick-date neo-mono">{{ p.date }}</span>
+              <span class="pick-date en-mono">{{ p.date }}</span>
               <span class="pick-ttl">{{ p.title }}</span>
               <span class="pick-sum">{{ p.summary }}</span>
             </span>
           </RouterLink>
         </div>
 
-        <h2 class="neo-eyebrow sec">{{ N.drawer.recent }}</h2>
-        <RouterLink to="/updates" class="neo-card feed neo-lens" aria-label="最近动态 · 查看全部" @pointermove="onLens">
+        <h2 class="en-eyebrow sec">{{ N.drawer.recent }}</h2>
+        <RouterLink to="/updates" class="en-card feed en-lens" aria-label="最近动态 · 查看全部" @pointermove="onLens">
           <span v-for="u in recent" :key="u.date + u.text" class="feed-row">
-            <span class="feed-date neo-mono">{{ u.date }}</span>
+            <span class="feed-date en-mono">{{ u.date }}</span>
             <span class="feed-text">{{ u.text }}</span>
           </span>
         </RouterLink>
@@ -120,37 +120,14 @@ onUnmounted(() => {
 <style scoped>
 .home {
   position: relative;
-  /* 必须 isolate：.plate 是 z-index:-1 的 fixed 层，而 .home 只 position:relative 不建层叠
-     上下文——负 z 的子元素会掉到根元素背景**之下**，被 --ink-0 那层底色整个盖掉。
-     图没丢，是画在纸背面了。isolate 让 -1 停在"本组件背景之上、内容之下"这一层。 */
+  /* 必须 isolate：把 .drawer 的 z-index:2 关在本组件的层叠上下文里，不让它到根层级去和
+     App.vue 那层 fixed 的 .sub-plate（z-index:-1）、顶栏抢序。去掉它抽屉照样在图之上，
+     但排序对象从"本页内部"变成"全站根层"，改动会波及别的页。 */
   isolation: isolate;
 }
 
-/* 风景底片层：**fixed**，不随滚动——这才是"抽屉从一张不动的底图上拉出来"的那个观感。
-   上一版是 absolute 贴在 .home 里，图跟着内容一起走，抽屉感就没了。
-   z-index: -1 让它待在页面底色之上、所有内容之下；首屏自己的 .hero-plate 是不透明的，
-   所以它不会从首屏背后透出来。
-   模糊与调色都烘在素材里（scripts/build_plate_bg.ps1），这里不挂 filter/backdrop-filter。
-   沉回 --ink-0 的那条渐变是承重的：照片下半是暗部，浅色墨字压上去实测只有 4.2:1。 */
-.plate {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent 26%, var(--ink-0) 82%) no-repeat,
-    var(--plate-img) no-repeat 50% 30% / cover;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 160px, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 160px, #000 100%);
-}
-
-@supports (height: 100svh) {
-  .plate {
-    top: 100svh;
-  }
-}
-
 /* 抽屉：整块在首次进入视口时从下方拉出一次。
-   表面是玻璃态（见下面的 .sheet），但不复用 .neo-glass——那是模态抽屉专属的定宽浮层，
+   表面是玻璃态（见下面的 .sheet），但不复用 .en-glass——那是模态抽屉专属的定宽浮层，
    自带 max-width / padding / 定位，套在常驻面板上会打架。
    呈现走 animation 而不是 transition：常态必须是可见的。隐藏文档里 transition 不推进，
    "默认 opacity:0 + 加类翻 1"会让整块内容永久停在起点；动画只在 .open 那一刻跑，
@@ -175,7 +152,7 @@ onUnmounted(() => {
 /* 抽屉面板：玻璃态。底下那层 .sub-plate 是 fixed 的风景底片，backdrop-filter 糊的正是它——
    这才是"抽屉压在一张不动的底图上"的观感。
    原先这里用 --panel-frost-bg 的旧值（米黄 rgba(245,242,234,.78)），就是那个米黄框。
-   那枚令牌现在也改成跟随 --ink-0 了，文章页 .neo-glass 同源——两处表面不会再一处冷一处米。
+   那枚令牌现在也改成跟随 --ink-0 了，文章页 .en-glass 同源——两处表面不会再一处冷一处米。
    兜底也不再回落到米黄：不支持 backdrop-filter 时用高不透明的冷色 ink-0。 */
 .sheet {
   max-width: 1120px;
@@ -249,7 +226,7 @@ onUnmounted(() => {
   gap: var(--space-2);
 }
 
-/* 卡面、封面格、以及"封面贴边"（class 上的 neo-flush）都在 neo.css §6d；
+/* 卡面、封面格、以及"封面贴边"（class 上的 en-flush）都在 site.css §6d；
    这里只补一条：栅格里的 min-width，让长标题截断而不是把列撑破 */
 .pick {
   min-width: 0;

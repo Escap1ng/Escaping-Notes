@@ -37,7 +37,7 @@ test('反向：字数尺子量得动、也咬得住', () => {
 })
 
 test('视图里每一处 N.字段 引用都真实存在', () => {
-  const files = ['src/components/neo/HorizonHero.vue', 'src/App.vue', 'src/views/HomeView.vue']
+  const files = ['src/components/HorizonHero.vue', 'src/App.vue', 'src/views/HomeView.vue']
   let hits = 0
   for (const f of files) {
     for (const m of src(f).matchAll(/\bN\.([A-Za-z_$][\w$]*)/g)) {

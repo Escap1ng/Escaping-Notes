@@ -9,7 +9,7 @@
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/StarTrails.vue)
 [![Backend](https://img.shields.io/badge/Backend-Python%203-3776ab?logo=python&logoColor=white)](server/api.py)
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#许可与使用声明)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
@@ -28,7 +28,7 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 
 - **滚动即时间**：首屏之内越往下滑，曝光窗口越长、天空转得越快（流速 1 → 2.2 倍）；滚过 1.1 倍视口高就到底
 - **指针即时间膨胀**：光标 180px 半径内的星轨局部加速卷曲，越靠中心越快（最高 2.8 倍）
-- **流星即叙事**：每 6–9 秒随机落一颗，单颗活 900ms，同时在场最多 8 颗；播放器在放歌时间隔压向最短值，停下即自然回弹
+- **流星即叙事**：每 6–9 秒随机落一颗，单颗活 900ms，同时在场最多 9 颗；播放器在放歌时间隔压向最短值，停下即自然回弹
 
 星轨只在首页那一格里画。但**沉积是全站累积的**：底片像素与全站时钟都是 `src/lib/sky.js` 里的单例，换页不重铺，回到首页还是那圈越积越密的弧。折线以下交给照片。
 
@@ -46,15 +46,15 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 - **双主题**：深色（冷白/暖白/琥珀星轨）与浅色（天文干版底片：板岩/石墨轨迹 + 朱砂点睛），色温跟星等走（暗星冷、少数亮星抽暖）；**切换主题不换山**——暗色首屏是同一取景的压暗版（`plate-hero-deep.jpg`），两套共用一条山脊折线；底片本身按主题各沉积一张（防串色）；默认浅色，首帧刻意不读系统 `prefers-color-scheme`（首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上）
 - **首屏排版**：地景横带钉在底边，高度按照片自己算（`.hero-plate` 高 = `clamp(54svh, 31vw, 70svh)`——31vw 就是照片按 cover 铺满宽度时自身的高度，所以宽窗口自动抬高折线、一寸不缺；够方的窗口仍是下沿 54%，上半屏整片留给排版）；星轨以 `destination-in` 沿山脊被遮住，脊线附近保留到六成亮度、26px 羽化；站名逐字打出（起笔 260ms、每字 82ms、打满 1500ms 后光标淡退），打完才放行十六字宣言（0.9s 揭开，第二行晚 0.18s）；文字块随滚动以 0.25 倍速下沉并淡出
 - **折线以下**：抽屉里是一枚本地时刻读数、三张精选卡、最近五条动态（整卡链向 `/updates`），首次进入视口时从下方拉出一次；它压在一张**全站共用**的照片底片上——五张轮播、每张 10s（周期 50s），深色主题五档指向同一张，所以夜里不跳景；模糊程度是运行时参数：设置卡里一条 0–12px 滑杆，默认拉满，偏好记在 `localStorage`
-- **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距 5 档 / 字号 11 档 / 行高 4 档 / 字重 3 档）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入「单行下划线 / 多行发丝框」、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
+- **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距 6 档 / 字号 11 档 / 行高 4 档 / 字重 3 档）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入「单行下划线 / 多行发丝框」、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
 - **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制（暗色主题星数再乘 0.65、≤720px 视口从 280 降到 140 颗）；无第三方 UI 库、图表库或字体 CDN——运行时依赖只有 Vue 与 Vue Router，展示层子集是一枚自托管 woff2
 - **优雅降级**：API 不可达或超时（读 10s、上传 60s）时自动回落 `src/config/` 的本地种子数据，站点仍是完整的离线底片；后端不启动也能读完全部内容与图片
-- **无障碍**：抽屉、两处灯箱与项目介绍面板都有焦点陷阱（关闭后焦点回到触发元素）、路由切换向读屏播报（`role="status"`）、跳转链接与 `#main` 可聚焦、触屏（`pointer: coarse`）下按钮/链接/标签最小高 44px、`prefers-reduced-motion` 下有完整静态降级（打字机直接给全文、星轨离线冲一张 380 步稳态底片、轮播停掉只留第一张）
-- **性能**：风景底片挂在 `App.vue` 上而不是每个页面里，不随路由重画；`--shift` 的滚动深度只缓存极值，不每帧读 `scrollHeight`（那等于每帧一次重排）；resize 去抖 150ms；抽屉用 `IntersectionObserver` 拉出一次即断开；卡面光斑走 transform；常驻的顶栏表面不用 `backdrop-filter`——玻璃只留给真正需要与底片隔离的三处表面
-- **阅读可读性（照实说）**：一张无纱的风景照片上放裸字到不了 WCAG AA——实测最坏点在 1.0~1.8:1，与渐变形状无关（试过竖向单条、上下双纱、顶部淡入三种形状）。所以结论是**分工**：底片只当风景，正文一律落在 `.sheet` / `.neo-glass` / `.neo-card` 上，那里的前景从 5.5:1 起；`npm run check:contrast` 每次提交前重算主题令牌对平底的对比（深色 `--text-0` 18.38:1 / 浅色 16.90:1，判据 7:1），但它核的是令牌对纯色底，**不等于**核照片合成底
+- **无障碍**：顶栏抽屉、播放器卡、设置卡、两处灯箱与项目介绍面板都有焦点陷阱（关闭后焦点回到触发元素）、路由切换向读屏播报（`role="status"`）、跳转链接与 `#main` 可聚焦、触屏（`pointer: coarse`）下按钮/链接/标签最小高 44px、`prefers-reduced-motion` 下有完整静态降级（打字机直接给全文、星轨离线冲一张 380 步稳态底片、轮播停掉只留第一张）
+- **性能**：风景底片挂在 `App.vue` 上而不是每个页面里，不随路由重画；首屏那张地景（本页的 LCP 元素）由 `index.html` 首帧脚本按当前主题 `preload`，与样式表并行起跑，不再排在 CSS 之后；`--shift` 的滚动深度只缓存极值，不每帧读 `scrollHeight`（那等于每帧一次重排）；resize 去抖 150ms；抽屉用 `IntersectionObserver` 拉出一次即断开；卡面光斑走 transform；常驻的顶栏表面不用 `backdrop-filter`——玻璃只留给真正要与底片隔开的那几层浮起表面（阅读底板、首页抽屉、导航抽屉、两处灯箱、项目介绍面板）
+- **阅读可读性（照实说）**：一张无纱的风景照片上放裸字到不了 WCAG AA——实测最坏点在 1.0~1.8:1，与渐变形状无关（试过竖向单条、上下双纱、顶部淡入三种形状）。所以结论是**分工**：底片只当风景，正文一律落在 `.sheet` / `.en-glass` / `.en-card` 上，那里的前景从 5.5:1 起；`npm run check:contrast` 每次提交前重算主题令牌对平底的对比（深色 `--text-0` 18.38:1 / 浅色 16.90:1，判据 7:1），但它核的是令牌对纯色底，**不等于**核照片合成底
 - **反馈闭环**：文章列表有骨架屏（3 张），「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query（可分享、刷新不丢）
 - **映像柜**：`/gallery` 把全站用过的图摊成一墙拍立得——站点自有 9 张（首屏两张 + 浅色五张 + 深色压暗底 + `og.png`）加全部文章封面，按 src 去重；倾斜 ±2.4° 由 src 哈希决定，进场每张错开 60ms（最多 12 张），列数 3/2/1；灯箱 `Teleport` 到 `body`，键盘 ←/→ 翻页、Esc 关闭，触屏横滑 >50px 翻页
-- **全功能后台**：`/admin` 分「用户」（管理员可见）与「文章 + 设置」两档（站长可见），设置里编辑动态 / 项目 / 装备 / 歌单；鉴权是 `Authorization: Bearer`（7 天期，存 `localStorage`），限流 30 请求 / 60 秒且只计 POST；**没有自助注册端点**——账号只能由站长建；音乐页那枚「同步歌单」仅站长可见，走 `POST /api/sync/records` 由服务端重取 QQ 公开歌单
+- **全功能后台**：`/admin` 分「用户」（管理员可见）与「文章 + 设置」两档（站长可见），设置里编辑动态 / 项目 / 装备 / 歌单；鉴权是 `Authorization: Bearer`（7 天期，存 `localStorage`），限流按 IP 30 请求 / 60 秒且只计 POST；**没有自助注册端点**——账号只能由站长建；音乐页那枚「同步歌单」仅站长可见，走 `POST /api/sync/records` 由服务端重取 QQ 公开歌单
 
 ## 读图：两处承重设计
 
@@ -76,7 +76,7 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 | --- | --- |
 | 前端 | Vue 3（Composition API）+ Vite 5 + Vue Router 4 |
 | 渲染 | Canvas 2D 离屏累积缓冲（长曝光底片模拟） |
-| 样式 | 原生 CSS + 自定义属性令牌（`tokens.css` 基线 / `neo.css` 皮肤） |
+| 样式 | 原生 CSS + 自定义属性令牌（`site.css` 一个文件：结构刻度 + 两套主题配色 + 全站基元） |
 | 后端 | Python 3 标准库单文件（`server/api.py`），无第三方依赖 |
 | 测试 | Node 内置 `node --test` + `python -m unittest`，零测试框架 |
 | 部署 | GitHub Pages / Vercel / nginx + systemd |
@@ -110,7 +110,7 @@ npm run preview        # 本地预览 dist/
 | `npm run dev` | Vite 开发服务器，改文件即时热更 |
 | `npm run build` / `build:pages` | 生产构建；两者 `base` 都是 `/`，唯一差异是 `VITE_DEPLOY=pages`（`.env.pages`）把路由切成 hash |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
-| `npm run test` | 8 个测试文件（7 个 `.mjs` + 1 个 `.py`）：frontmatter/markdown 解析、CRLF、URL 注入面、底片模糊三处默认值不漂移、首帧主题、映像柜与素材名单一致、项目介绍经后台保存后不丢 |
+| `npm run test` | 10 个测试文件（9 个 `.mjs` + 1 个 `.py`）：frontmatter/markdown 解析、CRLF、URL 注入面、底片模糊三处默认值不漂移、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍经后台保存后不丢；那个 `.py` 是跨语言对拍——同一篇文章在 `frontmatter.js` 与 `api.py` 下必须同答案 |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
 | `npm run art:build` | 重绘本页顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
@@ -121,7 +121,7 @@ npm run preview        # 本地预览 dist/
 | `npm run check:api` | `docs/api.md` 的端点表与 `server/api.py` 的路由双向对拍（当前 26 个端点），漂移即退出码非 0 |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对 README 路由表与 `src/router` 一致 |
 | `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
-| `npm run check:contrast` | 从 `neo.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
+| `npm run check:contrast` | 从 `site.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
 
 ## 页面地图
 
@@ -145,7 +145,7 @@ npm run preview        # 本地预览 dist/
 ## 项目结构
 
 ```text
-├── index.html             # 壳层：首帧内联脚本（主题 + 底片模糊，都不闪一下）、SEO/OG 元信息
+├── index.html             # 壳层：首帧内联脚本（主题 + 底片模糊 + 按主题预加载首屏地景，都不闪一下）、SEO/OG 元信息
 ├── server/api.py          # 后端：内容 / 鉴权 / RSS / OG 注入 / 歌单同步，监听 127.0.0.1:8787
 ├── content/posts/         # Markdown 文章（frontmatter）
 ├── public/                # 静态资源：favicon、robots.txt、og.png，以及三个**必须入库**的派生素材目录
@@ -168,11 +168,10 @@ npm run preview        # 本地预览 dist/
 ├── tests/                 # 零依赖防护网：node --test + unittest，跑 npm run test
 └── src/
     ├── assets/fonts/      # 自托管子集字体（一枚 woff2，700 字重）+ OFL 许可
-    ├── components/        # neo/ 下四件：StarTrails 星轨相机 · HorizonHero 首屏排版 · NeoSiteHeader 顶栏+抽屉 · NeoSiteFooter
-    │                      #   上一层两件：MusicCard.vue（顶栏点开的播放器卡）与 SettingsCard.vue（底片模糊滑杆）
+    ├── components/        # 平铺六件：StarTrails 星轨相机 · HorizonHero 首屏排版 · SiteHeader 顶栏+抽屉 · SiteFooter · MusicCard 播放器卡 · SettingsCard 底片模糊滑杆
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子 8 个文件（records.js 由脚本生成，勿手改）
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / ridge / lens / shift / sky / debounce / focus
-    ├── styles/            # tokens.css 令牌基线 · neo.css 全站皮肤
+    ├── styles/            # site.css 一个文件：结构刻度 + 两套主题配色 + 全站基元
     └── views/             # 11 个视图平铺，一页一个文件：9 张内容页 + AdminView / LoginView
 ```
 

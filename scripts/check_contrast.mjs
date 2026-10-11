@@ -1,4 +1,4 @@
-// 双主题对比度审计：从 neo.css 的两个主题块读令牌，按 WCAG 比值 + 绝对级差两套尺子判。
+// 双主题对比度审计：从 site.css 的两个主题块读令牌，按 WCAG 比值 + 绝对级差两套尺子判。
 // 为什么两套尺子：近黑底上 WCAG 比值会压缩（bg 2.2 级时 1.48:1 已经是 Δ41 级），
 // 而浅色上比值才贴近观感——星轨那几轮（design.md §10 ⑮⑯）吃过这个亏，所以两把都打。
 // 用法：node scripts/check_contrast.mjs          正常审计，不达标 exit 1
@@ -8,11 +8,11 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const CSS = readFileSync(join(ROOT, 'src', 'styles', 'neo.css'), 'utf8')
+const CSS = readFileSync(join(ROOT, 'src', 'styles', 'site.css'), 'utf8')
 
 function block(selRe) {
   const m = CSS.match(selRe)
-  if (!m) throw new Error('neo.css 里找不到选择器 ' + selRe)
+  if (!m) throw new Error('site.css 里找不到选择器 ' + selRe)
   const open = CSS.indexOf('{', m.index)
   let depth = 0, j = open
   for (; j < CSS.length; j++) {
@@ -26,8 +26,8 @@ function block(selRe) {
 }
 
 // 选择器在文件头注释里也出现过一次，必须带 `{` 锚定，否则会匹配到注释
-const DEEP = block(/html\[data-skin='neo'\]:not\(\[data-theme='out'\]\)\s*\{/)
-const PAPER = block(/html\[data-skin='neo'\]\[data-theme='out'\]\s*\{/)
+const DEEP = block(/html:root:not\(\[data-theme='out'\]\)\s*\{/)
+const PAPER = block(/html:root\[data-theme='out'\]\s*\{/)
 
 /* ---------- 颜色数学 ---------- */
 const px = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))

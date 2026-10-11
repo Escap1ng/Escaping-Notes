@@ -47,7 +47,7 @@ const { KEYS } = await import('../src/lib/storage.js')
 test('clampBlur：越界夹住、非数值走默认档', () => {
   assert.equal(BLUR_MIN, 0)
   assert.equal(BLUR_MAX, 12)
-  assert.equal(BLUR_DEFAULT, 12) // 默认拉满是作者定的口味，改它要连 neo.css 与 index.html 一起
+  assert.equal(BLUR_DEFAULT, 12) // 默认拉满是作者定的口味，改它要连 site.css 与 index.html 一起
   assert.equal(clampBlur('8'), 8)
   assert.equal(clampBlur('8.6'), 9) // 滑杆 step=1，半档要落到整数而不是留小数
   assert.equal(clampBlur('0'), 0) // 0 是"用户明确要清晰"，不能被当成没存过
@@ -73,9 +73,9 @@ test('applyBlur 写存储、且 0 不留下 data 属性', () => {
   assert.equal(store.get(KEYS.blur), '12')
 })
 
-test('默认档 12 在三处同口径：lib / neo.css / index.html', () => {
+test('默认档 12 在三处同口径：lib / site.css / index.html', () => {
   const html = src('index.html')
-  const css = src('src/styles/neo.css')
+  const css = src('src/styles/site.css')
   assert.ok(html.includes("'" + KEYS.blur + "'"), 'index.html 必须按这个键名读')
   assert.ok(html.includes('dataset.plateBlur'), '首帧要写同一个 data 属性，否则 App.vue 的门控不生效')
   assert.ok(html.includes('--plate-blur'), '首帧要写同一个 CSS 变量')
@@ -87,7 +87,7 @@ test('默认档 12 在三处同口径：lib / neo.css / index.html', () => {
     line.includes(`Math.min(${BLUR_MAX}, Math.max(${BLUR_MIN},`),
     `index.html 必须自己夹一遍 ${BLUR_MIN}–${BLUR_MAX}（手改过的 999 不能直接进 filter）`
   )
-  assert.ok(css.includes(`--plate-blur: ${BLUR_DEFAULT}px`), `neo.css 的初值必须是 ${BLUR_DEFAULT}px`)
+  assert.ok(css.includes(`--plate-blur: ${BLUR_DEFAULT}px`), `site.css 的初值必须是 ${BLUR_DEFAULT}px`)
 })
 
 // 反向对照：桩没垫好、或内联脚本被改成不夹上限，上面几条必须真的红。

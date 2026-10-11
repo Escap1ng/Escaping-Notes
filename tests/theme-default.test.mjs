@@ -1,5 +1,5 @@
 // 首开浅色的钉子。这条口径散在三处：index.html 的首帧内联脚本（默认值的唯一来源）、
-// src/lib/theme.js 的属性缺失兜底、src/styles/neo.css 的 `:not([data-theme='out'])` 兜底块。
+// src/lib/theme.js 的属性缺失兜底、src/styles/site.css 的 `:not([data-theme='out'])` 兜底块。
 // 为什么要钉：2026-10-10 之前它跟系统偏好走，改成固定浅色之后 storage.js 里还留着一个
 // 与实现相反的死常量 THEME_DEFAULT='well'——不 import 就永远不报错，只在别人当它是口径时有害。
 // 漂开的症状也是静默的：首开变成深色底、顶栏却画着浅色图标，不进日志、不进 CI。
@@ -36,7 +36,17 @@ function runBoot(code, stored, prefersDark) {
   const store = new Map()
   if (stored !== null) store.set(KEYS.theme, stored)
   const writes = []
-  const doc = { documentElement: { dataset: {}, style: { setProperty() {} } } }
+  const links = []
+  const doc = {
+    documentElement: { dataset: {}, style: { setProperty() {} } },
+    // 首帧脚本会挂一条 hero 的 preload（见 tests/hero-preload.test.mjs），桩要接住
+    // createElement + head.appendChild，并把建出来的元素留给断言
+    createElement: () => {
+      const el = { setAttribute(k, v) { el[k] = v } }
+      return el
+    },
+    head: { appendChild: (el) => links.push(el) },
+  }
   const ctx = {
     document: doc,
     localStorage: {
@@ -50,7 +60,7 @@ function runBoot(code, stored, prefersDark) {
     matchMedia: (q) => ({ matches: /light/.test(q) ? !prefersDark : prefersDark }),
   }
   new Function(...Object.keys(ctx), code)(...Object.values(ctx))
-  return { theme: doc.documentElement.dataset.theme, writes }
+  return { theme: doc.documentElement.dataset.theme, writes, links }
 }
 
 // ---------- theme.js 的桩：与 plate-blur.test.mjs 同一套，被测代码的依赖面就这么大 ----------
@@ -143,13 +153,18 @@ test('只有显式切换才落存储', async () => {
   assert.equal(mem.get(KEYS.theme), LIGHT)
 })
 
-test('样式网关与兜底块：浅色调的是 §3，属性缺失才落到 §2', () => {
+test('主题兜底块与特异性锚点：浅色调的是主题块，data-theme 缺失才落到深色块', () => {
   const html = src('index.html')
-  const css = src('src/styles/neo.css')
-  assert.ok(/<html[^>]*data-skin='neo'|<html[^>]*data-skin="neo"/.test(html), '皮肤网关在 index.html 上硬编码')
-  assert.ok(css.includes(`html[data-skin='neo'][data-theme='${LIGHT}']`), '浅色块的选择器还在吗')
-  assert.ok(css.includes(`html[data-skin='neo']:not([data-theme='${LIGHT}'])`), '深色块要同时兜住属性缺失')
-  assert.ok(!/深色（默认）/.test(css), 'neo.css 里别再声称深色是默认')
+  const css = src('src/styles/site.css')
+  assert.ok(css.includes(`html:root[data-theme='${LIGHT}']`), '浅色块的选择器还在吗')
+  assert.ok(css.includes(`html:root:not([data-theme='${LIGHT}'])`), '深色块要同时兜住 data-theme 缺失')
+  // data-skin 那个"皮肤网关"只有 neo 一个取值、由 index.html 硬编码、从不参与分支，
+  // 已退役；它的 (0,1,1) 由 html:root 原样接替（两者逐位同宽）。留着只会让人以为有第二套皮肤。
+  // 只看规则体：注释里写"退役前的 html[data-skin='neo']"是给下一个人的说明，不是依赖。
+  const cssRules = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  assert.ok(!/data-skin/.test(html.replace(/<!--[\s\S]*?-->/g, '')), 'index.html 不许再挂 data-skin')
+  assert.ok(!/data-skin/.test(cssRules), '样式表的规则不许再依赖 data-skin')
+  assert.ok(!/深色（默认）/.test(css), 'site.css 里别再声称深色是默认')
   assert.ok(!/THEME_DEFAULT/.test(src('src/lib/storage.js')), '默认值不许在 storage.js 留第二处')
 })
 

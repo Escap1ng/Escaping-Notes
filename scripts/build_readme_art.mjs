@@ -1,13 +1,13 @@
 // README 配图：把站点的长曝光底片离线复算成 PNG（`npm run art:build`，产物提交进仓库）。
 //
 // 这不是"画一张像星空的图"：所有常数从源码里读，读不到就抛错，图与代码不可能悄悄分叉。
-//   · 星群与尾迹模型 = src/components/neo/StarTrails.vue 的 mkStar / accPass
+//   · 星群与尾迹模型 = src/components/StarTrails.vue 的 mkStar / accPass
 //   · 快进步数与衰减 = 同文件 buildPlate() 用的 PLATE_STEPS / PLATE_OM / PLATE_FADE
 //     （即 prefers-reduced-motion 用户实际看到的那一张）
 //   · 弧长倍率 = 同处的 PLATE_LEN：尾迹长度由它承载，不再挂在衰减窗口上（§10 ⑭）
 //   · 每根弧的角长 = 同处的 SHEAR_MIN / SHEAR_SPAN / SHEAR_POW（尾迹长度就等于它）
 //   · 天极位置 = src/lib/sky.js 的 POLE_FX / POLE_FY
-//   · 两套主题的色 = src/styles/neo.css §2 / §3 的 --white / --cold / --hot / --text-0 / --ink-0
+//   · 两套主题的色 = src/styles/site.css §2 / §3 的 --white / --cold / --hot / --text-0 / --ink-0
 // 合成模式也照抄：深色 = 'lighter'（加色），浅色 = 'source-over'（墨压在干版上）。
 //
 // 为什么不用逐帧模拟：canvas 每帧先把底片乘 (1−fd)，再沉积一段长 shear 的弧。
@@ -22,9 +22,9 @@ import { encodePng } from './lib/png.mjs'
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'docs', 'assets', 'readme')
 
-const ST = readFileSync(join(ROOT, 'src', 'components', 'neo', 'StarTrails.vue'), 'utf8')
+const ST = readFileSync(join(ROOT, 'src', 'components', 'StarTrails.vue'), 'utf8')
 const SKY = readFileSync(join(ROOT, 'src', 'lib', 'sky.js'), 'utf8')
-const CSS = readFileSync(join(ROOT, 'src', 'styles', 'neo.css'), 'utf8')
+const CSS = readFileSync(join(ROOT, 'src', 'styles', 'site.css'), 'utf8')
 
 function num(src, name) {
   const m = src.match(new RegExp(`^(?:export )?const ${name} = (-?[\\d.]+)`, 'm'))
@@ -64,10 +64,10 @@ const mix = (a, b, t) => [
   Math.round(a[2] + (b[2] - a[2]) * t),
 ]
 function themeBlock(selector) {
-  // 选择器在 neo.css 的页眉注释里也出现过，所以必须连着 `{` 一起找才是真的规则块
+  // 选择器在 site.css 的页眉注释里也出现过，所以必须连着 `{` 一起找才是真的规则块
   const re = new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{')
   const m = re.exec(CSS)
-  if (!m) throw new Error(`neo.css 里找不到主题块：${selector}`)
+  if (!m) throw new Error(`site.css 里找不到主题块：${selector}`)
   const body = CSS.slice(m.index, CSS.indexOf('\n}', m.index))
   const vars = {}
   for (const x of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,8})/g)) {
@@ -75,8 +75,8 @@ function themeBlock(selector) {
   }
   return vars
 }
-const DEEP = themeBlock(`html[data-skin='neo']:not([data-theme='out'])`)
-const PAPER = themeBlock(`html[data-skin='neo'][data-theme='out']`)
+const DEEP = themeBlock(`html:root:not([data-theme='out'])`)
+const PAPER = themeBlock(`html:root[data-theme='out']`)
 for (const [n, v] of [['深色', DEEP], ['浅色', PAPER]]) {
   for (const k of ['ink-0', 'text-0', 'cold', 'hot', 'white']) {
     if (!v[k]) throw new Error(`${n}主题缺令牌 --${k} —— 配色脚本要跟着改`)

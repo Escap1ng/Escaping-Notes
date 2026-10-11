@@ -64,29 +64,29 @@ onUnmounted(() => {
       </svg>
       <div class="meta">
         <p class="nt" :title="current?.title">{{ music.started ? current?.title || '--' : '待播' }}</p>
-        <p v-if="music.started && current?.artist" class="na neo-mono">{{ current.artist }}</p>
+        <p v-if="music.started && current?.artist" class="na en-mono">{{ current.artist }}</p>
       </div>
     </div>
 
     <div class="transport">
-      <button class="neo-btn neo-btn-sm neo-btn-quiet t-btn" type="button" aria-label="上一首" @click="prev">
-        <span class="neo-ico" aria-hidden="true">«</span>
+      <button class="en-btn en-btn-sm en-btn-quiet t-btn" type="button" aria-label="上一首" @click="prev">
+        <span class="en-ico" aria-hidden="true">«</span>
       </button>
       <button
-        class="neo-btn neo-btn-sm neo-btn-primary t-btn play"
+        class="en-btn en-btn-sm en-btn-primary t-btn play"
         type="button"
         :aria-label="music.playing ? '暂停' : '播放'"
         @click="toggleMusic"
       >
-        <span class="neo-ico" aria-hidden="true">{{ music.playing ? '❚' : '▶' }}</span>
+        <span class="en-ico" aria-hidden="true">{{ music.playing ? '❚' : '▶' }}</span>
       </button>
-      <button class="neo-btn neo-btn-sm neo-btn-quiet t-btn" type="button" aria-label="下一首" @click="next">
-        <span class="neo-ico" aria-hidden="true">»</span>
+      <button class="en-btn en-btn-sm en-btn-quiet t-btn" type="button" aria-label="下一首" @click="next">
+        <span class="en-ico" aria-hidden="true">»</span>
       </button>
     </div>
 
     <div class="scrub">
-      <span class="tm neo-mono">{{ fmt(music.time) }}</span>
+      <span class="tm en-mono">{{ fmt(music.time) }}</span>
       <input
         class="sl"
         type="range"
@@ -98,10 +98,10 @@ onUnmounted(() => {
         aria-label="播放进度"
         @input="seek(Number($event.target.value))"
       />
-      <span class="tm neo-mono">{{ fmt(music.duration) }}</span>
+      <span class="tm en-mono">{{ fmt(music.duration) }}</span>
     </div>
 
-    <p class="lbl neo-mono">// LISTEN · {{ tracks.length }} 首</p>
+    <p class="lbl en-mono">// LISTEN · {{ tracks.length }} 首</p>
     <ul class="q">
       <li v-for="(t, i) in tracks" :key="t.file">
         <button
@@ -111,15 +111,15 @@ onUnmounted(() => {
           :aria-current="isCur(i) ? 'true' : undefined"
           @click="onRow(i)"
         >
-          <span class="q-no neo-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
+          <span class="q-no en-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
           <span class="q-tt">{{ t.title }}</span>
-          <span class="q-ar neo-mono">{{ t.artist }}</span>
+          <span class="q-ar en-mono">{{ t.artist }}</span>
         </button>
       </li>
     </ul>
 
     <div class="vol">
-      <span class="tm neo-mono">VOL</span>
+      <span class="tm en-mono">VOL</span>
       <input
         class="sl"
         type="range"

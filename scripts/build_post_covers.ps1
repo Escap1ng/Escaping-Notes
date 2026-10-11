@@ -27,7 +27,7 @@ $OutDir = Join-Path $Root 'public\posts'
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir | Out-Null }
 
 # Long edge in px. The widest this asset is ever drawn is the reading column, which caps at
-# --measure = 44 x 20px = 880 CSS px (see neo.css 6c), so 1600 covers a 2x display with room
+# --measure = 44 x 20px = 880 CSS px (see site.css 6c), so 1600 covers a 2x display with room
 # to spare. Quality sits above bg:build's 62 on purpose: those two are blurred backdrops,
 # these are photographs a reader looks AT and can open in the lightbox.
 $W = 1600

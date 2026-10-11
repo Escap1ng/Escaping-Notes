@@ -3,7 +3,7 @@
 // 长曝光星轨装置由 StarTrails(interactive) 提供，本组件只负责叙事排版
 import { onMounted, onUnmounted, ref } from 'vue'
 import StarTrails from './StarTrails.vue'
-import { N } from '../../config/narrative.js'
+import { N } from '../config/narrative.js'
 
 const textEl = ref(null)
 
@@ -185,7 +185,7 @@ onUnmounted(() => {
   font-family: var(--font-display);
   font-size: var(--fs-hero-title);
   font-weight: var(--fw-bold);
-  line-height: var(--lh-hero-title); /* 展示级标题：行高刻意脱离四档刻度（同 .neo-title/.neo-h2） */
+  line-height: var(--lh-hero-title); /* 展示级标题：行高刻意脱离四档刻度（同 .en-title/.en-h2） */
   letter-spacing: 0.18em; /* 全大写小字号要靠字距撑开，0.06em 在 20px 上会挤成一团 */
   white-space: nowrap;
   text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);

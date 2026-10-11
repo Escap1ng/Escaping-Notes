@@ -55,8 +55,8 @@ async function submit() {
         PASSWORD · 密码
         <input v-model="form.password" class="field" type="password" autocomplete="current-password" required />
       </label>
-      <p v-if="err" class="neo-note-err">// {{ err }}</p>
-      <button class="neo-btn neo-btn-primary" type="submit">
+      <p v-if="err" class="en-note-err">// {{ err }}</p>
+      <button class="en-btn en-btn-primary" type="submit">
         {{ needsSetup ? '点火 · 初始化' : '入轨 · 登录' }}
       </button>
     </form>

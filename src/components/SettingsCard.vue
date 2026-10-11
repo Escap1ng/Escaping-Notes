@@ -36,17 +36,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="cardEl" id="neo-settings" class="card" role="dialog" aria-label="设置">
+  <div ref="cardEl" id="en-settings" class="card" role="dialog" aria-label="设置">
     <div class="head">
       <h2 class="ttl">设置</h2>
       <button class="close" type="button" aria-label="关闭设置" @click="emit('close')">
-        <span class="neo-ico" aria-hidden="true">✕</span>
+        <span class="en-ico" aria-hidden="true">✕</span>
       </button>
     </div>
 
     <div class="row">
       <label class="lab" for="plate-blur">底片模糊</label>
-      <output class="val neo-mono" for="plate-blur">{{ plate.blur }}px</output>
+      <output class="val en-mono" for="plate-blur">{{ plate.blur }}px</output>
     </div>
 
     <input

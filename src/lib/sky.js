@@ -9,7 +9,7 @@
 // 但两个相机若极点不同，导航后同心弧的圆心会跳 → "同一片天"当场穿帮，所以仍必须全站一处。
 export const POLE_FX = 0.5
 export const POLE_FY = 0.38
-export const MAXPX = 9e6 // 底片像素预算（超出则自动降 DPR）
+const MAXPX = 9e6 // 底片像素预算（超出则自动降 DPR）
 // 底片内部分辨率的下限。**2026-10-07 第六轮之后，它治病的理由已经不成立了**：
 // 当时量的是"底片网格上的覆盖度谷/峰"（0.94 设备 px 是 0.25，1.87 是 0.79），可 1× 屏上眼睛
 // 采样的网格是 1 CSS px = 1 设备像素，把底片栅格加密并不动它——重算下来 p=1 是 0.33、
@@ -19,7 +19,7 @@ export const MAXPX = 9e6 // 底片像素预算（超出则自动降 DPR）
 // 现在保留它的唯一理由是弧线几何的平滑度（超采样让同心弧的台阶更细），**这一条没量过**。
 // 代价是 1× 大屏每帧全屏 destination-out + drawImage 多 2.7× 像素（1920×1080：2.07MP→6.2MP）。
 // 等他的 fps 读数决定要不要退回 `dpr = devicePixelRatio` + 4.6MP —— 别把 1.8 当成已生效的下限。
-export const MIN_DPR = 1.8
+const MIN_DPR = 1.8
 
 export const sky = {
   acc: null, // 长曝光底片（离屏累积缓冲）

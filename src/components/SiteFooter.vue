@@ -1,6 +1,6 @@
 <script setup>
 // 新版页脚：单行式，发丝顶线
-import { N } from '../../config/narrative.js'
+import { N } from '../config/narrative.js'
 
 function toTop() {
   scrollTo({
@@ -11,15 +11,15 @@ function toTop() {
 </script>
 
 <template>
-  <footer class="neo-footer">
-    <span class="neo-mono line">{{ N.footer.line }}</span>
+  <footer class="en-footer">
+    <span class="en-mono line">{{ N.footer.line }}</span>
     <span class="thanks">{{ N.footer.thanks }}</span>
-    <button class="neo-btn neo-btn-sm neo-btn-quiet" type="button" @click="toTop">{{ N.footer.top }}</button>
+    <button class="en-btn en-btn-sm en-btn-quiet" type="button" @click="toTop">{{ N.footer.top }}</button>
   </footer>
 </template>
 
 <style scoped>
-.neo-footer {
+.en-footer {
   position: relative;
   z-index: 2;
   display: flex;
@@ -39,7 +39,7 @@ function toTop() {
 }
 
 @media (max-width: 720px) {
-  .neo-footer {
+  .en-footer {
     padding: var(--space-2);
     justify-content: center;
     text-align: center;

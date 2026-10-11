@@ -28,12 +28,11 @@ BLOG/
 │   ├── assets/fonts/     ← 自托管子集字体 + OFL 许可
 │   ├── config/           ← 内容种子（站点信息/动态/项目/播放器曲单/records 快照/映像底片清单），改内容主路径是 /admin
 │   ├── lib/              ← API/内容/会话等前端客户端（自动维护，无需手改）
-│   ├── components/       ← 公共组件：`neo/` 内为星空与壳层装置，`MusicCard.vue` 在上一层
+│   ├── components/       ← 公共组件：星空与壳层装置与 `MusicCard.vue`，六件同层平铺
 │   ├── views/            ← 11 个页面各一个文件，平铺（含 /admin /login）
 │   ├── router/           ← 网址路由与页面标题
-│   └── styles/           ← 改外观只碰这两个文件：
-│       ├── tokens.css    ←   基线令牌（灰阶/间距/字体栈）
-│       └── neo.css       ←   皮肤令牌（深浅两套配色 + 圆角/阴影）
+│   └── styles/           ← 改外观只碰这一个文件：
+│       └── site.css      ←   基线令牌（灰阶/间距/字体栈）+ 皮肤令牌（深浅两套配色 + 圆角/阴影）
 ├── docs/                 ← design.md 界面设计 · manual.md 本手册 · api.md 后端接口契约
 └── index.html            ← 网页标题、描述、OG/SEO 元信息在这里改
 ```
@@ -75,7 +74,6 @@ BLOG/
 ```js
 export const site = {
   name: 'Escaping Notes',   // 站名
-  subtitle: '每一次书写，都是一次逃逸', // 副标题
   author: 'Xia',           // 你的名字
   bio: '...',              // 身份简介（关于页显示）
   location: 'Chengdu, Sichuan',
@@ -150,7 +148,7 @@ export const site = {
 - **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），显示在自述卡左侧、≤720px 收到正文上方。要换人就换 QQ 那张歌单封面再同步；离线/镜像用的是 `src/config/records.js` 快照里的 URL。
 - **碎片（已随旧版下线，代码保留参考）**：`/fragments` 不占导航位、非 1.0.0 对外功能；接口 `GET/POST/DELETE /api/fragments` 仍保留。
 - **图片管理**：`/admin` 文章页签可「上传图片并插入」正文光标处，下方 IMAGES 列表可插入/删除已上传图片；接口 `GET /api/uploads`、`DELETE /api/uploads/:文件名`（均仅站长）。上传白名单：png/jpg/jpeg/webp/gif/svg/mp3，≤8MB。
-- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记：文章的封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏地平线的亮/暗两版、抽屉那五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `neo.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记：文章的封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏地平线的亮/暗两版、抽屉那五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
 - **项目 `/projects`（05 导航位）**：卡面那四样（`name|desc|year|url`）在 `/admin` 的 PROJECTS 块按行编辑，一行一个项目。点开卡片看到的那段介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）**只在 `src/config/projects.js` 里改**——行式编辑装不下多段正文。后台点保存不会把介绍抹掉（`src/lib/content.js` 按 `name` 把它贴回来），但**在后台改了项目名字就等于把它和介绍断开**，改名时同步改 `projects.js` 里那个 `name`。`npm test` 里 `tests/projects-intro.test.mjs` 钉着这条。
 - **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
 
@@ -205,14 +203,14 @@ export const site = {
 
 ### 3.1 改外观（颜色 / 字体 / 字号 / 间距 / 栏宽 / 圆角）
 
-分两个文件（`neo.css` 必须在 `tokens.css` 之后，靠导入顺序 + `data-skin` 特异性覆盖，见 `src/main.js`）：
+只有一个文件 `src/styles/site.css`（由 `src/main.js` 一处导入）：基线令牌在前、皮肤规则在后，两套主题块靠 `html:root` 的 (0,1,1) 特异性覆盖基线 `:root`：
 
-- `src/styles/tokens.css` 的 `:root`：基线令牌 —— `--ink-0/1/2` 灰阶、`--text-0/1` 文字、`--line` 发丝线、`--font-*` 三层字体栈、`--measure` 阅读栏宽，以及**四组刻度**：
+- `src/styles/site.css` 的 `:root`：基线令牌 —— `--ink-0/1/2` 灰阶、`--text-0/1` 文字、`--line` 发丝线、`--font-*` 三层字体栈、`--measure` 阅读栏宽，以及**四组刻度**：
   - `--space-0…5` 间距（4 / 8 / 16 / 32 / 64 / 96px）
   - `--fs-3xs…4xl` 字号（11.5 → 34px，共 11 档）
   - `--lh-tight/snug/normal/relaxed` 行高（1.35 / 1.6 / 1.75 / 1.9）
   - `--fw-normal/medium/bold` 字重（400 / 600 / 700）
-- `src/styles/neo.css` 的两套主题块：真正生效的配色 —— `--cold`（交互/蓝移）、`--hot`（深度/红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--scrim`（文字底衬色，**当前零消费方**，见 `docs/design.md` 的「首页」条）、`--panel-*`（文章页玻璃底板）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白，以及**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`。
+- `src/styles/site.css` 的两套主题块：真正生效的配色 —— `--cold`（交互/蓝移）、`--hot`（深度/红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--scrim`（文字底衬色，**当前零消费方**，见 `docs/design.md` 的「首页」条）、`--panel-*`（文章页玻璃底板）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白，以及**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`。
 
 改完保存即生效。三条约定：
 
@@ -222,11 +220,11 @@ export const site = {
 
 ### 3.1.1 组件库：新页面该用哪些类
 
-全站只有一套组件，都在 `src/styles/neo.css`：**按钮**（`neo-btn` + `neo-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义）、**筛选与页签**（`neo-chip`）、**标签**（`neo-tag` / `neo-tag-quiet`）、**输入**（`neo-field`，多行长文用 `textarea.neo-field`）、**状态提示**（`neo-note-ok` / `neo-note-err` / `neo-note-info`）、**卡片**（`neo-card` 一张卡面 + `neo-cards` 两列栅格，动态/音乐/项目/关于/首页精选/文章列表都用它；带封面的再加 `neo-flush`（图贴边）与一格 `neo-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**图标**（`neo-ico`，只用 `▶ ❚ « » ✦ ✧ ≡ ✕ → ↗` 这类单字符符号——`«` 是播放器「上一首」新增的，与既有的 `»` 成对；**例外**只有描边 SVG `.neo-svg`：顶栏右上角那三枚，加播放器卡片里那枚星轨符号）。
+全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义）、**筛选与页签**（`en-chip`）、**标签**（`en-tag` / `en-tag-quiet`）、**输入**（`en-field`，多行长文用 `textarea.en-field`）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，动态/音乐/项目/关于/首页精选/文章列表都用它；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**图标**（`en-ico`，只用 `▶ ❚ « » ✦ ✧ ≡ ✕ → ↗` 这类单字符符号——`«` 是播放器「上一首」新增的，与既有的 `»` 成对；**例外**只有描边 SVG `.en-svg`：顶栏右上角那三枚，加播放器卡片里那枚星轨符号）。
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。1.3.0 之前 `/login` `/register` `/admin` 各自写过一套，现已全部并入上面这些类。
-- 唯一一处**故意不用** `.neo-card` 的是 `/gallery` 那面拍立得墙（`.wall` / `.shot` / `.frame` / `.tape` / `.cap`，全在 `GalleryView.vue` 的 scoped 里）：一张照片被胶带钉在桌面上的相纸感，与"这是一组卡片"不是同一件事。它的颜色仍走令牌（`--polar` 白框 / `--tape` 胶带 / `--shadow` 框影），页面里没有写死的色值，别把它当"另造了一套卡面"合并回去。
-- 功能页（`/login` `/admin`）用 `tokens.css` 的 `.page` / `.readout` / `.field` 打底，交互元素同样用上面的 `.neo-*`。
+- 唯一一处**故意不用** `.en-card` 的是 `/gallery` 那面拍立得墙（`.wall` / `.shot` / `.frame` / `.tape` / `.cap`，全在 `GalleryView.vue` 的 scoped 里）：一张照片被胶带钉在桌面上的相纸感，与"这是一组卡片"不是同一件事。它的颜色仍走令牌（`--polar` 白框 / `--tape` 胶带 / `--shadow` 框影），页面里没有写死的色值，别把它当"另造了一套卡面"合并回去。
+- 功能页（`/login` `/admin`）用 `site.css` 的 `.page` / `.readout` / `.field` 打底，交互元素同样用上面的 `.en-*`。
 
 ### 3.2 设备适配（响应式）
 
@@ -235,9 +233,9 @@ export const site = {
 | 断点 | 变化 |
 | --- | --- |
 | `1240px` | 顶栏收起昵称（昵称宽度不可控，最先收） |
-| `1280px` | 顶栏收起整条导航（登录后还有管理/登出），改由汉堡抽屉承载。**加一枚导航就要往上抬约 72px**：单枚实测 67.6px + 4px 间距，同时改 `NeoSiteHeader.vue` 的 CSS 与 `onResize` 两处 |
+| `1280px` | 顶栏收起整条导航（登录后还有管理/登出），改由汉堡抽屉承载。**加一枚导航就要往上抬约 72px**：单枚实测 67.6px + 4px 间距，同时改 `SiteHeader.vue` 的 CSS 与 `onResize` 两处 |
 | `900px` | 音乐页两张曲目表（在线听歌 / QQ 曲目）2 列 → 1 列；关于页三枚读数 3 列 → 1 列；首页精选 3 列 → 1 列；文章列表 `.cards` 3 列 → 2 列；映像墙 3 列 → 2 列 |
-| `880px` | 共用的卡片栅格 `.neo-cards` 2 列 → 1 列（动态 / 项目 / 关于） |
+| `880px` | 共用的卡片栅格 `.en-cards` 2 列 → 1 列（动态 / 项目 / 关于） |
 | `720px` | 手机版：页边距收窄、输入框字号 ≥16px（防 iOS 聚焦放大）、文章列表 `.cards` 收到单列、映像墙收到单列（灯箱翻页箭头隐去，改横滑） |
 | `480px` | 顶栏隐藏品牌文字，只留吸积环图标 |
 
@@ -260,7 +258,7 @@ export const site = {
 
 - 头部主题开关切换，选择会自动记住。深色=近纯黑夜空，浅色=冷灰白档案风（2026-10-09 由米黄底冷色化，10-10 把文章页阅读底板也并回同一底色），**默认浅色**；**首帧不读系统 `prefers-color-scheme`**——`index.html` 只认「存储值 → 否则浅色」，因为首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上。切换是设计叙事的一部分（夜拍 / 显影），不是普通明暗切换。
 - 主题默认值只在 `index.html` 的首帧内联脚本里决定一次（避免首屏闪一下），`src/lib/theme.js` 只读取结果——不要在别处再写一遍默认逻辑。它唯一的例外：`data-theme` 压根没写上时补成浅色（只补属性、不写 `localStorage`，否则兜底值会被当成访客的选择永久固化）。这两条都由 `tests/theme-default.test.mjs` 钉着，含负向对照。
-- 改浅色配色：`src/styles/neo.css` 的 `html[data-skin='neo'][data-theme='out']` 变量块（§3）；改深色配色：`html[data-skin='neo']:not([data-theme='out'])` 变量块（§2，它同时是 `data-theme` 缺失时的兜底，所以选择器不是 `[data-theme='well']`）。**两套都要改**，尤其新增颜色令牌时不要只定义一套（历史上 `--scrim` 漏定义就导致浅色首页文字底衬整条失效）。
+- 改浅色配色：`src/styles/site.css` 的 `html:root[data-theme='out']` 变量块（§3）；改深色配色：`html:root:not([data-theme='out'])` 变量块（§2，它同时是 `data-theme` 缺失时的兜底，所以选择器不是 `[data-theme='well']`）。**两套都要改**，尤其新增颜色令牌时不要只定义一套（历史上 `--scrim` 漏定义就导致浅色首页文字底衬整条失效）。
 - 当访客系统开启“减弱视觉效果”（prefers-reduced-motion）时，全站动画自动关停、`fall` 转场与晕影取消，星轨装置降级为一次性快进的静态底片，无需手动处理。
 
 ### 3.4 性能与无障碍约定（改代码时请遵守）
@@ -274,10 +272,10 @@ export const site = {
 - **天空的口味常量按主题分档，不许两主题共用一个数**。深色是 `lighter` 加在 2.2 级的近黑底上，浅色是墨压在 245 级的干版上——同一个 α 的对比度差着一个数量级（α=0.037：浅色 3% 看不见，深色 320% 读成"脏灰"）。所以星数是 `N_DEEP_K=0.65`（深色 182 根 / 浅色 280 根），沉积与衰减也各带一个主题倍率（浅色 ×1.5 / ×1.4）。新增这一类常量时**两档都要各测各的**，报结论也要报两遍。
 - **不要各自写滚动监听**。滚动深度统一由 `App.vue` 写入 `--shift`（0..1），需要就 `var(--shift, 0)`；`scrollHeight` 会强制同步布局，绝不能每帧读。
 - **焦点与播报**：新增模态/浮层请用 `src/lib/focus.js` 的 `trapFocus()` 锁住 Tab 并在关闭时归还焦点；`#main` 带 `tabindex="-1"` 供「跳到内容」使用；路由切换由 `App.vue` 的 `aria-live` 区域播报 `route.meta.t`——新页面记得在 `src/router/index.js` 写上 `meta.t`。
-- **触控目标 ≥44px**：直接复用 `.neo-btn` / `.neo-chip` 就会自动满足（`neo.css` 的 `@media (pointer: coarse)` 已统一处理）；只有自己写控件时才需补 `min-height: 44px`。
+- **触控目标 ≥44px**：直接复用 `.en-btn` / `.en-chip` 就会自动满足（`site.css` 的 `@media (pointer: coarse)` 已统一处理）；只有自己写控件时才需补 `min-height: 44px`。
 - **最小字号 11.5px**：仪器文字再小就不可读了，即 `--fs-3xs`，不要再往下调。
-- **复用现有组件，不要新造**：按钮、输入框、卡片、提示一律取 §3.1.1 的那套类。若发现基元不够用，先扩 `neo.css` 里的基元本身，再让所有页面一起切换——不要在建页面时顺手写一份“只有这个页面用”的样式。
-- **状态提示用 `.neo-note-ok` / `.neo-note-err` / `.neo-note-info`**，统一以 `//` 打头；不要新增 `.err` / `.warn` / `.notice` 之类的一次性类，也不要给“失败”用冷色、“成功”用热色。
+- **复用现有组件，不要新造**：按钮、输入框、卡片、提示一律取 §3.1.1 的那套类。若发现基元不够用，先扩 `site.css` 里的基元本身，再让所有页面一起切换——不要在建页面时顺手写一份“只有这个页面用”的样式。
+- **状态提示用 `.en-note-ok` / `.en-note-err` / `.en-note-info`**，统一以 `//` 打头；不要新增 `.err` / `.warn` / `.notice` 之类的一次性类，也不要给“失败”用冷色、“成功”用热色。
 
 ## 4. 上传方法（部署上线）
 
@@ -507,8 +505,8 @@ Pages 版是只读测试镜像：文章用打包版，登录/发文不可用（�
   - 内容渲染——`src/lib/markdown.js` 支持 GFM 管道表，标题层级收到 h2/h6（h1 让给文章标题）。
 - **v1.3.0 · 统一设计系统（界面一致性）**：
   - 建立刻度——间距 `--space-0…5`、字号 `--fs-3xs…4xl`（11 档）、行高 `--lh-*`（4 档）、字重 `--fw-*`（3 档）、卡片 `--card-*` 一组、次级页顶栏避让 `--page-top`；组件内不再写裸字号/裸间距。
-  - 收敛组件——按钮从 6 套并为「2 尺寸 × 4 语义」；输入框从 2 套并为「单行下划线 / 多行发丝框」；卡片 3 套规格并为 `--card-*`；状态提示 5 种各自实现并为 `.neo-note-ok/err/info` 三态；图标统一为 `.neo-ico` 单字符符号（播放符号两套合并）。
-  - 功能页并入——`/login` `/register` `/admin` 的私有类（`.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn`）全部删除，改用 `.neo-*`；后台页签选中态由热色改冷色，与全站 `.neo-chip` 一致。
+  - 收敛组件——按钮从 6 套并为「2 尺寸 × 4 语义」；输入框从 2 套并为「单行下划线 / 多行发丝框」；卡片 3 套规格并为 `--card-*`；状态提示 5 种各自实现并为 `.en-note-ok/err/info` 三态；图标统一为 `.en-ico` 单字符符号（播放符号两套合并）。
+  - 功能页并入——`/login` `/register` `/admin` 的私有类（`.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn`）全部删除，改用 `.neo-*`；后台页签选中态由热色改冷色，与全站 `.en-chip` 一致。
   - 修正——`.field` 显式声明 `font-family` / `text-transform`，避免嵌在 `.readout` 标签里被带成等宽大写；修复本次重构一度造成的提交按钮无样式、错误提示无颜色。
 - **v1.2.0 · 运行时性能 / 无障碍 / SEO**：
   - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 监听统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改为 `transform` 位移（不再逐帧重绘渐变）。（`fall` 转场的整页模糊经评估后按设计取舍保留。）

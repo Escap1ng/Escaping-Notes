@@ -12,10 +12,10 @@
 // plate-hero.jpg 与 plate-hero-deep.jpg，只差调色，所以 deep 复用 out 这条折线。
 // 换 bake 源（SRC_HERO）就必须重描。plate-bg-deep.jpg 是另一张照片（plate1.jpg 全幅）
 // 做的夜景阅读底，只当抽屉背景，首屏不用它，故不再单独描线。
-export const RIDGE_BIAS = 10 // px：遮罩边界整体上移，给描线误差与脊尖留余量
-export const RIDGE_FEATHER = 26 // px：0 → ALT_FLOOR 的羽化带
-export const RIDGE_ALT_K = 0.22 // 高度衰减带占视口高的比例
-export const RIDGE_ALT_FLOOR = 0.62 // 羽化带顶的遮罩值（脊线附近星轨亮度保留到六成）
+const RIDGE_BIAS = 10 // px：遮罩边界整体上移，给描线误差与脊尖留余量
+const RIDGE_FEATHER = 26 // px：0 → ALT_FLOOR 的羽化带
+const RIDGE_ALT_K = 0.22 // 高度衰减带占视口高的比例
+const RIDGE_ALT_FLOOR = 0.62 // 羽化带顶的遮罩值（脊线附近星轨亮度保留到六成）
 
 // 扁平 [u0,v0,u1,v1,...]，u 单调递增
 const OUT = [
@@ -31,7 +31,7 @@ const OUT = [
   0.85, 0.645, 0.875, 0.672, 0.9, 0.685, 0.925, 0.69, 0.95, 0.7, 0.975, 0.705,
   1.0, 0.71,
 ]
-export const RIDGES = {
+const RIDGES = {
   out: { ar: 6000 / 1860, pts: OUT },
   deep: { ar: 6000 / 1860, pts: OUT },
 }

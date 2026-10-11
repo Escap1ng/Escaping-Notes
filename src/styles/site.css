@@ -1,15 +1,248 @@
 /* ==========================================================================
-   Escaping Notes · neo 皮肤「长曝光星轨 STAR-TRAILS EXPOSURE」
+   Escaping Notes · 全站样式表（一份文件，按下面四层读）
+     1. `:root`                 结构刻度：间距 / 字号 / 行高 / 字重 / 字体栈 / 栏宽。
+                                 **这里没有配色**——颜色只在两个主题块各定一套（见 §2/§3），
+                                 改配色改到那里去。由 tests/token-single-source.test.mjs 钉住
+                                 "同一令牌不许既在 :root 又在主题块"；历史上 --scrim 只定义了
+                                 一套，浅色首页的文字底衬就整条静默失效过。
+     2. `html:root`             与主题无关的令牌（圆角 / 卡片 / --font-display / 品牌色 / 山脊几何）
+     3. `html:root:not([data-theme='out'])`  深色配色，同时兜住 data-theme 缺失的异常路径
+     4. `html:root[data-theme='out']`         浅色配色
    概念：首页是一台架好的相机在长曝光；滚动 = 这一夜的曝光在加速（晕影收紧、天空转快）。
    色彩取自夜空的两副面孔，语义严格分工：
      --cold  冷 = 交互（hover / 链接 / 焦点 / 星轨节点）
      --hot   热 = 深度（进度 / 强调 / 当前项）
      --white 高光 = 仅星核与 ≤2px 高光
-   仅当 <html data-skin="neo"> 生效（由 index.html 硬编码，本站唯一样式网关）。
-   特异性：html[data-skin='neo'] (0,1,1) > :root (0,1,0)
-           html[data-skin='neo']:not([data-theme='out']) / [data-theme='out'] (0,2,1)
-   必须在 tokens.css 之后导入（见 src/main.js）。
+   为什么站级规则挂 `html:root`：要的是它那 (0,1,1) 的特异性——`:root` 恒等于文档根 <html>，
+   这个写法与退役前的 `html[data-skin='neo']` 逐位同宽，所以去掉那个属性时层叠一字没变。
+   它稳定压过 :root (0,1,0)，但会压死各页 scoped 的 `.x[data-v-…]` (0,2,0)——
+   所以 §6d 那批"允许页面把基元扳回自己形态"的规则刻意不带这个前缀，那不是漏写。
+   用法与改法见 docs/manual.md §3。
    ========================================================================== */
+
+:root {
+  /* 字体：全部系统字体栈，零外部依赖。
+     mono 必须含 ui-monospace/SFMono-Regular/Menlo，否则 macOS 上会一路落到 Courier New。
+     serif 的 CJK 候选名尽量列全（Noto Serif CJK SC 为官方 CJK 版名，Source Han Serif CN 为 Adobe 版名）。 */
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, SFMono-Regular, Menlo, Consolas,
+    'Courier New', monospace;
+  --font-serif: 'Songti SC', 'Noto Serif SC', 'Noto Serif CJK SC', 'Source Han Serif SC',
+    'Source Han Serif CN', STSong, SimSun, serif;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+
+  /* ---------- 间距刻度（4px 基准，全站唯一来源） ----------
+     0 = 发丝级（图标与文字之间、徽标内边距）
+     1/2/3/4/5 = 8 / 16 / 32 / 64 / 96，用于常规留白与区块节奏
+     组件内不要再写裸 px；确实需要细调时用 calc(var(--space-1) / 2) 并说明原因。 */
+  --space-0: 4px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 32px;
+  --space-4: 64px;
+  --space-5: 96px;
+
+  /* ---------- 排版刻度（全站唯一来源，组件里禁止写裸字号） ----------
+     共 11 档，覆盖仪表读数 → 页面标题。收敛原则：新需求先找最接近的档，
+     而不是新造一个 14.5px。最小 11.5px 是硬下限（等宽大写 + 宽字距下再小不可读）。 */
+  --fs-3xs: 11.5px; /* 仪器最小读数（标签/角标/脚注） */
+  --fs-2xs: 12px; /* 眉标 / 读数 / 等宽文字 */
+  --fs-xs: 13px; /* 注脚 / 辅助说明 */
+  --fs-sm: 14px; /* 次要正文 / 按钮 / 导航 */
+  --fs-md: 15px; /* 小正文 / 表单输入 / 列表行 */
+  --fs-base: 16px; /* 正文基准（body） */
+  --fs-lg: 17px; /* 长文正文（.en-prose） */
+  --fs-xl: 20px; /* 卡片标题 / 小标题 */
+  --fs-2xl: 26px; /* 区块标题（小） */
+  --fs-3xl: 30px; /* 区块标题 */
+  --fs-4xl: 34px; /* 页面标题（小） */
+  /* 比 4xl 更大的标题一律用 clamp() 写在 site.css 后面的标题规则里，不在此列 */
+
+  /* 行高三档：紧=标题、中=界面文字、松=长文。正文之外的文字默认取 snug */
+  --lh-tight: 1.35;
+  --lh-snug: 1.6;
+  --lh-normal: 1.75;
+  --lh-relaxed: 1.9;
+
+  /* 字重三档。规则：400=正文，600=按钮/强调标签，700=标题碑刻（衬线标题专用） */
+  --fw-normal: 400;
+  --fw-medium: 600;
+  --fw-bold: 700;
+
+  /* 阅读栏宽 */
+  --measure: 68ch;
+}
+
+/* 井外主题：逃逸完成后的冷灰蓝档案（头部 LOC 开关切换，localStorage 记忆）
+   改井外配色 → 只改这个块，见 docs/manual.md §3.3 */
+:root[data-theme='out'] {
+  --ink-0: #f2f5f9;
+  --ink-1: #e7ecf3;
+  --ink-2: #d9e1eb;
+  --line: rgba(14, 20, 29, 0.26);
+  --text-0: #0e141d;
+  --text-1: #55606f;
+  --signal: #b45309;
+  --signal-dim: rgba(180, 83, 9, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* 预留滚动条槽位：长短页切换时视口宽度不变，消除横向抽搐 */
+  scrollbar-gutter: stable;
+  /* 裁剪装饰性幽灵汉字等越界元素：避免横向滚动导致页面左右抖动/缩放 */
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-0);
+  color: var(--text-0);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--ink-0);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+/* 仪表读数样式：全站所有“仪器文字”共用（等宽 · 大写 · 宽字距） */
+.readout {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
+  letter-spacing: 0.08em;
+  color: var(--text-1);
+  text-transform: uppercase;
+}
+
+/* 通用页面骨架 */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3);
+}
+
+.page-code {
+  margin: 0;
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: 0.02em;
+  margin: var(--space-1) 0 var(--space-3);
+}
+
+/* ---------- 表单控件（登录 / 管理 共用） ----------
+   形态规则（全站唯一）：
+     单行输入 / 搜索 → 下划线式（.field，与 .en-field 同语言同状态）
+     多行文本域     → 发丝框（textarea.field）——长文编辑需要明确的边界与内边距
+   状态规则：hover 抬亮描边、focus 转为交互色（冷）、disabled 降到 50% 不透明。 */
+.field {
+  width: 100%;
+  padding: var(--space-1) 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: var(--text-0);
+  /* 必须显式声明：输入框常嵌在 .readout 标签里，inherit 会把等宽字体与大写转换带进来 */
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  text-transform: none;
+  transition: border-color 0.24s;
+}
+
+.field::placeholder {
+  color: var(--text-1);
+  opacity: 0.7;
+}
+
+.field:hover {
+  border-color: color-mix(in srgb, var(--signal) 50%, var(--line));
+}
+
+.field:focus,
+.field:focus-visible {
+  outline: none;
+  border-color: var(--signal);
+}
+
+/* 多行文本域：唯一允许"盒子"形态的输入，因为长文需要边界 */
+textarea.field {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm, 8px);
+  resize: vertical;
+}
+
+textarea.field:hover {
+  border-color: color-mix(in srgb, var(--signal) 45%, var(--line));
+}
+
+textarea.field:focus,
+textarea.field:focus-visible {
+  border-color: var(--signal);
+}
+
+.field.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-normal);
+}
+
+.field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 移动端输入框 ≥16px，避免 iOS 聚焦自动缩放 */
+@media (max-width: 720px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* 系统开启“减弱视觉效果”时：全局关停动画。
+   轨迹场装置另有静态轨迹图降级（阶段一实现）。 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- 以下小节编号 §0–§9 沿用合并前 neo.css 的编号，文档按它引用 ---------- */
 
 /* ---------- 0. 展示层子集字体 ---------- */
 /* 仅 --font-display（标题 / 卡名 / 抽屉项）使用，正文继续走系统宋体栈。
@@ -24,7 +257,7 @@
 }
 
 /* ---------- 1. 非颜色令牌 ---------- */
-html[data-skin='neo'] {
+html:root {
   --r-sm: 8px;
   --r-md: 14px;
   --r-pill: 999px;
@@ -33,24 +266,22 @@ html[data-skin='neo'] {
      首选项为自托管子集（只覆盖展示层用字），其后回落系统宋体栈——Windows 上会落到 SimSun。 */
   --font-display: 'EN Display Serif', var(--font-serif);
 
-  --measure: 68ch;
-  /* 长文正文字号（.neo-prose）：随视口在 --fs-lg 与 --fs-xl 两档之间插值，两端都是刻度上的档，
+  /* 长文正文字号（.en-prose）：随视口在 --fs-lg 与 --fs-xl 两档之间插值，两端都是刻度上的档，
      不新造字号。宽屏上 17px 相对屏宽偏小，但栏宽不能单独放——汉字一行超过 ~44 字就读着累，
-     所以让字号和栏宽一起长（栏宽在 §6c 按这枚字号算）。 */
+     所以让字号和栏宽一起长（栏宽在 §6c 按这枚字号算）。
+     --measure（68ch）不在这里定：它属结构刻度，唯一来源是文件顶部的 :root 块。 */
   --prose-size: clamp(var(--fs-lg), 0.6vw + 11.4px, var(--fs-xl));
-  --space-5: 96px;
-  /* 次级页内容顶部留白：所有 .neo-shell 页面共用，避开固定顶栏 */
+  /* 次级页内容顶部留白：所有 .en-shell 页面共用，避开固定顶栏 */
   --page-top: 120px;
 
   /* 品牌色：顶栏吸积环签名专用。跨主题固定为深色三档色温——
      它是全站的视觉锚点，浅色主题下也保持同一枚环，故不放进主题块。 */
   --brand-cold: #8ec9ff;
   --brand-hot: #ff5c39;
-  --brand-white: #fff7ed;
 
   /* 暗带契约（§3.3）：文字底下的天空必须被压低，天空只在带外全亮。
      压低系数 --sky-k 在 §2/§3 两个主题块各定一档（两套主题差 2.5 倍）。
-     带宽 1120px = .neo-shell 的 max-width，保证正文整块落在带内。用 % 而不是 vw：
+     带宽 1120px = .en-shell 的 max-width，保证正文整块落在带内。用 % 而不是 vw：
      mask 的定位面积就是画布盒子（fixed inset:0，已排除滚动条），vw 会把滚动条算进来。 */
   --sky-band: min(1120px, 100%);
   /* 羽化段"恰好吃掉带外的全部余量"：带内全压、到视口边缘全亮，中间线性过渡。
@@ -65,7 +296,7 @@ html[data-skin='neo'] {
      **填充只负责"这是一组"，不负责可读性**——那是暗带的活。实测填充相对带内天空底
      只有 1.04~1.14:1 的表面比（肉眼几乎看不出），卡片认得出边界靠的是 --card-brd
      那根发丝线；44%→72% 这一档 hover 变化更是只有 1.05:1，等于没有。
-     所以这里收窄 hover 的填充跳幅（让边线与 .neo-spike 承担悬停强调）， resting 抬一档
+     所以这里收窄 hover 的填充跳幅（让边线与 .en-spike 承担悬停强调）， resting 抬一档
      让它在变安静的带面上仍读得出是一块板。52/62 是**实测区间内的口味值**，不是算出来的。 */
   --card-bg: color-mix(in srgb, var(--ink-1) 52%, transparent);
   --card-bg-hover: color-mix(in srgb, var(--ink-1) 62%, transparent);
@@ -92,7 +323,7 @@ html[data-skin='neo'] {
 /* ---------- 2. 深色（也是 data-theme 缺失时的兜底块） ---------- */
 /* 选择器写成 :not([data-theme='out']) 而不是 [data-theme='well']，所以属性没写上时
    这里就是渲染结果。首开默认浅色由 index.html 决定，与此无关。 */
-html[data-skin='neo']:not([data-theme='out']) {
+html:root:not([data-theme='out']) {
   --ink-0: #020204;
   --ink-1: #0a0a10;
   --ink-2: #15151d;
@@ -106,7 +337,7 @@ html[data-skin='neo']:not([data-theme='out']) {
   --hot: #ff5c39;
   --white: #fff7ed;
 
-  /* 共享旧组件的强调色：neo 下交给蓝移 */
+  /* 共享旧组件的强调色：深色主题下交给蓝移 */
   --signal: #8ec9ff;
   --signal-dim: rgba(142, 201, 255, 0.36);
 
@@ -139,7 +370,7 @@ html[data-skin='neo']:not([data-theme='out']) {
 }
 
 /* ---------- 3. 白矮冷调（浅色） ---------- */
-html[data-skin='neo'][data-theme='out'] {
+html:root[data-theme='out'] {
   --ink-0: #f2f5f9;
   --ink-1: #e7ecf3;
   --ink-2: #d9e1eb;
@@ -195,29 +426,29 @@ html[data-skin='neo'][data-theme='out'] {
 }
 
 /* ---------- 4. 基线 ---------- */
-html[data-skin='neo'] body {
+html:root body {
   background: var(--ink-0);
   color: var(--text-0);
   font-family: var(--font-sans);
 }
 
-html[data-skin='neo'] main {
+html:root main {
   z-index: 2;
 }
 
-html[data-skin='neo'] ::selection {
+html:root ::selection {
   background: var(--hot);
   color: var(--ink-0);
 }
 
-html[data-skin='neo'] :focus-visible {
+html:root :focus-visible {
   outline: 2px solid var(--cold);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
 /* 仅供读屏：视觉隐藏但留在可访问性树里（路由播报、跳转提示等） */
-html[data-skin='neo'] .sr-only {
+html:root .sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -230,52 +461,52 @@ html[data-skin='neo'] .sr-only {
 }
 
 /* ------------------------------------------------------------------
-    统一光标系统（neo）：
+    统一光标系统：
     1) 正文/标题等任何点击都不出现 I 形文本竖线（cursor: default, caret 透明）
     2) 可交互元素（链接/按钮/标签）→ 手型
     3) 仅真正的输入框保留 I 形光标与插入竖线（caret）
     用 :where() 把基础规则特异性归零，让 pointer/text 规则能覆盖它。
     ------------------------------------------------------------------ */
-html[data-skin='neo'] :where(:not(input):not(textarea):not([contenteditable='true'])) {
+html:root :where(:not(input):not(textarea):not([contenteditable='true'])) {
   cursor: default;
   caret-color: transparent;
 }
 
-html[data-skin='neo'] a[href],
-html[data-skin='neo'] button,
-html[data-skin='neo'] label,
-html[data-skin='neo'] summary {
+html:root a[href],
+html:root button,
+html:root label,
+html:root summary {
   cursor: pointer;
 }
 
-html[data-skin='neo'] input,
-html[data-skin='neo'] textarea,
-html[data-skin='neo'] [contenteditable='true'] {
+html:root input,
+html:root textarea,
+html:root [contenteditable='true'] {
   cursor: text;
   caret-color: var(--cold);
 }
 
-html[data-skin='neo'] ::-webkit-scrollbar {
+html:root ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-html[data-skin='neo'] ::-webkit-scrollbar-track {
+html:root ::-webkit-scrollbar-track {
   background: transparent;
 }
-html[data-skin='neo'] ::-webkit-scrollbar-thumb {
+html:root ::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--hot) 40%, transparent);
   border-radius: var(--r-pill);
 }
 
 /* ---------- 5. 骨架与文字层级 ---------- */
 /* 次级页空白滚动余量：页脚压出首屏，且内容末尾与页脚之间恒留空白（类由 App.vue 挂载，首页除外） */
-html[data-skin='neo'] main.neo-sub {
+html:root main.en-sub {
   min-height: calc(100vh + 140px);
   min-height: calc(100svh + 140px);
   padding-bottom: 140px;
 }
 
-.neo-shell {
+.en-shell {
   position: relative;
   max-width: 1120px;
   margin: 0 auto;
@@ -283,12 +514,12 @@ html[data-skin='neo'] main.neo-sub {
 }
 
 @media (max-width: 720px) {
-  .neo-shell {
+  .en-shell {
     padding: var(--space-4) var(--space-2);
   }
 }
 
-.neo-eyebrow {
+.en-eyebrow {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -301,7 +532,7 @@ html[data-skin='neo'] main.neo-sub {
   color: var(--text-1);
 }
 
-.neo-eyebrow::before {
+.en-eyebrow::before {
   content: '';
   width: 20px;
   height: 1px;
@@ -309,7 +540,7 @@ html[data-skin='neo'] main.neo-sub {
   flex-shrink: 0;
 }
 
-.neo-title {
+.en-title {
   font-family: var(--font-display);
   font-size: clamp(40px, 11vw, 132px);
   font-weight: var(--fw-bold);
@@ -318,7 +549,7 @@ html[data-skin='neo'] main.neo-sub {
   margin: var(--space-2) 0;
 }
 
-.neo-h2 {
+.en-h2 {
   font-family: var(--font-display);
   font-size: clamp(28px, 4.6vw, 44px);
   font-weight: var(--fw-bold);
@@ -327,7 +558,7 @@ html[data-skin='neo'] main.neo-sub {
   margin: var(--space-1) 0 var(--space-2);
 }
 
-.neo-lede {
+.en-lede {
   max-width: var(--measure);
   color: var(--text-1);
   font-size: var(--fs-base);
@@ -335,7 +566,7 @@ html[data-skin='neo'] main.neo-sub {
   margin: 0 0 var(--space-3);
 }
 
-.neo-mono {
+.en-mono {
   font-family: var(--font-mono);
   font-size: var(--fs-2xs);
   line-height: var(--lh-snug);
@@ -345,7 +576,7 @@ html[data-skin='neo'] main.neo-sub {
 }
 
 /* 观测手记：纸边铅笔字 */
-.neo-note {
+.en-note {
   font-family: var(--font-serif);
   font-style: italic;
   font-size: var(--fs-xs);
@@ -355,22 +586,15 @@ html[data-skin='neo'] main.neo-sub {
   max-width: 34ch;
 }
 
-.neo-hair {
-  height: 1px;
-  border: 0;
-  margin: var(--space-3) 0;
-  background: var(--line);
-}
-
 /* ---------- 5b. 状态提示（全站唯一的反馈语言） ----------
    三种状态只用两个色 + 一个中性：
-     info（默认，= .neo-note 的中性色）→ --text-1，用于"降级/提示"这类非错误信息
+     info（默认，= .en-note 的中性色）→ --text-1，用于"降级/提示"这类非错误信息
      ok                               → --cold（交互色 = 一切正常，可继续交互）
      err                              → --hot（深度色 = 需要你注意/不可继续）
    统一以 "//" 前缀起头，与全站眉标同构；不再新增 .err/.warn/.notice 之类的一次性类。 */
-.neo-note-ok,
-.neo-note-err,
-.neo-note-info {
+.en-note-ok,
+.en-note-err,
+.en-note-info {
   margin: 0;
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
@@ -378,15 +602,15 @@ html[data-skin='neo'] main.neo-sub {
   letter-spacing: 0.04em;
 }
 
-.neo-note-info {
+.en-note-info {
   color: var(--text-1);
 }
 
-.neo-note-ok {
+.en-note-ok {
   color: var(--cold);
 }
 
-.neo-note-err {
+.en-note-err {
   color: var(--hot);
 }
 
@@ -395,9 +619,9 @@ html[data-skin='neo'] main.neo-sub {
      状态/开关：✦ 实心=开 · ✧ 空心=关      菜单：≡ 打开 · ✕ 关闭
      媒体：▶ 播放 · ❚ 暂停 · » 下一首        方向：→ 站内 · ↗ 站外
    规则：① 图标一律 aria-hidden，语义由所在按钮的 aria-label 承担；
-        ② 放在 .neo-ico 的固定盒里（1.15em 宽 + 居中），避免不同字形宽窄不一致导致布局跳动；
+        ② 放在 .en-ico 的固定盒里（1.15em 宽 + 居中），避免不同字形宽窄不一致导致布局跳动；
         ③ 颜色不单独指定，跟随宿主：默认 --text-1、hover --cold、激活/播放中 --hot。 */
-.neo-ico {
+.en-ico {
   display: inline-block;
   width: 1.15em;
   text-align: center;
@@ -407,14 +631,14 @@ html[data-skin='neo'] main.neo-sub {
 
 /* ---------- 6. 按钮 / 胶囊 / 输入 ----------
    按钮体系（全站唯一）：两个尺寸 × 四种语义，其它形态都由此组合。
-     尺寸  .neo-btn（默认：表单提交、页面主/次动作）· .neo-btn-sm（表格行、工具条里的密集操作）
-     语义  .neo-btn-primary（热色实心，仅"深度方向"的主动作）
-           .neo-btn-ghost  （发丝描边，次级动作）
-           .neo-btn-danger （描边 + hover 转热色，破坏性动作：删除/禁用）
-           .neo-btn-quiet  （无框纯文字，附注动作：复制/回顶/退出登录）
-   文字一律用 --font-sans；等宽只留给"仪器文字"（.readout/.neo-mono/.neo-chip）。
+     尺寸  .en-btn（默认：表单提交、页面主/次动作）· .en-btn-sm（表格行、工具条里的密集操作）
+     语义  .en-btn-primary（热色实心，仅"深度方向"的主动作）
+           .en-btn-ghost  （发丝描边，次级动作）
+           .en-btn-danger （描边 + hover 转热色，破坏性动作：删除/禁用）
+           .en-btn-quiet  （无框纯文字，附注动作：复制/回顶/退出登录）
+   文字一律用 --font-sans；等宽只留给"仪器文字"（.readout/.en-mono/.en-chip）。
    状态一律三态：hover 抬升、active 回落、disabled 置灰且不再抬升。 */
-.neo-btn {
+.en-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -431,7 +655,7 @@ html[data-skin='neo'] main.neo-sub {
   line-height: var(--lh-tight);
   text-align: center;
   text-decoration: none;
-  /* 按钮常嵌在 .readout/.neo-mono 里，二者会继承大写转换，必须显式复位 */
+  /* 按钮常嵌在 .readout/.en-mono 里，二者会继承大写转换，必须显式复位 */
   text-transform: none;
   cursor: pointer;
   transition:
@@ -442,73 +666,73 @@ html[data-skin='neo'] main.neo-sub {
     background-color 0.24s ease;
 }
 
-.neo-btn-sm {
+.en-btn-sm {
   min-height: 28px;
   padding: 0 var(--space-1);
   font-size: var(--fs-2xs);
 }
 
-.neo-btn:hover {
+.en-btn:hover {
   transform: translateY(-2px);
 }
 
-.neo-btn:active {
+.en-btn:active {
   transform: translateY(0) scale(0.98);
 }
 
-.neo-btn:disabled,
-.neo-btn[aria-disabled='true'] {
+.en-btn:disabled,
+.en-btn[aria-disabled='true'] {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.neo-btn:disabled:hover,
-.neo-btn[aria-disabled='true']:hover {
+.en-btn:disabled:hover,
+.en-btn[aria-disabled='true']:hover {
   transform: none;
   box-shadow: none;
 }
 
 /* 红移实心：仅用于「深度方向」的主动作 */
-.neo-btn-primary {
+.en-btn-primary {
   background: var(--hot);
   color: var(--ink-0);
 }
 
-.neo-btn-primary:hover {
+.en-btn-primary:hover {
   box-shadow: 0 0 0 1px var(--hot), 0 8px 26px -10px var(--hot);
 }
 
-.neo-btn-ghost,
-.neo-btn-danger {
+.en-btn-ghost,
+.en-btn-danger {
   border-color: var(--line);
 }
 
-.neo-btn-ghost:hover {
+.en-btn-ghost:hover {
   border-color: var(--cold);
   color: var(--cold);
 }
 
-.neo-btn-danger:hover {
+.en-btn-danger:hover {
   border-color: var(--hot);
   color: var(--hot);
 }
 
 /* 附注动作：没有边框、没有底色，只有颜色变化 */
-.neo-btn-quiet {
+.en-btn-quiet {
   min-height: 0;
   padding: var(--space-0) 0;
   border: 0;
   color: var(--text-1);
 }
 
-.neo-btn-quiet:hover {
+.en-btn-quiet:hover {
   transform: none;
   color: var(--cold);
 }
 
 /* 筛选胶囊 / 页签：与按钮分工不同——这类是"仪器文字"（等宽、宽字距、无位移），
    选中态用交互色（冷），把热色完整让给"主动作"。 */
-.neo-chip {
+.en-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-0);
@@ -525,17 +749,17 @@ html[data-skin='neo'] main.neo-sub {
   transition: color 0.22s, border-color 0.22s;
 }
 
-.neo-chip:hover {
+.en-chip:hover {
   color: var(--cold);
   border-color: var(--cold);
 }
 
-.neo-chip.on {
+.en-chip.on {
   color: var(--cold);
   border-color: var(--cold);
 }
 
-.neo-tag {
+.en-tag {
   display: inline-flex;
   padding: 0 var(--space-1);
   border-radius: var(--r-pill);
@@ -549,14 +773,14 @@ html[data-skin='neo'] main.neo-sub {
 
 /* 中性标签：只是"标记"，不带交互语义。它唯一的消费方是文章页那枚"本地读数"，
    2026-10-10 随本地回退计数一起撤走 → 现在零消费方，退役与否等他定 */
-.neo-tag-quiet {
+.en-tag-quiet {
   background: color-mix(in srgb, var(--text-1) 14%, transparent);
   color: var(--text-1);
 }
 
 /* 单行输入 / 搜索：下划线式（与 legacy 页面的 .field 同一语言、同一组状态）
-   多行文本域见下方 textarea.neo-field —— 形态规则全站只有这一条。 */
-.neo-field {
+   多行文本域见下方 textarea.en-field —— 形态规则全站只有这一条。 */
+.en-field {
   width: 100%;
   padding: var(--space-1) 2px;
   border: 0;
@@ -570,28 +794,28 @@ html[data-skin='neo'] main.neo-sub {
   transition: border-color 0.24s;
 }
 
-.neo-field::placeholder {
+.en-field::placeholder {
   color: var(--text-1);
   opacity: 0.7;
 }
 
-.neo-field:hover {
+.en-field:hover {
   border-color: color-mix(in srgb, var(--cold) 50%, var(--line));
 }
 
-.neo-field:focus,
-.neo-field:focus-visible {
+.en-field:focus,
+.en-field:focus-visible {
   outline: none;
   border-color: var(--cold);
 }
 
-.neo-field:disabled {
+.en-field:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* 多行文本域：唯一允许"盒子"形态的输入 */
-textarea.neo-field {
+textarea.en-field {
   min-height: 88px;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--line);
@@ -599,25 +823,24 @@ textarea.neo-field {
   resize: vertical;
 }
 
-textarea.neo-field:hover {
+textarea.en-field:hover {
   border-color: color-mix(in srgb, var(--cold) 45%, var(--line));
 }
 
 /* 移动端：输入框 ≥16px，防 iOS 聚焦自动放大 */
 @media (max-width: 720px) {
-  html[data-skin='neo'] .neo-field {
+  html:root .en-field {
     font-size: 16px;
   }
 }
 
 /* 触控设备：可点目标不小于 44×44（WCAG 2.5.5 / iOS HIG），只影响手指，不动鼠标观感 */
 @media (pointer: coarse) {
-  html[data-skin='neo'] .neo-btn,
-  html[data-skin='neo'] .link-item {
+  html:root .en-btn {
     min-height: 44px;
   }
 
-  html[data-skin='neo'] .neo-chip {
+  html:root .en-chip {
     min-height: 44px;
     padding-left: 18px;
     padding-right: 18px;
@@ -632,13 +855,13 @@ textarea.neo-field:hover {
    光斑本体是一张静止的径向渐变（只栅格化一次），跟随指针全靠 transform 位移；
    若沿用「每帧改 gradient 中心 / background-position」的写法，元素会持续重绘。
    transform 变化只有在该元素成为独立合成层时才不触发重绘，故 hover 期申请 will-change。 */
-.neo-lens {
+.en-lens {
   position: relative;
   /* 裁住跟随指针的光斑，使其不越出宿主边界（原先靠 inset:0 天然对齐） */
   overflow: hidden;
 }
 
-.neo-lens::after {
+.en-lens::after {
   content: '';
   position: absolute;
   left: 0;
@@ -658,13 +881,13 @@ textarea.neo-field:hover {
   transition: opacity 0.35s ease;
 }
 
-.neo-lens:hover::after {
+.en-lens:hover::after {
   opacity: 1;
   will-change: transform;
 }
 
 /* 左缘引力标记：垂直生长 */
-.neo-lens .bar {
+.en-lens .bar {
   position: absolute;
   left: 0;
   top: 0;
@@ -676,17 +899,17 @@ textarea.neo-field:hover {
   pointer-events: none;
 }
 
-.neo-lens:hover .bar {
+.en-lens:hover .bar {
   transform: scaleY(1);
 }
 
 /* 按钮高光扫过 */
-.neo-btn {
+.en-btn {
   position: relative;
   overflow: hidden;
 }
 
-.neo-btn::before {
+.en-btn::before {
   content: '';
   position: absolute;
   top: 0;
@@ -704,24 +927,24 @@ textarea.neo-field:hover {
   opacity: 0;
 }
 
-.neo-btn:hover::before {
+.en-btn:hover::before {
   opacity: 1;
-  animation: neo-sheen 0.65s cubic-bezier(0.3, 0.6, 0.3, 1);
+  animation: en-sheen 0.65s cubic-bezier(0.3, 0.6, 0.3, 1);
 }
 
-@keyframes neo-sheen {
+@keyframes en-sheen {
   from { transform: translateX(-140%); }
   to { transform: translateX(360%); }
 }
 
 /* 胶囊填充扫入 */
-.neo-chip {
+.en-chip {
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
 
-.neo-chip::before {
+.en-chip::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -732,15 +955,15 @@ textarea.neo-field:hover {
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.neo-chip:hover::before,
-.neo-chip.on::before {
+.en-chip:hover::before,
+.en-chip.on::before {
   transform: scaleX(1);
 }
 
 /* 衍射十字芒：把首屏星轨的锥形衍射芒语言搬到 DOM（画布侧的变星装置 2026-10-09 已撤，
    芒形留在卡片上）。芒臂 ≤2px 且只用冷色（§5.3①：冷=交互方向；白热只留给光子核心）。
    纯装饰：不接指针事件，调用处须带 aria-hidden。 */
-.neo-spike {
+.en-spike {
   position: absolute;
   width: 22px;
   height: 22px;
@@ -753,8 +976,8 @@ textarea.neo-field:hover {
     transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.neo-spike::before,
-.neo-spike::after {
+.en-spike::before,
+.en-spike::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -765,14 +988,14 @@ textarea.neo-field:hover {
   background: linear-gradient(90deg, transparent, var(--cold) 50%, transparent);
 }
 
-.neo-spike::after {
+.en-spike::after {
   transform: rotate(90deg);
 }
 
 /* 宿主页 hover 即缓绽：只挂在可交互元素上，避免任意容器 hover 误触发 */
-a:hover > .neo-spike,
-button:hover > .neo-spike,
-.neo-spike.on {
+a:hover > .en-spike,
+button:hover > .en-spike,
+.en-spike.on {
   opacity: 1;
   transform: scale(1) rotate(45deg);
 }
@@ -781,7 +1004,7 @@ button:hover > .neo-spike,
    隔离星轨背景 + 提升前景对比。描边、圆角、模糊三项与首页 .sheet 逐字相同——两处表面
    是同一件东西，不该一个有羽化一个没有。原先的四边羽化 mask 已撤：它把 1px 描边从左右
    各吃掉 120px、上下各 40px，剩下的读起来是一圈被裁切的调试外框，而不是一块底板。 */
-html[data-skin='neo'] .neo-glass {
+html:root .en-glass {
   position: relative;
   z-index: 1;
   /* 栏宽 = 正文 44 字，按 §1 的 --prose-size 算成绝对长度。
@@ -801,17 +1024,17 @@ html[data-skin='neo'] .neo-glass {
   backdrop-filter: blur(22px) saturate(1.35);
   /* 抬升阴影走 --shadow：浅色主题下若拿 --ink-2 当阴影，晕出的是一圈浅淡光斑而非阴影 */
   box-shadow: 0 22px 60px -34px var(--shadow, rgba(0, 0, 0, 0.6));
-  animation: neo-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
+  animation: en-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
 }
 
 /* 无 backdrop-filter 的旧浏览器：抬高底板不透明度（≤80%），仍能隔离背景与保证对比 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  html[data-skin='neo'] .neo-glass {
+  html:root .en-glass {
     background: var(--panel-frost-bg);
   }
 }
 
-@keyframes neo-glass-in {
+@keyframes en-glass-in {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -823,7 +1046,7 @@ html[data-skin='neo'] .neo-glass {
 }
 
 @media (max-width: 720px) {
-  html[data-skin='neo'] .neo-glass {
+  html:root .en-glass {
     max-width: 100%;
     padding: var(--space-3) var(--space-2);
   }
@@ -832,15 +1055,15 @@ html[data-skin='neo'] .neo-glass {
 /* ---------- 6d. 卡片基元（全站唯一的卡片表面） ----------
    从 BlogView 的 .card 提上来：动态 / 歌单 / 项目 / 关于 / 首页精选 / 文章列表共用这一组，
    页面里只留各自的内部排版，不再各写一套边、角、底、hover。
-   配方是 `class="neo-card neo-lens"` + 一个 `<span class="bar">` 子元素（光带属 .neo-lens，见 §6b）。
-   带封面的那张再加 `neo-flush`（收掉卡面内边距，让图贴边，内边距交给卡内的信息体）。
+   配方是 `class="en-card en-lens"` + 一个 `<span class="bar">` 子元素（光带属 .en-lens，见 §6b）。
+   带封面的那张再加 `en-flush`（收掉卡面内边距，让图贴边，内边距交给卡内的信息体）。
 
-   **本节刻意不带 `html[data-skin='neo']` 前缀**（与 .neo-shell / .neo-lens / .neo-cards 同一档）。
+   **本节刻意不带 `html:root` 前缀**（与 .en-shell / .en-lens / .en-cards 同一档）。
    加上它就是 (0,2,1)，而各页 scoped 的 `.head[data-v-x]` 只有 (0,2,0)——页面想扳回基元的
    flex-direction / padding / gap / min-height 会**静默失效**：不报错、不红，只是那一行白写。
    实测曾同时压着五处这样的死规则（首页精选的封面格、歌单头卡与曲目卡、动态卡、文章卡）。
-   `.neo-*` 类只存在于 neo 视图里，皮肤网关对这个基元是多余的。 */
-.neo-card {
+   这批基元只服务站内页面，加锚点反而抢掉页面的形态权——所以 §6d 的类不带 `html:root` 前缀。 */
+.en-card {
   position: relative;
   z-index: 0;
   display: flex;
@@ -859,19 +1082,19 @@ html[data-skin='neo'] .neo-glass {
     background 0.28s;
 }
 
-.neo-card:hover,
-.neo-card:focus-visible {
+.en-card:hover,
+.en-card:focus-visible {
   border-color: var(--card-brd-hover);
   background: var(--card-bg-hover);
 }
 
 /* 封面贴边的卡：图占第一格、自己顶到卡边，留白由卡内的信息体给 */
-.neo-card.neo-flush {
+.en-card.en-flush {
   padding: 0;
 }
 
 /* 卡片栅格：宽屏两列，窄屏单列。列数只在这里定，页面不再各写一遍 */
-.neo-cards {
+.en-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
@@ -881,7 +1104,7 @@ html[data-skin='neo'] .neo-glass {
 }
 
 @media (max-width: 880px) {
-  .neo-cards {
+  .en-cards {
     grid-template-columns: 1fr;
   }
 }
@@ -889,20 +1112,20 @@ html[data-skin='neo'] .neo-glass {
 /* 封面格：卡片带照片时的第一格，3:2 定比 + 居中裁切。
    没配图时给一格等高的斜纹空版——卡片高度不齐比"没有图"更难看。
    首页精选与文章列表共用这一份（原先两处各写一套，改比例要改两个文件）。 */
-.neo-shot {
+.en-shot {
   display: block;
   aspect-ratio: 3 / 2;
   overflow: hidden;
 }
 
-.neo-shot img {
+.en-shot img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.neo-shot.blank {
+.en-shot.blank {
   background: repeating-linear-gradient(
     135deg,
     transparent 0 9px,
@@ -911,7 +1134,7 @@ html[data-skin='neo'] .neo-glass {
 }
 
 /* ---------- 7. 晕影与深度 ---------- */
-.neo-vignette {
+.en-vignette {
   position: fixed;
   inset: 0;
   z-index: 30;
@@ -969,7 +1192,7 @@ html[data-skin='neo'] .neo-glass {
 }
 
 /* ---------- 9. 正文排版（命中 v-html，放全局） ---------- */
-html[data-skin='neo'] .neo-prose {
+html:root .en-prose {
   max-width: var(--measure);
   margin: var(--space-3) auto 0;
   font-family: var(--font-serif);
@@ -979,17 +1202,17 @@ html[data-skin='neo'] .neo-prose {
   color: var(--text-0);
 }
 
-html[data-skin='neo'] .neo-prose h2,
-html[data-skin='neo'] .neo-prose h3,
-html[data-skin='neo'] .neo-prose h4,
-html[data-skin='neo'] .neo-prose h5,
-html[data-skin='neo'] .neo-prose h6 {
+html:root .en-prose h2,
+html:root .en-prose h3,
+html:root .en-prose h4,
+html:root .en-prose h5,
+html:root .en-prose h6 {
   font-family: var(--font-display);
   line-height: 1.35;
   letter-spacing: -0.01em;
 }
 
-html[data-skin='neo'] .neo-prose h2 {
+html:root .en-prose h2 {
   position: relative;
   font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
@@ -997,7 +1220,7 @@ html[data-skin='neo'] .neo-prose h2 {
   padding-left: var(--space-2);
 }
 
-html[data-skin='neo'] .neo-prose h2::before {
+html:root .en-prose h2::before {
   content: '';
   position: absolute;
   left: 0;
@@ -1007,35 +1230,35 @@ html[data-skin='neo'] .neo-prose h2::before {
   background: var(--hot);
 }
 
-html[data-skin='neo'] .neo-prose h3 {
+html:root .en-prose h3 {
   font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
   margin: var(--space-3) 0 var(--space-2);
 }
 
-html[data-skin='neo'] .neo-prose h4 {
+html:root .en-prose h4 {
   font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
   margin: var(--space-3) 0 var(--space-1);
 }
 
-html[data-skin='neo'] .neo-prose h5 {
+html:root .en-prose h5 {
   font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   margin: var(--space-3) 0 var(--space-1);
 }
 
-html[data-skin='neo'] .neo-prose h6 {
+html:root .en-prose h6 {
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
   margin: var(--space-2) 0 var(--space-0);
 }
 
-html[data-skin='neo'] .neo-prose p {
+html:root .en-prose p {
   margin: var(--space-2) 0;
 }
 
-html[data-skin='neo'] .neo-prose a {
+html:root .en-prose a {
   color: var(--cold);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--cold) 40%, transparent);
@@ -1043,11 +1266,11 @@ html[data-skin='neo'] .neo-prose a {
   transition: text-decoration-color 0.2s;
 }
 
-html[data-skin='neo'] .neo-prose a:hover {
+html:root .en-prose a:hover {
   text-decoration-color: currentColor;
 }
 
-html[data-skin='neo'] .neo-prose code {
+html:root .en-prose code {
   font-family: var(--font-mono);
   font-size: 0.88em;
   background: var(--ink-1);
@@ -1056,7 +1279,7 @@ html[data-skin='neo'] .neo-prose code {
   padding: 2px 6px;
 }
 
-html[data-skin='neo'] .neo-prose pre {
+html:root .en-prose pre {
   position: relative;
   background: var(--ink-1);
   border: 1px solid var(--line);
@@ -1065,7 +1288,7 @@ html[data-skin='neo'] .neo-prose pre {
   overflow: auto;
 }
 
-html[data-skin='neo'] .neo-prose pre::before {
+html:root .en-prose pre::before {
   content: '';
   position: absolute;
   left: 0;
@@ -1075,7 +1298,7 @@ html[data-skin='neo'] .neo-prose pre::before {
   background: var(--cold);
 }
 
-html[data-skin='neo'] .neo-prose pre code {
+html:root .en-prose pre code {
   background: none;
   border: 0;
   padding: 0;
@@ -1083,7 +1306,7 @@ html[data-skin='neo'] .neo-prose pre code {
   line-height: var(--lh-normal);
 }
 
-html[data-skin='neo'] .neo-prose blockquote {
+html:root .en-prose blockquote {
   margin: var(--space-2) 0;
   padding: var(--space-1) var(--space-2);
   border-left: 2px solid var(--hot);
@@ -1091,7 +1314,7 @@ html[data-skin='neo'] .neo-prose blockquote {
   font-style: italic;
 }
 
-html[data-skin='neo'] .neo-prose img {
+html:root .en-prose img {
   display: block; /* 行内图会在下沿留一条基线缝，压不满圆角时看得更清楚 */
   width: 100%;
   border: 1px solid var(--line);
@@ -1101,51 +1324,51 @@ html[data-skin='neo'] .neo-prose img {
   cursor: zoom-in;
 }
 
-html[data-skin='neo'] .neo-prose ul,
-html[data-skin='neo'] .neo-prose ol {
+html:root .en-prose ul,
+html:root .en-prose ol {
   padding-left: 1.4em;
   margin: var(--space-2) 0;
 }
 
-html[data-skin='neo'] .neo-prose li::marker {
+html:root .en-prose li::marker {
   color: var(--hot);
 }
 
-html[data-skin='neo'] .neo-prose hr {
+html:root .en-prose hr {
   height: 1px;
   border: 0;
   margin: var(--space-3) 0;
   background: var(--line);
 }
 
-html[data-skin='neo'] .neo-prose table {
+html:root .en-prose table {
   width: 100%;
   border-collapse: collapse;
   margin: var(--space-2) 0;
   font-size: var(--fs-md);
 }
 
-html[data-skin='neo'] .neo-prose th,
-html[data-skin='neo'] .neo-prose td {
+html:root .en-prose th,
+html:root .en-prose td {
   border: 1px solid var(--line);
   padding: var(--space-1) var(--space-2);
   text-align: left;
 }
 
-html[data-skin='neo'] .neo-prose th {
+html:root .en-prose th {
   background: var(--ink-1);
 }
 
 /* ---------- 10. 沿用旧组件页面的协调化 ----------
-   功能页（/login /admin）复用 tokens.css 的通用类，这里只做"换成 neo 语言"的
-   最小调整。表单（.field）与按钮已统一为 .neo-* 的同一套规格，不再需要覆盖——
-   新增功能页时请直接用 .neo-btn / .neo-field / .neo-note-*，不要再写页面私有样式。 */
-html[data-skin='neo'] .page {
+   功能页（/login /admin）复用本表的通用类，这里只做向 .en-* 规格靠拢的
+   最小调整。表单（.field）与按钮已统一为 .en-* 的同一套规格，不再需要覆盖——
+   新增功能页时请直接用 .en-btn / .en-field / .en-note-*，不要再写页面私有样式。 */
+html:root .page {
   max-width: 1120px;
   padding: var(--space-4) var(--space-3);
 }
 
-html[data-skin='neo'] .page-title {
+html:root .page-title {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
@@ -1157,29 +1380,29 @@ html[data-skin='neo'] .page-title {
     animation: none;
   }
 
-  html[data-skin='neo'] .neo-btn:hover {
+  html:root .en-btn:hover {
     transform: none;
   }
 
-  .neo-btn:hover::before {
+  .en-btn:hover::before {
     animation: none;
     opacity: 0;
   }
 
-  html[data-skin='neo'] .neo-vignette {
+  html:root .en-vignette {
     opacity: 0;
   }
 
   /* 阅读底板的淡入上浮随 §6c 一起搬到这里 */
-  html[data-skin='neo'] .neo-glass {
+  html:root .en-glass {
     animation: none;
   }
 
   /* 衍射芒的绽开靠 transform：减弱动效下两态都钉成 none，只留淡入淡出 */
-  .neo-spike,
-  a:hover > .neo-spike,
-  button:hover > .neo-spike,
-  .neo-spike.on {
+  .en-spike,
+  a:hover > .en-spike,
+  button:hover > .en-spike,
+  .en-spike.on {
     transform: none;
   }
 }

@@ -1,17 +1,17 @@
 <template>
-  <section class="neo-shell nf">
+  <section class="en-shell nf">
     <div class="plate" aria-hidden="true">
       <span class="star"></span>
       <span class="beam cross"></span>
       <span class="beam diag"></span>
     </div>
 
-    <h2 class="neo-h2 title">{{ N.nf.title }}</h2>
+    <h2 class="en-h2 title">{{ N.nf.title }}</h2>
     <p class="lede">{{ N.nf.text }}</p>
 
     <div class="cta">
-      <RouterLink class="neo-btn neo-btn-primary" to="/">{{ N.nf.home }}</RouterLink>
-      <RouterLink class="neo-btn neo-btn-ghost" to="/blog">{{ N.nf.blog }}</RouterLink>
+      <RouterLink class="en-btn en-btn-primary" to="/">{{ N.nf.home }}</RouterLink>
+      <RouterLink class="en-btn en-btn-ghost" to="/blog">{{ N.nf.blog }}</RouterLink>
     </div>
   </section>
 </template>

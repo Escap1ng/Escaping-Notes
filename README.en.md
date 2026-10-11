@@ -9,7 +9,7 @@
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/neo/StarTrails.vue)
+[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/StarTrails.vue)
 [![Backend](https://img.shields.io/badge/Backend-Python%203-3776ab?logo=python&logoColor=white)](server/api.py)
 [![License](https://img.shields.io/badge/License-Personal%20Use%20Only-d42b2b)](#license--usage-terms)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
@@ -28,7 +28,7 @@ Escaping Notes is a personal blog and journal that treats writing as a long expo
 
 - **Scroll as time** — within the landing screen, the further you go the longer the exposure window and the faster the sky turns (time flow 1 → 2.2×); it saturates after 1.1 viewport heights
 - **Pointer as time dilation** — star trails within a 180px cursor radius locally accelerate and curl, fastest at the centre (up to 2.8×)
-- **Meteors as narrative** — one falls every 6–9s, lives 900ms, at most 8 in frame; while the player is running the interval is squeezed toward its minimum and relaxes back on its own
+- **Meteors as narrative** — one falls every 6–9s, lives 900ms, at most 9 in frame; while the player is running the interval is squeezed toward its minimum and relaxes back on its own
 
 Trails are only painted inside the landing screen. But **the deposition is site-wide**: the plate pixels and the clock are singletons in `src/lib/sky.js`, so changing routes never re-lays the plate — come back to the top and the same arcs are denser. Below the fold, photographs take over.
 
@@ -46,12 +46,12 @@ Trails are only painted inside the landing screen. But **the deposition is site-
 - **Dual themes** — dark (cold white / warm white / amber trails) and light (astronomical dry plate: slate/graphite trails + vermilion accents); trail colour temperature follows magnitude (dim stars cool, a few bright stars warm). **Switching theme no longer swaps the mountain** — the dark landing screen is a darkened bake of the same framing (`plate-hero-deep.jpg`) and both themes share one ridge polyline. Each theme deposits its own plate (to keep colours from bleeding); the default is light and the first frame deliberately ignores `prefers-color-scheme`, because the landing screen is a bright photograph
 - **Landing typography** — the landscape strip is pinned to the bottom edge with its height derived from the photo itself (`.hero-plate` height = `clamp(54svh, 31vw, 70svh)`; 31vw is the photo's own cover height, so wide windows raise the fold and nothing gets cropped, while squarer windows keep the lower 54% and leave the upper half for type); trails are masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px; the site name is typed out character by character (first keystroke after 260ms, 82ms per character, caret fades 1500ms after the last one) and only then does the sixteen-character manifesto release (0.9s reveal, second line 0.18s behind); the whole text block sinks at 0.25× scroll speed and fades out
 - **Below the fold** — a drawer holding one local-time readout, three featured cards and the last five updates (the whole card links to `/updates`), pulled up from below the first time it enters the viewport; it rides on **one shared photographic plate for the whole site** — five slots on a carousel, 10s each (50s cycle), and on the dark theme all five tokens point to the same file so nothing changes at night. How blurred the plate is, is a runtime parameter: a 0–12px slider in the settings card, defaulted to full, remembered in `localStorage`
-- **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (5 spacing / 11 type-size / 4 line-height / 3 weight steps), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
+- **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (6 spacing / 11 type-size / 4 line-height / 3 weight steps), card tokens, buttons in "2 sizes × 4 semantics", inputs as "underline for single-line, hairline box for multi-line", three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — trails are drawn frame by frame with an offscreen accumulation buffer (280 stars, 140 on viewports ≤720px, and multiplied by 0.65 on the dark theme); no third-party UI kits, chart libraries or font CDNs — Vue and Vue Router are the only runtime dependencies, and the display face is one self-hosted subset woff2
 - **Graceful degradation** — if the API is unreachable or times out (10s reads, 60s uploads) the site falls back to the bundled seeds in `src/config/`: still a complete offline plate, readable end to end with no backend at all
-- **Accessibility** — focus traps in the drawer, in both lightboxes and in the project detail panel (focus returns to the element that opened them), route changes announced to screen readers (`role="status"`), a focusable skip link and `#main`, ≥44px touch targets for buttons / links / chips under `pointer: coarse`, and a full static fallback under `prefers-reduced-motion` (title appears complete, trails are pre-computed as one 380-step plate, the carousel stops on its first slot)
-- **Performance** — the landscape plate lives on `App.vue`, not in each page, so routing never repaints it; the `--shift` scroll depth caches its extreme instead of reading `scrollHeight` per frame (which is a reflow per frame); resize is debounced 150ms; the drawer's `IntersectionObserver` disconnects after one pull; card glows move by transform; the persistent header surface avoids `backdrop-filter` — glass is reserved for the three surfaces that genuinely need isolating from the plate
-- **Reading legibility (stated plainly)** — a scrim-free landscape photo **cannot** reach WCAG AA for naked text: the worst measured point sits at 1.0–1.8:1 regardless of gradient shape (three shapes were tried — single vertical, double scrim top and bottom, fade-in from the top). So the work is divided: the plate is scenery, and body copy always lands on `.sheet` / `.neo-glass` / `.neo-card`, where the foreground starts at 5.5:1. `npm run check:contrast` recomputes the theme tokens against a flat ground before every commit (dark `--text-0` 18.38:1, light 16.90:1 against a 7:1 bar) — but that checks tokens against a solid colour, **not** the composited photo
+- **Accessibility** — focus traps in the header drawer, the player card, the settings card, both lightboxes and the project detail panel (focus returns to the element that opened them), route changes announced to screen readers (`role="status"`), a focusable skip link and `#main`, ≥44px touch targets for buttons / links / chips under `pointer: coarse`, and a full static fallback under `prefers-reduced-motion` (title appears complete, trails are pre-computed as one 380-step plate, the carousel stops on its first slot)
+- **Performance** — the landscape plate lives on `App.vue`, not in each page, so routing never repaints it; the landing photo (this page's LCP element) is `preload`ed by the inline first-paint script for the active theme, so it starts downloading alongside the stylesheet instead of after it; the `--shift` scroll depth caches its extreme instead of reading `scrollHeight` per frame (which is a reflow per frame); resize is debounced 150ms; the drawer's `IntersectionObserver` disconnects after one pull; card glows move by transform; the persistent header surface avoids `backdrop-filter` — glass is reserved for the surfaces that genuinely need isolating from the plate (reading panel, landing drawer, nav drawer, both lightboxes, project panel)
+- **Reading legibility (stated plainly)** — a scrim-free landscape photo **cannot** reach WCAG AA for naked text: the worst measured point sits at 1.0–1.8:1 regardless of gradient shape (three shapes were tried — single vertical, double scrim top and bottom, fade-in from the top). So the work is divided: the plate is scenery, and body copy always lands on `.sheet` / `.en-glass` / `.en-card`, where the foreground starts at 5.5:1. `npm run check:contrast` recomputes the theme tokens against a flat ground before every commit (dark `--text-0` 18.38:1, light 16.90:1 against a 7:1 bar) — but that checks tokens against a solid colour, **not** the composited photo
 - **Feedback loop** — skeleton cards while the archive loads (3 of them), distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query (shareable, survives reload)
 - **Gallery** — `/gallery` pins every image the site has used to one wall of Polaroids: 9 site-owned plates (two hero bands, five light plates, the dark scrim plate, `og.png`) plus every article cover, deduplicated by src; tilt is ±2.4° hashed from the src, entry staggers 60ms per card (capped at 12), columns run 3/2/1; the lightbox `Teleport`s to `body` with ←/→ paging, Esc to close and >50px swipes on touch
 - **Full-featured admin** — `/admin` splits into a "users" tab (admin) and "posts + settings" (owner), where settings edits updates, projects, gear and the playlist; auth is an `Authorization: Bearer` token (7-day life, kept in `localStorage`), rate-limited at 30 requests / 60s per IP counting POSTs only; **there is no self-registration endpoint** — accounts are created by the owner alone; the "sync playlist" button on the Music page is owner-only and calls `POST /api/sync/records`, which re-fetches the public QQ Music playlist server-side
@@ -76,7 +76,7 @@ Now that the plate persists across routes, `fall` is the only transition left: t
 | --- | --- |
 | Frontend | Vue 3 (Composition API) + Vite 5 + Vue Router 4 |
 | Rendering | Canvas 2D with an offscreen accumulation buffer (long-exposure plate simulation) |
-| Styling | Plain CSS + custom-property tokens (`tokens.css` baseline / `neo.css` skin) |
+| Styling | Plain CSS + custom-property tokens (one file, `site.css`: structural scales + the two theme palettes + site-wide primitives) |
 | Backend | Single-file Python 3 stdlib server (`server/api.py`), no extra dependencies |
 | Testing | Node's built-in `node --test` + `python -m unittest`, no test framework |
 | Deployment | GitHub Pages / Vercel / nginx + systemd |
@@ -110,7 +110,7 @@ npm run preview        # preview dist/ locally
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` / `build:pages` | Production builds; both use `base: '/'` — the only difference is `VITE_DEPLOY=pages` (`.env.pages`) switching the router to hash mode |
 | `npm run preview` | Serve `dist/` the way production would |
-| `npm run test` | 8 test files (7 `.mjs` + 1 `.py`): frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the first-paint theme, the gallery list matching the asset manifest, and project write-ups surviving a save from `/admin` |
+| `npm run test` | 10 test files (9 `.mjs` + 1 `.py`): frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the first-paint theme, the preloaded landing photo matching `--hero-img` in `site.css`, token single source (no token defined twice, nothing defined for only one theme), the gallery list matching the asset manifest, and project write-ups surviving a save from `/admin`; the `.py` file is a cross-language pair — one article must parse the same under `frontmatter.js` and `api.py` |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read out of the source by regex and it throws if they are gone, so re-run after touching star-trail parameters) |
@@ -121,7 +121,7 @@ npm run preview        # preview dist/ locally
 | `npm run check:api` | Diffs the endpoint table in `docs/api.md` against the routes in `server/api.py`, both ways (26 endpoints today); non-zero exit on drift |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the README route table matches `src/router` |
 | `npm run check:naming` | Naming-convention scan; non-zero exit on a violation |
-| `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `neo.css`; non-zero exit if a text token fails |
+| `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `site.css`; non-zero exit if a text token fails |
 
 ## Route Map
 
@@ -145,7 +145,7 @@ All 11 routes are lazy-loaded and each carries `meta.t` for the document title a
 ## Project Structure
 
 ```text
-├── index.html             # Shell: inline first-paint script (theme + plate blur, so neither flashes), SEO/OG metadata
+├── index.html             # Shell: inline first-paint script (theme + plate blur + preloading the landing photo for that theme, so none of them flashes), SEO/OG metadata
 ├── server/api.py          # Backend: content / auth / RSS / OG injection / playlist sync, listens on 127.0.0.1:8787
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── public/                # Static assets: favicon, robots.txt, og.png, plus three derived-asset dirs that **must be committed**
@@ -168,11 +168,10 @@ All 11 routes are lazy-loaded and each carries `meta.t` for the document title a
 ├── tests/                 # Zero-dependency safety net: node --test + unittest, run by `npm run test`
 └── src/
     ├── assets/fonts/      # Self-hosted subset font (one woff2, weight 700) + OFL licence
-    ├── components/        # four under neo/: StarTrails the camera · HorizonHero the landing type layer · NeoSiteHeader bar + drawer · NeoSiteFooter
-    │                      #   one level up: MusicCard.vue (the player card the header opens) and SettingsCard.vue (the plate-blur slider)
+    ├── components/        # six flat: StarTrails the camera · HorizonHero the landing type layer · SiteHeader bar + drawer · SiteFooter · MusicCard the player card · SettingsCard the plate-blur slider
     ├── config/            # narrative.js copy layer · site.js site info · 8 content-seed files (records.js is generated — don't hand-edit)
     ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / ridge / lens / shift / sky / debounce / focus
-    ├── styles/            # tokens.css token baseline · neo.css the site skin
+    ├── styles/            # site.css, one file: structural scale + the two theme palettes + site-wide primitives
     └── views/             # 11 views, one file each, flat: 9 content pages + AdminView / LoginView
 ```
 

@@ -12,7 +12,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 2. 指向不存在的 §节号（节号平移后最容易留下"见 §5.3"这种死链）。
 
 § 有个坑：本仓库的 § 记号是**重载**的——既指文档章节（design.md §3.1），
-也指代码文件的内部分节横幅（neo.css §8.5、§11）。所以解析顺序是：
+也指代码文件的内部分节横幅（site.css §8.5、§11）。所以解析顺序是：
   引用点前 30 字内若显式写了 xxx.md / xxx.css / xxx.py → 用它作目标；
   否则默认当前文档；再否则"任意文档或代码里有这节"只作提示、不算失效。
 
@@ -20,7 +20,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 """
 
 DOCS = ['README.md', 'README.en.md', 'docs/design.md', 'docs/manual.md', 'docs/api.md']
-CODE_SECTIONED = ['src/styles/neo.css', 'src/styles/tokens.css', 'server/api.py', 'src/lib/sky.js']
+CODE_SECTIONED = ['src/styles/site.css', 'server/api.py', 'src/lib/sky.js']
 
 # 文档里作为"示例/待创建/构建产物"出现的路径，不是引用
 EXAMPLES = {
@@ -44,7 +44,7 @@ def headings(text):
 
 
 def match_secs_key(named, secs):
-    """把引用点写明的文件名对上 secs 的键（允许只写 neo.css / design.md）。
+    """把引用点写明的文件名对上 secs 的键（允许只写 site.css / design.md）。
 
     **只在该文件确有编号分节时才认它作目标**：`src/lib/sky.js` 这类文件虽在清单里却一条
     横幅都没有，若照样匹配，「归 `src/lib/sky.js`，见 §3.1」就会被错判成指向 sky.js。
@@ -56,13 +56,47 @@ def match_secs_key(named, secs):
 # 文档会合法地提到"不存在/已删除"的文件（历史叙述），这些不是死引用
 HIST_MARKS = ('原 ', '原`', '不存在', '已删除', '已退役', '曾指向', '废弃')
 
+# 合并样式表之前那两份的名字，只允许活在日期化叙述里（design.md 第八/九轮、manual 里程碑）。
+# 单列出来而不是靠 HIST_MARKS 的 14 字窗口去猜，是因为窗口一旦盖不住，这条就成了假死引用；
+# 而真正的判据"这名字指向的文件在不在版本库里"由 tracked_files() 负责。
+RETIRED_NAMES = {'neo.css', 'tokens.css'}
+
+# design.md 引用的两支实测探针。脚本本身留在 `docs/assets/mock/measure/`，而那整个目录在
+# .gitignore 里——所以从干净检出复算不了那两个数，这不是死链，是"证据在仓库外"。
+# 把它们塞进 EXAMPLES 会混淆语义（那不是示例），单列一个口子，将来探针入库或文档改写即删。
+OFFREPO_PROBES = {'quant-plate.mjs', 'line-probe.mjs'}
+
+
+def tracked_files():
+    """版本库里的文件清单。
+
+    以前这里用 `Path('.').rglob('*')`，后果是检查会**被工作区里任何一份未跟踪的同名文件喂饱**：
+    `vibe_images/plate-park-20260926/files/src/styles/neo.css` 这么一份 9MB 素材快照，
+    就让整个仓库对已删除的 neo.css 的引用全部静默放行——而 by_base 是按 basename 匹配的，
+    所以那份快照在哪个角落都无所谓。干净检出里根本没有它，检查器于是"在开发机上绿、在 CI 里红"
+    或者反过来。改成问 git，量具才与它要核对的对象（版本库）同宽。
+    """
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ['git', 'ls-files', '-z'], capture_output=True, timeout=20
+        )
+    except Exception as exc:                                    # 没有 git / 超时 / 非仓库
+        print(f'  note       取不到 git ls-files（{exc}），退回工作区枚举——此时死引用不可信')
+        return None
+    if out.returncode != 0:
+        print('  note       git ls-files 返回非 0，退回工作区枚举——此时死引用不可信')
+        return None
+    return {f.decode('utf-8', 'replace') for f in out.stdout.split(b'\0') if f}
+
 
 def named_target(text, i, secs):
     """看 § 之前是否**紧贴着**写明了目标文件名。
 
     取前 40 字里最后一个文件名，且要求它与 § 之间只有空白/反引号/中文连接词，
     否则判为"没指明目标"（按当前文档处理）。这样 `docs/manual.md` §2.7 能正确归属，
-    而「搬到 `neo.css` §6c（它一直躺在 §5.4 …」里的 §5.4 不会被错认成指向 neo.css。
+    而「搬到 `site.css` §6c（它一直躺在 §5.4 …」里的 §5.4 不会被错认成指向 site.css。
     """
     near = text[max(0, i - 40):i]
     hits = list(NAMED.finditer(near))
@@ -76,8 +110,11 @@ def named_target(text, i, secs):
 
 def check(mutate=False):
     root = pathlib.Path('.')
-    known = {str(p).replace('\\', '/') for p in root.rglob('*') if p.is_file()
-             and 'node_modules' not in str(p) and not str(p).replace('\\', '/').startswith('.git/')}
+    tracked = tracked_files()
+    if tracked is None:                                         # 取不到 git 时的退路
+        tracked = {str(p).replace('\\', '/') for p in root.rglob('*') if p.is_file()
+                   and 'node_modules' not in str(p) and not str(p).replace('\\', '/').startswith('.git/')}
+    known = tracked
     by_base = {}
     for f in known:
         by_base.setdefault(pathlib.Path(f).name, set()).add(f)
@@ -109,6 +146,8 @@ def check(mutate=False):
             if any(k in text[max(0, i - 14):i] for k in HIST_MARKS):
                 continue
             if f in EXAMPLES or base in EXAMPLES or RUNTIME.search(f):
+                continue
+            if base in RETIRED_NAMES or base in OFFREPO_PROBES:                  # 见上面两段注释
                 continue
             if f in known or base in by_base:
                 continue

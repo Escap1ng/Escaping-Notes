@@ -1,7 +1,7 @@
 // 映像柜（/gallery）里站点自己的那几张底片。
 // 文章封面由 src/lib/gallery.js 从 frontmatter 的 image 自动收，不需要在这里登记；
-// 这里只补「站点在用、但不属于任何文章」的图——也就是 neo.css 的 --plate-img / --hero-img
-// 与分享卡。跑 npm test 会核对：这个清单与 neo.css 里出现的 /plates/ 路径必须互相咬合，
+// 这里只补「站点在用、但不属于任何文章」的图——也就是 site.css 的 --plate-img / --hero-img
+// 与分享卡。跑 npm test 会核对：这个清单与 site.css 里出现的 /plates/ 路径必须互相咬合，
 // 换底片时漏改这里，映像柜就会挂着已经不在用的那张。
 export const sitePlates = [
   { src: '/plates/plate-hero.jpg', title: '首屏的地平线' },

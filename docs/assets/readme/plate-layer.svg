@@ -25,7 +25,7 @@
 
   <rect width="920" height="440" fill="#0a0a10"/>
   <text class="h" x="40" y="30">site backdrop, vertical cross-section</text>
-  <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in neo.css §1 / §2 / §3</text>
+  <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in site.css §1 / §2 / §3</text>
 
   <!-- A. 视口剖面 -->
   <rect x="60" y="70" width="140" height="29" fill="url(#photo)"/>
@@ -83,5 +83,5 @@
   <text class="t" x="230" y="407">on a card · 5.5:1 +</text>
   <text class="s" x="410" y="401">A scrim-free photo cannot reach AA for naked text, whatever</text>
   <text class="s" x="410" y="415">shape the gradient has — so the plate is scenery, and body</text>
-  <text class="s" x="410" y="429">copy belongs on .sheet / .neo-glass / .neo-card.</text>
+  <text class="s" x="410" y="429">copy belongs on .sheet / .en-glass / .en-card.</text>
 </svg>

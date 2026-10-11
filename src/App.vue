@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import NeoSiteHeader from './components/neo/NeoSiteHeader.vue'
-import NeoSiteFooter from './components/neo/NeoSiteFooter.vue'
+import SiteHeader from './components/SiteHeader.vue'
+import SiteFooter from './components/SiteFooter.vue'
 import { loadContent } from './lib/content.js'
 import { loadMe } from './lib/auth.js'
 import { debounce } from './lib/debounce.js'
@@ -81,9 +81,9 @@ onUnmounted(() => {
        首页与次级页共用这一层；首页上方由 .hero-plate（不透明、在 hero 内）盖住。
        四个 <i> 是轮播的第 2–5 张，父元素自己那张是第 1 张，见下面的 plate-slot。 -->
   <div class="sub-plate" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <div class="neo-vignette" aria-hidden="true"></div>
-  <NeoSiteHeader />
-  <main id="main" tabindex="-1" :class="{ 'neo-sub': isSub }">
+  <div class="en-vignette" aria-hidden="true"></div>
+  <SiteHeader />
+  <main id="main" tabindex="-1" :class="{ 'en-sub': isSub }">
     <RouterView v-slot="{ Component, route }">
       <!-- 不用 out-in：Vue 3.5 下离开方在 leave 期间重渲染（如 RouterLink active 翻转）
            会丢失挂起的 enter；并行模式 + leave 绝对定位叠层规避 -->
@@ -92,7 +92,7 @@ onUnmounted(() => {
       </Transition>
     </RouterView>
   </main>
-  <NeoSiteFooter />
+  <SiteFooter />
   <!-- 路由播报：SPA 换页不刷新文档，读屏用户需要被告知当前页面 -->
   <p class="sr-only" role="status" aria-live="polite">{{ announced }}</p>
 </template>
@@ -135,7 +135,7 @@ html[data-plate-blur] .sub-plate {
    第 49–50s 四层全灭，露出来的就是父层那张。延迟写成 10s 的倍数减 1s，是为了让淡出与下一张的
    淡入落在同一秒上。
    深色主题下五个令牌指向同一张，动画照跑但看不出变化。
-   周期 50s = 每张 10s（原来是 48s / 每张 16s，作者改口要 10s 一张），常数在 neo.css。
+   周期 50s = 每张 10s（原来是 48s / 每张 16s，作者改口要 10s 一张），常数在 site.css。
    加一张要动三处：模板多一个 <i>、这里多一档延迟、--plate-cycle +10s（关键帧的 2%/20%/22%
    是按 50s 一圈算的，改成 60s 就得跟着重算）。 */
 .sub-plate > i {

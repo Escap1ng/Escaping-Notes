@@ -63,7 +63,7 @@ image: /posts/writing-and-uploading.jpg
 
 ```powershell
 npm run build       # 出 dist/（含 rss.xml / sitemap.xml），无报错即合格
-npm test            # frontmatter 解析、Markdown 渲染、底片清单与 neo.css 对拍
+npm test            # frontmatter 解析、Markdown 渲染、底片清单与 site.css 对拍
 npm run check       # api 文档 vs 路由、文档死链与节号、命名规约，漂移即退出码非 0
 npm run preview     # 本地模拟线上环境，浏览器过一眼
 ```
@@ -82,4 +82,4 @@ npm run preview     # 本地模拟线上环境，浏览器过一眼
 
 不用手工登记的地方有三处：文章列表多一格封面、首页抽屉的精选卡换了一轮（取最新三篇）、映像柜墙上多一枚拍立得（封面按 frontmatter 的 `image` 自动上墙，最新那篇在左上第一格）。
 
-只有站点自己的底片要登记——首屏的地平线、抽屉轮播那五张、深色那张压暗底、分享卡，记在 `src/config/gallery.js`。这份清单与 `neo.css` 里真正引用的 `/plates/` 路径由 `npm test` 对拍，两侧必须咬合：换底片只改了 CSS 而忘了这里，映像柜就会把一张全站已经不用的图留在墙上示众。
+只有站点自己的底片要登记——首屏的地平线、抽屉轮播那五张、深色那张压暗底、分享卡，记在 `src/config/gallery.js`。这份清单与 `site.css` 里真正引用的 `/plates/` 路径由 `npm test` 对拍，两侧必须咬合：换底片只改了 CSS 而忘了这里，映像柜就会把一张全站已经不用的图留在墙上示众。

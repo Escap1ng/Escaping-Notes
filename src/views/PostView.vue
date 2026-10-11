@@ -93,50 +93,50 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="neo-shell post">
+  <section class="en-shell post">
     <div class="progress" aria-hidden="true"></div>
 
     <div v-if="missing" class="lost">
-      <p class="neo-eyebrow">// SIGNAL_LOST</p>
-      <h2 class="neo-h2">{{ N.nf.title }}</h2>
-      <RouterLink class="neo-btn neo-btn-ghost" to="/blog">{{ N.nf.blog }}</RouterLink>
+      <p class="en-eyebrow">// SIGNAL_LOST</p>
+      <h2 class="en-h2">{{ N.nf.title }}</h2>
+      <RouterLink class="en-btn en-btn-ghost" to="/blog">{{ N.nf.blog }}</RouterLink>
     </div>
 
     <template v-else-if="post">
-      <article class="neo-glass">
+      <article class="en-glass">
         <header class="head">
-          <p class="neo-eyebrow">{{ N.sections.post }} · {{ post.date }}</p>
+          <p class="en-eyebrow">{{ N.sections.post }} · {{ post.date }}</p>
           <h1 class="title">{{ post.title }}</h1>
-          <p class="meta neo-mono">
+          <p class="meta en-mono">
             {{ post.words }} 字 · {{ post.minutes }} 分钟 ·
             VIEWS {{ views ?? '--' }}
-            <button class="neo-btn neo-btn-sm neo-btn-quiet" type="button" @click="copyLink">
+            <button class="en-btn en-btn-sm en-btn-quiet" type="button" @click="copyLink">
               {{ copied ? N.reader.copied : N.reader.copy }}
             </button>
           </p>
           <p v-if="post.tags && post.tags.length" class="tags">
-            <span v-for="t in post.tags" :key="t" class="neo-tag">{{ t }}</span>
+            <span v-for="t in post.tags" :key="t" class="en-tag">{{ t }}</span>
           </p>
         </header>
 
-        <div class="neo-prose" v-html="htmlBody" @click="onProseClick"></div>
+        <div class="en-prose" v-html="htmlBody" @click="onProseClick"></div>
 
         <nav class="ends" :aria-label="N.reader.endsAria">
           <RouterLink v-if="neighbors.prev" :to="`/blog/${neighbors.prev.slug}`" class="end">
-            <span class="neo-spike" aria-hidden="true"></span>
-            <span class="neo-mono">{{ N.postPrev }}</span>
+            <span class="en-spike" aria-hidden="true"></span>
+            <span class="en-mono">{{ N.postPrev }}</span>
             <span class="end-title">{{ neighbors.prev.title }}</span>
           </RouterLink>
           <span v-else></span>
           <RouterLink v-if="neighbors.next" :to="`/blog/${neighbors.next.slug}`" class="end next">
-            <span class="neo-spike" aria-hidden="true"></span>
-            <span class="neo-mono">{{ N.postNext }}</span>
+            <span class="en-spike" aria-hidden="true"></span>
+            <span class="en-mono">{{ N.postNext }}</span>
             <span class="end-title">{{ neighbors.next.title }}</span>
           </RouterLink>
         </nav>
 
         <div class="exit">
-          <RouterLink class="neo-btn neo-btn-primary" to="/blog">{{ N.postEnd.back }}</RouterLink>
+          <RouterLink class="en-btn en-btn-primary" to="/blog">{{ N.postEnd.back }}</RouterLink>
         </div>
       </article>
     </template>
@@ -159,12 +159,12 @@ onUnmounted(() => {
 <style scoped>
 .post {
   /* 骨架默认 1120px，会把 §6c 那块 1280px 的阅读底板夹回 1056px。
-     只有文章页需要比骨架更宽：1344 = 底板 1280 + .neo-shell 左右各 32 的内边距。 */
+     只有文章页需要比骨架更宽：1344 = 底板 1280 + .en-shell 左右各 32 的内边距。 */
   max-width: 1344px;
   padding-top: var(--page-top);
 }
 
-/* .neo-glass（阅读底板）已上移到 neo.css §6c：它是 §5.4 列出的全站基元，不该锁在本页 scoped 里 */
+/* .en-glass（阅读底板）已上移到 site.css §6c：它是 §5.4 列出的全站基元，不该锁在本页 scoped 里 */
 
 /* 顶部进度线（冷 → 热）：--shift 直接喂给 scaleX，零 JS、零滚动监听。
    必须是 transform 而非 width：--shift 每个滚动帧都在变，改宽度等于每帧一次布局。
@@ -198,7 +198,7 @@ onUnmounted(() => {
   font-size: clamp(32px, 5.6vw, 58px);
   font-weight: var(--fw-bold);
   letter-spacing: -0.02em;
-  line-height: 1.16; /* 展示级标题：行高刻意脱离四档刻度（同 .neo-title/.neo-h2） */
+  line-height: 1.16; /* 展示级标题：行高刻意脱离四档刻度（同 .en-title/.en-h2） */
   margin: var(--space-2) 0;
 }
 
@@ -244,21 +244,21 @@ onUnmounted(() => {
   padding-right: 28px;
 }
 
-/* 形态与绽放在 neo.css §6b；这里只给位置。上下用 inset + auto 外边距居中，
+/* 形态与绽放在 site.css §6b；这里只给位置。上下用 inset + auto 外边距居中，
    不碰 transform——那是基元用来做缓绽的。 */
-.end .neo-spike {
+.end .en-spike {
   top: 0;
   bottom: 0;
   left: 0;
   margin: auto 0;
 }
 
-.end.next .neo-spike {
+.end.next .en-spike {
   left: auto;
   right: 0;
 }
 
-.end .neo-mono {
+.end .en-mono {
   color: var(--hot);
   font-size: var(--fs-3xs);
 }

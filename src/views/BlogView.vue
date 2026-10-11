@@ -56,25 +56,25 @@ const filtered = computed(() =>
 </script>
 
 <template>
-  <section class="neo-shell">
-    <p class="neo-eyebrow">{{ N.sections.blog }}</p>
-    <h2 class="neo-h2">{{ navLabel('/blog') }}</h2>
-    <p class="neo-lede">{{ N.notes.archive }}</p>
+  <section class="en-shell">
+    <p class="en-eyebrow">{{ N.sections.blog }}</p>
+    <h2 class="en-h2">{{ navLabel('/blog') }}</h2>
+    <p class="en-lede">{{ N.notes.archive }}</p>
 
     <div class="tools">
       <input
         v-model="q"
-        class="neo-field search"
+        class="en-field search"
         type="search"
         placeholder="搜索标题 / 摘要 / 标签"
         aria-label="搜索文章"
       />
       <div class="chips">
-        <button class="neo-chip" :class="{ on: !tag }" type="button" @click="tag = ''">全部</button>
+        <button class="en-chip" :class="{ on: !tag }" type="button" @click="tag = ''">全部</button>
         <button
           v-for="t in tags"
           :key="t"
-          class="neo-chip"
+          class="en-chip"
           :class="{ on: tag === t }"
           type="button"
           @click="tag = tag === t ? '' : t"
@@ -88,16 +88,16 @@ const filtered = computed(() =>
       <template v-if="loading">
         <!-- 骨架屏：列表从服务器拉取，空等一片黑会让人以为「没有文章」 -->
         <li v-for="i in 3" :key="`skel-${i}`" class="skeleton" aria-hidden="true">
-          <span class="neo-shot"></span>
+          <span class="en-shot"></span>
           <span class="body"></span>
         </li>
       </template>
       <template v-else>
         <li v-for="p in filtered" :key="p.slug">
-          <RouterLink :to="`/blog/${p.slug}`" class="neo-card neo-flush card neo-lens" @pointermove="onLens">
+          <RouterLink :to="`/blog/${p.slug}`" class="en-card en-flush card en-lens" @pointermove="onLens">
             <span class="bar" aria-hidden="true"></span>
-            <span class="neo-spike" aria-hidden="true"></span>
-            <span class="neo-shot" :class="{ blank: !p.image }">
+            <span class="en-spike" aria-hidden="true"></span>
+            <span class="en-shot" :class="{ blank: !p.image }">
               <img
                 v-if="p.image"
                 :src="p.image"
@@ -108,19 +108,19 @@ const filtered = computed(() =>
               />
             </span>
             <div class="body">
-              <span class="date neo-mono">{{ p.date }}</span>
+              <span class="date en-mono">{{ p.date }}</span>
               <h3 class="title">{{ p.title }}</h3>
               <p v-if="p.summary" class="summary">{{ p.summary }}</p>
               <span class="foot">
-                <span class="meta neo-mono">{{ p.words }} 字 · {{ p.minutes }} 分钟</span>
-                <span v-if="p.tags && p.tags.length" class="tags neo-mono">{{ p.tags.join('/') }}</span>
+                <span class="meta en-mono">{{ p.words }} 字 · {{ p.minutes }} 分钟</span>
+                <span v-if="p.tags && p.tags.length" class="tags en-mono">{{ p.tags.join('/') }}</span>
               </span>
             </div>
           </RouterLink>
         </li>
       </template>
       <!-- 空态分流：「本来就没有文章」与「筛选后没有结果」是两件事 -->
-      <li v-if="!loading && !filtered.length" class="empty neo-mono">
+      <li v-if="!loading && !filtered.length" class="empty en-mono">
         {{ posts.length ? N.empty.search : N.empty.posts }}
       </li>
     </ul>
@@ -128,7 +128,7 @@ const filtered = computed(() =>
 </template>
 
 <style scoped>
-.neo-shell {
+.en-shell {
   padding-top: var(--page-top);
 }
 
@@ -182,7 +182,7 @@ const filtered = computed(() =>
   display: flex;
 }
 
-/* 卡面（边/角/底/hover/最小高）、封面格（.neo-shot）与"贴边"（.neo-flush）都在 neo.css §6d；
+/* 卡面（边/角/底/hover/最小高）、封面格（.en-shot）与"贴边"（.en-flush）都在 site.css §6d；
    这里只留栅格内的撑满与卡内排版 */
 .card {
   flex: 1;
@@ -197,8 +197,8 @@ const filtered = computed(() =>
   padding: var(--card-pad);
 }
 
-/* 衍射芒落在封面右上角：hover 时"这颗星被点亮"。形态与绽放在 neo.css §6b，这里只管位置 */
-.card .neo-spike {
+/* 衍射芒落在封面右上角：hover 时"这颗星被点亮"。形态与绽放在 site.css §6b，这里只管位置 */
+.card .en-spike {
   top: var(--space-2);
   right: var(--space-2);
   z-index: 2;
