@@ -229,7 +229,7 @@ BLOG/
 
 ### 3.1.1 组件库：新页面该用哪些类
 
-全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义；`quiet` 那一档的字面是等宽仪器字面，不是 sans，见 design.md §4.3）、**筛选与页签**（`en-chip`）、**标签**（`en-tag` / `en-tag-quiet`）、**输入**（`en-field`，多行用 `textarea.en-field`）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，音乐 / 项目 / 关于 / 首页精选 / 文章列表都用它；动态满宽、一条一枚卡，不吃 `en-cards`；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**阅读底板**（`en-glass`——文章页与项目详情页共用同一块）、**图标**（`en-ico` 单字符符号：`▶ ❚ « » ✦ ✧ ≡ ✕ → ↗ ↑`；方向图标另有 `en-ico-up`，被指到时朝自己那侧让一枚 `--nudge`；**例外**只有描边 SVG `.en-svg`——顶栏右上角那三枚与播放器卡片里那枚星轨符号）。
+全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义；`quiet` 那一档的字面是等宽仪器字面，不是 sans，见 design.md §4.3）、**筛选与页签**（`en-chip`）、**标签**（`en-tag` / `en-tag-quiet`）、**输入**（`en-field`，多行用 `textarea.en-field`；`en-chip` 与 `en-field` 的底和边都取 `--card-bg` / `--card-brd`，即与卡片同一块色面，设置卡「卡片颜色」两档一起翻）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，音乐 / 项目 / 关于 / 首页精选 / 文章列表都用它；动态满宽、一条一枚卡，不吃 `en-cards`；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**阅读底板**（`en-glass`——文章页与项目详情页共用同一块）、**图标**（`en-ico` 单字符符号：`▶ ❚ « » ✦ ✧ ≡ ✕ → ↗ ↑`；方向图标另有 `en-ico-up`，被指到时朝自己那侧让一枚 `--nudge`；**例外**只有描边 SVG `.en-svg`——顶栏右上角那三枚与播放器卡片里那枚星轨符号）。
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。早期 `/login` `/admin` 各自写过一套，现已全部并入上面这些类。
 - 唯一一处**故意不用** `.en-card` 的是 `/gallery` 那面拍立得墙（`.wall` / `.shot` / `.frame` / `.tape` / `.cap`，全在 `GalleryView.vue` 的 scoped 里）：一张照片被胶带钉在桌面上的相纸感，与"这是一组卡片"不是同一件事。它的颜色仍走令牌（`--polar` 白框 / `--tape` 胶带 / `--shadow` 框影），页面里没有写死的色值，别把它当"另造了一套卡面"合并回去。

@@ -155,10 +155,12 @@ a {
 }
 
 /* ---------- 表单控件（登录 / 管理 共用） ----------
-   形态规则（全站唯一）：
-     单行输入 / 搜索 → 下划线式（.field，与 .en-field 同语言同状态）
+   形态规则：
+     单行输入 / 搜索 → 下划线式（.field）
      多行文本域     → 发丝框（textarea.field）——长文编辑需要明确的边界与内边距
-   状态规则：hover 抬亮描边、focus 转为交互色（冷）、disabled 降到 50% 不透明。 */
+   状态规则：hover 抬亮描边、focus 转为交互色（冷）、disabled 降到 50% 不透明。
+   **这套只服务登录 / 管理两页。**次级页的设计系统输入是 §6 的 .en-field，2026-10-13 起
+   改成卡面底板形态（与卡片共用 --card-bg / --card-brd），两者已不同形——并轨与否待作者定。 */
 .field {
   width: 100%;
   padding: var(--space-1) 2px;
@@ -782,7 +784,9 @@ html:root main.en-sub {
 }
 
 /* 筛选胶囊 / 页签：与按钮分工不同——这类是"仪器文字"（等宽、宽字距、无位移），
-   选中态用交互色（冷），把热色完整让给"主动作"。 */
+   选中态用交互色（冷），把热色完整让给"主动作"。
+   色面走卡面那一套（--card-bg / --card-brd），所以设置卡「卡片颜色」两档一起管着它：
+   不透底档下是一枚实心小胶囊，半透档下和卡片一同透底。 */
 .en-chip {
   display: inline-flex;
   align-items: center;
@@ -790,26 +794,29 @@ html:root main.en-sub {
   min-height: 28px;
   padding: 0 var(--space-1);
   border-radius: var(--r-pill);
-  border: 1px solid var(--line);
+  border: 1px solid var(--card-brd);
   color: var(--text-1);
   font-family: var(--font-mono);
   font-size: var(--fs-2xs);
   letter-spacing: 0.06em;
   cursor: pointer;
-  background: none;
+  background: var(--card-bg);
   transition:
     color var(--dur-fast),
-    border-color var(--dur-fast);
+    border-color var(--dur-fast),
+    background var(--dur-fast);
 }
 
 .en-chip:hover {
   color: var(--cold);
-  border-color: var(--cold);
+  border-color: var(--card-brd-hover);
+  background: var(--card-bg-hover);
 }
 
 .en-chip.on {
   color: var(--cold);
   border-color: var(--cold);
+  background: var(--card-bg-hover);
 }
 
 .en-tag {
@@ -831,20 +838,22 @@ html:root main.en-sub {
   color: var(--text-1);
 }
 
-/* 单行输入 / 搜索：下划线式（与 legacy 页面的 .field 同一语言、同一组状态）
-   多行文本域见下方 textarea.en-field —— 形态规则全站只有这一条。 */
+/* 单行输入 / 搜索：一块卡面底板（与 .en-card 同一组色面令牌，故「卡片颜色」两档同样驱动它）。
+   多行文本域见下方 textarea.en-field —— 形态规则全站只有这一条。
+   注意 legacy 的 .field（登录 / 管理）仍是下划线式，这一档只覆盖 .en-field。 */
 .en-field {
   width: 100%;
-  padding: var(--space-1) 2px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  background: none;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-sm);
+  background: var(--card-bg);
   color: var(--text-0);
   font-family: var(--font-sans);
   font-size: var(--fs-md);
   line-height: var(--lh-snug);
-  transition: border-color var(--dur-fast);
+  transition:
+    border-color var(--dur-fast),
+    background var(--dur-fast);
 }
 
 .en-field::placeholder {
@@ -853,13 +862,14 @@ html:root main.en-sub {
 }
 
 .en-field:hover {
-  border-color: color-mix(in srgb, var(--cold) 50%, var(--line));
+  border-color: var(--card-brd-hover);
 }
 
 .en-field:focus,
 .en-field:focus-visible {
   outline: none;
   border-color: var(--cold);
+  background: var(--card-bg-hover);
 }
 
 .en-field:disabled {
@@ -867,17 +877,10 @@ html:root main.en-sub {
   cursor: not-allowed;
 }
 
-/* 多行文本域：唯一允许"盒子"形态的输入 */
+/* 多行文本域：同一块底板，只是更高、可纵向拉伸 */
 textarea.en-field {
   min-height: 88px;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
   resize: vertical;
-}
-
-textarea.en-field:hover {
-  border-color: color-mix(in srgb, var(--cold) 45%, var(--line));
 }
 
 /* 移动端：输入框 ≥16px，防 iOS 聚焦自动放大 */
