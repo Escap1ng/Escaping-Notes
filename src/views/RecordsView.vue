@@ -1,5 +1,5 @@
 <script setup>
-// 新版共振：歌单快照（运行时零外部请求）+ 谱线扫光曲目行
+// 新版共振：歌单快照（运行时零外部请求）+ 卡面聚光、曲目行左缘标记
 import { computed, onMounted, ref } from 'vue'
 import { records, loadRecords, syncRecords } from '../lib/records.js'
 import { music, tracks, playIndex, toggleMusic } from '../lib/music.js'
@@ -48,14 +48,13 @@ const shownSongs = computed(() =>
 
 <template>
   <section class="en-shell">
-    <p class="en-eyebrow">{{ N.sections.records }}</p>
     <h2 class="en-h2">{{ navLabel('/records') }}</h2>
     <p class="en-lede">{{ N.hints.records }}</p>
 
     <!-- 在线听歌：站内自托管的 mp3，整页唯一能播的那一张，所以不折。
          进度与音量收在顶栏「音乐」点开的卡里，两处共用 lib/music.js 那台引擎，当前曲同时亮 -->
     <div v-if="tracks.length" class="en-card local en-lens" @pointermove="onLens">
-      <p class="en-eyebrow">// LISTEN · 在线听歌</p>
+      <p class="en-eyebrow">在线听歌</p>
       <ol class="songs">
         <li v-for="(t, i) in tracks" :key="t.file">
           <button
@@ -78,7 +77,7 @@ const shownSongs = computed(() =>
     <div class="en-card tracklist en-lens" @pointermove="onLens">
       <div class="fold-head">
         <div class="fh-label">
-          <p class="en-eyebrow">// SOURCE · QQ 音乐</p>
+          <p class="en-eyebrow">音源 · QQ 音乐</p>
           <p class="en-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
         </div>
         <div class="fh-acts">
@@ -105,8 +104,7 @@ const shownSongs = computed(() =>
       </div>
       <ol id="qq-tracks" class="tracks">
         <li v-for="(s, i) in shownSongs" :key="s.url">
-          <a class="track en-lens" :href="s.url" target="_blank" rel="noopener noreferrer" @pointermove="onLens">
-            <span class="bar" aria-hidden="true"></span>
+          <a class="track" :href="s.url" target="_blank" rel="noopener noreferrer">
             <span class="no en-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
             <span class="tt">{{ s.title }}</span>
             <span class="ar en-mono">{{ s.artist }}</span>
@@ -176,34 +174,65 @@ const shownSongs = computed(() =>
   gap: var(--space-0) var(--space-3);
 }
 
-.song {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-1);
-  width: 100%;
+/* ---- 曲目行：两张卡共用一套指针语言，一份规则 ----
+   聚光归卡不归行：en-lens 只挂在卡上，一枚光斑在卡里跟着指针走。原先每行各挂一枚，
+   指针处叠了两层（卡那层 + 行那层），被指到的那一行洗得比别处重。
+   左缘标记走 ::before 而不是 <span class="bar">：那枚 span 属卡面配方（site.css §6b），
+   触发器是 .en-lens:hover .bar——父卡自己也带 en-lens，于是鼠标一进卡，
+   整列标记一起立起来，读作一排竖线。
+   行被指到只有三个动作，上下两张卡完全一样：标记从顶上长满、序号放大、曲名冷移并让出一枚 --nudge。 */
+.song,
+.track {
+  position: relative;
   padding: var(--space-1) var(--space-0);
   border: 0;
   border-top: 1px solid var(--line);
+  overflow: hidden;
   background: none;
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: background-color var(--dur-fast) ease;
 }
 
-.song:hover {
+.song::before,
+.track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--cold);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.song:hover,
+.track:hover {
   background: color-mix(in srgb, var(--cold) 5%, transparent);
 }
 
-.s-no,
-.s-st {
-  flex-shrink: 0;
-  font-size: var(--fs-3xs);
-  color: var(--text-1);
+.song:hover::before,
+.track:hover::before {
+  transform: scaleY(1);
 }
 
-.s-tt {
+.s-no,
+.no {
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.song:hover .s-no,
+.track:hover .no {
+  transform: scale(1.15);
+}
+
+.s-tt,
+.tt {
   min-width: 0;
   font-family: var(--font-display);
   font-size: var(--fs-base);
@@ -211,6 +240,31 @@ const shownSongs = computed(() =>
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition:
+    color var(--dur-fast),
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.song:hover .s-tt,
+.track:hover .tt {
+  color: var(--cold);
+  transform: translateX(var(--nudge));
+}
+
+/* 听歌卡那一行是 <button>：UA 那套边、底、字体在上面那份共用规则里已经清掉了，
+   这里只补它作为一列 flex 的形态——艺术家紧跟曲名，所以不占满剩余宽度 */
+.song {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.s-no,
+.s-st {
+  flex-shrink: 0;
+  font-size: var(--fs-3xs);
+  color: var(--text-1);
 }
 
 .s-ar {
@@ -239,64 +293,17 @@ const shownSongs = computed(() =>
   gap: var(--space-0) var(--space-3);
 }
 
+/* QQ 表那一行是 <a>：三列栅格，艺术家顶到右边缘 */
 .track {
-  position: relative;
   display: grid;
   grid-template-columns: 3ch 1fr auto;
   align-items: baseline;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-0);
-  border-top: 1px solid var(--line);
-  overflow: hidden;
-  text-decoration: none;
-  color: inherit;
-  transition: background-color var(--dur-fast) ease;
-}
-
-.track:hover {
-  background: color-mix(in srgb, var(--cold) 5%, transparent);
-}
-
-.track::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--cold);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.track:hover::before {
-  transform: scaleY(1);
 }
 
 .no {
   color: var(--hot);
   font-size: var(--fs-3xs);
-  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.track:hover .no {
-  transform: scale(1.15);
-}
-
-.tt {
-  font-family: var(--font-display);
-  font-size: var(--fs-base);
-  font-weight: var(--fw-bold);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: color var(--dur-fast), transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.track:hover .tt {
-  color: var(--cold);
-  transform: translateX(var(--nudge));
 }
 
 .ar {
@@ -311,7 +318,9 @@ const shownSongs = computed(() =>
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .song:hover .s-tt,
   .track:hover .tt,
+  .song:hover .s-no,
   .track:hover .no {
     transform: none;
   }

@@ -23,6 +23,9 @@ docs/assets/mock/
 # ASCII 化的底图源图（从 1/ 复制改名而来）：.ps1 按 ANSI 解码，中文文件名不能进脚本
 plates-src/
 
+# 字体源 TTF（Google Fonts 可变字体，~200KB+）：不进仓库，仓库只收 build_font*.mjs 裁出的 woff2 子集
+fonts-src/
+
 # 音乐原曲投递目录（带中文文件名、~9.9MB）：与 /1/ 同一条口径，原曲不进仓库，
 # 仓库只收播放器真正对外服务的那一份 public/audio/
 music/

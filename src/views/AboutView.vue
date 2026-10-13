@@ -42,12 +42,11 @@ const stats = computed(() => {
 
 <template>
   <section class="en-shell">
-    <p class="en-eyebrow">{{ N.sections.about }}</p>
     <h2 class="en-h2">{{ navLabel('/about') }}</h2>
 
     <!-- 自述：头像 + 长段第一人称，满宽一张 -->
     <div class="en-card wide en-lens" @pointermove="onLens">
-      <p class="en-eyebrow">// ABOUT · 自述</p>
+      <p class="en-eyebrow">自述</p>
       <div class="bio-row">
         <!-- 头像取歌单封面那张图（外链，与音乐页同源）：显式声明宽高，图到达前就占好位 -->
         <img
@@ -74,7 +73,7 @@ const stats = computed(() => {
 
     <div class="en-cards">
       <div class="en-card en-lens" @pointermove="onLens">
-        <p class="en-eyebrow">// FACTS · 档案</p>
+        <p class="en-eyebrow">档案</p>
         <dl class="facts">
           <div v-for="f in facts" :key="f.k" class="fact">
             <dt class="en-mono">{{ f.k }}</dt>
@@ -88,7 +87,7 @@ const stats = computed(() => {
       </div>
 
       <div class="en-card en-lens" @pointermove="onLens">
-        <p class="en-eyebrow">// SOCIAL</p>
+        <p class="en-eyebrow">社交</p>
         <ul class="links">
           <li v-for="s in content.site.socials" :key="s.label">
             <a class="link" :href="s.url" target="_blank" rel="noopener noreferrer">
@@ -99,7 +98,7 @@ const stats = computed(() => {
       </div>
 
       <div class="en-card wide en-lens" @pointermove="onLens">
-        <p class="en-eyebrow">// FRIENDS · 友链</p>
+        <p class="en-eyebrow">友链</p>
         <ul class="links">
           <li v-for="f in friends" :key="f.url">
             <a class="link" :href="f.url" target="_blank" rel="noopener noreferrer">
@@ -112,7 +111,7 @@ const stats = computed(() => {
 
     <!-- 技术栈：每项一枚卡，名字 + 它在这一站里干什么。
          一行放多枚（auto-fill 按 190px 起排），不锁两列——5 条锁两列就会落单 -->
-    <p class="en-eyebrow sec">// GEAR · 技术栈</p>
+    <p class="en-eyebrow sec">技术栈</p>
     <div class="gears">
       <div v-for="g in content.gear" :key="g.name" class="en-card gear en-lens" @pointermove="onLens">
         <h3 class="gn">{{ g.name }}</h3>

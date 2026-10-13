@@ -7,7 +7,7 @@ import { useRoute } from 'vue-router'
 import { content } from '../lib/content.js'
 import { findProject } from '../lib/projects.js'
 import { useDetailExit } from '../lib/exit.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N } from '../config/narrative.js'
 
 const route = useRoute()
 const p = computed(() => findProject(content.projects, route.params.slug))
@@ -30,14 +30,13 @@ watch(
 <template>
   <section class="en-shell project">
     <div v-if="missing" class="lost">
-      <p class="en-eyebrow">{{ N.sections.projects }}</p>
       <h2 class="en-h2">{{ N.projects.lost }}</h2>
       <RouterLink class="en-btn en-btn-ghost" to="/projects">{{ N.projects.back }}</RouterLink>
     </div>
 
     <article v-else-if="p" class="en-glass">
       <header class="head">
-        <p class="en-eyebrow">{{ navLabel('/projects') }} · {{ p.year }}</p>
+        <p class="en-eyebrow">{{ p.year }}</p>
         <h1 class="en-h2">{{ p.name }}</h1>
         <p class="en-lede">{{ p.desc }}</p>
       </header>

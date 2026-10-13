@@ -258,6 +258,16 @@ textarea.field:focus-visible {
   font-display: swap;
 }
 
+/* 英文刊头专用 Didone 子集（仅大写+空格），由 scripts/build_font_didone.mjs 裁切。
+   woff2 落地前这条会 404 并回落到 --font-display，属预期中间态；跑完构建即消失。 */
+@font-face {
+  font-family: 'EN Display Didone';
+  src: url('../assets/fonts/en-display-didone-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- 1. 非颜色令牌 ---------- */
 html:root {
   --r-sm: 8px;
@@ -267,6 +277,11 @@ html:root {
   /* 标题用衬线：黑洞叙事需要碑刻感。
      首选项为自托管子集（只覆盖展示层用字），其后回落系统宋体栈——Windows 上会落到 SimSun。 */
   --font-display: 'EN Display Serif', var(--font-serif);
+
+  /* 英文刊头专用：高对比 Didone 子集（仅大写+空格）。优先自托管，其次本机已装的
+     同款/同族 Didone，最后回落 --font-display——子集未落地时首页标题不至于裸奔。 */
+  --font-display-en: 'EN Display Didone', 'Playfair Display', 'Bodoni MT', 'Didot',
+    var(--font-display);
 
   /* 长文正文字号（.en-prose）：随视口在 --fs-lg 与 --fs-xl 两档之间插值，两端都是刻度上的档，
      不新造字号。宽屏上 17px 相对屏宽偏小，但栏宽不能单独放——汉字一行超过 ~44 字就读着累，
@@ -304,7 +319,7 @@ html:root {
      余量可留给天空），不是漏算；大气感由首页那台不加遮罩的相机负责。 */
   --sky-feather: calc((100% - var(--sky-band)) / 2);
 
-  /* 卡片：全站唯一规格（文章卡 / 图片格 / 后台面板都从这里取）。
+  /* 卡面：全站唯一色面（文章卡 / 图片格 / 后台面板都从这里取，§6c 的阅读底板也取它）。
      resting 档 = **不透底**：卡面取 --card-solid（浅色 #ffffff / 深色不透明的 --ink-1），
      hover 只掺 6% 冷色——再亮就没得亮了。
      **填充不负责可读性**这条在两个档位上都成立（那是暗带的活）；不透底只是把"这是一组"换成
@@ -312,7 +327,8 @@ html:root {
      另一档 'glass'（设置卡「卡片颜色 · 半透明」，见 §3 之后的门控块）是这套卡原本的样子：
      52% / 62%。实测填充相对带内天空底只有 1.04~1.14:1 的表面比（肉眼几乎看不出），卡片认得出
      边界靠的是 --card-brd 那根发丝线；原先 44%→72% 的 hover 跳幅更是只有 1.05:1，等于没有，
-     所以收窄成 62%（悬停强调交给边线与 .en-spike）。52/62 是**实测区间内的口味值**，不是算出来的。 */
+     所以收窄成 62%（悬停强调交给边线与 .en-spike）。52/62 是**实测区间内的口味值**，不是算出来的。
+     --card-bg 一处同时驱动卡片与 §6c 的阅读底板：设置卡「卡片颜色」那档开关翻一次，两处一起翻。 */
   --card-bg: var(--card-solid);
   --card-bg-hover: color-mix(in srgb, var(--card-solid) 94%, var(--cold));
   --card-brd: var(--line);
@@ -372,9 +388,9 @@ html:root:not([data-theme='out']) {
   --plate-img-5: url('/plates/plate-bg-deep.jpg');
   --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
 
-  /* 阅读玻璃底板（文章页）：页面底色按比例半透 + 背景模糊，隔离星轨、提升前景对比。
-     深浅两档各自定：深色 55% / 78%，浅色 60% / 78%（浅色背后是亮底照片，要多透一档才压得住）。 */
-  --panel-bg: color-mix(in srgb, var(--ink-0) 55%, transparent);
+  /* 阅读底板（.en-glass，文章页与项目详情页共用）的填充已并给卡面那枚 --card-bg，
+     由设置卡「卡片颜色」两档一起驱动。这里只留无 backdrop-filter 时的兜底：半透明那一档
+     糊不出玻璃，就把不透明度抬到 78% 顶住隔离（不透底档本来就挡死，用不到它）。 */
   --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
   /* 卡面的 resting 色面（--card-bg 默认就取它，半透明那一档才绕开它）。深色刻意不给白：#fff 压在
@@ -433,10 +449,9 @@ html:root[data-theme='out'] {
   --plate-img-5: url('/plates/plate-bg-paper6.jpg');
   --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面。暗色是同一张取景的压暗版（plate-hero-deep），两套共用一条山脊折线 */
 
-  /* 阅读玻璃底板（文章页）：跟随 --ink-0 的半透冷色 + 背景模糊，隔离星轨、提升前景对比。
-     写成 color-mix 而非抄字面量：这块底板的语义就是"底色的 60% / 78%"。首页 .sheet 在冷色化时
-     已改成跟随 ink-0，文章页却留着旧的 rgba(245,242,234)——同一件表面分叉成两处，靠抄死值追不平。 */
-  --panel-bg: color-mix(in srgb, var(--ink-0) 60%, transparent);
+  /* 阅读底板的兜底色：同深色块那一条——底板填充走 --card-bg，这里只在浏览器不支持
+     backdrop-filter 时接管（写成 color-mix 而非抄字面量：这块面的语义就是"底色的 78%"，
+     抄死值会在下次改 --ink-0 时静默落后，亮色冷色化那一批就是这么漏掉一处表面的）。 */
   --panel-frost-bg: color-mix(in srgb, var(--ink-0) 78%, transparent); /* 无 backdrop-filter 时的兜底 */
 
   /* 卡面的 resting 色面：浅色这里就是字面的纯白。语义与深色那枚相同（卡片不透背景），
@@ -562,17 +577,8 @@ html:root main.en-sub {
   font-family: var(--font-mono);
   font-size: var(--fs-2xs);
   line-height: var(--lh-snug);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--text-1);
-}
-
-.en-eyebrow::before {
-  content: '';
-  width: 20px;
-  height: 1px;
-  background: var(--hot);
-  flex-shrink: 0;
 }
 
 .en-title {
@@ -945,8 +951,11 @@ textarea.en-field {
   will-change: transform;
 }
 
-/* 左缘引力标记：垂直生长 */
-.en-lens .bar {
+/* 左缘引力标记：垂直生长。
+   子代选择器用 `>` 不用空格——卡自己就是 .en-lens，写成后代的话，
+   卡内再嵌一枚 .en-lens 时父卡 hover 会把所有后代的标记一起点亮（读作一排竖线）。
+   行级标记不归这里，归各页 scoped（/records 两张曲目表共用一份 ::before）。 */
+.en-lens > .bar {
   position: absolute;
   left: 0;
   top: 0;
@@ -958,7 +967,7 @@ textarea.en-field {
   pointer-events: none;
 }
 
-.en-lens:hover .bar {
+.en-lens:hover > .bar {
   transform: scaleY(1);
 }
 
@@ -1059,10 +1068,12 @@ button:hover > .en-spike,
   transform: scale(1) rotate(45deg);
 }
 
-/* ---------- 6c. 阅读底板（玻璃面板；与首页抽屉 .sheet 同一套表面语言） ----------
-   隔离星轨背景 + 提升前景对比。描边、圆角、模糊三项与首页 .sheet 逐字相同——两处表面
+/* ---------- 6c. 阅读底板（与首页抽屉 .sheet 同一套表面语言） ----------
+   隔离星轨背景 + 提升前景对比。描边、圆角两项与首页 .sheet 逐字相同——两处表面
    是同一件东西，不该一个有羽化一个没有。原先的四边羽化 mask 已撤：它把 1px 描边从左右
-   各吃掉 120px、上下各 40px，剩下的读起来是一圈被裁切的调试外框，而不是一块底板。 */
+   各吃掉 120px、上下各 40px，剩下的读起来是一圈被裁切的调试外框，而不是一块底板。
+   填充取 --card-bg（2026-10-13 起与卡面同一枚令牌、同一个开关）：默认档不透底——浅色纯白、
+   深色不透明墨底；设置卡翻到「半透明」才让风景透出板面，见本节末那两条门控规则。 */
 html:root .en-glass {
   position: relative;
   z-index: 1;
@@ -1078,17 +1089,24 @@ html:root .en-glass {
   padding: var(--space-4) var(--space-3) var(--space-3);
   border-radius: var(--r-md);
   border: 1px solid color-mix(in srgb, var(--text-0) 12%, transparent);
-  background: var(--panel-bg);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
-  backdrop-filter: blur(22px) saturate(1.35);
+  background: var(--card-bg);
   /* 抬升阴影走 --shadow：浅色主题下若拿 --ink-2 当阴影，晕出的是一圈浅淡光斑而非阴影 */
   box-shadow: 0 22px 60px -34px var(--shadow, rgba(0, 0, 0, 0.6));
   animation: en-glass-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* 300–500ms 从无到有 */
 }
 
-/* 无 backdrop-filter 的旧浏览器：抬高底板不透明度（≤80%），仍能隔离背景与保证对比 */
+/* 糊面只在半透明那一档建：不透底时板后的一切已被卡面挡死，留着 backdrop-filter 不等于
+   "更玻璃"，而是星轨每动一帧都要重算一次背后模糊（manual.md §3.4 那条禁令的正身）。
+   这一条 (0,3,1) 高于上面那条 (0,2,1)，属性由 lib/surface.js 与 index.html 首帧内联写上。 */
+html:root[data-card-surface='glass'] .en-glass {
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  backdrop-filter: blur(22px) saturate(1.35);
+}
+
+/* 无 backdrop-filter 的旧浏览器：半透明档抬高底板不透明度（78%），仍能隔离背景与保证对比。
+   选择器带上档位门控——默认档已经是不透底，兜底没有它可兜。 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  html:root .en-glass {
+  html:root[data-card-surface='glass'] .en-glass {
     background: var(--panel-frost-bg);
   }
 }

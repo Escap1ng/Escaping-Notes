@@ -7,7 +7,6 @@ import { N, navLabel } from '../config/narrative.js'
 
 <template>
   <section class="en-shell">
-    <p class="en-eyebrow">{{ N.sections.updates }}</p>
     <h2 class="en-h2">{{ navLabel('/updates') }}</h2>
     <p class="en-lede">{{ N.hints.updates }}</p>
 

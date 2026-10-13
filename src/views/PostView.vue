@@ -103,7 +103,6 @@ onUnmounted(() => {
     <div class="progress" aria-hidden="true"></div>
 
     <div v-if="missing" class="lost">
-      <p class="en-eyebrow">// SIGNAL_LOST</p>
       <h2 class="en-h2">{{ N.nf.title }}</h2>
       <RouterLink class="en-btn en-btn-ghost" to="/blog">{{ N.nf.blog }}</RouterLink>
     </div>
@@ -111,7 +110,7 @@ onUnmounted(() => {
     <template v-else-if="post">
       <article class="en-glass">
         <header class="head">
-          <p class="en-eyebrow">{{ N.sections.post }} · {{ post.date }}</p>
+          <p class="en-eyebrow">{{ post.date }}</p>
           <h1 class="title">{{ post.title }}</h1>
           <p class="meta en-mono">
             {{ post.words }} 字 · {{ post.minutes }} 分钟 ·

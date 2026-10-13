@@ -74,7 +74,6 @@ onUnmounted(() => {
 
 <template>
   <section class="en-shell gallery">
-    <p class="en-eyebrow">{{ N.sections.gallery }}</p>
     <h2 class="en-h2">{{ navLabel('/gallery') }}</h2>
     <p class="en-lede">{{ N.hints.gallery }}</p>
     <p class="tally en-mono">{{ tally }} · {{ N.gallery.open }}</p>

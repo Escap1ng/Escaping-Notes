@@ -57,7 +57,6 @@ const filtered = computed(() =>
 
 <template>
   <section class="en-shell">
-    <p class="en-eyebrow">{{ N.sections.blog }}</p>
     <h2 class="en-h2">{{ navLabel('/blog') }}</h2>
     <p class="en-lede">{{ N.notes.archive }}</p>
 

@@ -10,6 +10,7 @@ import { debounce } from '../lib/debounce.js'
 import { trapFocus } from '../lib/focus.js'
 import MusicCard from './MusicCard.vue'
 import SettingsCard from './SettingsCard.vue'
+import SearchCard from './SearchCard.vue'
 import { N } from '../config/narrative.js'
 
 const route = useRoute()
@@ -31,27 +32,42 @@ let trap = null // 焦点陷阱的释放函数
 
 /* 播放器卡片：顶栏「音乐」按钮点开的那一张（播放控制面全站只此一处） */
 const player = ref(false)
-/* 设置卡片：顶栏「设置」按钮点开的那一张（目前只有底片模糊滑杆） */
+/* 设置卡片：顶栏「设置」按钮点开的那一张（目前只有底片模糊滑杆与卡片颜色两档） */
 const settings = ref(false)
-// 三张面板都挂在顶栏下沿同一条线上，任何时刻只开一张
+/* 搜索卡片：顶栏「搜索」按钮点开的那一张（结果行点进文章，全量交给 /blog?q=） */
+const search = ref(false)
+// 三张卡都挂在顶栏下沿同一条线上，与全屏抽屉一起，任何时刻只开一张
 function togglePlayer() {
   drawer.value = false
   settings.value = false
+  search.value = false
   player.value = !player.value
 }
 function toggleDrawer() {
-  player.value = false // 两张面板都是右上角的下层，不叠着开
+  player.value = false // 三张卡都是右上角的下层，不叠着开
   settings.value = false
+  search.value = false
   drawer.value = !drawer.value
 }
 function toggleSettings() {
   drawer.value = false
   player.value = false
+  search.value = false
   settings.value = !settings.value
+}
+function toggleSearch() {
+  drawer.value = false
+  player.value = false
+  settings.value = false
+  search.value = !search.value
 }
 
 function closeDrawer() {
   drawer.value = false
+}
+function onDrawerBackdrop(e) {
+  // 点空白处即收，点内容区不收
+  if (e.target === e.currentTarget) closeDrawer()
 }
 function onKey(e) {
   if (e.key === 'Escape') closeDrawer()
@@ -114,8 +130,16 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     </nav>
 
     <div class="right">
-      <!-- 右上角四枚：搜索 / 主题 / 音乐 / 设置。搜索暂只摆位，未接任何行为 -->
-      <button class="ico-btn" type="button" aria-label="搜索" title="搜索">
+      <!-- 右上角四枚：搜索 / 主题 / 音乐 / 设置。四枚都是开关，只有主题那枚不落下层卡 -->
+      <button
+        class="ico-btn search-btn"
+        type="button"
+        :aria-expanded="search"
+        aria-controls="en-search"
+        :aria-label="search ? '搜索：收起' : '搜索：展开'"
+        :title="search ? '收起搜索' : '搜索文章'"
+        @click="toggleSearch"
+      >
         <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="10.8" cy="10.8" r="6.6" />
           <path d="M15.7 15.7 20.4 20.4" />
@@ -198,7 +222,11 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
       <SettingsCard v-if="settings" @close="settings = false" />
     </Transition>
 
-    <Transition name="drawer">
+    <Transition name="pop">
+      <SearchCard v-if="search" @close="search = false" />
+    </Transition>
+
+    <Transition name="sheet">
       <div
         v-if="drawer"
         id="en-drawer"
@@ -207,34 +235,40 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         role="dialog"
         aria-modal="true"
         aria-label="站点菜单"
+        @click="onDrawerBackdrop"
       >
-        <button class="drawer-close ico-btn" type="button" aria-label="关闭菜单" @click="closeDrawer">
-          <span class="en-ico" aria-hidden="true">✕</span>
-        </button>
+        <div class="drawer-inner" @click.stop>
+          <div class="sheet-head">
+            <span class="sheet-title en-mono">// MENU</span>
+            <button class="sheet-close ico-btn" type="button" aria-label="关闭菜单" @click="closeDrawer">
+              <span class="en-ico" aria-hidden="true">✕</span>
+            </button>
+          </div>
 
-        <nav class="drawer-nav" aria-label="移动端主导航">
-          <RouterLink
-            v-for="(item, i) in N.nav"
-            :key="item.to"
-            :to="item.to"
-            class="drawer-link"
-            :class="{ active: i === activeIdx }"
-            :style="{ transitionDelay: `${60 + i * 45}ms` }"
-            @click="closeDrawer"
-          >
-            <span class="d-code en-mono" aria-hidden="true">{{ item.code }}</span>
-            <span class="d-label">{{ item.label }}</span>
-            <span class="d-arrow" aria-hidden="true">→</span>
-          </RouterLink>
-        </nav>
+          <nav class="sheet-nav" aria-label="移动端主导航">
+            <RouterLink
+              v-for="(item, i) in N.nav"
+              :key="item.to"
+              :to="item.to"
+              class="sheet-link"
+              :class="{ active: i === activeIdx }"
+              :style="{ transitionDelay: `${60 + i * 45}ms` }"
+              @click="closeDrawer"
+            >
+              <span class="sheet-code en-mono" aria-hidden="true">{{ item.code }}</span>
+              <span class="sheet-label">{{ item.label }}</span>
+              <span class="sheet-arrow" aria-hidden="true">→</span>
+            </RouterLink>
+          </nav>
 
-        <div v-if="auth.user" class="drawer-auth en-mono">
-          <RouterLink to="/admin" class="en-btn en-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
-          <span class="drawer-name">{{ auth.user.nickname }}</span>
-          <button class="en-btn en-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
+          <div v-if="auth.user" class="sheet-auth en-mono">
+            <RouterLink to="/admin" class="en-btn en-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
+            <span class="sheet-name">{{ auth.user.nickname }}</span>
+            <button class="en-btn en-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
+          </div>
+
+          <p class="sheet-foot en-mono">// Escap1ng · 仍在坠入</p>
         </div>
-
-        <p class="drawer-foot en-mono">// Escap1ng · 仍在坠入</p>
       </div>
     </Transition>
   </header>
@@ -295,19 +329,19 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  /* 光子环：用品牌令牌（跨主题固定深色配色），避免浅色主题下发色黯淡。
-     去掉了原来 20% 处那一段 --brand-white——白色止点在浅色标签页/顶栏背景上等于
-     把四分之一环擦掉，这就是它看着"糊、缺一段"的原因；现在全程饱和，冷蓝占主导。 */
+  /* 光子环：全冷蓝单色调，避免红蓝混出紫色。用 brand-cold 与少量白色的高光段
+     制造环面亮度变化；mix 里白色只占 25%，结果仍是蓝色，不会在浅色顶栏背景上
+     被读成"缺一段"。 */
   background: conic-gradient(
     from 210deg,
     var(--brand-cold),
-    var(--brand-hot) 34%,
-    color-mix(in srgb, var(--brand-hot) 55%, var(--brand-cold)) 64%,
+    color-mix(in srgb, var(--brand-cold) 75%, #fff) 22%,
+    var(--brand-cold) 44%,
     var(--brand-cold)
   );
   -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 53%);
   mask: radial-gradient(closest-side, transparent 50%, #000 53%);
-  filter: saturate(1.2);
+  filter: saturate(1.05);
   /* 不再旋转：这是一枚标识，不是一段动画；转起来只会让它一直停在运动模糊里看不清 */
 }
 
@@ -472,122 +506,145 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   padding: var(--space-0) var(--space-1);
 }
 
-/* ---- 抽屉 ---- */
-/* 全站唯一保留 backdrop-filter 的表面：它是打开即遮满全屏的模态，
-   背后星轨被 88% 实底压住，模糊只在这 0.28s 的进出场里算，不构成常驻开销 */
+/* ---- 移动端菜单（全屏遮罩抽屉） ---- */
+/* 保留全屏 backdrop-filter 遮罩作为整体强调效果；内部结构换新：标题栏、居中列表、冷色当前态。 */
 .drawer {
   position: fixed;
   inset: 0;
   z-index: 70;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-3);
   background: color-mix(in srgb, var(--ink-0) 88%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  overflow-y: auto;
 }
 
-/* 抽屉自带关闭按钮：抽屉 z-index 高于顶栏，会盖住汉堡按钮，
-   触屏用户若无此按钮就只剩「点导航离开」一条出路 */
-.drawer-close {
-  position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
+.drawer-inner {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.sheet-title {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  color: var(--text-1);
+}
+
+.sheet-close {
   width: 32px;
   min-width: 32px;
   padding: 0;
   justify-content: center;
 }
 
-.drawer-nav {
+.sheet-nav {
   display: flex;
   flex-direction: column;
-  /* 半档：抽屉项自带上下内边距，整档 4px 会让列表显得松散 */
-  gap: calc(var(--space-0) / 2);
 }
 
-.drawer-link {
+.sheet-link {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border-left: 2px solid transparent;
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--line);
   text-decoration: none;
-  transition: border-color var(--dur-fast), background-color var(--dur-fast);
+  transition: color var(--dur-fast), background-color var(--dur-fast);
 }
 
-.drawer-link.active {
-  border-left-color: var(--hot);
-  background: color-mix(in srgb, var(--hot) 8%, transparent);
+.sheet-link.active {
+  color: var(--cold);
+  background: color-mix(in srgb, var(--cold) 6%, transparent);
 }
 
-.d-code {
-  font-size: var(--fs-2xs);
-  width: 12ch;
+.sheet-code {
+  width: 3ch;
   flex-shrink: 0;
+  font-size: var(--fs-2xs);
+  color: var(--text-1);
+  text-align: right;
 }
 
-.d-label {
+.sheet-link.active .sheet-code {
+  color: var(--cold);
+}
+
+.sheet-label {
   font-family: var(--font-display);
-  font-size: var(--fs-3xl);
+  font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: -0.01em;
   color: var(--text-0);
 }
 
-.drawer-link.active .d-label {
-  color: var(--hot);
+.sheet-link.active .sheet-label,
+.sheet-link:hover .sheet-label {
+  color: var(--cold);
 }
 
-.d-arrow {
+.sheet-arrow {
   margin-left: auto;
   color: var(--text-1);
   transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1), color var(--dur-fast);
 }
 
-.drawer-link:hover .d-arrow {
+.sheet-link:hover .sheet-arrow {
   transform: translateX(var(--nudge));
   color: var(--cold);
 }
 
 /* 抽屉内的管理入口（移动端顶栏隐藏 auth 时的兜底）：复用 .en-btn-quiet */
-.drawer-auth {
+.sheet-auth {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
-  padding-top: var(--space-2);
+  padding-top: var(--space-1);
   font-size: var(--fs-xs);
 }
 
-.drawer-name {
+.sheet-name {
   color: var(--hot);
 }
 
-.drawer-foot {
+.sheet-foot {
   padding-top: var(--space-2);
   border-top: 1px solid var(--line);
+  font-size: var(--fs-xs);
+  color: var(--text-1);
 }
 
-.drawer-enter-active,
-.drawer-leave-active {
+.sheet-enter-active,
+.sheet-leave-active {
   transition: opacity 0.28s ease;
 }
 
-.drawer-enter-active .drawer-link,
-.drawer-leave-active .drawer-link {
-  transition: opacity 0.34s ease, transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.24s;
+.sheet-enter-active .sheet-link,
+.sheet-leave-active .sheet-link {
+  transition: opacity 0.34s ease, transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.drawer-enter-from,
-.drawer-leave-to {
+.sheet-enter-from,
+.sheet-leave-to {
   opacity: 0;
 }
 
-.drawer-enter-from .drawer-link {
+.sheet-enter-from .sheet-link {
   opacity: 0;
   transform: translateY(14px);
 }
@@ -630,7 +687,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   .burger {
     display: inline-flex;
   }
-  /* 顶栏容不下管理入口：移到抽屉（.drawer-auth） */
+  /* 顶栏容不下管理入口：移到抽屉（.sheet-auth） */
   .auth {
     display: none;
   }
@@ -655,7 +712,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   .auth-link {
     height: 44px;
   }
-  .drawer-close {
+  .sheet-close {
     width: 44px;
     min-width: 44px;
   }
@@ -669,8 +726,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   .auth-link:hover {
     transform: none;
   }
-  .drawer-link,
-  .d-arrow {
+  .sheet-link,
+  .sheet-arrow {
     transition: none;
   }
 }

@@ -20,23 +20,13 @@ export const N = {
 
   // 首屏之下的抽屉：一枚读数 + 精选/最近动态的眉标
   drawer: {
-    clock: '此刻 · LOCAL',
-    featured: '精选 · SELECTED',
-    recent: '最近动态 · RECENT',
+    clock: '此刻',
+    featured: '精选',
+    recent: '最近动态',
   },
 
   notes: {
     archive: '按时间倒序，越往下越早。',
-  },
-
-  sections: {
-    blog: '// 文章 · JOURNAL',
-    updates: '// 动态 · UPDATES',
-    records: '// 音乐 · PLAYLIST',
-    gallery: '// 映像 · GALLERY',
-    projects: '// 项目 · WORKS',
-    about: '// 关于 · ABOUT',
-    post: '// 阅读 · READING',
   },
 
   hints: {
@@ -56,8 +46,8 @@ export const N = {
   // 项目页（/projects）：卡片点进去是 /projects/:slug 那一页（与 /blog → /blog/:slug 同一套路），
   // 所以这里只剩那一页上的两块眉标、仓库出口、返回与「名字对不上」那一态
   projects: {
-    points: '// 要点 · HIGHLIGHTS',
-    stack: '// 技术栈 · STACK',
+    points: '要点',
+    stack: '技术栈',
     repo: '查看仓库',
     back: '返回项目列表',
     lost: '这里没有这个项目的介绍',

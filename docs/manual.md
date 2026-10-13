@@ -31,7 +31,7 @@ BLOG/
 ├── tests/              ← 零依赖防护网：node --test + unittest，跑 npm test
 └── src/
     ├── assets/fonts/   ← 自托管子集字体（一枚 woff2，700 字重）+ OFL 许可
-    ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard
+    ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
     ├── config/         ← narrative.js 文案层 · site.js 站点信息 · 内容种子（动态/项目/音乐/歌单/映像/友链）
     ├── lib/            ← api auth content posts frontmatter markdown theme storage music records gallery plate ridge lens shift sky debounce focus exit projects
     ├── router/         ← 12 条路由，全部懒加载
@@ -216,7 +216,7 @@ BLOG/
   - `--lh-tight/snug/normal/relaxed` 行高（1.35 / 1.6 / 1.75 / 1.9）
   - `--fw-normal/medium/bold` 字重（400 / 600 / 700）
   - **指针反馈四枚**：`--dur-fast`（0.22s，颜色 / 描边）、`--dur`（0.3s，位移 / 缩放）、`--nudge`（4px，行内右移）、`--lift`（-2px，控件抬起）——见 design.md §4.6。入场动画与开合转场不归这四枚管。
-- **两套主题块**：真正生效的配色——`--cold`（交互 / 蓝移）、`--hot`（深度 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-*`（阅读玻璃底板）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。
+- **两套主题块**：真正生效的配色——`--cold`（交互 / 蓝移）、`--hot`（深度 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
 
 改完保存即生效。四条约定：
 
@@ -229,7 +229,7 @@ BLOG/
 
 ### 3.1.1 组件库：新页面该用哪些类
 
-全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义；`quiet` 那一档的字面是等宽仪器字面，不是 sans，见 design.md §4.3）、**筛选与页签**（`en-chip`）、**标签**（`en-tag` / `en-tag-quiet`）、**输入**（`en-field`，多行用 `textarea.en-field`；`en-chip` 与 `en-field` 的底和边都取 `--card-bg` / `--card-brd`，即与卡片同一块色面，设置卡「卡片颜色」两档一起翻）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，音乐 / 项目 / 关于 / 首页精选 / 文章列表都用它；动态满宽、一条一枚卡，不吃 `en-cards`；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**阅读底板**（`en-glass`——文章页与项目详情页共用同一块）、**图标**（`en-ico` 单字符符号：`▶ ❚ « » ✦ ✧ ≡ ✕ → ↗ ↑`；方向图标另有 `en-ico-up`，被指到时朝自己那侧让一枚 `--nudge`；**例外**只有描边 SVG `.en-svg`——顶栏右上角那三枚与播放器卡片里那枚星轨符号）。
+全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义；`quiet` 那一档的字面是等宽仪器字面，不是 sans，见 design.md §4.3）、**筛选与页签**（`en-chip`）、**标签**（`en-tag` / `en-tag-quiet`）、**输入**（`en-field`，多行用 `textarea.en-field`；`en-chip` 与 `en-field` 的底和边都取 `--card-bg` / `--card-brd`，即与卡片同一块色面，设置卡「卡片颜色」两档一起翻）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，音乐 / 项目 / 关于 / 首页精选 / 文章列表都用它；动态满宽、一条一枚卡，不吃 `en-cards`；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**阅读底板**（`en-glass`——文章页与项目详情页共用同一块；填充取 `--card-bg`，即与卡片、胶囊、输入框同一块色面，设置卡「卡片颜色」两档一起翻）、**图标**（`en-ico` 单字符符号：`▶ ❚ « » ✦ ✧ ≡ ✕ → ↗ ↑`；方向图标另有 `en-ico-up`，被指到时朝自己那侧让一枚 `--nudge`；**例外**只有描边 SVG `.en-svg`——顶栏右上角那四枚（搜索 / 主题 / 音乐 / 设置，主题那枚两副字形按当前档取一副）与播放器卡片里那枚星轨符号）。
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。早期 `/login` `/admin` 各自写过一套，现已全部并入上面这些类。
 - 唯一一处**故意不用** `.en-card` 的是 `/gallery` 那面拍立得墙（`.wall` / `.shot` / `.frame` / `.tape` / `.cap`，全在 `GalleryView.vue` 的 scoped 里）：一张照片被胶带钉在桌面上的相纸感，与"这是一组卡片"不是同一件事。它的颜色仍走令牌（`--polar` 白框 / `--tape` 胶带 / `--shadow` 框影），页面里没有写死的色值，别把它当"另造了一套卡面"合并回去。
@@ -274,7 +274,7 @@ BLOG/
 ### 3.4 性能与无障碍约定（改代码时请遵守）
 
 - **动画只动 `opacity` / `transform`**。不要**新增**整页或大面积的 `filter: blur()`——那会每帧重新栅格化整棵子树。两处既有例外：`fall` 转场（换页时的下坠模糊，刻意保留的手感），以及底片的 `--plate-blur`（运行时可调参数，见 design.md §8「首页折线以下」条）。后者的边界条件：**初值 12px = 拉满**，所以默认就会建这层渲染面，只有滑杆拖回 0 时 filter 整条消失；图层向四周多撑 3 倍模糊半径，免得边缘淡进透明露出白边。新组件仍请勿照抄大面积 blur。
-- **不要给常驻悬在画布之上的元素加 `backdrop-filter`**——星轨每动一帧它就要重算背后模糊。实际消费方清单（都落在"瞬时模态"或"长时间阅读面"两类里）：首页抽屉 `.sheet`、文章页与项目详情页的 `.en-glass`、`/gallery` 灯箱糊底与那条胶带、播放器卡与设置卡、顶栏抽屉。**常驻顶栏刻意不用** `backdrop-filter`，用高不透明实底。
+- **不要给常驻悬在画布之上的元素加 `backdrop-filter`**——星轨每动一帧它就要重算背后模糊。实际消费方清单（都落在"瞬时模态"或"长时间阅读面"两类里）：首页抽屉 `.sheet`、文章页与项目详情页的 `.en-glass`（**只在设置卡「卡片颜色 = 半透明」那一档建**：不透底时板后已被卡面挡死，留着模糊只剩开销）、`/gallery` 灯箱糊底与那条胶带、顶栏抽屉。**常驻顶栏刻意不用** `backdrop-filter`，用高不透明实底。
 - **`resize` 一律经 `src/lib/debounce.js` 去抖（150ms）**，因为大多数处理要重建画布或重新测量布局。
 - **不要各自写滚动监听**。滚动深度统一由 `App.vue` 写入 `--shift`（0..1），CSS 里 `var(--shift, 0)`，JS 里读 `src/lib/shift.js` 的 `shift.v`；`scrollHeight` 会强制同步布局，绝不能每帧读。
 - **星轨那几条数值约束**（改常量前必读 design.md §3.1 与 §9）：① 往累积缓冲沉积的那笔 alpha 必须乘帧时长比例（`accPass(…, dep, step)`）——漏乘会让高刷屏整体变亮变密，而 60Hz 开发机上看不见；② `DEP` 与 `FADE_*` 是一对，只能同倍率一起动，且 `fd` 不许低于 ~0.1——底片是 RGBA8，`α·fd < 0.5 LSB` 的那一档永远掉不下去；③ 改线宽必须同倍率反向改 `DEP`（单位弧长的墨 = α·lw）；④ 天空的口味常量按主题分档，不许两主题共用一个数，新增这类常量时两档都要各测各的、报结论也报两遍。
@@ -296,8 +296,9 @@ BLOG/
 | 详情页 | 点正文底板以外的空白 | 同上（按下与抬起都要落在空白才算，拖选文字不算） |
 | 文章页 / 映像墙灯箱 | `Esc` | 只关框，不退页 |
 | 映像墙灯箱 | `←` / `→`、触屏横滑 >50px | 上一张 / 下一张 |
-| 任意模态（顶栏抽屉 / 两处灯箱 / 播放器卡 / 设置卡） | `Tab` | 锁在框内，关闭后焦点回到触发它的那一枚 |
-| 播放器卡 / 设置卡 | 点卡外或 `Esc` | 收起，焦点回顶栏按钮 |
+| 任意模态（顶栏抽屉 / 两处灯箱 / 播放器卡 / 设置卡 / 搜索卡） | `Tab` | 锁在框内，关闭后焦点回到触发它的那一枚 |
+| 播放器卡 / 设置卡 / 搜索卡 | 点卡外或 `Esc` | 收起，焦点回顶栏按钮 |
+| 搜索卡 | 输入词 | 即时筛（标题 / 摘要 / 标签，与 `/blog` 那一格同一条判据）；`Enter` 带着词进 `/blog?q=`，点结果行进文章，换页即收卡 |
 | 设置卡「卡片颜色」 | 方向键 | 在同组两档之间移动即选中（原生 `radio` 组，不用先 `Tab` 到另一枚再按空格） |
 | `/records` 曲目表 | 点一行 | 播放 / 暂停该曲 |
 | 任意页面 | 第一次 `Tab` | 先落「跳到内容」，再进 `#main` |

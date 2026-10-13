@@ -49,6 +49,12 @@ function onScroll() {
   })
 }
 
+/* 下滑提示点击：滚过一整屏到折线以下；减弱动效时不做强平滑 */
+function scrollDown() {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  scrollTo({ top: innerHeight, behavior: reduce ? 'auto' : 'smooth' })
+}
+
 onMounted(() => {
   addEventListener('scroll', onScroll, { passive: true })
   typeTitle()
@@ -80,6 +86,9 @@ onUnmounted(() => {
       </p>
     </div>
 
+    <!-- 下滑提示：可点（平滑滚到折线以下），也靠 bob 暗示"下面还有"；随 --shift 淡出 -->
+    <button class="scroll-cue" type="button" aria-label="向下滚动" @click="scrollDown">↓</button>
+
   </section>
 </template>
 
@@ -108,10 +117,10 @@ onUnmounted(() => {
   --peak-y: calc(var(--svh) - var(--band-h) + 0.208 * max(var(--band-h), 31vw));
   /* lockup 自己的高：站名一行 + --space-3 那口气 + 宣言两行。字号/行高都引下面那两条规则
      用的同一组令牌，改字号不会让这里的推算悄悄失准 */
-  --fs-hero-title: clamp(22px, 4.2vw, 60px);
+  --fs-hero-title: clamp(40px, 7vw, 96px);
   --lh-hero-title: 1.1;
-  --fs-manifesto: clamp(18px, 3vw, 38px);
-  --lh-manifesto: 1.9;
+  --fs-manifesto: clamp(14px, 2vw, 22px);
+  --lh-manifesto: 1.8;
   --lockup-h: calc(
     var(--lh-hero-title) * var(--fs-hero-title) + var(--space-3) + 2 * var(--lh-manifesto) * var(--fs-manifesto)
   );
@@ -176,17 +185,16 @@ onUnmounted(() => {
 }
 
 /* 站名：打字机逐字打出，光标是「还在曝光」的信号 */
-/* 中英主次：站名是第一眼，但那十六个字才是有分量的句——两行要读成一个 lockup，
-   而不是"大标题 + 小副标"。比例收到 ≈1.6:1（60/38），并让两行**宽度接近**：
-   英文 14 字 ×(0.72+0.18)em ≈ 12.6em ≈ 756px，中文 17 字 ×1.08em ≈ 18.4em ≈ 700px。
-   旧的 70/34（2.1:1）就是"大小不协调"的来源：中文被压成了副标。 */
+/* 中英主次：站名是唯一主角（刊头），联句退成题注，权重差 ≈4:1（96/22）。
+   英文用高对比 Didone 子集、字距收到 0.04em 读成刊头；中文降为 400 系统宋、
+   字距拉到 0.35em 读成碑帖题注。旧的 1.6:1 让两行权重接近、没有主次。 */
 .title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display-en);
   font-size: var(--fs-hero-title);
   font-weight: var(--fw-bold);
   line-height: var(--lh-hero-title); /* 展示级标题：行高刻意脱离四档刻度（同 .en-title/.en-h2） */
-  letter-spacing: 0.18em; /* 全大写小字号要靠字距撑开，0.06em 在 20px 上会挤成一团 */
+  letter-spacing: 0.04em; /* 刊头字距：0.18em 在 96px 上会散成一排孤岛 */
   white-space: nowrap;
   text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);
 }
@@ -205,6 +213,7 @@ onUnmounted(() => {
 .caret.gone {
   opacity: 0;
   transition: opacity 0.6s ease;
+  animation: none; /* 退场时停掉闪烁，否则 animation 会覆盖 transition 的 opacity */
 }
 
 @keyframes caret-blink {
@@ -218,15 +227,59 @@ onUnmounted(() => {
   }
 }
 
+/* 下滑提示：一枚细圈 ↓，轻 bob 暗示"下面还有"；可点，平滑滚过首屏。
+   透明度挂 --shift：滚过首屏前 1/6 即淡出，不留残影。bob 用 transform，
+   居中靠 margin-left 而非 translateX，把 transform 整条让给动画。 */
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  margin-left: -26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 冷色=交互：下滑提示是"该动了"的信号，用灰读不出，用冷色一眼锁定 */
+  border: 1px solid color-mix(in srgb, var(--cold) 70%, transparent);
+  /* 半透底托：山脊照片明暗不定，裸圈会被吃掉，垫一层同族底把箭头托出来 */
+  background: color-mix(in srgb, var(--ink-0) 45%, transparent);
+  border-radius: 50%;
+  color: var(--cold);
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  line-height: 1;
+  cursor: pointer;
+  opacity: calc(1 - var(--shift, 0) * 6);
+  animation: cue-bob 1.8s ease-in-out infinite;
+  transition: border-color var(--dur-fast), color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.scroll-cue:hover {
+  border-color: var(--cold);
+  color: var(--cold);
+  background: color-mix(in srgb, var(--ink-0) 62%, transparent);
+}
+
+@keyframes cue-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+
 .manifesto {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-manifesto); /* 与站名 60 成 ≈1.6:1：再小就读成副标，lockup 散掉 */
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-manifesto); /* 联句行距：1.7 时两行粗宋贴得太近，读成一坨；1.9 才有联的呼吸 */
-  /* 字距随下潜被潮汐拉长。基线从 -0.02em 抬到 +0.08em：负字距是英文排版的遗留，
-     汉字粗宋 34px 挤在一起笔画会互相咬；正字距才读得出碑帖味。潮汐项同比加长。 */
-  letter-spacing: calc(0.08em + var(--shift, 0) * 0.06em);
+  font-family: var(--font-serif); /* 题注走系统宋体栈，不再吃那枚 700 子集 */
+  font-size: var(--fs-manifesto); /* 与站名 ≈4:1：再大就抢回主角位，lockup 散掉 */
+  font-weight: var(--fw-normal); /* 400：粗宋在小号下会糊成一块 */
+  line-height: var(--lh-manifesto);
+  /* 题注字距拉宽读成碑帖；潮汐项保留但同比缩小（字已小，再拉长会散）。 */
+  letter-spacing: calc(0.35em + var(--shift, 0) * 0.05em);
   text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);
 }
 

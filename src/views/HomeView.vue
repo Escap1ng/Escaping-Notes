@@ -5,6 +5,7 @@ import HorizonHero from '../components/HorizonHero.vue'
 import { loadPosts, coverPos } from '../lib/posts.js'
 import { updates } from '../config/updates.js'
 import { onLens } from '../lib/lens.js'
+import { debounce } from '../lib/debounce.js'
 import { N } from '../config/narrative.js'
 
 const posts = ref([])
@@ -24,6 +25,32 @@ const day = ref('')
 let clk = 0
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
+/* 折线声波的高度与相位：哈希噪声经邻域平滑（不规则但相邻相近，仍舒缓），
+   再叠一层慢涨落给出整体起伏；相位加抖动，去掉整齐行波的机械感。
+   全部由下标确定，同一屏永远同一排，不随刷新跳变。
+   根数按视口宽补：一节 = 竖条 6px + 间隙 1px（抄 .wave i 的 max-width 与 .wave 的 gap 两枚常数），
+   240 节铺到 1679px 就顶满，更宽的屏右侧会剩一段空白。所以 ≤1679px 恒为 240 根（现状一寸不动），
+   再宽按每 7px 一根往上加。涨落与相位都是按根算的，节距不变则画面尺度不变——补根只是把这条带接长。 */
+const frac = (x) => x - Math.floor(x)
+const noise = (i) => frac(Math.sin(i * 127.1 + 311.7) * 43758.5453)
+const smooth = (i) => (noise(i - 1) + 2 * noise(i) + noise(i + 1)) / 4
+const PITCH = 7
+const MIN_BARS = 240
+const barCount = () => Math.max(MIN_BARS, Math.ceil((innerWidth + 1) / PITCH)) // n 根占 7n−1 px，+1 才刚好不留余量
+const waveCount = ref(barCount())
+const onWaveResize = debounce(() => {
+  waveCount.value = barCount()
+})
+const wave = computed(() =>
+  Array.from({ length: waveCount.value }, (_, i) => {
+    const swell = 0.5 + 0.5 * Math.sin(i * 0.083 + 0.9)
+    return {
+      h: Math.round(24 + 96 * Math.pow(smooth(i), 0.8) * (0.5 + 0.5 * swell)),
+      d: `${-(i * 0.06 + noise(i + 41) * 0.9).toFixed(2)}s`,
+    }
+  })
+)
+
 function tick() {
   const now = new Date()
   clock.value = now.toLocaleTimeString('zh-CN', { hour12: false })
@@ -34,6 +61,8 @@ let io = null
 onMounted(async () => {
   tick()
   clk = setInterval(tick, 1000)
+  // 挂在早退分支之前：下面那条「隐藏页」路径会 return，声波补根不该只服务于可见页
+  addEventListener('resize', onWaveResize)
   posts.value = await loadPosts()
   // 抽屉第一次进入视口时拉出一次，之后断开——它不是滚动监听，docs/design.md §3.2 那条「不要各自写滚动监听」的禁令不适用。
   // 两道兜底都要：⑴ 没有 IntersectionObserver；⑵ 有，但页面是隐藏页，回调永远不来
@@ -55,6 +84,8 @@ onMounted(async () => {
 })
 onUnmounted(() => {
   clearInterval(clk)
+  removeEventListener('resize', onWaveResize)
+  onWaveResize.cancel()
   if (io) io.disconnect()
 })
 </script>
@@ -67,6 +98,11 @@ onUnmounted(() => {
          这里只留抽屉。 -->
 
     <section ref="drawerEl" class="drawer" :class="{ open }">
+      <!-- 折线声波：骑在首屏/抽屉接缝上上下对称、排密到相接，读成一条穿过地平线的不断波形；装饰层 -->
+      <div class="wave" aria-hidden="true">
+        <i v-for="(w, i) in wave" :key="i" :style="{ '--h': w.h, '--d': w.d }"></i>
+      </div>
+
       <div class="sheet">
         <span class="lip" aria-hidden="true"></span>
 
@@ -149,11 +185,83 @@ onUnmounted(() => {
   }
 }
 
+/* 卡片错峰"显影"：整块抽屉拉出后，卡逐张从糊到清、从暗到亮升起，
+   读作底片在显影而不是列表在滑入。backwards 让延迟期内保持起点态。 */
+.drawer.open .pick,
+.drawer.open .feed {
+  animation: card-develop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.drawer.open .pick:nth-child(1) {
+  animation-delay: 0.12s;
+}
+.drawer.open .pick:nth-child(2) {
+  animation-delay: 0.22s;
+}
+.drawer.open .pick:nth-child(3) {
+  animation-delay: 0.32s;
+}
+.drawer.open .feed {
+  animation-delay: 0.42s;
+}
+
+@keyframes card-develop {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(6px);
+  }
+}
+
+/* 折线声波：整排以接缝为中线上下对称（transform-origin center），上半压进首屏山脊、
+   下半落进抽屉留白，读成一道穿过地平线的波。竖线 flex 等分铺满整屏宽（gap 1px 相接成
+   一条不断的带），窄屏自动变细、宽屏到 6px 封顶。封顶不等于铺满：240 根 ×(6+1) 只有
+   1679px，宽于它的屏右侧会空出一段——所以根数跟着视口走（见 script 里的 PITCH）。 */
+.wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: 140px;
+  pointer-events: none;
+}
+
+.wave i {
+  flex: 1 1 0;
+  min-width: 1px;
+  max-width: 6px;
+  height: calc(var(--h) * 1px);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--cold) 90%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cold) 45%, transparent);
+  transform-origin: center;
+  animation: wave-breathe 2.6s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+
+@keyframes wave-breathe {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
 /* 抽屉面板：玻璃态。底下那层 .sub-plate 是 fixed 的风景底片，backdrop-filter 糊的正是它——
    这才是"抽屉压在一张不动的底图上"的观感。
    原先这里用 --panel-frost-bg 的旧值（米黄 rgba(245,242,234,.78)），就是那个米黄框。
-   那枚令牌现在也改成跟随 --ink-0 了，文章页 .en-glass 同源——两处表面不会再一处冷一处米。
-   兜底也不再回落到米黄：不支持 backdrop-filter 时用高不透明的冷色 ink-0。 */
+   那枚令牌现在也改成跟随 --ink-0 了，兜底也不再回落到米黄：不支持 backdrop-filter 时
+   用高不透明的冷色 ink-0。
+   注意这块面**不吃**设置卡「卡片颜色」那档开关：文章页 .en-glass 的填充 2026-10-13 起并给了
+   --card-bg，首页抽屉还留着它自己这一档（ink-0 42%）——站内最后一处分叉的表面，改哪一处都要先看另一处。 */
 .sheet {
   max-width: 1120px;
   margin: 0 auto;
@@ -309,6 +417,13 @@ onUnmounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .drawer.open {
+    animation: none;
+  }
+  .drawer.open .pick,
+  .drawer.open .feed {
+    animation: none;
+  }
+  .wave i {
     animation: none;
   }
 }

@@ -11,6 +11,7 @@
     "build": "vite build && node scripts/build_seo.mjs",
     "build:pages": "vite build --mode pages && node scripts/build_seo.mjs",
     "font:build": "node scripts/build_font.mjs",
+    "font:build:didone": "node scripts/build_font_didone.mjs",
     "og:build": "node scripts/build_seo.mjs --og",
     "art:build": "node scripts/build_readme_art.mjs",
     "bg:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_plate_bg.ps1",
