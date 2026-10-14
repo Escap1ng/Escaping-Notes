@@ -40,7 +40,7 @@
 | `tryApi(path, opts)` | `{ok, status, data, code, reason}` | 需要告诉用户"到底为什么没成"的写路径：登录、初始化站长、发文、保存内容 |
 | `uploadFile(path, file)` | 同 `tryApi` | 上传。走同一个 client，`Bearer` 与超时由它负责 |
 
-- 为什么不把 `status` 直接塞进 `api()` 的返回值：那会让 22 处 `if (await api(...))` 型降级判断同时
+- 为什么不把 `status` 直接塞进 `api()` 的返回值：那会让 17 处 `await api(` 型降级判断同时
   失效（对象恒真）。所以降级语义留在 `api()`，信息量放在 `tryApi()`。
 - **`code` 是后端原样给出的机器码**（`{'error':'bad credentials'}`），翻成中文的唯一出处是
   `src/config/narrative.js` 的 `errors` 表。**`offline` 与后端错误码严格分开**：后端没起时提示
@@ -65,7 +65,7 @@
 | `/api/health` | — | `{ok:true}` | — | — |
 | `/api/bootstrap` | — | `{needsSetup:bool}` | — | `LoginView` |
 | `/api/me` | 可选 | `{id,username,nickname,role}` | 401 | `lib/auth.js` |
-| `/api/posts` | — | `[{slug,title,date,tags,summary,words,minutes}]` 按 date 倒序 | — | `lib/posts.js` |
+| `/api/posts` | — | `[{…该稿 frontmatter 的全部键…, slug, words, minutes}]` 按 date 倒序——`list_posts()` 是 `{**meta, 'slug', …}` 展开，所以稿子里写的 `image` / `imagePos` 乃至任何自定义键都会跟着出来（**写入端只落 title/date/tags/summary/image/imagePos 六样**，见下面 POST 那行） | — | `lib/posts.js` |
 | `/api/posts/{slug}` | — | `{meta:{…,slug},body}` | 404 | `lib/posts.js`、`AdminView` |
 | `/api/stats` | — | `{slug:count,…}` | — | `PostView` |
 | `/api/users` | a | `[{id,username,nickname,role,ban,created}]`（不含 `pass`） | 403 | `AdminView` |
@@ -81,14 +81,14 @@
 
 | 路径 | 角色 | 成功 | 失败 | 前端 |
 | --- | --- | --- | --- | --- |
-| `/api/upload` | o | `{ok:true,url}`（**multipart 单文件**，≤8 MB，落盘名加时间戳前缀） | 403 owner only · 400 bad file（无 boundary / 无 filename）· 415 type not allowed | `AdminView` ×2（裸 `fetch`，见 §6 T4） |
+| `/api/upload` | o | `{ok:true,url}`（**multipart 单文件**，≤8 MB，落盘名加时间戳前缀） | 403 owner only · 400 bad file（无 boundary / 无 filename）· 415 type not allowed | `AdminView` 两处上传共用一个 `uploadFrom()`，它走 `src/lib/api.js` 的 `uploadFile()`（T4 已收口；`lib/api.js` 之外全站零裸 `fetch`） |
 | `/api/setup` | — | `{token,user}` | 409 already setup · **503 storage unavailable** · 400 bad username / weak password · 409 taken | `LoginView` |
 | `/api/login` | — | `{token,user}` | 401 bad credentials · 403 banned | `LoginView` |
 | `/api/logout` | u | `{ok:true}`（**无 token 也返回 200**） | — | `lib/auth.js` |
 | `/api/view` | — | `{ok:true,count}` | 400 bad slug | `PostView` |
 | `/api/fragments` | o | `{ok:true}` | 403 · 400 empty · 400 bad image | — |
 | `/api/sync/records` | o | 同 `/api/records` | 403 · 502 sync failed | `lib/records.js` |
-| `/api/posts` | o | `{ok:true,slug}` | 403 · 400 empty · 400 bad slug | `AdminView` |
+| `/api/posts` | o | `{ok:true,slug}` | 403 · 400 empty · 400 bad slug · **400 bad image**（`image` 过不了 `POST_IMG_RE` 即拒）。不对称的一处：`imagePos` 过不了 `POST_POS_RE` 时**静默置空、不报错** | `AdminView` |
 | `/api/posts/{slug}` | o | 同上（**POST 即"按 slug 写入/覆盖"**，本站没有 `PUT /api/posts/*`） | 同上 | `AdminView` |
 | `/api/users/{id}/role` | o | `{ok:true}`（**只接受 `role='admin'`**，即任命；两档之下没有"降级"的中间值，收权走 ban 或删除） | 403 · 400 bad role · 404 not found（目标不存在或目标本身是 owner） | `AdminView` |
 | `/api/users/{id}/ban` | a | `{ok:true}` | 403（owner 不可被禁；admin 不可禁 admin） | `AdminView` |
@@ -123,7 +123,7 @@
   `pass` 是 `"<16字节盐hex>$<pbkdf2-hmac-sha256 120000 次>"`，**任何端点都不外发**（`_pub()` 只出 4 个字段，
   `/api/users` 白名单里也没有 `pass`）。
 - **文章**：正文与元数据存在 `data/posts/{slug}.md`，frontmatter 为 `---` 块（`parse_post` 认 LF 与 CRLF）。
-  `words` 按 CJK 与拉丁分别计数，`minutes = max(1, round(words/400))`。
+  `words` = **去掉所有空白后的字符数**（`len(re.sub(r'\s','',body))`），CJK 与拉丁同一把尺、不分速读；`minutes = max(1, round(words/400))`。前端 `src/lib/frontmatter.js` 的 `stats()` 是同一条算式，两端不会分歧（跨语言对拍里量过）。
 - **歌单**：`/api/sync/records` 拉 QQ 接口写入 `records.json`；同一套抓取逻辑在
   `scripts/sync_records.py` 里**还有第二份实现**（逐字段重复），见 §6 T3。
 
@@ -168,7 +168,7 @@
 | T4 | ~~`AdminView.vue` 两处裸 `fetch('/api/upload')` 手拼 `Bearer`~~ **已收口** | 曾绕过超时/降级/鉴权头，是唯一不受 §1.1 契约保护的调用点 | 现走 `uploadFile()`；`src/` 内除 `lib/api.js` 外不得再出现 `fetch(` |
 | T5 | `POST /api/upload` 的写文件不在 `LOCK` 内、无扩展名之外的内容校验 | 同名覆盖可能；上传即信任 | 待定 |
 | T6 | `/api/fragments`、`/api/health`、`PUT /api/content/site|links` **无前端消费方** | 属于"已实现未接线"，容易被误认为在用 | 接线或删除 |
-| T7 | 端点层仍无用例（解析/渲染层已经有了：`npm test` 跑 24 条 Node + 4 条 Python，含跨语言对拍） | 端点契约仍只靠本文与 §7 的对拍防漂移 | 补端点用例＝S0 的余下半程 |
+| T7 | 端点层仍无用例（解析/渲染层已经有了：`npm test` 跑 67 条 Node + 4 条 Python，含跨语言对拍） | 端点契约仍只靠本文与 §7 的对拍防漂移 | 补端点用例＝S0 的余下半程 |
 | T8 | `GET /api/*` 与 `PUT` / `DELETE` 不限流 | 列表型端点可被刷 | 待定 |
 
 ## 7. 让这份文档不撒谎

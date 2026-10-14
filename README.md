@@ -120,7 +120,7 @@ npm run preview        # 本地预览 dist/
 | `npm run font:build` | 重切展示层子集字体（需要本机装有 Noto Serif SC；产物已提交，日常不用跑） |
 | `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格，产物 3.6KB；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部；产物已提交） |
 | `npm run check` | 下面四道门禁连跑（api / docs / naming / contrast），提交前跑这一条 |
-| `npm run check:api` | `docs/api.md` 的端点表与 `server/api.py` 的路由双向对拍（当前 26 个端点），漂移即退出码非 0 |
+| `npm run check:api` | `docs/api.md` 的端点表与 `server/api.py` 的路由双向对拍，漂移即退出码非 0 |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对 README 路由表与 `src/router` 一致 |
 | `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
 | `npm run check:contrast` | 从 `site.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |

@@ -120,7 +120,7 @@ npm run preview        # preview dist/ locally
 | `npm run font:build` | Re-subset the display font (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
 | `npm run font:build:didone` | Re-subset the masthead Didone (Playfair Display, uppercase and space only, 3.6 KB out; the variable source TTF lives in `fonts-src/` and is not committed — fetch steps are written in the script header; the output is committed) |
 | `npm run check` | Runs the four gates below in sequence (api / docs / naming / contrast) — the one command to run before committing |
-| `npm run check:api` | Diffs the endpoint table in `docs/api.md` against the routes in `server/api.py`, both ways (26 endpoints today); non-zero exit on drift |
+| `npm run check:api` | Diffs the endpoint table in `docs/api.md` against the routes in `server/api.py`, both ways; non-zero exit on drift |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the README route table matches `src/router` |
 | `npm run check:naming` | Naming-convention scan; non-zero exit on a violation |
 | `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `site.css`; non-zero exit if a text token fails |

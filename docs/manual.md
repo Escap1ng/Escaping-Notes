@@ -12,7 +12,7 @@
 
 ```text
 BLOG/
-├── index.html          ← 壳层：首帧内联脚本（主题 + 底片模糊，都不闪一下）、SEO/OG 元信息
+├── index.html          ← 壳层：首帧内联脚本（主题 + 底片模糊 + 卡面档位，都不闪一下；并按当前主题预加载首屏地景）、SEO/OG 元信息
 ├── server/api.py       ← 后端：单文件、只用 Python 3 标准库，监听 127.0.0.1:8787
 ├── content/posts/      ← Markdown 文章（带 frontmatter）——种子与离线回退；上线后发文主路径是 /admin
 ├── public/
@@ -20,6 +20,7 @@ BLOG/
 │   └── favicon.svg  robots.txt  og.png  images/
 ├── scripts/            ← 构建期脚本，按动词分族：build_* / check_* / sync_*
 │   ├── build_font.mjs        ←   展示层子集字体裁切（依赖 devDep subset-font）
+│   ├── build_font_didone.mjs ←   刊头 Didone 子集裁切（只留大写与空格；源 TTF 在 fonts-src/，不进仓库）
 │   ├── build_seo.mjs         ←   dist/rss.xml、dist/sitemap.xml、public/og.png
 │   ├── build_readme_art.mjs  ←   README 配图：按 StarTrails 常数离线复算
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1  ←  底图与封面烘培（Windows PowerShell）
@@ -30,10 +31,10 @@ BLOG/
 │   └── assets/readme/  ← README 配图
 ├── tests/              ← 零依赖防护网：node --test + unittest，跑 npm test
 └── src/
-    ├── assets/fonts/   ← 自托管子集字体（一枚 woff2，700 字重）+ OFL 许可
+    ├── assets/fonts/   ← 两枚自托管子集 woff2（正文衬线 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
     ├── config/         ← narrative.js 文案层 · site.js 站点信息 · 内容种子（动态/项目/音乐/歌单/映像/友链）
-    ├── lib/            ← api auth content posts frontmatter markdown theme storage music records gallery plate ridge lens shift sky debounce focus exit projects
+    ├── lib/            ← api auth content posts frontmatter markdown theme storage music records gallery plate surface ridge lens shift sky debounce focus exit projects
     ├── router/         ← 12 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
     └── views/          ← 12 个页面各一个文件，平铺
@@ -163,7 +164,7 @@ BLOG/
 - **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（frontmatter 的 `image`，或 `/admin` 里给文章配的图）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
 - **图片管理**：`/admin` 文章页签可「上传图片并插入」正文光标处，下方 IMAGES 列表可插入 / 删除已上传图片；接口 `GET /api/uploads`、`DELETE /api/uploads/:文件名`（均仅站长）。上传白名单：png / jpg / jpeg / webp / gif / svg / mp3，≤8MB。
 - **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
-- **碎片（已随旧版下线，代码保留参考）**：`/fragments` 不占导航位、非 1.0.0 对外功能；接口 `GET/POST/DELETE /api/fragments` 仍保留。
+- **碎片（已随旧版下线，代码保留参考）**：站内**没有** `/fragments` 这条路由、也没有对应视图（12 条路由里不含它），所以"占不占导航位"这个问题不存在；服务端 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点仍保留，前端零消费方（`api.md` 的待办表记着这条）。
 
 ### 2.5 播放器
 
@@ -193,7 +194,7 @@ BLOG/
 | 身份 | 权限 |
 | --- | --- |
 | 游客（未登录） | 浏览全部 |
-| 管理员 `admin` | 用户管理（任命 / 禁用 / 删除）、读取含草稿的文章列表；**不能发文章、不能改站点设置** |
+| 管理员 `admin` | 用户管理（任命 / 禁用 / 删除）、读文章列表；**不能发文章、不能改站点设置**。本站没有草稿概念——`api.py` 不认 `draft` 字段，写进 frontmatter 也不会被过滤 |
 | 站长 `owner` | 以上全部 + 文章发布 / 编辑 / 删除 + 站点设置 + 上传 + 歌单同步 |
 
 - 管理界面在 `/admin`，仅管理员 / 站长可见；站长比管理员多「文章」「设置」两个页签。
@@ -208,7 +209,7 @@ BLOG/
 
 ### 3.1 改外观（颜色 / 字体 / 字号 / 间距 / 栏宽 / 圆角）
 
-只有一个文件 `src/styles/site.css`（由 `src/main.js` 一处导入）：基线令牌在前、皮肤规则在后，两套主题块靠 `html:root` 的 (0,1,1) 特异性覆盖基线 `:root`。
+只有一个文件 `src/styles/site.css`（由 `src/main.js` 一处导入）：基线令牌在前、组件规则在后，两套主题块靠 `html:root` 的 (0,1,1) 特异性覆盖基线 `:root`。（旧版那层 `html[data-skin='neo']` 皮肤网关已于 2026-10-11 退役，别再往里加。）
 
 - **基线 `:root`**：`--ink-0/1/2` 灰阶、`--text-0/1` 文字、`--line` 发丝线、`--font-*` 字体栈、`--measure` 阅读栏宽，以及**四组刻度**——
   - `--space-0…5` 间距（4 / 8 / 16 / 32 / 64 / 96px）
@@ -216,7 +217,7 @@ BLOG/
   - `--lh-tight/snug/normal/relaxed` 行高（1.35 / 1.6 / 1.75 / 1.9）
   - `--fw-normal/medium/bold` 字重（400 / 600 / 700）
   - **指针反馈四枚**：`--dur-fast`（0.22s，颜色 / 描边）、`--dur`（0.3s，位移 / 缩放）、`--nudge`（4px，行内右移）、`--lift`（-2px，控件抬起）——见 design.md §4.6。入场动画与开合转场不归这四枚管。
-- **两套主题块**：真正生效的配色——`--cold`（交互 / 蓝移）、`--hot`（深度 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-lg/--r-pill` 圆角、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
+- **两套主题块**：真正生效的配色——`--cold`（交互 / 蓝移）、`--hot`（深度 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-pill` 三档圆角（没有 `--r-lg`，用到"大圆角"的地方取 `--r-pill`）、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
 
 改完保存即生效。四条约定：
 
