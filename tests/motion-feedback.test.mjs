@@ -40,7 +40,7 @@ const VUE_FILES = [
 const NON_FEEDBACK = {
   'src/styles/site.css': [
     /transition-duration: 0\.01ms !important/, // 减弱动效的全站开关
-    /transition:\s*opacity 0\.26s ease,\s*transform 0\.4s/, // 衍射芒缓绽：读成"星光绽开"而不是"控件响应"，见 design.md §6b
+    /transition:\s*opacity 0\.26s ease,\s*transform 0\.4s/, // 衍射芒缓绽：读成"星光绽开"而不是"控件响应"，见 site.css §6b
   ],
   'src/components/SiteHeader.vue': [
     /transition: background-color 0\.3s ease, border-color 0\.3s ease, padding 0\.3s ease/, // 吸顶收拢

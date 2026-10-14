@@ -443,7 +443,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   transition: color var(--dur-fast), border-color var(--dur-fast), transform var(--dur);
 }
 
-/* 图标按钮：32px 正方形等大一枚（右上角三枚与汉堡/关闭共用这一档）。
+/* 图标按钮：32px 正方形等大一枚（右上角四枚与汉堡/关闭共用这一档）。
    描边 SVG 的着色走 currentColor，所以 hover/播放中的变色规则与文字按钮同一条 */
 .ico-btn {
   width: 32px;
@@ -663,7 +663,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 /* ---- 响应式 ---- */
-/* 右上角三枚自 2026-10-09 起就是纯图标 32px 方（不再有文字档），
+/* 右上角四枚自 2026-10-09 起就是纯图标 32px 方（不再有文字档），
    所以原先"≤1400px 收起文字"那一档已无消费者，删掉 */
 
 /* 昵称是顶栏唯一宽度不可控的元素：1240px 以下先收起，
@@ -675,7 +675,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 /* 导航整条实测 497px（「映像」进来之后是 7 枚 × 67.6px + 6 × 4px 间距，本机 Chrome 量的），
-   与品牌 / 右上角三枚 / 登录后的管理入口相加超过 1280px，故折叠断点从 1200 抬到 1280。
+   与品牌 / 右上角四枚 / 登录后的管理入口相加超过 1280px，故折叠断点从 1200 抬到 1280。
    加一枚导航实打实要 72px——这个数别凭感觉估，估小了就是 1201~1279px 那一段整条溢出被裁 */
 @media (max-width: 1280px) {
   .en-header {

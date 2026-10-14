@@ -135,7 +135,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 贴在顶栏下沿、右对齐于那三枚图标之下。顶栏本身 position: fixed，
+/* 贴在顶栏下沿、右对齐于那四枚图标之下。顶栏本身 position: fixed，
    所以这张卡跟着视口走，不受 fall 转场的包含块影响 */
 .card {
   position: absolute;

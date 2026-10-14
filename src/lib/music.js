@@ -1,4 +1,4 @@
-// 播放器引擎：全站唯一的 <audio> 与它的状态。顶栏「音乐」按钮、右下悬浮读数条、
+// 播放器引擎：全站唯一的 <audio> 与它的状态。顶栏「音乐」按钮与它点开的那张播放器卡、
 // /records 的在线听歌模块读写同一个 `music`——任一处按下播放，其余几处的高亮同时跟上。
 // 曲目来自 content.playlist（/admin 的 PLAYLIST 块，或 src/config/music.js 种子）。
 import { computed, reactive, watch } from 'vue'
