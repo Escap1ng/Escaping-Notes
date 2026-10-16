@@ -20,7 +20,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 24，不是 20：`npm test` 把 tests/**/*.test.mjs 这条 glob 交给 node 自己展开，
+          # 那是 21 之后才有的能力；runner 拿 20 跑会把字面量当文件名，直接红。
+          # 门禁现在在发布路径上（红了就不发），所以这里跟作者机器同一个大版本（本机 v24.18.1，
+          # 98 项全绿是在它上面跑出来的）。
+          node-version: '24'
       # 门禁在构建之前：test 里含内容校验（tests/content-rolls.test.mjs 真读 content/posts/），
       # check 里含发文回执、命名对拍、文档死指针与对比度。过去这里只有 npm ci 与 build，
       # 任何一条 check 都不在发布路径上——封面漏了、日期写歪都是"构建绿、线上坏"。
