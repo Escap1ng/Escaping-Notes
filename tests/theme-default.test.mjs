@@ -7,7 +7,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
 import { join, dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -168,9 +167,29 @@ test('主题兜底块与特异性锚点：浅色调的是主题块，data-theme 
   assert.ok(!/THEME_DEFAULT/.test(src('src/lib/storage.js')), '默认值不许在 storage.js 留第二处')
 })
 
+// 反向对照用的历史样本：2026-10-10 之前那段首帧脚本的原样（首次访问跟系统偏好走的那一版）。
+// 为什么原样抄在这里、而不是 `git show 011411d:index.html` 去取：CI 的 checkout 只带最新一个
+// 提交，而 011411d 从来没进过远端（gh api 查它 404）——拿它当夹具的判据就只能在这台机器上绿。
+// 2026-10-16 把 npm test 放上发布路径，这条立刻让 Pages 不发：**只在本地能验的判据等于没有判据**。
+const OLD_BOOT = `
+      // 首帧前应用主题，避免切换后闪一下。已存偏好优先；首次访问不设默认主题，直接跟随系统偏好。
+      // 这段逻辑是主题默认值的唯一来源，theme.js 直接读已写入的 data-theme，勿在此之外重复实现。
+      const stored = localStorage.getItem('en-theme')
+      document.documentElement.dataset.theme =
+        stored === 'well' || stored === 'out'
+          ? stored
+          : matchMedia('(prefers-color-scheme: light)').matches
+            ? 'out'
+            : 'well'
+`
+const OLD_HTML = `<!doctype html><html><head><script>${OLD_BOOT}</script></head></html>`
+
 // 反向对照：上面这些判据不是恒绿的——旧实现与造假都必须被判出来。
 test('负向对照：本文件的判据抓得住假首开', () => {
-  const old = bootScript(execFileSync('git', ['show', '011411d:index.html'], { cwd: ROOT, encoding: 'utf8' }))
+  const old = bootScript(OLD_HTML)
+  assert.equal(old.trim(), OLD_BOOT.trim(), '夹具没经过 bootScript 那一条抽取路径，这条对照是虚的')
+  // 夹具必须与现役脚本真的不同，否则"抓得住旧版"是假的
+  assert.notEqual(old.trim(), bootScript(src('index.html')).trim())
   // 旧版跟系统走：同一探针下两档必须判出不同结果，否则这个量具是瞎的
   assert.equal(runBoot(old, null, true).theme, DARK)
   assert.equal(runBoot(old, null, false).theme, LIGHT)
