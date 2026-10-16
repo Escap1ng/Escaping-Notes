@@ -101,17 +101,18 @@ npm run preview        # preview dist/ locally
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Vite dev server with HMR |
-| `npm run build` / `build:pages` | Production builds; both use `base: '/'` — the only difference is `VITE_DEPLOY=pages` (`.env.pages`) switching the router to hash mode |
+| `npm run build` / `build:pages` | Production builds; both use `base: '/'` — the only difference is `VITE_DEPLOY=pages` (`.env.pages`) switching the router to hash mode. Each build first prints the post receipt and validates every roll; a red gate produces no `dist/` |
 | `npm run preview` | Serve `dist/` the way production would |
-| `npm run test` | 12 `.mjs` test files: frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the card-surface setting never drifting apart (storage key / mode values / gate selector spelled identically in three places, the default being the base block's opaque value, and `--card-solid` defined for both themes with the light one exactly white), the first-paint theme, the preloaded landing photo matching `--hero-img` in `site.css`, the landing copy contract (the two fields the hero needs must exist in `narrative.js`, and no view may reference a field that isn't there — deleting one fails silently as empty text), pointer-feedback consistency (durations and offsets must come from the four tokens, or be listed as an explicit exception), token single source (no token defined twice, nothing defined for only one theme), the gallery list matching the asset manifest, the three project write-up fields being filled in and detail-page URLs round-tripping without collisions, and both detail pages sharing one return mechanism |
-| `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, `dist/sitemap.xml`) |
+| `npm run test` | 13 `.mjs` test files: the content layer (frontmatter parsing, CRLF, every posting rule probed with its own fake sample, the real `content/posts/` run through the gate, and a sweep proving both shores share one parser), markdown rendering and the URL injection surface, the three blur defaults never drifting apart, the card-surface setting never drifting apart (storage key / mode values / gate selector spelled identically in three places, the default being the base block's opaque value, and `--card-solid` defined for both themes with the light one exactly white), the first-paint theme, the preloaded landing photo matching `--hero-img` in `site.css`, the landing copy contract (the two fields the hero needs must exist in `narrative.js`, and no view may reference a field that isn't there — deleting one fails silently as empty text), pointer-feedback consistency (durations and offsets must come from the four tokens, or be listed as an explicit exception), token single source (no token defined twice, nothing defined for only one theme), the gallery list matching the asset manifest, the three project write-up fields being filled in and detail-page URLs round-tripping without collisions, and both detail pages sharing one return mechanism |
+| `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, now with full text and categories; `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read out of the source by regex and it throws if they are gone, so re-run after touching star-trail parameters) |
 | `npm run bg:build` | Re-bake the site backdrops in `public/plates/*.jpg` (hero band light + dark, the five-slot drawer carousel, the dark drawer scrim; originals live in `plates-src/`, needs local PowerShell; commit the output) |
-| `npm run cover:build` | Re-bake the article covers in `public/posts/*.jpg` (originals live in `plates-src/`, which is not committed; re-run after changing them, and commit the output) |
+| `npm run cover:build` | Re-bake article covers: walks `content/posts/<slug>/` and bakes each roll's own `*-src.jpg` into `cover.jpg` beside it (originals are neither committed nor published; there is no mapping table to edit; needs local PowerShell; commit the output) |
 | `npm run font:build` | Re-subset the display font (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
 | `npm run font:build:didone` | Re-subset the masthead Didone (Playfair Display, uppercase and space only, 3.6 KB out; the variable source TTF lives in `fonts-src/` and is not committed — fetch steps are written in the script header; the output is committed) |
-| `npm run check` | Runs the three gates below in sequence (docs / naming / contrast) — the one command to run before committing |
+| `npm run check` | Runs the four gates below in sequence (content / docs / naming / contrast) — the one command to run before committing |
+| `npm run check:content` | The posting gate and receipt: reads every roll in `content/posts/` and fails on a malformed date, a misspelled frontmatter key, or an image referenced from prose that is not in that roll (also runs inside `npm run build` and in CI) |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the README route table matches `src/router` |
 | `npm run check:naming` | Naming-convention scan; non-zero exit on a violation |
 | `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `site.css`; non-zero exit if a text token fails |
@@ -138,22 +139,23 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 
 ```text
 ├── index.html             # Shell: inline first-paint script (theme + plate blur + card surface + preloading the landing photo for that theme, so none of them flashes), SEO/OG metadata
-├── content/posts/         # Markdown posts (frontmatter)
-├── public/                # Static assets: favicon, robots.txt, og.png, plus three derived-asset dirs that **must be committed**
-│                          #   plates/ (backdrops) · posts/ (covers) · audio/ (self-hosted tracks) — see "Scripts" for the bake commands
-│                          #   their source dirs (plates-src/ · music/ · /1/) are gitignored — do not report that as a leak
+├── content/posts/         # Posts: one directory per post (`<slug>/index.md` plus that post's own cover and images) — the directory name is the URL
+├── public/                # Static assets: favicon, robots.txt, og.png, plus two derived-asset dirs that **must be committed**
+│                          #   plates/ (backdrops) · audio/ (self-hosted tracks) — see "Scripts" for the bake commands; article covers are not here, each lives in its own roll
+│                          #   originals (plates-src/ · music/ · /1/ · each roll's *-src.*) are gitignored — do not report that as a leak
 ├── scripts/               # Build-time and content-refresh scripts (verb families)
 │   ├── build_font.mjs     #   display-font subsetting (Node; needs the `subset-font` devDep)
 │   ├── build_font_didone.mjs #  masthead Didone subsetting (same devDep; uppercase and space only)
-│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only)
+│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only; frontmatter parsing comes from src/lib/schema.js — the same module the browser uses)
 │   ├── build_readme_art.mjs # the two plates above: recomputed from StarTrails' constants
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1 # backdrop & cover baking (PowerShell + System.Drawing; cannot run on CI)
+│   ├── check_content.mjs  #   the posting gate and receipt (walks every roll; runs inside the build and in CI)
 │   ├── check_doc_refs.py  #   drift scan over doc references / § numbers / the README route table
 │   ├── check_naming.py    #   naming-convention scan
 │   ├── check_contrast.mjs #   theme-token WCAG contrast audit
 │   ├── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
 │   ├── data/              #   script input data (the GB2312 level-1 character table used by build_font)
-│   └── lib/               #   modules shared between scripts (PNG encoder, used by build_seo and build_readme_art)
+│   └── lib/               #   modules shared between scripts (PNG encoder; the roll scanner rolls.mjs)
 ├── docs/                  # design.md design spec · manual.md handbook
 │   └── assets/readme/     # README figures (how they are made, and how to swap in real screenshots)
 ├── tests/                 # Zero-dependency safety net: node --test, run by `npm run test`
@@ -161,7 +163,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
     ├── assets/fonts/      # Two self-hosted subset woff2 files (serif + masthead Didone), weight 700 + OFL licence
     ├── components/        # seven flat: StarTrails the camera · HorizonHero the landing type layer · SiteHeader bar + drawer · SiteFooter · MusicCard the player card · SettingsCard the plate-blur slider + card-surface radios · SearchCard the header search card
     ├── config/            # narrative.js copy layer · site.js site info · 6 content-seed files (records.js is generated — don't hand-edit)
-    ├── lib/               # content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
+    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
     ├── styles/            # site.css, one file: structural scale + the two theme palettes + site-wide primitives
     └── views/             # 10 views, one file each, flat
 ```

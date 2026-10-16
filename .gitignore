@@ -21,6 +21,11 @@ docs/assets/mock/
 # ASCII 化的底图源图（从 1/ 复制改名而来）：.ps1 按 ANSI 解码，中文文件名不能进脚本
 plates-src/
 
+# 一卷底片里的原图（content/posts/<slug>/*-src.jpg 那一类）：它是 npm run cover:build 的
+# 输入，既不提交也不上线——同目录烘出来的 cover.jpg 才是站点用的那一张。
+# 判据写在 src/lib/schema.js 的 SOURCE_ORIGINAL，脚本与构建拷哪些文件都跟着它。
+content/posts/*/*-src.*
+
 # 字体源 TTF（Google Fonts 可变字体，~200KB+）：不进仓库，仓库只收 build_font*.mjs 裁出的 woff2 子集
 fonts-src/
 
@@ -28,12 +33,14 @@ fonts-src/
 # 仓库只收播放器真正对外服务的那一份 public/audio/
 music/
 
-# ---------- 反向记一条：这三个生成物目录不在忽略之列，且必须进仓库 ----------
-#   public/plates/  ← npm run bg:build      （首屏地景 + 抽屉五张轮播 + 深色压暗底）
-#   public/posts/   ← scripts/build_post_covers.ps1（文章封面，卡片与正文同一张）
-#   public/audio/   ← 播放器自托管 mp3，src/config/music.js 的曲单直接指向它
+# ---------- 反向记一条：这三处生成物不在忽略之列，且必须进仓库 ----------
+#   public/plates/            ← npm run bg:build（首屏地景亮/暗两张 + 抽屉五张轮播 + 深色压暗底）
+#   content/posts/*/cover.jpg ← npm run cover:build（卡片、阅读页顶部那张满栏图、映像柜共用的一张）
+#   public/audio/             ← 播放器自托管 mp3，src/config/music.js 的曲单直接指向它
 # 它们都是"跑一条命令就能重烘出来"的派生物，但**不能**按生成物处理：那两条 bake 脚本跑在
 # Windows PowerShell 5.1 + System.Drawing 上，Pages 的 ubuntu runner 执行不了，CI 里也装不了
 # PIL/sharp；音频没有构建步骤可再生。仓库里这一份就是唯一的一份。
-# 给它们加忽略规则的后果是静默的：构建不报错，线上每张 /plates/*.jpg、/posts/*.jpg 与每段
-# /audio/*.mp3 都是 404。改这块之前先看 docs/manual.md 的部署一节。
+# 后果过去是静默的（构建不报错，线上一片 404）。现在文章那一张有人核了：正文引用的图不在
+# 本卷目录里、或有 cover.jpg 却没写 alt，构建直接红（scripts/check_content.mjs）。整张封面
+# 缺失仍是一条合法路径（列表页留等高斜纹空版），不报红。/plates/ 与 /audio/ 仍然没人核。
+# 改这块之前先看 docs/manual.md 的部署一节。

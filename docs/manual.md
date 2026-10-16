@@ -13,19 +13,20 @@
 ```text
 BLOG/
 ├── index.html          ← 壳层：首帧内联脚本（主题 + 底片模糊 + 卡面档位，都不闪一下；并按当前主题预加载首屏地景）、SEO/OG 元信息
-├── content/posts/      ← Markdown 文章（带 frontmatter）——全站文章的唯一来源，构建期整体打包
+├── content/posts/      ← 文章：**一篇一个目录**（`<slug>/index.md` + 它的封面与插图），全站文章的唯一来源，构建期整体打包
 ├── public/
-│   ├── plates/ posts/ audio/   ← 三个**必须入库**的派生素材目录（重烘命令见 README 的「常用脚本」）
-│   └── favicon.svg  robots.txt  og.png  images/
+│   ├── plates/ audio/  ← 两个**必须入库**的派生素材目录（重烘命令见 README 的「常用脚本」；文章封面不在这儿，它躺在自己那一卷目录里）
+│   └── favicon.svg  robots.txt  og.png
 ├── scripts/            ← 构建期脚本，按动词分族：build_* / check_* / sync_*
 │   ├── build_font.mjs        ←   展示层子集字体裁切（依赖 devDep subset-font）
 │   ├── build_font_didone.mjs ←   刊头 Didone 子集裁切（只留大写与空格；源 TTF 在 fonts-src/，不进仓库）
 │   ├── build_seo.mjs         ←   dist/rss.xml、dist/sitemap.xml、public/og.png
 │   ├── build_readme_art.mjs  ←   README 配图：按 StarTrails 常数离线复算
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1  ←  底图与封面烘培（Windows PowerShell）
-│   ├── check_doc_refs.py / check_naming.py / check_contrast.mjs  ← 三道门禁
+│   ├── check_content.mjs     ←   发文门禁与回执（构建会先跑它，红则不出产物）
+│   ├── check_doc_refs.py / check_naming.py / check_contrast.mjs  ← 另三道门禁
 │   ├── sync_records.py       ←   抓 QQ 公开歌单 → 生成 src/config/records.js
-│   ├── data/  lib/           ←   脚本输入数据（GB2312 一级字表）／共用模块（PNG 编码器）
+│   ├── data/  lib/           ←   脚本输入数据（GB2312 一级字表）／共用模块（PNG 编码器、读卷清单）
 ├── docs/               ← design.md 设计依据 · manual.md 本文
 │   └── assets/readme/  ← README 配图
 ├── tests/              ← 零依赖防护网：node --test 的 .mjs 用例，跑 npm test
@@ -33,7 +34,7 @@ BLOG/
     ├── assets/fonts/   ← 两枚自托管子集 woff2（正文衬线 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
     ├── config/         ← narrative.js 文案层 · site.js 站点信息 · 内容种子（动态/项目/音乐/歌单/映像/友链）
-    ├── lib/            ← content posts frontmatter markdown theme storage music records gallery plate surface ridge lens shift sky debounce focus exit projects
+    ├── lib/            ← content posts schema markdown theme storage music records gallery plate surface ridge lens shift sky debounce focus exit projects
     ├── router/         ← 10 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
     └── views/          ← 10 个页面各一个文件，平铺
@@ -43,7 +44,7 @@ BLOG/
 
 - **`src/styles/site.css` 是唯一的样式表**，改外观不碰别的文件。
 - **`src/config/*.js` 是站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）的唯一来源**，改内容改这里。
-- **派生素材要提交**（`public/plates/`、`public/posts/`、`public/audio/`），构建机不会重跑烘培脚本。
+- **派生素材要提交**（`public/plates/`、`content/posts/*/cover.jpg`、`public/audio/`），构建机不会重跑烘培脚本。
 
 ---
 
@@ -76,7 +77,7 @@ BLOG/
 
 ## 2. 编辑方法
 
-> **站内没有后台，编辑都在仓库里改文件**：文章改 `content/posts/*.md`，站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）改 `src/config/*.js`；改完 `git push`，等 CI 重新构建即上线。
+> **站内没有后台，编辑都在仓库里改文件**：文章改 `content/posts/<slug>/index.md`（一卷是一个目录），站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）改 `src/config/*.js`；改完 `git push`，等 CI 重新构建即上线。
 > 本章按内容类型分节：站点信息、文章、动态、内容种子、播放器、SEO、账号（已下线）。
 > 低语（井外随机浮现）与 `/fragments` 碎片已随旧版下线，服务端那三个端点也已于 2026-10-16 删除（§2.4）。
 
@@ -100,8 +101,8 @@ BLOG/
 
 ### 2.2 写一篇新文章
 
-1. 在 `content/posts/` 里新建文件，文件名用英文短横线，如 `my-first-post.md`。
-2. 文件开头必须是 frontmatter（两条 `---` 之间），格式照抄 `hello-world.md`：
+1. 在 `content/posts/` 里新建一个**目录**：名字用英文小写短横线，如 `my-first-post/`，它就是网址 `/blog/my-first-post`。目录里固定有一枚 `index.md`（稿子，文件名不变），其余文件都是这一篇自己的图。
+2. `index.md` 开头是 frontmatter（两条 `---` 之间），一行一条 `key: value`：
 
    ```markdown
    ---
@@ -109,14 +110,16 @@ BLOG/
    date: 2026-09-01
    tags: [技术, 随笔]
    summary: 一句话摘要，显示在列表里。
-   image: /posts/my-first-post.jpg
+   alt: 封面上能看到什么——一句真的描述
    imagePos: 60% 40%
    ---
 
    正文从这里开始，标准 Markdown 语法。
    ```
 
-   `image` 可选：列表页那格封面 + 正文顶部那张满栏图（同一个文件）；`imagePos` 是裁切焦点，缺省居中。封面文件由 `npm run cover:build` 从 `plates-src/` 烘出来，或直接放进 `public/posts/`。
+   **封面不写在这里**：这一卷的目录里有 `cover.jpg`，它就是封面——列表页那格、正文顶部那张满栏图、映像柜墙上那枚，三处共用同一个文件，一处也不用提第二遍。没有 `cover.jpg` 是合法状态，列表那一格留一张等高的斜纹空版。`imagePos` 可选，是封面在 3:2 卡格里的裁切焦点（CSS `background-position` 那套写法），缺省居中。`alt` 在有封面时必须写：读屏软件与图挂了的时候只有它。
+
+   `cover.jpg` 是烘出来的，不是原图：把原图丢进同一目录、名字以 `-src.jpg` 收尾（`.png`/`.webp`/`.tif` 都认），跑 `npm run cover:build`——就地烘出 `cover.jpg`（长边 1600px、JPEG 质量 72），`*-src.*` 在 `.gitignore` 里、不进仓库也不上线。烘哪些由目录决定，脚本里没有映射表要改。
 
 3. 常用语法速查：
 
@@ -125,7 +128,7 @@ BLOG/
    | `## 二级标题` | 标题（`#` 数 1–5 可用：`#` 留给文章标题，所以实际渲染为 h2–h6） |
    | `**加粗**` | **加粗** |
    | `[文字](https://url)` | 链接 |
-   | `![描述](/images/xx.png)` | 插图（图放 `public/images/`） |
+   | `![描述](dune.jpg)` | 插图（图就放在这一卷的目录里，正文只写文件名；构建期换成 `/blog/<slug>/dune.jpg`） |
    | 三个反引号包裹 | 代码块 |
    | `- 条目` | 列表 |
    | `> 引用` | 引用块 |
@@ -136,7 +139,7 @@ BLOG/
 
    **链接与图片的地址只接受**：站内相对路径（`/…`、`./…`）、锚点（`#…`）、`http(s):`、`mailto:`、`tel:`。写成 `javascript:` 之类协议的不会变成链接，只保留可见文字。原因不是排版而是权限：正文会经 `v-html` 渲染给**每一个读者**，一条能点就能执行的地址足以在访客浏览器里执行任意脚本。
 
-4. 提交推送即可上线：`git add . ; git commit -m "说明" ; git push`。`content/posts/` 是文章的唯一来源，构建期整体打包进站点；`scripts/build_seo.mjs` 依此目录在构建期生成 `dist/sitemap.xml` 与 `dist/rss.xml`。
+4. 提交推送即可上线：`git add . ; git commit -m "说明" ; git push`。`content/posts/` 是文章的唯一来源，构建期整体打包进站点；`scripts/build_seo.mjs` 依同一份解析生成 `dist/sitemap.xml` 与 `dist/rss.xml`（RSS 带全文与标签）。发之前先跑 `npm run build` 或 `npm run check:content`：它会打一份**发文回执**并逐卷校验——日期写歪、键名拼错、正文引用的图不在这卷目录里，都会在这里红掉而不会等到线上才看见（§4.0）。
 
 ### 2.3 发一条动态
 
@@ -151,8 +154,8 @@ BLOG/
 - **项目 `/projects`（05 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/config/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
 - **音乐 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名 / 艺术家 / 逐行跳转；表内两列，默认折到前 8 首，点表头「展开其余 N 首」看全）。曲目来自 `src/config/records.js` 静态快照——本地跑 `python scripts/sync_records.py` 重新生成该文件，再 `git push`。**这个文件是脚本产物，别手改**。前提是歌单设为公开。
 - **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），即快照里的那张。要换头像就换 QQ 那张歌单封面，再跑 `python scripts/sync_records.py` 重生成快照。
-- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（frontmatter 的 `image`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
-- **图片**：文章封面由 `npm run cover:build` 从 `plates-src/`（gitignored 的原图目录）烘到 `public/posts/<slug>.jpg`，也可直接把图放进 `public/posts/`；正文插图放 `public/images/`，用 `![描述](/images/文件名.png)` 引用。两类图都随构建打包，无需线上上传。
+- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **图片**：文章封面躺在自己那一卷的目录里——原图以 `-src.jpg` 收尾丢进 `content/posts/<slug>/`，`npm run cover:build` 就地烘出同目录的 `cover.jpg`（提交进仓库）；正文插图也放同一目录，正文里只写文件名。`public/images/` 这个目录**不存在**，也不需要什么目录：插图跟着卷走。
 - **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
 - **碎片（已下线并删除）**：站内**没有** `/fragments` 这条路由、也没有对应视图（现役 10 条路由里不含它）；服务端原有的 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点在 2026-10-16 摘掉（连同 `fragments.json` 的读写），前端零消费方是它们被删的原因。同批删掉的还有 `/api/health`。
 
@@ -288,15 +291,18 @@ BLOG/
 ### 4.0 上传前自检
 
 ```powershell
-npm run build       # 生成 dist/ 目录（含 rss.xml / sitemap.xml），无报错即合格
+npm run build       # 先过发文门禁并打回执，再生成 dist/（含 rss.xml / sitemap.xml）
 npm test            # 零依赖防护网：node --test 跑 tests/ 下的 .mjs 用例
+npm run check:content # 只跑发文门禁与回执（构建与 npm run check 都含它）
 npm run check:docs  # 文档里的文件引用与 § 节号是否还指得到东西 + README 路由表 vs src/router 是否一致
 npm run check:naming    # 命名规约扫描（文件名 / 类前缀 / 存储键字面量）
 npm run check:contrast  # 双主题的文字与强调色对比度审计，任一项不达标即退出码非 0
 npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 ```
 
-三条 `check` 查的是**代码与文档有没有开始说谎**（漂移即退出码非 0），已串进 `npm run check`。其中两条要 `python`：脚本里写的是 `python`，只有 `python3` 的机器上直接跑 `python3 scripts/check_doc_refs.py` 等对应脚本；`check:contrast` 与 `check:naming` 另有 `--self` 负向对照模式（验证规则本身抓得住违规）。
+四条 `check` 查的是**代码与文档有没有开始说谎**（漂移即退出码非 0），已串进 `npm run check`。其中两条要 `python`：脚本里写的是 `python`，只有 `python3` 的机器上直接跑 `python3 scripts/check_doc_refs.py` 等对应脚本；`check:contrast` 与 `check:naming` 另有 `--self` 负向对照模式（验证规则本身抓得住违规）。
+
+发文门禁与 `npm test` 里的内容校验是同一套判据（`src/lib/schema.js`），构建期会再跑一遍：`content/posts/` 里的日期写歪、frontmatter 键拼错、正文引用了本卷没有的图，都会让 `npm run build` 红掉而不出产物。`npm run dev` 只打回执不拦——半篇稿子要能接着写。CI 的发布路径（`.github/workflows/deploy.yml`）现在跑 `npm test` 与 `npm run check` 再构建，任一条红就不发布。
 
 **门禁核不到的一件事**：文档在讲一个已经删掉的功能。删功能时要自己把 `docs/` 与代码注释里的 `§` 引用一起清掉——`check:docs` 只扫那几份文档本身，`src/`、`scripts/`、`tests/` 里的引用不在扫描范围内。
 
@@ -400,6 +406,8 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/config/*.js
 | GitHub Pages 刷新 404 | Pages 版自动用 hash 路由；若手动构建，确认用的是 `npm run build:pages` |
 | 端口 5173 被占用 | Vite 会自动换 5174…，以终端显示为准 |
 | 文章列表短暂显示灰色骨架卡 | 加载态的占位，文章是构建期打包的，数据到位即替换，稍等即可 |
+| `npm run build` 红：发文门禁 N 个问题 | 红之前那份回执逐条写着是哪一卷、哪一条（缺 `alt` / `date` 歪 / 键名拼错 / 正文引用的图不在这卷目录里）。对照 §2.2 改，改完再构建 |
+| 线上某张文章图 404 | 那一卷的 `cover.jpg` 或插图文件没提交进仓库（`*-src.*` 是烘图输入，永远不上线，这是故意的）。`content/posts/<slug>/` 里有的文件名，就是 `/blog/<slug>/` 里该有的那张 |
 | 项目详情页显示"这里没有这个项目的介绍" | URL 拼错，或与 `src/config/projects.js` 里的 `name` 对不上——URL 由 `name` 现算，改过名字老链接就断（§2.4） |
 | 分享链接没有卡片图 | 确认 `public/og.png` 存在，且 `index.html` 里的域名是你的真实域名（换域名见 §2.6） |
 | 提交前该跑什么 | `npm test` + `npm run check`，两条都绿再提交（§4.0） |

@@ -21,7 +21,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      # 门禁在构建之前：test 里含内容校验（tests/content-rolls.test.mjs 真读 content/posts/），
+      # check 里含发文回执、命名对拍、文档死指针与对比度。过去这里只有 npm ci 与 build，
+      # 任何一条 check 都不在发布路径上——封面漏了、日期写歪都是"构建绿、线上坏"。
+      # setup-python 不是多余的：这两条 check 是 Python 3.12 语法（f-string 里同种引号嵌套），
+      # 而 runner 上的 `python` 是否指向 3 并不稳定。
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
+      - run: npm test
+      - run: npm run check
       - run: npm run build:pages
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

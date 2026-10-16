@@ -1,35 +1,29 @@
-// 文章数据源：构建期把 content/posts/*.md 打进产物（静态站零运行时请求）
-import { parseFrontmatter, stats } from './frontmatter.js'
+// 文章取数（浏览器这一岸）：构建期把 content/posts/<slug>/index.md 打进产物，运行时零请求。
+// 一卷里有哪些素材由 virtual:rolls 给出——那是 vite.config.js 的插件在构建/启动时读磁盘得来的，
+// 与门禁、RSS 走的是同一个 readRolls，所以"线上画出来的"与"回执上列出的"是同一份清单。
+// 字段口径、派生与校验都在 src/lib/schema.js，这里只做取数。
+import { normalizeRoll, sortByDate } from './schema.js'
+import { rollFiles } from 'virtual:rolls'
 
-// 封面焦点（frontmatter 的 imagePos）：它会被写进 style 属性，所以只放行取值字符，
-// 其余一律回落 center。首页精选与文章列表共用这一份——两处各写一条正则，
-// 将来只会有一条被修。
-const POS_OK = /^[-\d.%a-z ]{1,24}$/i
-export const coverPos = (p) =>
-  typeof p.imagePos === 'string' && POS_OK.test(p.imagePos) ? p.imagePos : 'center'
+const bundled = import.meta.glob('/content/posts/*/index.md', { query: '?raw', import: 'default' })
 
-const bundled = import.meta.glob('/content/posts/*.md', { query: '?raw', import: 'default' })
+// /content/posts/<slug>/index.md → <slug>
+const slugOf = (path) => path.split('/').slice(-2, -1)[0]
 
-async function bundledPosts() {
-  const items = []
-  for (const [path, loader] of Object.entries(bundled)) {
-    const raw = await loader()
-    const { meta, body } = parseFrontmatter(raw)
-    items.push({
-      slug: path.split('/').pop().replace(/\.md$/, ''),
-      ...meta,
-      ...stats(body),
-      body,
-    })
-  }
-  return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-}
-
-export const loadPosts = bundledPosts
-
-export async function loadPost(slug) {
-  const loader = bundled[`/content/posts/${slug}.md`]
+const read = async (slug) => {
+  const loader = bundled[`/content/posts/${slug}/index.md`]
   if (!loader) return null
-  const { meta, body } = parseFrontmatter(await loader())
-  return { slug, ...meta, ...stats(body), body }
+  const { record } = normalizeRoll({ slug, raw: await loader(), files: rollFiles[slug] || [] })
+  return record
 }
+
+export async function loadPosts() {
+  const items = []
+  for (const slug of Object.keys(bundled).map(slugOf)) {
+    const r = await read(slug)
+    if (r) items.push(r)
+  }
+  return sortByDate(items)
+}
+
+export const loadPost = (slug) => read(slug)

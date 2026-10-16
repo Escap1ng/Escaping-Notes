@@ -101,17 +101,18 @@ npm run preview        # 本地预览 dist/
 | 命令 | 说明 |
 | --- | --- |
 | `npm run dev` | Vite 开发服务器，改文件即时热更 |
-| `npm run build` / `build:pages` | 生产构建；两者 `base` 都是 `/`，唯一差异是 `VITE_DEPLOY=pages`（`.env.pages`）把路由切成 hash |
+| `npm run build` / `build:pages` | 生产构建；两者 `base` 都是 `/`，唯一差异是 `VITE_DEPLOY=pages`（`.env.pages`）把路由切成 hash。构建先打**发文回执**并逐卷校验内容，红则不出产物 |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
-| `npm run test` | 12 个 `.mjs` 测试文件：frontmatter/markdown 解析、CRLF、URL 注入面、底片模糊三处默认值不漂移、卡面档位不漂移（键名 / 档位值 / 门控选择器三处同字面量、默认档就是基础块那个不透底值、`--card-solid` 两套主题各一份且浅色那枚是纯白）、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、首屏文案契约（`narrative.js` 里必须真有首屏要的那两样，视图不许引用不存在的字段——删字段是静默失败，只会渲染成空文本）、指针反馈一致性（时长与位移只准取四枚令牌，例外须显式写进名单）、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍三件写满且详情页 URL 往返不撞车、两张详情页共用同一处返回机制（不许各抄一份） |
-| `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、`dist/sitemap.xml`） |
+| `npm run test` | 13 个 `.mjs` 测试文件：内容层（frontmatter 解析、CRLF、每一条发文判据都拿假样本验一遍、真读 `content/posts/` 跑门禁、验"两个岸共用一份口径"没有第二份解析）、markdown 渲染与 URL 注入面、底片模糊三处默认值不漂移、卡面档位不漂移（键名 / 档位值 / 门控选择器三处同字面量、默认档就是基础块那个不透底值、`--card-solid` 两套主题各一份且浅色那枚是纯白）、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、首屏文案契约（`narrative.js` 里必须真有首屏要的那两样，视图不许引用不存在的字段——删字段是静默失败，只会渲染成空文本）、指针反馈一致性（时长与位移只准取四枚令牌，例外须显式写进名单）、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍三件写满且详情页 URL 往返不撞车、两张详情页共用同一处返回机制（不许各抄一份） |
+| `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、带全文与标签，`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
 | `npm run art:build` | 重绘本页顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
 | `npm run bg:build` | 重烘站点底图 `public/plates/*.jpg`（首屏地景亮/暗两张 + 抽屉五张轮播 + 抽屉深色压暗底；原图在 `plates-src/`，需本机 PowerShell；产物需提交） |
-| `npm run cover:build` | 重烘文章封面 `public/posts/*.jpg`（原图放在不进仓库的 `plates-src/`，改图后重跑；产物需提交） |
+| `npm run cover:build` | 重烘文章封面：逐卷读 `content/posts/<slug>/`，把同目录里那张 `*-src.jpg` 就地烘成 `cover.jpg`（原图不进仓库也不上线；脚本里没有映射表，需本机 PowerShell；产物需提交） |
 | `npm run font:build` | 重切展示层子集字体（需要本机装有 Noto Serif SC；产物已提交，日常不用跑） |
 | `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格，产物 3.6KB；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部；产物已提交） |
-| `npm run check` | 下面三道门禁连跑（docs / naming / contrast），提交前跑这一条 |
+| `npm run check` | 下面四道门禁连跑（content / docs / naming / contrast），提交前跑这一条 |
+| `npm run check:content` | 发文门禁与回执：逐卷读 `content/posts/`，日期写歪 / 键名拼错 / 正文引用了本卷没有的图都会在这里红（`npm run build` 与 CI 都含它） |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对 README 路由表与 `src/router` 一致 |
 | `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
 | `npm run check:contrast` | 从 `site.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
@@ -138,22 +139,23 @@ npm run preview        # 本地预览 dist/
 
 ```text
 ├── index.html             # 壳层：首帧内联脚本（主题 + 底片模糊 + 卡面档位 + 按主题预加载首屏地景，都不闪一下）、SEO/OG 元信息
-├── content/posts/         # Markdown 文章（frontmatter）
-├── public/                # 静态资源：favicon、robots.txt、og.png，以及三个**必须入库**的派生素材目录
-│                          #   plates/（底图）· posts/（封面）· audio/（自托管音轨）——重烘命令见「常用脚本」
-│                          #   它们的原图目录（plates-src/ · music/ · /1/）在 .gitignore 里，别当泄漏报
+├── content/posts/         # 文章：一篇一个目录（`<slug>/index.md` + 它的封面与插图），目录名就是网址
+├── public/                # 静态资源：favicon、robots.txt、og.png，以及两个**必须入库**的派生素材目录
+│                          #   plates/（底图）· audio/（自托管音轨）——重烘命令见「常用脚本」；文章封面不在这儿，它躺在自己那一卷目录里
+│                          #   原图（plates-src/ · music/ · /1/ · 各卷的 *-src.*）在 .gitignore 里，别当泄漏报
 ├── scripts/               # 构建期与内容刷新脚本（命名按动词分族）
 │   ├── build_font.mjs     #   展示层子集字体裁切（Node，依赖 devDep `subset-font`）
 │   ├── build_font_didone.mjs #  刊头 Didone 子集裁切（同一套 devDep，只留大写与空格）
-│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块）
+│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块；frontmatter 解析走 src/lib/schema.js，与浏览器同一份）
 │   ├── build_readme_art.mjs # 本页顶部两张底片图：按 StarTrails 常数离线复算
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1 # 底图与封面烘图（PowerShell + System.Drawing，CI 上跑不了）
+│   ├── check_content.mjs  #   发文门禁与回执（逐卷读盘校验；构建与 CI 都跑它）
 │   ├── check_doc_refs.py  #   文档引用 / § 节号 / README 路由表 的漂移扫描
 │   ├── check_naming.py    #   命名规约扫描
 │   ├── check_contrast.mjs #   主题令牌 WCAG 对比度审计
 │   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
 │   ├── data/              #   脚本输入数据（GB2312 一级字表，build_font 用）
-│   └── lib/               #   脚本间共用模块（PNG 编码器，build_seo 与 build_readme_art 共用）
+│   └── lib/               #   脚本间共用模块（PNG 编码器；读卷清单 rolls.mjs）
 ├── docs/                  # design.md 设计依据 · manual.md 使用手册
 │   └── assets/readme/     # README 配图（含生成方式与换真截图的步骤）
 ├── tests/                 # 零依赖防护网：node --test，跑 npm run test
@@ -161,7 +163,7 @@ npm run preview        # 本地预览 dist/
     ├── assets/fonts/      # 两枚自托管子集 woff2（正文衬线 + 刊头 Didone），均 700 字重 + OFL 许可
     ├── components/        # 平铺七件：StarTrails 星轨相机 · HorizonHero 首屏排版 · SiteHeader 顶栏+抽屉 · SiteFooter · MusicCard 播放器卡 · SettingsCard 底片模糊滑杆 + 卡片颜色两档 · SearchCard 顶栏搜索卡
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子 6 个文件（records.js 由脚本生成，勿手改）
-    ├── lib/               # content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
+    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
     ├── styles/            # site.css 一个文件：结构刻度 + 两套主题配色 + 全站基元
     └── views/             # 10 个视图平铺，一页一个文件
 ```

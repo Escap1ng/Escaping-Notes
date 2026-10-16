@@ -2,7 +2,7 @@
 // 归档页：三列封面卡，宽屏一行三篇、依次收到两列与一列，带搜索与标签筛选
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { loadPosts, coverPos } from '../lib/posts.js'
+import { loadPosts } from '../lib/posts.js'
 import { onLens } from '../lib/lens.js'
 import { N, navLabel } from '../config/narrative.js'
 
@@ -96,12 +96,12 @@ const filtered = computed(() =>
           <RouterLink :to="`/blog/${p.slug}`" class="en-card en-flush card en-lens" @pointermove="onLens">
             <span class="bar" aria-hidden="true"></span>
             <span class="en-spike" aria-hidden="true"></span>
-            <span class="en-shot" :class="{ blank: !p.image }">
+            <span class="en-shot" :class="{ blank: !p.cover }">
               <img
-                v-if="p.image"
-                :src="p.image"
+                v-if="p.cover"
+                :src="p.cover"
                 :alt="p.title"
-                :style="{ objectPosition: coverPos(p) }"
+                :style="{ objectPosition: p.imagePos }"
                 loading="lazy"
                 decoding="async"
               />

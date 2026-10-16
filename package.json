@@ -17,10 +17,11 @@
     "bg:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_plate_bg.ps1",
     "cover:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build_post_covers.ps1",
     "seo:build": "node scripts/build_seo.mjs",
+    "check:content": "node scripts/check_content.mjs",
     "check:docs": "python scripts/check_doc_refs.py",
     "check:naming": "python scripts/check_naming.py",
     "check:contrast": "node scripts/check_contrast.mjs",
-    "check": "npm run check:docs && npm run check:naming && npm run check:contrast",
+    "check": "npm run check:content && npm run check:docs && npm run check:naming && npm run check:contrast",
     "test": "node --test \"tests/**/*.test.mjs\"",
     "preview": "vite preview"
   },

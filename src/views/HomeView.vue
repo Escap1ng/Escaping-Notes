@@ -2,7 +2,7 @@
 // 首页：星轨首屏 + 风景底片 + 下滑拉出的抽屉（读数 / 精选 / 最近动态）
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import HorizonHero from '../components/HorizonHero.vue'
-import { loadPosts, coverPos } from '../lib/posts.js'
+import { loadPosts } from '../lib/posts.js'
 import { updates } from '../config/updates.js'
 import { onLens } from '../lib/lens.js'
 import { debounce } from '../lib/debounce.js'
@@ -126,12 +126,12 @@ onUnmounted(() => {
             class="en-card en-flush pick en-lens"
             @pointermove="onLens"
           >
-            <span class="en-shot" :class="{ blank: !p.image }">
+            <span class="en-shot" :class="{ blank: !p.cover }">
               <img
-                v-if="p.image"
-                :src="p.image"
+                v-if="p.cover"
+                :src="p.cover"
                 :alt="p.title"
-                :style="{ objectPosition: coverPos(p) }"
+                :style="{ objectPosition: p.imagePos }"
                 loading="lazy"
                 decoding="async"
               />
