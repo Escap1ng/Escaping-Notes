@@ -8,13 +8,16 @@
 // 这个文件不许自己解析 frontmatter：字段口径、封面派生、日期判据都在 src/lib/schema.js，
 // 由浏览器那一岸共用。过去这里抄了一份，结果 tags 从来没进过 RSS、缺标题时页面与 RSS
 // 一边给空串一边给 slug。现在直接 import 那一岸用的模块（它们都不带 vue / import.meta）。
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderMarkdown } from '../src/lib/markdown.js'
 import { sortByDate } from '../src/lib/schema.js'
+import { projectSlug } from '../src/lib/projects.js'
 import { site } from '../src/config/site.js'
 import { N } from '../src/config/narrative.js'
+import { projects } from '../src/config/projects.js'
+import { buildShell, planShells, shellTagAudit, uncoveredRoutes } from './lib/shell.mjs'
 import { inspectPosts } from './check_content.mjs'
 import { encodePng } from './lib/png.mjs'
 
@@ -86,6 +89,33 @@ function rssXml(base, posts) {
     items +
     '</channel></rss>\n'
   )
+}
+
+/* ---------------- 静态壳（深链、分享卡、状态码） ---------------- */
+// dist/ 里每一条真实路由都要有一份服务器能直接答出来的 HTML：状态码 200，head 写的是这一页
+// 自己的标题与封面。文件里带着同一个应用（vite 已把 asset 链接注进 index.html），挂载后照常
+// 渲染这一页，所以观感与站内一致——这一步只换 head，不重排任何版式。
+// 写哪几份、落在哪里、head 成什么样都由 planShells 算（scripts/lib/shell.mjs，可凭空测），
+// 这里只负责读模板与落盘。
+function emitShells(base, posts) {
+  const tpl = readFileSync(join(OUT, 'index.html'), 'utf8')
+  const audit = shellTagAudit(tpl)
+  if (audit.missing.length || audit.doubled.length) {
+    throw new Error(
+      `静态壳：index.html 的 head 里 ${audit.missing.length ? `缺 ${audit.missing.join(' / ')}` : ''}` +
+        `${audit.doubled.length ? ` 重复 ${audit.doubled.join(' / ')}` : ''}`
+    )
+  }
+  const plans = planShells({ base, nav: N.nav, posts, projects, slugOf: projectSlug })
+  // 先验覆盖再落盘：sitemap 与 RSS 会把每一条网址推广出去，少一份壳就是发出去一条 404
+  const gaps = uncoveredRoutes(plans, STATIC_ROUTES, posts.map((p) => p.url))
+  if (gaps.length) throw new Error(`静态壳：${gaps.join(' / ')} 在 dist/ 里没有对应的文件，却会被写进 sitemap`)
+  for (const s of plans) {
+    const file = join(OUT, ...s.file.split('/'))
+    mkdirSync(dirname(file), { recursive: true })
+    writeFileSync(file, buildShell(tpl, s.patch), 'utf8')
+  }
+  return plans
 }
 
 /* ---------------- og.png（长曝光底片，无文字） ---------------- */
@@ -244,6 +274,11 @@ writeFileSync(join(OUT, 'sitemap.xml'), sitemapXml(base, posts), 'utf8')
 writeFileSync(join(OUT, 'rss.xml'), rssXml(base, posts), 'utf8')
 console.log(
   `seo: dist/sitemap.xml (${STATIC_ROUTES.length + posts.length} urls) · dist/rss.xml (${Math.min(posts.length, 20)} items，全文)`
+)
+
+const shells = emitShells(base, posts)
+console.log(
+  `seo: 静态壳 ${shells.length} 份 · 导航 ${STATIC_ROUTES.length - 1} · 文章 ${posts.length} · 项目 ${projects.length} · 404 一份`
 )
 
 if (process.argv.includes('--og')) {

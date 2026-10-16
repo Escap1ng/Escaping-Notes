@@ -91,8 +91,7 @@ npm install
 npm run dev
 
 # 生产构建
-npm run build          # 默认构建（history 路由）+ 生成 dist/rss.xml、dist/sitemap.xml
-npm run build:pages    # Pages 构建（hash 路由，escaping.top 用的是这一份）
+npm run build          # 发文回执 + dist/（rss.xml、sitemap.xml、每条路由一份静态壳）
 npm run preview        # 本地预览 dist/
 ```
 
@@ -101,7 +100,7 @@ npm run preview        # 本地预览 dist/
 | 命令 | 说明 |
 | --- | --- |
 | `npm run dev` | Vite 开发服务器，改文件即时热更 |
-| `npm run build` / `build:pages` | 生产构建；两者 `base` 都是 `/`，唯一差异是 `VITE_DEPLOY=pages`（`.env.pages`）把路由切成 hash。构建先打**发文回执**并逐卷校验内容，红则不出产物 |
+| `npm run build` | 生产构建（站内只有一种路由模式：history，`base` 固定 `/`）。先打**发文回执**并逐卷校验内容，红则不出产物；随后 `build_seo.mjs` 出 `rss.xml`、`sitemap.xml` 与**按页静态壳**——每一卷文章、每个项目、每条导航在 `dist/` 里都有自己的 `index.html`（head 写的是这一页的标题与封面），外加一份 `404.html` |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
 | `npm run test` | 13 个 `.mjs` 测试文件：内容层（frontmatter 解析、CRLF、每一条发文判据都拿假样本验一遍、真读 `content/posts/` 跑门禁、验"两个岸共用一份口径"没有第二份解析）、markdown 渲染与 URL 注入面、底片模糊三处默认值不漂移、卡面档位不漂移（键名 / 档位值 / 门控选择器三处同字面量、默认档就是基础块那个不透底值、`--card-solid` 两套主题各一份且浅色那枚是纯白）、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、首屏文案契约（`narrative.js` 里必须真有首屏要的那两样，视图不许引用不存在的字段——删字段是静默失败，只会渲染成空文本）、指针反馈一致性（时长与位移只准取四枚令牌，例外须显式写进名单）、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍三件写满且详情页 URL 往返不撞车、两张详情页共用同一处返回机制（不许各抄一份） |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、带全文与标签，`dist/sitemap.xml`） |
@@ -163,7 +162,7 @@ npm run preview        # 本地预览 dist/
     ├── assets/fonts/      # 两枚自托管子集 woff2（正文衬线 + 刊头 Didone），均 700 字重 + OFL 许可
     ├── components/        # 平铺七件：StarTrails 星轨相机 · HorizonHero 首屏排版 · SiteHeader 顶栏+抽屉 · SiteFooter · MusicCard 播放器卡 · SettingsCard 底片模糊滑杆 + 卡片颜色两档 · SearchCard 顶栏搜索卡
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子 6 个文件（records.js 由脚本生成，勿手改）
-    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
+    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects
     ├── styles/            # site.css 一个文件：结构刻度 + 两套主题配色 + 全站基元
     └── views/             # 10 个视图平铺，一页一个文件
 ```
@@ -173,7 +172,9 @@ npm run preview        # 本地预览 dist/
 两种方式（GitHub Pages / Vercel 只读镜像）的完整步骤见 **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)**。要点：
 
 - GitHub Pages 已绑裸域名 `escaping.top`，DNS 记录、验证命令与证书步骤见 `docs/manual.md` §4.2
-- 因为域名绑的是根路径，两种构建的 `base` 都是 `/`——`build:pages` 不再带仓库名前缀，它只换路由模式
+- 因为域名绑的是根路径，`base` 固定 `/`，产物不带仓库名前缀；站内只有一种路由模式（history）
+- Pages 不会把未知路径回退到 `index.html`，所以构建期为每条路由写一份真实文件（`dist/blog/<slug>/index.html` 等）并留一份 `dist/404.html`——深链因此是 200 而不是 404，分享卡也是那一篇文章自己的封面
+- 旧的 `/#/blog/<slug>` 链接由 `src/main.js` 在挂载前改道成路径形状，别处贴过的链接不会静默落到首页
 
 ## 文档
 

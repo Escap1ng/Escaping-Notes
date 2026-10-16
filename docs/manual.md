@@ -26,7 +26,7 @@ BLOG/
 │   ├── check_content.mjs     ←   发文门禁与回执（构建会先跑它，红则不出产物）
 │   ├── check_doc_refs.py / check_naming.py / check_contrast.mjs  ← 另三道门禁
 │   ├── sync_records.py       ←   抓 QQ 公开歌单 → 生成 src/config/records.js
-│   ├── data/  lib/           ←   脚本输入数据（GB2312 一级字表）／共用模块（PNG 编码器、读卷清单）
+│   ├── data/  lib/           ←   脚本输入数据（GB2312 一级字表）／共用模块（PNG 编码器、读卷清单、静态壳的 head 改写）
 ├── docs/               ← design.md 设计依据 · manual.md 本文
 │   └── assets/readme/  ← README 配图
 ├── tests/              ← 零依赖防护网：node --test 的 .mjs 用例，跑 npm test
@@ -34,7 +34,7 @@ BLOG/
     ├── assets/fonts/   ← 两枚自托管子集 woff2（正文衬线 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
     ├── config/         ← narrative.js 文案层 · site.js 站点信息 · 内容种子（动态/项目/音乐/歌单/映像/友链）
-    ├── lib/            ← content posts schema markdown theme storage music records gallery plate surface ridge lens shift sky debounce focus exit projects
+    ├── lib/            ← content posts schema markdown theme storage music records gallery plate surface ridge lens shift sky debounce focus exit legacy projects
     ├── router/         ← 10 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
     └── views/          ← 10 个页面各一个文件，平铺
@@ -173,10 +173,10 @@ BLOG/
 
 打开根目录 `index.html`：
 
-- `<title>`、`<meta name="description">`：浏览器标签与搜索结果里的标题摘要。
-- `<link rel="canonical">`、`og:url`、`og:image`、`twitter:*`：搜索引擎与社交平台分享用的信息。**换域名时两处一起改**：`index.html` 里的域名与 `src/config/site.js` 的 `url`。
-- 分享卡片图 `public/og.png`（1200×630）由 `npm run og:build` 生成（纯 Node 绘制，不需要额外软件）；想换配色改 `scripts/build_seo.mjs` 里的 `TRAIL` 色板。
-- `public/robots.txt` 与 `dist/sitemap.xml`：抓取范围与页面清单，一般不用改。
+- `<title>`、`<meta name="description">`：浏览器标签与搜索结果里的标题摘要——**这两行只是站点级的兜底**。构建期会为每一卷文章、每一个项目与每条导航各写一份这份 HTML 的副本，把 `title` / `description` / `canonical` / `og:*` / `twitter:*` 换成那一页自己的值：文章的标题取自 frontmatter 的 `title`，摘要取自 `summary`，**分享卡的图就是这一卷目录里那张 `cover.jpg`**（没有封面才回落到 `og.png`）。所以"分享出去显示什么"这件事在 `content/posts/<slug>/` 里改，不在这里改。
+- `<link rel="canonical">`、`og:url`、`og:image`、`twitter:*`：搜索引擎与社交平台分享用的信息。**换域名时两处一起改**：`index.html` 里的四处地址与 `src/config/site.js` 的 `url`——这两处的对拍写在 `tests/content-rolls.test.mjs`，漏改一处就红，不再靠人记。
+- 分享卡片图 `public/og.png`（1200×630，站点级那张）由 `npm run og:build` 生成（纯 Node 绘制，不需要额外软件）；想换配色改 `scripts/build_seo.mjs` 里的 `TRAIL` 色板。
+- `public/robots.txt` 与 `dist/sitemap.xml`：抓取范围与页面清单，一般不用改。sitemap 里列的路由就是构建期写了壳的那些（导航取自 `src/config/narrative.js` 的 `N.nav`，文章取自 `content/posts/`）。
 
 ### 2.7 账号（已于 2026-10-16 下线）
 
@@ -291,7 +291,7 @@ BLOG/
 ### 4.0 上传前自检
 
 ```powershell
-npm run build       # 先过发文门禁并打回执，再生成 dist/（含 rss.xml / sitemap.xml）
+npm run build       # 先过发文门禁并打回执，再生成 dist/（rss.xml / sitemap.xml / 每条路由一份静态壳）
 npm test            # 零依赖防护网：node --test 跑 tests/ 下的 .mjs 用例
 npm run check:content # 只跑发文门禁与回执（构建与 npm run check 都含它）
 npm run check:docs  # 文档里的文件引用与 § 节号是否还指得到东西 + README 路由表 vs src/router 是否一致
@@ -329,7 +329,9 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 
 ### 4.2 方式 B：GitHub Pages（主线，绑 escaping.top）
 
-项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**——`build:pages` 只切换路由历史模式（hash，见 `src/router/index.js` 读 `VITE_DEPLOY`），`base` 与生产同为 `/`。
+项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**。站内只有一种路由模式（history，`base` 固定 `/`），而 Pages 不会把未知路径回退到 `index.html`——所以构建期为每条真实路由写一份 HTML：6 条导航、每一卷文章、每一个项目各一份 `index.html`，加一份 `404.html`（见 §4.0 与 `scripts/lib/shell.mjs`）。直接访问 `/blog/<slug>` 因此是 **200 + 这一篇自己的分享卡**；拼错的地址走 `404.html`，状态码就该是 404。
+
+以前 Pages 走 hash（`/#/blog/<slug>`）。那种链接现在仍然能用：`src/main.js` 在应用挂载前把它改道成路径形状，不会静默落在首页。
 
 镜像已绑自有域名 **`https://escaping.top/`**。绑域名后 `https://escap1ng.github.io/Escaping-Notes` 会 301 到域名根路径，**带仓库名前缀的那份不再单独服务**——这就是 `base` 不能写 `/Escaping-Notes/` 的原因。
 
@@ -403,7 +405,7 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/config/*.js
 | 双击 `index.html` 打开是空白 | 必须通过 `npm run dev` 或 `npm run preview` 访问，不能直接双击文件 |
 | 改了配置页面报错 | 99% 是少了逗号 / 引号。看终端报错行号，对照 §2.1 修复 |
 | `npm install` 很慢 | 可换国内镜像：`npm install --registry=https://registry.npmmirror.com` |
-| GitHub Pages 刷新 404 | Pages 版自动用 hash 路由；若手动构建，确认用的是 `npm run build:pages` |
+| Pages 上直接打开 `/blog/<slug>` 是 404 | 这一份 `dist/` 里没有那条路由的静态壳。先跑 `npm run build`（`build_seo.mjs` 会按卷与按导航写出 `index.html`），再确认发布用的就是这个 `dist/`；只改了文章没重新构建、或 CI 缓存了旧产物都会出现这一条 |
 | 端口 5173 被占用 | Vite 会自动换 5174…，以终端显示为准 |
 | 文章列表短暂显示灰色骨架卡 | 加载态的占位，文章是构建期打包的，数据到位即替换，稍等即可 |
 | `npm run build` 红：发文门禁 N 个问题 | 红之前那份回执逐条写着是哪一卷、哪一条（缺 `alt` / `date` 歪 / 键名拼错 / 正文引用的图不在这卷目录里）。对照 §2.2 改，改完再构建 |

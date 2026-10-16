@@ -90,9 +90,8 @@ npm install
 # Run the dev server
 npm run dev
 
-# Production builds
-npm run build          # default build (history router) + emits dist/rss.xml, dist/sitemap.xml
-npm run build:pages    # Pages build (hash router — the one served at escaping.top)
+# Production build
+npm run build          # post receipt + dist/ (rss.xml, sitemap.xml, one static shell per route)
 npm run preview        # preview dist/ locally
 ```
 
@@ -101,7 +100,7 @@ npm run preview        # preview dist/ locally
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Vite dev server with HMR |
-| `npm run build` / `build:pages` | Production builds; both use `base: '/'` — the only difference is `VITE_DEPLOY=pages` (`.env.pages`) switching the router to hash mode. Each build first prints the post receipt and validates every roll; a red gate produces no `dist/` |
+| `npm run build` | Production build (one routing mode only: history, `base` fixed at `/`). It first prints the **post receipt** and validates every roll — a red gate produces no `dist/`. Then `build_seo.mjs` emits `rss.xml`, `sitemap.xml` and the **per-page static shells**: every article roll, every project and every nav route gets its own `index.html` in `dist/` (with that page's title and cover in the head), plus one `404.html` |
 | `npm run preview` | Serve `dist/` the way production would |
 | `npm run test` | 13 `.mjs` test files: the content layer (frontmatter parsing, CRLF, every posting rule probed with its own fake sample, the real `content/posts/` run through the gate, and a sweep proving both shores share one parser), markdown rendering and the URL injection surface, the three blur defaults never drifting apart, the card-surface setting never drifting apart (storage key / mode values / gate selector spelled identically in three places, the default being the base block's opaque value, and `--card-solid` defined for both themes with the light one exactly white), the first-paint theme, the preloaded landing photo matching `--hero-img` in `site.css`, the landing copy contract (the two fields the hero needs must exist in `narrative.js`, and no view may reference a field that isn't there — deleting one fails silently as empty text), pointer-feedback consistency (durations and offsets must come from the four tokens, or be listed as an explicit exception), token single source (no token defined twice, nothing defined for only one theme), the gallery list matching the asset manifest, the three project write-up fields being filled in and detail-page URLs round-tripping without collisions, and both detail pages sharing one return mechanism |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, now with full text and categories; `dist/sitemap.xml`) |
@@ -163,7 +162,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
     ├── assets/fonts/      # Two self-hosted subset woff2 files (serif + masthead Didone), weight 700 + OFL licence
     ├── components/        # seven flat: StarTrails the camera · HorizonHero the landing type layer · SiteHeader bar + drawer · SiteFooter · MusicCard the player card · SettingsCard the plate-blur slider + card-surface radios · SearchCard the header search card
     ├── config/            # narrative.js copy layer · site.js site info · 6 content-seed files (records.js is generated — don't hand-edit)
-    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
+    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects
     ├── styles/            # site.css, one file: structural scale + the two theme palettes + site-wide primitives
     └── views/             # 10 views, one file each, flat
 ```
@@ -173,7 +172,9 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 Full steps for both targets (GitHub Pages / Vercel read-only mirror) live in **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)** (Chinese). Key points:
 
 - GitHub Pages is bound to the apex domain `escaping.top`; DNS records, verification commands and the certificate steps are in `docs/manual.md` §4.2
-- Because the domain is bound at the root, **both** builds use `base: '/'` — `build:pages` no longer carries the repository name, it only changes the routing mode
+- Because the domain is bound at the root, `base` is fixed at `/` and the artefacts carry no repository prefix; there is a single routing mode (history)
+- Pages never falls back to `index.html` for unknown paths, so the build writes a real file per route (`dist/blog/<slug>/index.html`, …) plus a `dist/404.html` — deep links answer 200 instead of 404, and the share card is the article's own cover
+- Legacy `/#/blog/<slug>` links are rewritten to the path form before the app mounts (`src/main.js`), so links already posted elsewhere do not silently land on the home page
 
 ## Documentation
 

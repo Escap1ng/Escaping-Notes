@@ -28,6 +28,8 @@ EXAMPLES = {
     '/opt/escaping-notes/api.py', '/images/xx.png', 'XView.vue', 'Node.js',
     'package.js', 'vercel.js', 'users.js', 'data/users.js', 'server/data/records.js',
     'sitemap.xml', 'rss.xml', '/rss.xml', '/index.html', 'og.png', 'robots.txt',
+    # 构建产物：静态壳写进 dist/ 的那份 404（仓库里没有这个文件，也不该有）
+    '404.html', 'dist/404.html',
     'hello-world.md', 'en-display-serif-700.woff2',
 }
 SECTIONS = re.compile(r'§([0-9]+(?:\.[0-9]+)*)')

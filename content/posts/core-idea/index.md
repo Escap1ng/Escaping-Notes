@@ -47,6 +47,6 @@ alt: 林间小径的尽头透出一团暖色的雾光，两侧树干压在暗蓝
 
 ## 数据：构建期定稿
 
-站内没有服务端，也没有运行时请求：文章是仓库里的 `content/posts/*.md`，站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）是 `src/config/*.js`，两者都在构建时打包进产物。GitHub Pages 与 Vercel 上的内容因此完全一致，只差路由模式——Pages 走 hash（`#/…`），Vercel 走 history。
+站内没有服务端，也没有运行时请求：文章是仓库里 `content/posts/<名字>/index.md` 一卷一卷放着，站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）是 `src/config/*.js`，两者都在构建时打包进产物。GitHub Pages 与 Vercel 上的内容因此完全一致，路由模式也一致（都是 history）——`/blog/<slug>` 这种地址在两边都是直接命中一份构建期写好的 HTML，不靠服务器回退。
 
 订阅地址是 `/rss.xml`：`index.html` 里挂了 `<link rel="alternate">`，浏览器会自己识别，页面上没有按钮。要发文或改站点信息，就是改仓库里的文件再 push，细节见 `docs/manual.md` §2 与「怎么写、怎么发」那一篇。

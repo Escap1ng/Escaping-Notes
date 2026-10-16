@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/build_seo.mjs",
-    "build:pages": "vite build --mode pages && node scripts/build_seo.mjs",
     "font:build": "node scripts/build_font.mjs",
     "font:build:didone": "node scripts/build_font_didone.mjs",
     "og:build": "node scripts/build_seo.mjs --og",

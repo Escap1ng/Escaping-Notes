@@ -248,6 +248,8 @@
 
 门禁走构建：`npm run build` 先打一份**发文回执**（每卷一行：日期 / 字数 / 时长 / 封面 / 标签），任一判据红就不出产物；`npm run dev` 只打印不拦（半篇稿子要能接着写）。判据本身由 `tests/schema.test.mjs` 逐条拿假样本验一遍——检查器必须能失败。
 
+同一趟构建还产出**按页静态壳**（§6.3）：把 `dist/index.html` 的 head 换成这一页自己的标题、网址与封面，写成 `dist/blog/<slug>/index.html` 等真实文件。壳是同一份应用，版式与观感一点没动，所以这一节的内容层口径也管着它——封面上进 `og:image` 的那张文件，就是这一卷目录里的那枚 `cover.jpg`。
+
 ---
 
 ## 6. 壳层与组件契约
@@ -284,17 +286,18 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 | 路由 | 视图 | 标题（`meta.t` / `document.title`） |
 | --- | --- | --- |
 | `/` | `HomeView` | `Escaping Notes · 逃逸笔记` |
-| `/blog` | `BlogView` | `文章 · ${T}` |
-| `/blog/:slug` | `PostView` | 兜底 `阅读 · ${T}`，加载完成后换成文章标题 |
-| `/updates` | `UpdatesView` | `动态 · ${T}` |
-| `/records` | `RecordsView` | `音乐 · ${T}` |
-| `/gallery` | `GalleryView` | `映像 · ${T}` |
-| `/projects` | `ProjectsView` | `项目 · ${T}` |
-| `/projects/:slug` | `ProjectView` | 兜底 `项目 · ${T}`，加载完成后换成项目名 |
-| `/about` | `AboutView` | `关于 · ${T}` |
-| `/:pathMatch(.*)*` | `NotFoundView` | `这里没有页面 · ${T}`（与页内 h1 同字，标签页与页面不说两句话） |
+| `/blog` | `BlogView` | `文章 · ${site.name}` |
+| `/blog/:slug` | `PostView` | 兜底 `阅读 · ${site.name}`，加载完成后换成文章标题 |
+| `/updates` | `UpdatesView` | `动态 · ${site.name}` |
+| `/records` | `RecordsView` | `音乐 · ${site.name}` |
+| `/gallery` | `GalleryView` | `映像 · ${site.name}` |
+| `/projects` | `ProjectsView` | `项目 · ${site.name}` |
+| `/projects/:slug` | `ProjectView` | 兜底 `项目 · ${site.name}`，加载完成后换成项目名 |
+| `/about` | `AboutView` | `关于 · ${site.name}` |
+| `/:pathMatch(.*)*` | `NotFoundView` | `这里没有页面 · ${site.name}`（与页内 h1 同字，标签页与页面不说两句话） |
 
-> 路由 URL 在 `.env.pages`（Pages 镜像）下用 hash，其余 history（见 `src/router/index.js`）。
+> 站内**只有一种路由模式**（history）：Pages 不会把未知路径回退到 `index.html`，所以构建期为每条真实路由写一份 HTML——6 条导航、每一卷文章、每一个项目各一份 `index.html`，加一份 `404.html`（判据与写法见 §5.1 末段与 `scripts/lib/shell.mjs`）。壳里带的是同一个应用，挂载后照常渲染，观感与站内无差；换的只有 head：`title` / `canonical` / `og:*` / `twitter:*` 是这一页自己的。旧的 `#/…` 形状在 `src/main.js` 里于挂载前改道成路径形状，别处贴过的链接不会静默落到首页。
+> 标题那一句的形状只有一处实现：`narrative.js` 的 `pageTitle(subject)`，路由 meta、静态壳与 `PostView` 挂载后改写的那一句都走它；由导航呈现的 7 页把整句写在 `N.nav[].t`，`tests/seo-shell.test.mjs` 对拍两种写法算出来必须相等（站名的字面量在 `src/router/index.js` 里已经不出现了）。
 > **`document.title` 只在内容加载完成时往前写一次，离开页面时不复位**：`router.afterEach` 与新页挂载都排在本次卸载之后，卸载里写兜底值会把「文章 · Escaping Notes」覆成站名（§9 第 20 条）。
 
 ### 6.4 基元与特异度陷阱（改样式前必读）

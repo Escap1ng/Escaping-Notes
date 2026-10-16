@@ -7,7 +7,7 @@ import { loadPost, loadPosts } from '../lib/posts.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { trapFocus } from '../lib/focus.js'
 import { useDetailExit } from '../lib/exit.js'
-import { N } from '../config/narrative.js'
+import { N, pageTitle } from '../config/narrative.js'
 
 const route = useRoute()
 const post = ref(null)
@@ -71,7 +71,9 @@ onMounted(async () => {
   }
   post.value = p
   htmlBody.value = renderMarkdown(p.body).html
-  document.title = `${p.title} · Escaping Notes`
+  // 与构建期那份静态壳同一个拼法（scripts/lib/shell.mjs 用同一个 pageTitle）：
+  // 分享卡上的标题与打开后标签页的标题必须是同一句话
+  document.title = pageTitle(p.title)
 
   addEventListener('keydown', onLightboxKey)
 })

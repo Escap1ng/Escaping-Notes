@@ -3,15 +3,20 @@
 // 隐喻只留在两处文学位（首屏 `manifesto`、关于页 `aboutBio`）。主题名同样直白为「深色 / 浅色」，
 // 「夜拍 / 显影」的说法留在 docs/design.md §2 原则 2 讲概念，不进界面。
 // 改新版文案 → 只改这个文件
+import { site } from './site.js'
+
 export const N = {
+  // t 是这一页在标签页上说的整句话：路由 meta 与构建期那份静态壳（scripts/lib/shell.mjs
+  // 给 /blog/<slug> 与各导航路由写好的 <title>/og:title）读的都是这一列。
+  // 写第二处不会报错，只会让"分享出去的标题"和"打开后的标题"是两个句子。
   nav: [
-    { to: '/', label: '首页', code: '00' },
-    { to: '/blog', label: '文章', code: '01' },
-    { to: '/updates', label: '动态', code: '02' },
-    { to: '/records', label: '音乐', code: '03' },
-    { to: '/gallery', label: '映像', code: '04' },
-    { to: '/projects', label: '项目', code: '05' },
-    { to: '/about', label: '关于', code: '06' },
+    { to: '/', label: '首页', code: '00', t: 'Escaping Notes · 逃逸笔记' },
+    { to: '/blog', label: '文章', code: '01', t: '文章 · Escaping Notes' },
+    { to: '/updates', label: '动态', code: '02', t: '动态 · Escaping Notes' },
+    { to: '/records', label: '音乐', code: '03', t: '音乐 · Escaping Notes' },
+    { to: '/gallery', label: '映像', code: '04', t: '映像 · Escaping Notes' },
+    { to: '/projects', label: '项目', code: '05', t: '项目 · Escaping Notes' },
+    { to: '/about', label: '关于', code: '06', t: '关于 · Escaping Notes' },
   ],
 
   // 首屏：站名（打字机进入）+ 对偶联宣言（十六字）
@@ -107,3 +112,10 @@ export const N = {
 // 各页的 <h2> 就是导航里那枚标签，不再各抄一份字面量：两处各写一遍的话，改名只会改到一处，
 // 另一处静默留着旧词（顶栏说「音乐」、页面大标题说「歌单」就是这么来的）。
 export const navLabel = (to) => N.nav.find((n) => n.to === to)?.label ?? ''
+
+// 标签页那整句话（路由 meta 与构建期的静态壳共用，见 N.nav 上那条注释）
+export const navTitle = (to) => N.nav.find((n) => n.to === to)?.t ?? ''
+
+// 「这一页 · 站名」的形状只写一次：导航之外的三类标题（文章、项目、找不到页）都从这里出。
+// 路由与 scripts/build_seo.mjs 各拼一遍的话，分享卡上的标题和标签页上的迟早分成两句话。
+export const pageTitle = (subject) => `${subject} · ${site.name}`

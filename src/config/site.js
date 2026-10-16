@@ -17,7 +17,7 @@ export const site = {
   // 逃逸装备（关于页）：name 是名字，note 是它在这一站里干什么
   gear: [
     { name: 'Vue 3', note: '视图层与响应式；运行时只依赖它和 vue-router' },
-    { name: 'Vite', note: '三档构建：dev / build / build:pages' },
+    { name: 'Vite', note: '两档跑法：dev 热更 / build 产出 dist（含静态壳与 feed）' },
     { name: 'GitHub Actions', note: 'push 即构建并发布到 Pages' },
     { name: 'Canvas 2D', note: '星轨逐帧绘制，无 WebGL、无图表库' },
   ],
