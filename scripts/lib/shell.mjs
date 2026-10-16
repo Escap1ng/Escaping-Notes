@@ -13,7 +13,7 @@ const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 // 标题的形状与「这里没有页面」那句话都取自文案层：壳、路由、页面渲染读的是同一批字
-import { N, pageTitle } from '../../src/config/narrative.js'
+import { N, pageTitle } from '../../src/data/narrative.js'
 
 // 值写在哪个属性上：<title> 写在标签中间，<link> 写在 href，<meta> 写在 content
 const VALUE_ATTR = { title: '', link: 'href', meta: 'content' }

@@ -1,10 +1,10 @@
 <script setup>
 // 新版项目页：卡片栅格（卡面走共用基元 .en-card）+ 冷色光带
 // 卡片点进去是 /projects/:slug 那一页（与 /blog 的卡片同一个动作），站内不为这一页另造浮层
-import { content } from '../lib/content.js'
+import { content } from '../data/index.js'
 import { onLens } from '../lib/lens.js'
 import { projectSlug } from '../lib/projects.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
 </script>
 
 <template>

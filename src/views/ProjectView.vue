@@ -4,10 +4,10 @@
 // 设置卡 / 抽屉），项目原先是自己又造了一层模态面板；并成文章这一种，容器少一个。
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { content } from '../lib/content.js'
+import { content } from '../data/index.js'
 import { findProject } from '../lib/projects.js'
 import { useDetailExit } from '../lib/exit.js'
-import { N } from '../config/narrative.js'
+import { N } from '../data/narrative.js'
 
 const route = useRoute()
 const p = computed(() => findProject(content.projects, route.params.slug))

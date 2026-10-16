@@ -1,8 +1,8 @@
 // 播放器引擎：全站唯一的 <audio> 与它的状态。顶栏「音乐」按钮与它点开的那张播放器卡、
 // /records 的在线听歌模块读写同一个 `music`——任一处按下播放，其余几处的高亮同时跟上。
-// 曲目来自 content.playlist（src/config/music.js）。
+// 曲目来自 content.playlist（src/data/music.js）。
 import { computed, reactive, watch } from 'vue'
-import { content } from './content.js'
+import { content } from '../data/index.js'
 import { KEYS, read, write } from './storage.js'
 
 export const music = reactive({

@@ -1,8 +1,8 @@
 <script setup>
 // 新版脉冲：一条一枚满宽卡，脉冲点冷/热交替
-import { content } from '../lib/content.js'
+import { content } from '../data/index.js'
 import { onLens } from '../lib/lens.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
 </script>
 
 <template>

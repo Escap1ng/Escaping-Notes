@@ -10,9 +10,9 @@ import assert from 'node:assert/strict'
 
 import { SHELL_KEYS, buildShell, planShells, shellHead, shellTagAudit, uncoveredRoutes } from '../scripts/lib/shell.mjs'
 import { legacyPath } from '../src/lib/legacy.js'
-import { N, navTitle, pageTitle } from '../src/config/narrative.js'
-import { projects } from '../src/config/projects.js'
-import { site } from '../src/config/site.js'
+import { N, navTitle, pageTitle } from '../src/data/narrative.js'
+import { projects } from '../src/data/projects.js'
+import { site } from '../src/data/site.js'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const src = (p) => readFileSync(join(ROOT, p), 'utf8')

@@ -3,7 +3,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { loadGallery } from '../lib/gallery.js'
 import { trapFocus } from '../lib/focus.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
 
 const shots = ref([])
 const ready = ref(false)

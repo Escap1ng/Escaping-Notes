@@ -7,7 +7,7 @@ import { loadPost, loadPosts } from '../lib/posts.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { trapFocus } from '../lib/focus.js'
 import { useDetailExit } from '../lib/exit.js'
-import { N, pageTitle } from '../config/narrative.js'
+import { N, pageTitle } from '../data/narrative.js'
 
 const route = useRoute()
 const post = ref(null)

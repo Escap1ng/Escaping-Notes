@@ -10,8 +10,8 @@ import assert from 'node:assert/strict'
 
 import { exitCode, formatReceipt, inspectPosts } from '../scripts/check_content.mjs'
 import { INDEX_NAME } from '../src/lib/schema.js'
-import { site } from '../src/config/site.js'
-import { N } from '../src/config/narrative.js'
+import { site } from '../src/data/site.js'
+import { N } from '../src/data/narrative.js'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const src = (p) => readFileSync(join(ROOT, p), 'utf8')
@@ -100,7 +100,7 @@ test('全站只剩一份 frontmatter 解析：代码里不许有第二份', () =
     assert.ok(!src(f).includes(OLD_PARSER), `${f} 还在引用已退役的 src/${OLD_PARSER}`)
   }
   assert.ok(src('scripts/build_seo.mjs').includes("from '../src/lib/schema.js'"))
-  assert.ok(src('scripts/build_seo.mjs').includes("from '../src/config/site.js'"))
+  assert.ok(src('scripts/build_seo.mjs').includes("from '../src/data/index.js'"))
   const deploy = src('.github/workflows/deploy.yml')
   assert.ok(deploy.includes('npm test'), 'deploy.yml 不再跑测试了')
   assert.ok(deploy.includes('npm run check'), 'deploy.yml 不再跑门禁了')
@@ -121,7 +121,7 @@ test('public/posts/ 与那份退役的旧解析器都不复存在', () => {
 
 /* ---------------- 域名与副标题：写死的地方各只有一处，且对得上 ---------------- */
 
-test('index.html 里的域名与 src/config/site.js 的 url 同一条（换域名不再靠人记两处）', () => {
+test('index.html 里的域名与 src/data/site.js 的 url 同一条（换域名不再靠人记两处）', () => {
   const html = src('index.html')
   const origin = site.url.replace(/\/+$/, '')
   const hits = [...html.matchAll(/(?:href|content)="([^"]*escaping[^"]*)"/g)].map((m) => m[1])

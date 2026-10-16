@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { N } from '../config/narrative.js'
+import { N } from '../data/narrative.js'
 </script>
 
 <style scoped>

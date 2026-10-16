@@ -152,7 +152,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 │   ├── check_doc_refs.py  #   drift scan over doc references / § numbers / the README route table
 │   ├── check_naming.py    #   naming-convention scan
 │   ├── check_contrast.mjs #   theme-token WCAG contrast audit
-│   ├── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
+│   ├── sync_records.py    #   fetch public QQ playlist → src/data/records.js (Python 3 stdlib; read-only mirrors)
 │   ├── data/              #   script input data (the GB2312 level-1 character table used by build_font)
 │   └── lib/               #   modules shared between scripts (PNG encoder; the roll scanner rolls.mjs)
 ├── docs/                  # design.md design spec · manual.md handbook
@@ -161,8 +161,8 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 └── src/
     ├── assets/fonts/      # Two self-hosted subset woff2 files (serif + masthead Didone), weight 700 + OFL licence
     ├── components/        # seven flat: StarTrails the camera · HorizonHero the landing type layer · SiteHeader bar + drawer · SiteFooter · MusicCard the player card · SettingsCard the plate-blur slider + card-surface radios · SearchCard the header search card
-    ├── config/            # narrative.js copy layer · site.js site info · 6 content-seed files (records.js is generated — don't hand-edit)
-    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects
+    ├── data/              # everything site-owned lives here: index.js is the single door · narrative.js copy layer · site.js site info · 6 data files (records.js is generated — don't hand-edit)
+    ├── lib/               # posts / schema / markdown / theme / storage / music / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects (data access no longer passes through here — see data/index.js)
     ├── styles/            # site.css, one file: structural scale + the two theme palettes + site-wide primitives
     └── views/             # 10 views, one file each, flat
 ```

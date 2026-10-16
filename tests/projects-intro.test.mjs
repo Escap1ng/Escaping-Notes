@@ -1,6 +1,6 @@
 // 项目页介绍字段的钉子。
 // 为什么要钉两件事：
-//   1) 详情页 /projects/:slug 靠 detail/points/stack，这三样只写在 src/config/projects.js 里
+//   1) 详情页 /projects/:slug 靠 detail/points/stack，这三样只写在 src/data/projects.js 里
 //      （卡面那四个字段是行式的，装不下多段正文），所以每一条都得写满、不能是占位句。
 //   2) 那一页少一个 N.projects.* 键，Vite 不会响，它渲染成空文本（同 hero-wording 那条判据）。
 //   3) 那一页的 URL 从 name 现算，所以名字一改，URL 跟着改——往返与撞车都在这里钉住。
@@ -11,9 +11,9 @@ import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { projects } from '../src/config/projects.js'
+import { projects } from '../src/data/projects.js'
 import { projectSlug, findProject } from '../src/lib/projects.js'
-import { N } from '../src/config/narrative.js'
+import { N } from '../src/data/narrative.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const src = (p) => readFileSync(join(ROOT, p), 'utf8')

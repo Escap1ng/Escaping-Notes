@@ -3,19 +3,20 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import HorizonHero from '../components/HorizonHero.vue'
 import { loadPosts } from '../lib/posts.js'
-import { updates } from '../config/updates.js'
+import { content } from '../data/index.js'
 import { onLens } from '../lib/lens.js'
 import { debounce } from '../lib/debounce.js'
-import { N } from '../config/narrative.js'
+import { N } from '../data/narrative.js'
 
 const posts = ref([])
 const drawerEl = ref(null)
 const open = ref(false)
 
 const featured = computed(() => posts.value.slice(0, 3))
-// 最近动态卡：updates 是 newest-first 的静态时间线（config/updates.js，§2.3 约定新条目加在最前），
+// 最近动态卡：updates 是 newest-first 的静态时间线（src/data/updates.js，§2.3 约定新条目加在最前），
 // 取前 5 条；整卡链向 /updates。首页不再有页内目录，页面导航只留顶栏。
-const recent = updates.slice(0, 5)
+// 走 content 这道门而不是直连数据文件——`/updates` 那一页读的是同一份，两条路迟早分叉。
+const recent = content.updates.slice(0, 5)
 
 /* 一枚读数：本地时刻与日期星期。
    （「本次停留 / 这一夜已曝」计时读数 2026-10-09 删除——它数的是打开页面后的秒数，

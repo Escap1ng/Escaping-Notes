@@ -2,7 +2,7 @@
 // 新版顶栏：无底色悬浮条 + 吸积环签名 + 等宽深度导航
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { content } from '../lib/content.js'
+import { content } from '../data/index.js'
 import { theme, toggleTheme } from '../lib/theme.js'
 import { music } from '../lib/music.js'
 import { debounce } from '../lib/debounce.js'
@@ -10,7 +10,7 @@ import { trapFocus } from '../lib/focus.js'
 import MusicCard from './MusicCard.vue'
 import SettingsCard from './SettingsCard.vue'
 import SearchCard from './SearchCard.vue'
-import { N } from '../config/narrative.js'
+import { N } from '../data/narrative.js'
 
 const route = useRoute()
 

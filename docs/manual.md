@@ -25,7 +25,7 @@ BLOG/
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1  ←  底图与封面烘培（Windows PowerShell）
 │   ├── check_content.mjs     ←   发文门禁与回执（构建会先跑它，红则不出产物）
 │   ├── check_doc_refs.py / check_naming.py / check_contrast.mjs  ← 另三道门禁
-│   ├── sync_records.py       ←   抓 QQ 公开歌单 → 生成 src/config/records.js
+│   ├── sync_records.py       ←   抓 QQ 公开歌单 → 生成 src/data/records.js
 │   ├── data/  lib/           ←   脚本输入数据（GB2312 一级字表）／共用模块（PNG 编码器、读卷清单、静态壳的 head 改写）
 ├── docs/               ← design.md 设计依据 · manual.md 本文
 │   └── assets/readme/  ← README 配图
@@ -33,8 +33,8 @@ BLOG/
 └── src/
     ├── assets/fonts/   ← 两枚自托管子集 woff2（正文衬线 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
-    ├── config/         ← narrative.js 文案层 · site.js 站点信息 · 内容种子（动态/项目/音乐/歌单/映像/友链）
-    ├── lib/            ← content posts schema markdown theme storage music records gallery plate surface ridge lens shift sky debounce focus exit legacy projects
+    ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 6 份数据（动态/项目/音乐/歌单/映像/友链，records.js 由脚本生成勿手改）
+    ├── lib/            ← posts schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
     ├── router/         ← 10 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
     └── views/          ← 10 个页面各一个文件，平铺
@@ -43,7 +43,7 @@ BLOG/
 三条会反复用到的事实：
 
 - **`src/styles/site.css` 是唯一的样式表**，改外观不碰别的文件。
-- **`src/config/*.js` 是站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）的唯一来源**，改内容改这里。
+- **`src/data/*.js` 是站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）的唯一来源**，改内容改这里；它们进界面只经过 `src/data/index.js` 那一道门，所以**加一类内容 = 放一份文件 + 在门上挂一行**，视图那边不用新开一条路。
 - **派生素材要提交**（`public/plates/`、`content/posts/*/cover.jpg`、`public/audio/`），构建机不会重跑烘培脚本。
 
 ---
@@ -77,13 +77,13 @@ BLOG/
 
 ## 2. 编辑方法
 
-> **站内没有后台，编辑都在仓库里改文件**：文章改 `content/posts/<slug>/index.md`（一卷是一个目录），站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）改 `src/config/*.js`；改完 `git push`，等 CI 重新构建即上线。
+> **站内没有后台，编辑都在仓库里改文件**：文章改 `content/posts/<slug>/index.md`（一卷是一个目录），站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）改 `src/data/*.js`；改完 `git push`，等 CI 重新构建即上线。
 > 本章按内容类型分节：站点信息、文章、动态、内容种子、播放器、SEO、账号（已下线）。
 > 低语（井外随机浮现）与 `/fragments` 碎片已随旧版下线，服务端那三个端点也已于 2026-10-16 删除（§2.4）。
 
 ### 2.1 改站点信息（名字 / 简介 / 邮箱 / 社交链接）
 
-打开 `src/config/site.js`，改引号里的文字即可。每个字段用在哪：
+打开 `src/data/site.js`，改引号里的文字即可。每个字段用在哪：
 
 | 字段 | 用在哪 |
 | --- | --- |
@@ -143,7 +143,7 @@ BLOG/
 
 ### 2.3 发一条动态
 
-打开 `src/config/updates.js`，在数组**最前面**加一行（新的在上）：
+打开 `src/data/updates.js`，在数组**最前面**加一行（新的在上）：
 
 ```js
 { date: '2026-09-01', text: '今天做了什么……' },
@@ -151,12 +151,12 @@ BLOG/
 
 ### 2.4 音乐 / 项目 / 映像 / 友链 / 碎片
 
-- **项目 `/projects`（05 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/config/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
-- **音乐 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名 / 艺术家 / 逐行跳转；表内两列，默认折到前 8 首，点表头「展开其余 N 首」看全）。曲目来自 `src/config/records.js` 静态快照——本地跑 `python scripts/sync_records.py` 重新生成该文件，再 `git push`。**这个文件是脚本产物，别手改**。前提是歌单设为公开。
+- **项目 `/projects`（05 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/data/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
+- **音乐 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名 / 艺术家 / 逐行跳转；表内两列，默认折到前 8 首，点表头「展开其余 N 首」看全）。曲目来自 `src/data/records.js` 静态快照——本地跑 `python scripts/sync_records.py` 重新生成该文件，再 `git push`。**这个文件是脚本产物，别手改**。前提是歌单设为公开。
 - **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），即快照里的那张。要换头像就换 QQ 那张歌单封面，再跑 `python scripts/sync_records.py` 重生成快照。
-- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/config/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/data/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
 - **图片**：文章封面躺在自己那一卷的目录里——原图以 `-src.jpg` 收尾丢进 `content/posts/<slug>/`，`npm run cover:build` 就地烘出同目录的 `cover.jpg`（提交进仓库）；正文插图也放同一目录，正文里只写文件名。`public/images/` 这个目录**不存在**，也不需要什么目录：插图跟着卷走。
-- **友情链接**：在 `src/config/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
+- **友情链接**：在 `src/data/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
 - **碎片（已下线并删除）**：站内**没有** `/fragments` 这条路由、也没有对应视图（现役 10 条路由里不含它）；服务端原有的 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点在 2026-10-16 摘掉（连同 `fragments.json` 的读写），前端零消费方是它们被删的原因。同批删掉的还有 `/api/health`。
 
 ### 2.5 播放器
@@ -167,16 +167,16 @@ BLOG/
 - **`/records` 的「在线听歌」卡**：满宽一张、卡内两列，只放曲目表、不放进度条——点一行即播，再点当前曲即暂停；当前曲红移，与顶栏按钮播放中同一个记号。没按下之前没有任何一行是「当前曲」（`music.started` 把关），否则第一行会一直红着、看着像已经在播。也别把听歌卡与别的卡并排：曲目会一首首加上去，第 5 首起就会把整行拉高。
 - **QQ 曲目表默认折叠**：只列前 8 首，表头右侧「展开其余 N 首 ↓」点开、「收起 ↑」收回（`aria-expanded`）。几十首时它是档案，不该把整页拖长压住真正能播的那一张。
 
-曲目清单在 `src/config/music.js`：每项 `{ title, artist, file }`，音频是仓库内的 `public/audio/*.mp3`（构建后落在 `dist/audio/`）。
+曲目清单在 `src/data/music.js`：每项 `{ title, artist, file }`，音频是仓库内的 `public/audio/*.mp3`（构建后落在 `dist/audio/`）。
 
 ### 2.6 改网页标题 / 搜索描述 / 分享卡片
 
 打开根目录 `index.html`：
 
 - `<title>`、`<meta name="description">`：浏览器标签与搜索结果里的标题摘要——**这两行只是站点级的兜底**。构建期会为每一卷文章、每一个项目与每条导航各写一份这份 HTML 的副本，把 `title` / `description` / `canonical` / `og:*` / `twitter:*` 换成那一页自己的值：文章的标题取自 frontmatter 的 `title`，摘要取自 `summary`，**分享卡的图就是这一卷目录里那张 `cover.jpg`**（没有封面才回落到 `og.png`）。所以"分享出去显示什么"这件事在 `content/posts/<slug>/` 里改，不在这里改。
-- `<link rel="canonical">`、`og:url`、`og:image`、`twitter:*`：搜索引擎与社交平台分享用的信息。**换域名时两处一起改**：`index.html` 里的四处地址与 `src/config/site.js` 的 `url`——这两处的对拍写在 `tests/content-rolls.test.mjs`，漏改一处就红，不再靠人记。
+- `<link rel="canonical">`、`og:url`、`og:image`、`twitter:*`：搜索引擎与社交平台分享用的信息。**换域名时两处一起改**：`index.html` 里的四处地址与 `src/data/site.js` 的 `url`——这两处的对拍写在 `tests/content-rolls.test.mjs`，漏改一处就红，不再靠人记。
 - 分享卡片图 `public/og.png`（1200×630，站点级那张）由 `npm run og:build` 生成（纯 Node 绘制，不需要额外软件）；想换配色改 `scripts/build_seo.mjs` 里的 `TRAIL` 色板。
-- `public/robots.txt` 与 `dist/sitemap.xml`：抓取范围与页面清单，一般不用改。sitemap 里列的路由就是构建期写了壳的那些（导航取自 `src/config/narrative.js` 的 `N.nav`，文章取自 `content/posts/`）。
+- `public/robots.txt` 与 `dist/sitemap.xml`：抓取范围与页面清单，一般不用改。sitemap 里列的路由就是构建期写了壳的那些（导航取自 `src/data/narrative.js` 的 `N.nav`，文章取自 `content/posts/`）。
 
 ### 2.7 账号（已于 2026-10-16 下线）
 
@@ -383,7 +383,7 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
    期望 `HTTP 200 ssl_verify=0` 与 `subject=CN=escaping.top`。
    旧地址 `escap1ng.github.io/Escaping-Notes`（不带尾斜杠）会 301 到新域名；带尾斜杠的那份可能仍直接返回产物、资源 404——GitHub 的重定向表要等 Fastly 缓存过期，不用管，站内所有 canonical/OG/RSS 都已指向 `escaping.top`。
 
-Pages 是主线交付：文章用打包版，站点内容来自 `src/config/*.js`，页脚与 canonical / OG 都指向 `escaping.top`。Vercel 是同源只读镜像（§4.1）。
+Pages 是主线交付：文章用打包版，站点内容来自 `src/data/*.js`，页脚与 canonical / OG 都指向 `escaping.top`。Vercel 是同源只读镜像（§4.1）。
 
 ### 4.3 方式 C：自有轻量服务器（已于 2026-10-16 下线）
 
@@ -393,8 +393,8 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/config/*.js
 
 ### 4.4 以后更新内容的流程
 
-改文章（`content/posts/*.md`）或站点内容（`src/config/*.js`）→ 本地 `npm run dev` 检查 → `git add . ; git commit -m "说明" ; git push` → 线上自动重建并更新（GitHub Pages / Vercel）。
-歌单变动时先在本地跑 `python scripts/sync_records.py` 重生成 `src/config/records.js`，再一起提交。
+改文章（`content/posts/*.md`）或站点内容（`src/data/*.js`）→ 本地 `npm run dev` 检查 → `git add . ; git commit -m "说明" ; git push` → 线上自动重建并更新（GitHub Pages / Vercel）。
+歌单变动时先在本地跑 `python scripts/sync_records.py` 重生成 `src/data/records.js`，再一起提交。
 
 ---
 
@@ -410,7 +410,7 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/config/*.js
 | 文章列表短暂显示灰色骨架卡 | 加载态的占位，文章是构建期打包的，数据到位即替换，稍等即可 |
 | `npm run build` 红：发文门禁 N 个问题 | 红之前那份回执逐条写着是哪一卷、哪一条（缺 `alt` / `date` 歪 / 键名拼错 / 正文引用的图不在这卷目录里）。对照 §2.2 改，改完再构建 |
 | 线上某张文章图 404 | 那一卷的 `cover.jpg` 或插图文件没提交进仓库（`*-src.*` 是烘图输入，永远不上线，这是故意的）。`content/posts/<slug>/` 里有的文件名，就是 `/blog/<slug>/` 里该有的那张 |
-| 项目详情页显示"这里没有这个项目的介绍" | URL 拼错，或与 `src/config/projects.js` 里的 `name` 对不上——URL 由 `name` 现算，改过名字老链接就断（§2.4） |
+| 项目详情页显示"这里没有这个项目的介绍" | URL 拼错，或与 `src/data/projects.js` 里的 `name` 对不上——URL 由 `name` 现算，改过名字老链接就断（§2.4） |
 | 分享链接没有卡片图 | 确认 `public/og.png` 存在，且 `index.html` 里的域名是你的真实域名（换域名见 §2.6） |
 | 提交前该跑什么 | `npm test` + `npm run check`，两条都绿再提交（§4.0） |
 
@@ -440,4 +440,4 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/config/*.js
   - SEO——`og:*` / `canonical` / `twitter:*` 补全；构建期生成 `rss.xml` 与 `sitemap.xml`；新增 `robots.txt`。
 - **v1.1.0 · 阅读体验优化**：文章页磨砂玻璃阅读底板（半透明页面色 + 背景模糊，对比达 WCAG AA）；星轨尾部渐隐防饱和、拉长尾迹、随机起点使圆环连续、弧端错落；阅读栏加宽并提高底板透明度、加大底板宽度。
 - **v1.0.0 · 概念与交互冻结**：长曝光星轨（流星 / 指针时间膨胀 / 滚动即时间）、顶栏编号导航、`fall` 转场、双主题、文章闭环、关于页、后端 v2（登录 / 角色 / 文章 CRUD / meta 注入 / RSS / 上传 / 计数 / 歌单同步）。
-- **此后已下线**（上面的条目里仍按"当时交付了什么"记着，那是历史，不是现状）：低语与 `/fragments` 碎片（端点在 2026-10-16 删除，§2.4）；自绘沉浸光标（现用系统默认光标）；每页一枚巨型空心汉字的签名装置；首屏变星（文章节点）入口；**自助注册与留言墙**（`/register`、`/wall`、`/api/register`、`/api/messages` 的读写删端点、`data/messages.json` 全部删除，角色由三档收敛为站长 + 管理员两档；2026-10-16 用户管理与角色机制整体撤除，收敛为单账号，见 §2.7）；**后端整体下线**（2026-10-16）——承载它的服务器与 `www.escaping.top` 的解析记录已删除，原 `server/api.py`、原 `docs/api.md` 与登录 / 后台 / 阅读计数 / 服务端 OG 注入随之撤除，站点改为纯静态：文章由 `content/posts/` 打包、站点内容由 `src/config/*.js` 提供。
+- **此后已下线**（上面的条目里仍按"当时交付了什么"记着，那是历史，不是现状）：低语与 `/fragments` 碎片（端点在 2026-10-16 删除，§2.4）；自绘沉浸光标（现用系统默认光标）；每页一枚巨型空心汉字的签名装置；首屏变星（文章节点）入口；**自助注册与留言墙**（`/register`、`/wall`、`/api/register`、`/api/messages` 的读写删端点、`data/messages.json` 全部删除，角色由三档收敛为站长 + 管理员两档；2026-10-16 用户管理与角色机制整体撤除，收敛为单账号，见 §2.7）；**后端整体下线**（2026-10-16）——承载它的服务器与 `www.escaping.top` 的解析记录已删除，原 `server/api.py`、原 `docs/api.md` 与登录 / 后台 / 阅读计数 / 服务端 OG 注入随之撤除，站点改为纯静态：文章由 `content/posts/` 打包、站点内容由 `src/data/*.js` 提供。

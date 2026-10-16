@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { N } from '../src/config/narrative.js'
+import { N } from '../src/data/narrative.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const src = (p) => readFileSync(join(ROOT, p), 'utf8')
