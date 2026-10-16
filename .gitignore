@@ -7,15 +7,22 @@ __pycache__/
 *.pyc
 
 # ---------- 本地素材与一次性产物：不进仓库，别用 git add -A 扫进来 ----------
-# AI 生成的底片原图与探尺寸产物（~9MB）；底图层已撤回，可回退副本停在这里的 plate-park-*
+# AI 生成的底图原图与探尺寸产物只落这一带，不进仓库。2026-10-16 清过一次：底图层撤回后停在
+# 这里的 plate-park-* 回退副本已进回收站——已提交过的部分（neo.css/App.vue/StarTrails.vue）
+# 从 git 历史取回，从未进过版本库的那份 neo.css 工作态与 mock_*.mjs 只能从回收站捞。
+# 规则留着，挡的是下一次误投。
 vibe_images/
-# 视觉方案的对照截图，只对当轮改稿有用，README 用的是可复算的 SVG/PNG（docs/assets/readme/）
+# 视觉方案的对照截图只对当轮改稿有用，README 用的是可复算的 SVG/PNG（docs/assets/readme/）；
+# 截图清完只剩 measure/ 里那几支探针，其中 quant-plate.mjs / line-probe.mjs 是 design.md 点名的
+# 复算依据（check_doc_refs.py 为它们单开了 OFFREPO_PROBES 口子）
 docs/assets/mock/
 # 聊天/下载工具落在根目录的散图（内容哈希命名，非站点资源）
 /*.jpg
 /*.jpeg
 /*.png
-# 风景原图投递目录：单张 2.6MB 级别的原图不进仓库，仓库只收 npm run bg:build 烘出的派生素材
+# 风景原图投递目录：单张 2.6MB 级别的原图不进仓库，仓库只收 npm run bg:build 烘出的派生素材。
+# 2026-10-16 清空过一次：里面十张有九张与 plates-src/ 逐字节相同（md5 复算过），唯一不落 plates-src
+# 的那张 Unsplash 原图在仓库与脚本里都查不到引用，整目录进回收站。要重烘底图看 plates-src/。
 /1/
 
 # ASCII 化的底图源图（从 1/ 复制改名而来）：.ps1 按 ANSI 解码，中文文件名不能进脚本
