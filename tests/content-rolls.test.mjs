@@ -113,6 +113,16 @@ test('构建配置里带着那条 /blog/<slug>/ 的资产路由与拷贝', () =>
   assert.ok(s.includes('virtual:rolls'))
 })
 
+test('旧 slug 的改道住在路由里，表由构建期算好', () => {
+  const router = src('src/router/index.js')
+  assert.ok(router.includes('beforeResolve'), '改道没挂在路由上')
+  assert.ok(router.includes('rollRoutes'), '路由没查那张表')
+  assert.ok(!/router\.(push|replace)\(/.test(src('src/views/PostView.vue')), '详情页又开始自己跳了')
+  // 规则的实现在 schema（findAlias），插件只是把候选旧名递过去——别在别处再写一遍 includes
+  assert.ok(src('vite.config.js').includes('findAlias'))
+  assert.ok(!src('src/views/PostView.vue').includes('movedFrom'))
+})
+
 test('public/posts/ 与那份退役的旧解析器都不复存在', () => {
   assert.ok(!existsSync(join(ROOT, 'src', 'lib', 'frontmatter.js')))
   assert.ok(!existsSync(join(ROOT, 'public', 'posts')))

@@ -12,7 +12,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderMarkdown } from '../src/lib/markdown.js'
-import { sortByDate } from '../src/lib/schema.js'
+import { isLive, sortByDate } from '../src/lib/schema.js'
 import { projectSlug } from '../src/lib/projects.js'
 import { content } from '../src/data/index.js'
 import { N } from '../src/data/narrative.js'
@@ -268,14 +268,18 @@ if (found.problems.length) {
   for (const p of found.problems) console.error(`seo: ${p}`)
   throw new Error(`发文门禁：${found.problems.length} 个问题，不出 sitemap/RSS`)
 }
-const posts = sortByDate(found.rolls.map((r) => r.record))
+const all = found.rolls.map((r) => r.record)
+// 草稿不进 RSS、不进 sitemap、也不写壳：判据与浏览器那一岸同一条（src/lib/schema.js 的 isLive）
+const posts = sortByDate(all.filter(isLive))
+const drafts = all.length - posts.length
 const base = site.url.replace(/\/+$/, '')
 
 mkdirSync(OUT, { recursive: true })
 writeFileSync(join(OUT, 'sitemap.xml'), sitemapXml(base, posts), 'utf8')
 writeFileSync(join(OUT, 'rss.xml'), rssXml(base, posts), 'utf8')
 console.log(
-  `seo: dist/sitemap.xml (${STATIC_ROUTES.length + posts.length} urls) · dist/rss.xml (${Math.min(posts.length, 20)} items，全文)`
+  `seo: dist/sitemap.xml (${STATIC_ROUTES.length + posts.length} urls) · dist/rss.xml (${Math.min(posts.length, 20)} items，全文)` +
+    (drafts ? ` · ${drafts} 篇草稿不进产物` : '')
 )
 
 const shells = emitShells(base, posts)

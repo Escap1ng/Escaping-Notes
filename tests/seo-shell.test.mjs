@@ -169,6 +169,16 @@ test('旧的 #/ 链接在挂载前改道，且只许改到本站的路径上', (
   }
 })
 
+test('草稿「不进产物」这条只有一个判据，三个地方问的是同一句', () => {
+  // 浏览器那一岸（列表/精选/读数/映像柜）、RSS 与 sitemap 与壳、以及构建拷素材那一步。
+  // 三处各写一遍 `!post.draft` 的话，总有一处会漏——症状是页面看不到它、RSS 里却带着全文
+  const isLive = /isLive/
+  assert.match(src('src/lib/posts.js'), isLive)
+  assert.match(src('scripts/build_seo.mjs'), isLive)
+  assert.match(src('vite.config.js'), isLive)
+  assert.match(src('src/lib/schema.js'), /export const isLive/)
+})
+
 test('标题的形状只有一处：路由与壳都从 pageTitle / N.nav 的 t 取', () => {
   assert.ok(!src('src/router/index.js').includes('Escaping Notes'), 'router 里还写着站名字面量')
   assert.ok(src('src/views/PostView.vue').includes('pageTitle('))
