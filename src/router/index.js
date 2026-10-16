@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { N, navTitle, pageTitle } from '../config/narrative.js'
+import { N, navTitle, pageTitle } from '../data/narrative.js'
 
 // 站内只有一种路由模式（history）。GitHub Pages 不能把未知路径回退到 index.html，
 // 所以构建期为每一条真实路由写一份静态壳（scripts/build_seo.mjs 调 scripts/lib/shell.mjs），

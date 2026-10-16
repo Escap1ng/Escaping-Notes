@@ -43,7 +43,7 @@ music/
 # ---------- 反向记一条：这三处生成物不在忽略之列，且必须进仓库 ----------
 #   public/plates/            ← npm run bg:build（首屏地景亮/暗两张 + 抽屉五张轮播 + 深色压暗底）
 #   content/posts/*/cover.jpg ← npm run cover:build（卡片、阅读页顶部那张满栏图、映像柜共用的一张）
-#   public/audio/             ← 播放器自托管 mp3，src/config/music.js 的曲单直接指向它
+#   public/audio/             ← 播放器自托管 mp3，src/data/music.js 的曲单直接指向它
 # 它们都是"跑一条命令就能重烘出来"的派生物，但**不能**按生成物处理：那两条 bake 脚本跑在
 # Windows PowerShell 5.1 + System.Drawing 上，Pages 的 ubuntu runner 执行不了，CI 里也装不了
 # PIL/sharp；音频没有构建步骤可再生。仓库里这一份就是唯一的一份。

@@ -152,7 +152,7 @@ npm run preview        # 本地预览 dist/
 │   ├── check_doc_refs.py  #   文档引用 / § 节号 / README 路由表 的漂移扫描
 │   ├── check_naming.py    #   命名规约扫描
 │   ├── check_contrast.mjs #   主题令牌 WCAG 对比度审计
-│   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
+│   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/data/records.js（Python3 标准库；只读镜像用）
 │   ├── data/              #   脚本输入数据（GB2312 一级字表，build_font 用）
 │   └── lib/               #   脚本间共用模块（PNG 编码器；读卷清单 rolls.mjs）
 ├── docs/                  # design.md 设计依据 · manual.md 使用手册
@@ -161,8 +161,8 @@ npm run preview        # 本地预览 dist/
 └── src/
     ├── assets/fonts/      # 两枚自托管子集 woff2（正文衬线 + 刊头 Didone），均 700 字重 + OFL 许可
     ├── components/        # 平铺七件：StarTrails 星轨相机 · HorizonHero 首屏排版 · SiteHeader 顶栏+抽屉 · SiteFooter · MusicCard 播放器卡 · SettingsCard 底片模糊滑杆 + 卡片颜色两档 · SearchCard 顶栏搜索卡
-    ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子 6 个文件（records.js 由脚本生成，勿手改）
-    ├── lib/               # content / posts / schema / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects
+    ├── data/              # 站点自有内容全在这一目录：index.js 是唯一的取数门 · narrative.js 文案层 · site.js 站点信息 · 6 份数据（records.js 由脚本生成，勿手改）
+    ├── lib/               # posts / schema / markdown / theme / storage / music / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects（取数不再经过这里，见 data/index.js）
     ├── styles/            # site.css 一个文件：结构刻度 + 两套主题配色 + 全站基元
     └── views/             # 10 个视图平铺，一页一个文件
 ```

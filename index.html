@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#020204" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f2f5f9" media="(prefers-color-scheme: light)" />
 
-    <!-- 域名写死在这里，且与 src/config/site.js 的 url 必须是同一个源头（tests/content-rolls.test.mjs
+    <!-- 域名写死在这里，且与 src/data/site.js 的 url 必须是同一个源头（tests/content-rolls.test.mjs
          对拍这一枚 canonical 与 og:url/og:image）。下面这几枚是站点级的通用值：构建期会为
          每一卷文章、每一个项目与每条导航各写一份这份 HTML 的副本，并把 title / canonical /
          og:* / twitter:* 换成那一页自己的值（scripts/lib/shell.mjs）——所以直接访问

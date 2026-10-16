@@ -14,15 +14,17 @@ import { fileURLToPath } from 'node:url'
 import { renderMarkdown } from '../src/lib/markdown.js'
 import { sortByDate } from '../src/lib/schema.js'
 import { projectSlug } from '../src/lib/projects.js'
-import { site } from '../src/config/site.js'
-import { N } from '../src/config/narrative.js'
-import { projects } from '../src/config/projects.js'
+import { content } from '../src/data/index.js'
+import { N } from '../src/data/narrative.js'
 import { buildShell, planShells, shellTagAudit, uncoveredRoutes } from './lib/shell.mjs'
 import { inspectPosts } from './check_content.mjs'
 import { encodePng } from './lib/png.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'dist')
+// 站点信息与项目都从那道门取：src/data/index.js 不带 vue，Node 这一岸也 import 得动——
+// 浏览器那一岸与这一岸读的是同一个对象，不是两份各自的 import 清单
+const { site, projects } = content
 
 /* ---------------- 站点信息 / 文章 ---------------- */
 const esc = (s) =>

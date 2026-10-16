@@ -1,9 +1,9 @@
 <script setup>
 // 新版页脚：宽屏一行三格（版权与许可 · 致谢 · 回到顶部），窄屏叠成三行居中。
-// 作者名与协议都取自 src/config/site.js（经 lib/content.js 的 store）：名字关于页已经在读它，
+// 作者名与协议都取自 src/data/site.js（经 src/data/index.js 那道门）：名字关于页已经在读它，
 // 页脚再抄一份字面量就是第二处事实，改名时必然分叉。年份运行时取，不写死。
-import { N } from '../config/narrative.js'
-import { content } from '../lib/content.js'
+import { N } from '../data/narrative.js'
+import { content } from '../data/index.js'
 
 const year = new Date().getFullYear()
 

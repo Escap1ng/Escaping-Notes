@@ -1,10 +1,13 @@
 <script setup>
 // 新版共振：歌单快照（运行时零外部请求）+ 卡面聚光、曲目行左缘标记
 import { computed, ref } from 'vue'
-import { records } from '../lib/records.js'
+import { content } from '../data/index.js'
 import { music, tracks, playIndex, toggleMusic } from '../lib/music.js'
 import { onLens } from '../lib/lens.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
+
+// 曲目表读的是快照本身（src/data/records.js，由 scripts/sync_records.py 生成，勿手改）
+const { records } = content
 
 // 再点当前曲 = 暂停/继续，点别的行 = 换曲；与顶栏那张卡走同一条通道
 function onSong(i) {

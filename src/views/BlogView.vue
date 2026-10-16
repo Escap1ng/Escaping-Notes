@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loadPosts } from '../lib/posts.js'
 import { onLens } from '../lib/lens.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
 
 const route = useRoute()
 const router = useRouter()

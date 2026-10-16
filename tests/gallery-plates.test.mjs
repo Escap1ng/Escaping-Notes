@@ -1,8 +1,8 @@
 // 映像柜（/gallery）的钉子：底片清单与真正在用的底片必须互相咬合。
-// 为什么要钉：换一张底片只改 site.css 的 --plate-img 时，config/gallery.js 会留下那张
+// 为什么要钉：换一张底片只改 site.css 的 --plate-img 时，src/data/gallery.js 会留下那张
 //   已经没人在用的旧图——三个 check 脚本都核不出「页面在展示一张全站已经不用的图」，
 //   而它恰恰是这一页存在的理由（"图片来自所有用过的图片"）。
-// 只碰 config/gallery.js：src/lib/gallery.js 经 posts.js 用到 import.meta.glob（Vite 专有），
+// 只碰 src/data/gallery.js：src/lib/gallery.js 经 posts.js 用到 import.meta.glob（Vite 专有），
 //   在纯 Node 里连不上，所以歪斜角那条数学不在这里验。
 // 跑法：npm test（Node 内置 test runner，零依赖）
 import { test } from 'node:test'
@@ -11,7 +11,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { sitePlates } from '../src/config/gallery.js'
+import { sitePlates } from '../src/data/gallery.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const src = (p) => readFileSync(join(ROOT, p), 'utf8')

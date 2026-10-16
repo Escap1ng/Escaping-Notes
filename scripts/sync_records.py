@@ -2,7 +2,7 @@
 """QQ 音乐歌单快照同步（零依赖，仅 Python3 标准库）
 
 用法：python scripts/sync_records.py [disstid]
-  抓取公开歌单 → 生成 src/config/records.js（前端打包用静态快照）。
+  抓取公开歌单 → 生成 src/data/records.js（前端打包用静态快照）。
   默认 disstid 为本站绑定歌单。平时网站不调用任何外部 API；
   歌单有增删时手动跑一次本脚本并 git push 即可更新。
 """
@@ -17,7 +17,7 @@ DISSTID = sys.argv[1] if len(sys.argv) > 1 else '9772836439'
 API = ('https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
        '?type=1&json=1&utf8=1&onlysong=0&disstid={id}&loginUin=0&hostUin=0'
        '&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0')
-OUT = Path(__file__).resolve().parent.parent / 'src' / 'config' / 'records.js'
+OUT = Path(__file__).resolve().parent.parent / 'src' / 'data' / 'records.js'
 
 
 def clean(s):

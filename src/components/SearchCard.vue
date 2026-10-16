@@ -15,7 +15,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loadPosts } from '../lib/posts.js'
 import { trapFocus } from '../lib/focus.js'
-import { N } from '../config/narrative.js'
+import { N } from '../data/narrative.js'
 
 const MAX = 6 // 320px 的卡不是归档页：列到第 7 条就该把人交给 /blog
 

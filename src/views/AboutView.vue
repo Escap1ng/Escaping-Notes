@@ -1,12 +1,14 @@
 <script setup>
 // 新版观测者：第一人称自述 + 三枚读数 + 事实发丝表 + 技术栈 + 社交/友链
 import { computed, onMounted, ref } from 'vue'
-import { content } from '../lib/content.js'
+import { content } from '../data/index.js'
 import { loadPosts } from '../lib/posts.js'
-import { records } from '../lib/records.js'
-import { friends } from '../config/friends.js'
 import { onLens } from '../lib/lens.js'
-import { N, navLabel } from '../config/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
+
+// 头像与友链都从 content 这道门取（records 是 scripts/sync_records.py 生成的快照，
+// 全站只此一份；快照挂在 src/data/index.js 这道门上，那枚两行转手壳已随之删掉）
+const { records, friends } = content
 
 const facts = [
   { k: 'OBSERVER', v: () => content.site.author },
@@ -113,7 +115,7 @@ const stats = computed(() => {
          一行放多枚（auto-fill 按 190px 起排），不锁两列——5 条锁两列就会落单 -->
     <p class="en-eyebrow sec">技术栈</p>
     <div class="gears">
-      <div v-for="g in content.gear" :key="g.name" class="en-card gear en-lens" @pointermove="onLens">
+      <div v-for="g in content.site.gear" :key="g.name" class="en-card gear en-lens" @pointermove="onLens">
         <h3 class="gn">{{ g.name }}</h3>
         <p v-if="g.note" class="gno">{{ g.note }}</p>
       </div>

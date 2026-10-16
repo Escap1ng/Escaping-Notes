@@ -3,7 +3,7 @@
 // 长曝光星轨装置由 StarTrails(interactive) 提供，本组件只负责叙事排版
 import { onMounted, onUnmounted, ref } from 'vue'
 import StarTrails from './StarTrails.vue'
-import { N } from '../config/narrative.js'
+import { N } from '../data/narrative.js'
 
 const textEl = ref(null)
 

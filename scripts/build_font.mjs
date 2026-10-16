@@ -26,7 +26,7 @@ const ASCII = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).
 const PUNCT = '—…“”‘’《》、。，；：！？（）·〈〉「」『』【】￥％＆＊＋－／＝'
 
 // 扫描全站可渲染文案：文章标题/正文小标题、narrative/site/records 等配置、页面与组件文字
-const SCAN = ['content/posts', 'src/config', 'src/views', 'src/components', 'index.html']
+const SCAN = ['content/posts', 'src/data', 'src/views', 'src/components', 'index.html']
 
 async function collect(p) {
   const abs = path.join(ROOT, p)
