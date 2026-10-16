@@ -1,5 +1,4 @@
-// 文章数据源：API 优先，后端缺席时回退打包文章（GitHub Pages 镜像可用）
-import { api } from './api.js'
+// 文章数据源：构建期把 content/posts/*.md 打进产物（静态站零运行时请求）
 import { parseFrontmatter, stats } from './frontmatter.js'
 
 // 封面焦点（frontmatter 的 imagePos）：它会被写进 style 属性，所以只放行取值字符，
@@ -21,25 +20,16 @@ async function bundledPosts() {
       ...meta,
       ...stats(body),
       body,
-      source: 'bundle',
     })
   }
   return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 }
 
-export async function loadPosts() {
-  const remote = await api('/api/posts')
-  if (Array.isArray(remote)) return remote.map((p) => ({ ...p, source: 'api' }))
-  return bundledPosts()
-}
+export const loadPosts = bundledPosts
 
 export async function loadPost(slug) {
-  const remote = await api(`/api/posts/${slug}`)
-  if (remote && typeof remote.body === 'string') {
-    return { ...remote.meta, ...stats(remote.body), body: remote.body, source: 'api' }
-  }
   const loader = bundled[`/content/posts/${slug}.md`]
   if (!loader) return null
   const { meta, body } = parseFrontmatter(await loader())
-  return { slug, ...meta, ...stats(body), body, source: 'bundle' }
+  return { slug, ...meta, ...stats(body), body }
 }

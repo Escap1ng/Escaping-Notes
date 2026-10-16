@@ -57,16 +57,6 @@ const router = createRouter({
       meta: { t: `关于 · ${T}` },
     },
     {
-      path: '/login',
-      component: () => import('../views/LoginView.vue'),
-      meta: { t: `登录 · ${T}` },
-    },
-    {
-      path: '/admin',
-      component: () => import('../views/AdminView.vue'),
-      meta: { t: `管理 · ${T}` },
-    },
-    {
       path: '/:pathMatch(.*)*',
       component: () => import('../views/NotFoundView.vue'),
       meta: { t: `这里没有页面 · ${T}` },

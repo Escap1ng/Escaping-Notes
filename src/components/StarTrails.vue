@@ -811,7 +811,7 @@ onUnmounted(() => {
   /* 暗带契约（令牌在 site.css §1 的 --sky-band / --sky-feather 与 §2/§3 各自的 --sky-k；
      设计说明见 docs/design.md §3.3）：视口正中 --sky-band 宽的一条天空被压到 --sky-k
      强度，两侧各 --sky-feather 羽化回全亮。整站一处生效——9 个次级页共用这块 fixed 画布
-     （App.vue 的 isSub 是 path !== '/'，路由 10 条里除首页外全部命中，含 login/admin 与 404），
+     （App.vue 的 isSub 是 path !== '/'，路由 10 条里除首页外全部命中，含 404），
      而画布在 main **之外**，所以它不随页根 transform 变包含块（那是进度线的老毛病）。
      mask 走 alpha 模式，故 rgba() 的 alpha 就是"天空保留多少"。
      首页那台 .st-abs 不进这里：它是主视觉，压暗带会把盘子本身压掉一半；

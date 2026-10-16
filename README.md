@@ -10,7 +10,6 @@
 [![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
 [![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/StarTrails.vue)
-[![Backend](https://img.shields.io/badge/Backend-Python%203-3776ab?logo=python&logoColor=white)](server/api.py)
 [![Content](https://img.shields.io/badge/Content-CC%20BY--NC--SA%204.0-4d4d4d)](#许可与使用声明)
 [![Code](https://img.shields.io/badge/Code-Personal%20Use%20Only-d42b2b)](#许可与使用声明)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
@@ -47,16 +46,13 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 - **双主题**：深色（冷白/暖白/琥珀星轨）与浅色（天文干版底片：板岩/石墨轨迹 + 朱砂点睛），色温跟星等走（暗星冷、少数亮星抽暖）；**切换主题不换山**——暗色首屏是同一取景的压暗版（`plate-hero-deep.jpg`），两套共用一条山脊折线；底片本身按主题各沉积一张（防串色）；默认浅色，首帧刻意不读系统 `prefers-color-scheme`（首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上）
 - **首屏排版**：地景横带钉在底边，高度按照片自己算（`.hero-plate` 高 = `clamp(54svh, 31vw, 70svh)`——31vw 就是照片按 cover 铺满宽度时自身的高度，所以宽窗口自动抬高折线、一寸不缺；够方的窗口仍是下沿 54%，上半屏整片留给排版）；星轨以 `destination-in` 沿山脊被遮住，脊线附近保留到六成亮度、26px 羽化；站名逐字打出（起笔 260ms、每字 82ms、打满 1500ms 后光标淡退），打完才放行十六字宣言（0.9s 揭开，第二行晚 0.18s）；文字块随滚动以 0.25 倍速下沉并淡出
 - **折线以下**：抽屉里是一枚本地时刻读数、三张精选卡、最近五条动态（整卡链向 `/updates`），首次进入视口时从下方拉出一次；它压在一张**全站共用**的照片底片上——五张轮播、每张 10s（周期 50s），深色主题五档指向同一张，所以夜里不跳景；模糊程度是运行时参数：设置卡里一条 0–12px 滑杆，默认拉满，偏好记在 `localStorage`；**卡片颜色也是运行时参数**：设置卡里两档单选，不透底（**默认**——浅色主题下是纯白、深色主题下是不透底的墨面，同一档语义两个色面）与半透明（卡面透出一底下的照片）
-- **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距 6 档 / 字号 11 档 / 行高 4 档 / 字重 3 档）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入与筛选胶囊取同一块卡面色面（登录 / 管理的表单仍是下划线式）、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
+- **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距 6 档 / 字号 11 档 / 行高 4 档 / 字重 3 档）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入与筛选胶囊取同一块卡面色面、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
 - **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制（暗色主题星数再乘 0.65、≤720px 视口从 280 降到 140 颗）；无第三方 UI 库、图表库或字体 CDN——运行时依赖只有 Vue 与 Vue Router，展示层字形是**两枚**自托管 woff2 子集（正文衬线 + 刊头 Didone）
-- **优雅降级**：API 不可达或超时（读 10s、上传 60s）时自动回落 `src/config/` 的本地种子数据，站点仍是完整的离线底片；后端不启动也能读完全部内容与图片
 - **无障碍**：顶栏抽屉、播放器卡、设置卡与两处灯箱都有焦点陷阱（关闭后焦点回到触发元素）、详情页 `Esc` 或点正文底板以外的空白即退回列表、路由切换向读屏播报（`role="status"`）、跳转链接与 `#main` 可聚焦、触屏（`pointer: coarse`）下按钮/链接/标签最小高 44px、`prefers-reduced-motion` 下有完整静态降级（打字机直接给全文、星轨离线冲一张 380 步稳态底片、轮播停掉只留第一张）
 - **性能**：风景底片挂在 `App.vue` 上而不是每个页面里，不随路由重画；首屏那张地景（本页的 LCP 元素）由 `index.html` 首帧脚本按当前主题 `preload`，与样式表并行起跑，不再排在 CSS 之后；`--shift` 的滚动深度只缓存极值，不每帧读 `scrollHeight`（那等于每帧一次重排）；resize 去抖 150ms；抽屉用 `IntersectionObserver` 拉出一次即断开；卡面光斑走 transform；常驻的顶栏表面不用 `backdrop-filter`——玻璃只留给真正要与底片隔开的那几层浮起表面（阅读底板、首页抽屉、导航抽屉、两处灯箱）
 - **阅读可读性（照实说）**：一张无纱的风景照片上放裸字到不了 WCAG AA——实测最坏点在 1.0~1.8:1，与渐变形状无关（试过竖向单条、上下双纱、顶部淡入三种形状）。所以结论是**分工**：底片只当风景，正文一律落在 `.sheet` / `.en-glass` / `.en-card` 上，那里的前景从 5.5:1 起；`npm run check:contrast` 每次提交前重算主题令牌对平底的对比（深色 `--text-0` 18.38:1 / 浅色 16.90:1，判据 7:1），但它核的是令牌对纯色底，**不等于**核照片合成底
 - **反馈闭环**：文章列表有骨架屏（3 张），「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query（可分享、刷新不丢）
 - **映像柜**：`/gallery` 把全站用过的图摊成一墙拍立得——站点自有 9 张（首屏两张 + 浅色五张 + 深色压暗底 + `og.png`）加全部文章封面，按 src 去重；倾斜 ±2.4° 由 src 哈希决定，进场每张错开 60ms（最多 12 张），列数 3/2/1；灯箱 `Teleport` 到 `body`，键盘 ←/→ 翻页、Esc 关闭，触屏横滑 >50px 翻页
-- **全功能后台**：`/admin` 分「用户」（管理员可见）与「文章 + 设置」两档（站长可见），设置里编辑动态 / 项目 / 装备 / 歌单；鉴权是 `Authorization: Bearer`（7 天期，存 `localStorage`），限流按 IP 30 请求 / 60 秒且只计 POST；**没有自助注册端点**——账号只能由站长建；音乐页那枚「同步歌单」仅站长可见，走 `POST /api/sync/records` 由服务端重取 QQ 公开歌单
-
 ## 读图：两处承重设计
 
 ### 底片层挂在 `App.vue` 上——一处 `fixed` 的包含块陷阱
@@ -78,13 +74,12 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
 | 前端 | Vue 3（Composition API）+ Vite 5 + Vue Router 4 |
 | 渲染 | Canvas 2D 离屏累积缓冲（长曝光底片模拟） |
 | 样式 | 原生 CSS + 自定义属性令牌（`site.css` 一个文件：结构刻度 + 两套主题配色 + 全站基元） |
-| 后端 | Python 3 标准库单文件（`server/api.py`），无第三方依赖 |
-| 测试 | Node 内置 `node --test` + `python -m unittest`，零测试框架 |
-| 部署 | GitHub Pages / Vercel / nginx + systemd |
+| 测试 | Node 内置 `node --test`，零测试框架 |
+| 部署 | GitHub Pages / Vercel（只读镜像） |
 
 ## 快速开始
 
-要求：Node.js **18+**；可选 Python 3.9+（只读浏览不需要后端）。
+要求：Node.js **18+**。
 
 ```bash
 # 克隆并安装
@@ -92,15 +87,12 @@ git clone https://github.com/Escap1ng/Escaping-Notes.git
 cd Escaping-Notes
 npm install
 
-# 启动前端（开发；/api 由 Vite 代理到 127.0.0.1:8787）
+# 启动开发服务器
 npm run dev
 
-# 启动后端（另开终端；不启动则站点以只读 + 本地模式运行）
-python server/api.py
-
 # 生产构建
-npm run build          # 自有域名（history 路由）+ 生成 dist/rss.xml、dist/sitemap.xml
-npm run build:pages    # GitHub Pages 镜像（hash 路由）
+npm run build          # 默认构建（history 路由）+ 生成 dist/rss.xml、dist/sitemap.xml
+npm run build:pages    # Pages 构建（hash 路由，escaping.top 用的是这一份）
 npm run preview        # 本地预览 dist/
 ```
 
@@ -111,7 +103,7 @@ npm run preview        # 本地预览 dist/
 | `npm run dev` | Vite 开发服务器，改文件即时热更 |
 | `npm run build` / `build:pages` | 生产构建；两者 `base` 都是 `/`，唯一差异是 `VITE_DEPLOY=pages`（`.env.pages`）把路由切成 hash |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
-| `npm run test` | 13 个测试文件（12 个 `.mjs` + 1 个 `.py`）：frontmatter/markdown 解析、CRLF、URL 注入面、底片模糊三处默认值不漂移、卡面档位不漂移（键名 / 档位值 / 门控选择器三处同字面量、默认档就是基础块那个不透底值、`--card-solid` 两套主题各一份且浅色那枚是纯白）、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、首屏文案契约（`narrative.js` 里必须真有首屏要的那两样，视图不许引用不存在的字段——删字段是静默失败，只会渲染成空文本）、指针反馈一致性（时长与位移只准取四枚令牌，例外须显式写进名单）、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍经后台保存后不丢、两张详情页共用同一处返回机制（不许各抄一份）；那个 `.py` 是跨语言对拍——同一篇文章在 `frontmatter.js` 与 `api.py` 下必须同答案 |
+| `npm run test` | 12 个 `.mjs` 测试文件：frontmatter/markdown 解析、CRLF、URL 注入面、底片模糊三处默认值不漂移、卡面档位不漂移（键名 / 档位值 / 门控选择器三处同字面量、默认档就是基础块那个不透底值、`--card-solid` 两套主题各一份且浅色那枚是纯白）、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、首屏文案契约（`narrative.js` 里必须真有首屏要的那两样，视图不许引用不存在的字段——删字段是静默失败，只会渲染成空文本）、指针反馈一致性（时长与位移只准取四枚令牌，例外须显式写进名单）、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍三件写满且详情页 URL 往返不撞车、两张详情页共用同一处返回机制（不许各抄一份） |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
 | `npm run art:build` | 重绘本页顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
@@ -119,15 +111,14 @@ npm run preview        # 本地预览 dist/
 | `npm run cover:build` | 重烘文章封面 `public/posts/*.jpg`（原图放在不进仓库的 `plates-src/`，改图后重跑；产物需提交） |
 | `npm run font:build` | 重切展示层子集字体（需要本机装有 Noto Serif SC；产物已提交，日常不用跑） |
 | `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格，产物 3.6KB；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部；产物已提交） |
-| `npm run check` | 下面四道门禁连跑（api / docs / naming / contrast），提交前跑这一条 |
-| `npm run check:api` | `docs/api.md` 的端点表与 `server/api.py` 的路由双向对拍，漂移即退出码非 0 |
+| `npm run check` | 下面三道门禁连跑（docs / naming / contrast），提交前跑这一条 |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对 README 路由表与 `src/router` 一致 |
 | `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
 | `npm run check:contrast` | 从 `site.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
 
 ## 页面地图
 
-12 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航只放前 7 条（`/login`、`/admin` 不进导航）。
+10 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航只放前 7 条。
 
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
@@ -140,16 +131,13 @@ npm run preview        # 本地预览 dist/
 | `/projects` | 项目 | 项目卡片栅格 |
 | `/projects/:slug` | 项目介绍 | 单个项目，与文章页同一块玻璃底板；`Esc` 或点空白退回列表 |
 | `/about` | 关于 | 自述 · 实时读数 · 装备 · 友链 |
-| `/login` | 登录 | 功能页 |
-| `/admin` | 管理 | 后台编辑 |
 
-> 第 12 条是 catch-all：任何未匹配路由落到 404 ——「这里没有页面」。
+> 第 10 条是 catch-all：任何未匹配路由落到 404 ——「这里没有页面」。
 
 ## 项目结构
 
 ```text
 ├── index.html             # 壳层：首帧内联脚本（主题 + 底片模糊 + 卡面档位 + 按主题预加载首屏地景，都不闪一下）、SEO/OG 元信息
-├── server/api.py          # 后端：内容 / 鉴权 / RSS / OG 注入 / 歌单同步，监听 127.0.0.1:8787
 ├── content/posts/         # Markdown 文章（frontmatter）
 ├── public/                # 静态资源：favicon、robots.txt、og.png，以及三个**必须入库**的派生素材目录
 │                          #   plates/（底图）· posts/（封面）· audio/（自托管音轨）——重烘命令见「常用脚本」
@@ -160,41 +148,35 @@ npm run preview        # 本地预览 dist/
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块）
 │   ├── build_readme_art.mjs # 本页顶部两张底片图：按 StarTrails 常数离线复算
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1 # 底图与封面烘图（PowerShell + System.Drawing，CI 上跑不了）
-│   ├── check_api_doc.py   #   docs/api.md ⇄ server/api.py 端点对拍（带 --self 负向对照）
 │   ├── check_doc_refs.py  #   文档引用 / § 节号 / README 路由表 的漂移扫描
 │   ├── check_naming.py    #   命名规约扫描
 │   ├── check_contrast.mjs #   主题令牌 WCAG 对比度审计
 │   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/config/records.js（Python3 标准库；只读镜像用）
 │   ├── data/              #   脚本输入数据（GB2312 一级字表，build_font 用）
 │   └── lib/               #   脚本间共用模块（PNG 编码器，build_seo 与 build_readme_art 共用）
-├── docs/                  # design.md 设计依据 · manual.md 使用手册 · api.md 后端接口契约
+├── docs/                  # design.md 设计依据 · manual.md 使用手册
 │   └── assets/readme/     # README 配图（含生成方式与换真截图的步骤）
-├── tests/                 # 零依赖防护网：node --test + unittest，跑 npm run test
+├── tests/                 # 零依赖防护网：node --test，跑 npm run test
 └── src/
     ├── assets/fonts/      # 两枚自托管子集 woff2（正文衬线 + 刊头 Didone），均 700 字重 + OFL 许可
     ├── components/        # 平铺七件：StarTrails 星轨相机 · HorizonHero 首屏排版 · SiteHeader 顶栏+抽屉 · SiteFooter · MusicCard 播放器卡 · SettingsCard 底片模糊滑杆 + 卡片颜色两档 · SearchCard 顶栏搜索卡
     ├── config/            # narrative.js 文案层 · site.js 站点信息 · 内容种子 6 个文件（records.js 由脚本生成，勿手改）
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
+    ├── lib/               # content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
     ├── styles/            # site.css 一个文件：结构刻度 + 两套主题配色 + 全站基元
-    └── views/             # 12 个视图平铺，一页一个文件：10 张内容页 + AdminView / LoginView
+    └── views/             # 10 个视图平铺，一页一个文件
 ```
 
 ## 部署
 
-三种方式（Vercel 只读镜像 / GitHub Pages 只读镜像 / 自有服务器 + nginx + systemd）的完整步骤、nginx 配置与备案注意事项见 **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)**。要点：
+两种方式（GitHub Pages / Vercel 只读镜像）的完整步骤见 **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)**。要点：
 
-- GitHub Pages 镜像已绑裸域名 `escaping.top`（`www` 留给自建服务器），DNS 记录、验证命令与证书步骤见 `docs/manual.md` §4.2
+- GitHub Pages 已绑裸域名 `escaping.top`，DNS 记录、验证命令与证书步骤见 `docs/manual.md` §4.2
 - 因为域名绑的是根路径，两种构建的 `base` 都是 `/`——`build:pages` 不再带仓库名前缀，它只换路由模式
-- 登录、发文、全网计数依赖后端，只有自有服务器能跑完整版；两个免费平台是只读镜像
-- 涉及登录务必启用 HTTPS
-- 自建服务器需设 `SITE_DIST` 与 `SITE_DATA` 两个环境变量（与手册的 /opt + /var/www 布局对齐），否则服务端 meta 注入与 `/rss.xml` 会 404
-- 备份 = 复制服务器 `data/` 目录
 
 ## 文档
 
 - [docs/design.md](docs/design.md) —— 界面设计唯一依据（概念、色彩与令牌、组件契约、开发指南）
 - [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 部署 / 常见问题）
-- [docs/api.md](docs/api.md) —— 后端接口契约：端点全表、鉴权与限流、状态码、存储与 fail-closed 边界、已知缺陷。附 `npm run check:api`，把文档与 `server/api.py` 的路由双向对拍——**改端点必须同步这份文档**
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) —— 本页四张配图的来源、重跑方式与「想换真截图该怎么做」
 
 ## 许可与使用声明
@@ -204,9 +186,9 @@ npm run preview        # 本地预览 dist/
 | 客体 | 许可 |
 | --- | --- |
 | **博客内容** —— 文章正文、站内原创图片与文案 | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)：可复制、可改编、可转载，须署名作者、不得用于商业用途、衍生作品须以同一协议发布 |
-| **源代码与设计** —— `src/`、`server/`、`scripts/`、`docs/`、视觉与交互设计、星轨交互装置 | 非商用声明，即下列五条 |
+| **源代码与设计** —— `src/`、`scripts/`、`docs/`、视觉与交互设计、星轨交互装置 | 非商用声明，即下列五条 |
 | **字体** | 两枚展示层子集分别取自 Noto Serif SC 与 Playfair Display（均 SIL OFL 1.1），条款全文见 [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
-| **第三方素材** | 后端嵌入的歌单、友链与站外内容各自依其原许可，不在本节授权范围内 |
+| **第三方素材** | 嵌入的歌单、友链与站外内容各自依其原许可，不在本节授权范围内 |
 
 以下五条只约束上表第二行的「源代码与设计」：
 

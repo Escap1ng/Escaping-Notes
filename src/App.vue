@@ -3,8 +3,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
-import { loadContent } from './lib/content.js'
-import { loadMe } from './lib/auth.js'
 import { debounce } from './lib/debounce.js'
 import { shift } from './lib/shift.js'
 
@@ -50,8 +48,6 @@ const onResize = debounce(() => {
 let ro = null
 
 onMounted(() => {
-  loadContent()
-  loadMe()
   measure()
   // body 尺寸变化 = 页面变高了（内容/图片加载、路由切换、字体换入）：重测缓存
   ro = new ResizeObserver(() => {

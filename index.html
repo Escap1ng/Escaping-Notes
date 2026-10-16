@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#020204" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f2f5f9" media="(prefers-color-scheme: light)" />
 
-    <!-- 站点域名写死为公开地址：与 server/api.py 的 SITE_URL 默认值、src/config/site.js 的 url 保持同一处事实。
-         换域名时这三处要一起改。文章页的 title / description / og / canonical 由后端 inject() 重写。 -->
+    <!-- 站点域名写死为公开地址：与 src/config/site.js 的 url 保持同一处事实，换域名时两处一起改。
+         文章页的 title 由前端挂载后改写；og / canonical 只有这一份通用值——静态站没有服务端按文章重写。 -->
     <link rel="canonical" href="https://escaping.top/" />
     <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Escaping Notes" />
     <meta property="og:site_name" content="Escaping Notes" />

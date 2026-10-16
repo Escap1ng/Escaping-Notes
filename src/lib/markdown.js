@@ -5,10 +5,10 @@
 const esc = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
-// URL 口径：渲染结果经 v-html 进 DOM，而 /api/posts 的写权限是 admin **或** owner
-// （server/api.py 的 _post_write），所以"写文章的人一定可信"不成立——读者登录后 en-token
-// 就躺在 localStorage 里，一个 javascript: 链接足以把它取走。白名单之外一律不成链接/图片，
-// 但保留可见文字，与修表格时定下的"不吞内容"是同一条取向。由 tests/markdown.test.mjs 把守。
+// URL 口径：渲染结果经 v-html 进 DOM，而文章正文是带 frontmatter 的 Markdown，来源会变
+// （引用、转载、别人提的 PR 都可能进来），所以"写文章的人一定可信"不成立——一个 javascript:
+// 链接足以在读者页面上动手。白名单之外一律不成链接/图片，但保留可见文字，与修表格时定下的
+// "不吞内容"是同一条取向。由 tests/markdown.test.mjs 把守。
 const SAFE_SCHEME = /^(?:https?:|mailto:|tel:)/i
 // 浏览器解析 URL 时会自行剥掉前导控制符与空白，所以这里也先按同一口径擦一遍再判
 const CTRL = new RegExp('[\\u0000-\\u0020]', 'g')

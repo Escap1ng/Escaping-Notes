@@ -3,8 +3,6 @@ dist
 .DS_Store
 *.local
 .trae/
-server/data/
-server/data.tested/
 __pycache__/
 *.pyc
 

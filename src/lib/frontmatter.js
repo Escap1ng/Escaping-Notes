@@ -1,7 +1,7 @@
-// frontmatter 解析与字数/阅读时长统计：打包回退与 API 数据共用
+// frontmatter 解析与字数/阅读时长统计：打包进产物的文章都走这里
 
 export function parseFrontmatter(raw) {
-  // \r? 不能省：api.py 与 build_seo.mjs 的另两份实现都写了。缺了它，Windows 上
+  // \r? 不能省：build_seo.mjs 那份实现也写了。缺了它，Windows 上
   // core.autocrlf=true 的新克隆（CRLF 检出）会整份 frontmatter 不识别——标题变空、
   // 日期回落 1970-01-01、`---` 被当正文渲染。由 tests/frontmatter.test.mjs 把守。
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(raw)

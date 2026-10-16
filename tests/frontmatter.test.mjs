@@ -12,7 +12,7 @@ test('解析 LF 书写的 frontmatter，正文不含分隔线', () => {
   assert.equal(body, '正文\n')
 })
 
-// 三份解析器里只有这一份漏了 \r?（api.py 与 build_seo.mjs 都写了）。
+// 两份解析器里只有这一份漏了 \r?（build_seo.mjs 那份写了）。
 // Windows 上 core.autocrlf=true 的新克隆会拿到 CRLF 检出，漏掉这一条就等于
 // 整个 frontmatter 不识别：标题空、日期回落 1970-01-01、`---` 一起当正文渲染出来。
 test('CRLF 检出的文章必须与 LF 解析结果一致', () => {

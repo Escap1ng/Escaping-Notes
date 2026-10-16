@@ -2,10 +2,8 @@
 //   npm run seo:build        → dist/sitemap.xml + dist/rss.xml
 //   node scripts/build_seo.mjs --og  → 额外重绘 public/og.png（提交进仓库的分享卡片）
 //
-// 为什么 RSS/Sitemap 走构建期而不是服务端：GitHub Pages 只读镜像没有后端，
-// index.html 里 <link rel="alternate" href="/rss.xml"> 会直接 404。
-// 自有域名场景下 nginx 把 /rss.xml 反代给 api.py（动态、含后台上传的文章），
-// 那份永远优先，本脚本产物只是镜像兜底。
+// RSS/Sitemap 走构建期：站点是纯静态的（GitHub Pages），没有服务端能动态生成这两个文件，
+// 而 index.html 里 <link rel="alternate" href="/rss.xml"> 指向的就是这份产物。
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -13,15 +11,8 @@ import { encodePng } from './lib/png.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'dist')
-// 文章有**两个**目录（真正的单一事实源合并放在方案 S2，这里先止住漏发文）：
-//   content/posts      —— 仓库里手写的稿子，同时是前端的离线兜底（src/lib/posts.js）
-//   server/data/posts  —— 站长在 /admin 里发的文，即 api.py 的 POSTS_DIR
-// 原先只读前者，于是**后台发的文章永远进不了 dist/sitemap.xml 与 dist/rss.xml**。
-// 也支持 SITE_DATA 覆盖，口径与 api.py 一致（部署机上的 data 不在仓库里时能指对）。
-const POSTS_DIRS = [
-  join(ROOT, 'content', 'posts'),
-  join(process.env.SITE_DATA || join(ROOT, 'server', 'data'), 'posts'),
-]
+// 文章的唯一事实源：仓库里的 content/posts（同一份也被前端 src/lib/posts.js 打包进产物）
+const POSTS_DIR = join(ROOT, 'content', 'posts')
 
 /* ---------------- 站点信息 / 文章 ---------------- */
 function siteUrl() {
@@ -31,12 +22,11 @@ function siteUrl() {
 }
 
 function parsePosts() {
-  const bySlug = new Map() // 后一个目录（server 侧）覆盖同名 slug：它是线上实际服务的那份
-  for (const dir of POSTS_DIRS) {
-    if (!existsSync(dir)) continue
-    for (const name of readdirSync(dir)) {
+  const items = []
+  if (existsSync(POSTS_DIR)) {
+    for (const name of readdirSync(POSTS_DIR)) {
       if (!name.endsWith('.md')) continue
-      const raw = readFileSync(join(dir, name), 'utf8')
+      const raw = readFileSync(join(POSTS_DIR, name), 'utf8')
       const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
       const meta = {}
       const body = m ? m[2] : raw
@@ -48,7 +38,7 @@ function parsePosts() {
         }
       }
       const slug = name.replace(/\.md$/, '')
-      bySlug.set(slug, {
+      items.push({
         slug,
         title: meta.title || slug,
         date: meta.date || '1970-01-01',
@@ -58,7 +48,7 @@ function parsePosts() {
     }
   }
   // 与前端一致：按日期倒序
-  return [...bySlug.values()].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 }
 
 const esc = (s) =>

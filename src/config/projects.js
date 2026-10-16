@@ -1,7 +1,6 @@
 // 项目页种子数据。
-// 卡面那四个字段（name / desc / year / url）阶段三起可在 /admin 设置页签按行编辑；
-// 介绍三件（detail 段落 / points 要点 / stack 一行技术栈）**只在这里改**——后台的行式编辑装不下
-// 多段正文。服务器里存的那份不带它们，lib/content.js 按 name 回贴，所以后台点保存不会抹掉介绍。
+// 卡面四字段（name / desc / year / url）与介绍三件（detail 段落 / points 要点 / stack 一行技术栈）
+// 都只在这里改——站点是构建期定稿的静态产物，没有后台表单，改完提交即生效。
 export const projects = [
   {
     name: 'Escaping Notes',
@@ -9,17 +8,17 @@ export const projects = [
     year: '2026',
     url: 'https://github.com/Escap1ng/Escaping-Notes',
     detail: [
-      '一个个人博客与记录站，把写过的东西按时间落在同一张底片上。前端是 Vue 3 + Vite 的单页应用，11 条路由全部懒加载；文章用带 frontmatter 的 Markdown 存在仓库里，后端是 Python 3 标准库的单文件服务（server/api.py），不装任何第三方依赖。',
+      '一个个人博客与记录站，把写过的东西按时间落在同一张底片上。前端是 Vue 3 + Vite 的单页应用，10 条路由全部懒加载；文章用带 frontmatter 的 Markdown 存在仓库里，构建时打包进产物，站点没有服务端。',
       '首页架着一台一直开着快门的相机：星轨由 Canvas 2D 的离屏累积缓冲逐帧画出，滚动和光标都在改变它的曝光速度；沉积是全站累积的，换页不重铺，回到首页还是那圈越积越密的弧。首屏之下是一条照片地景横带，深色与浅色用的是同一取景，切主题不换山。',
-      '设计上能核的部分都写进了 docs/design.md——界面唯一依据。颜色、字号、间距全部走令牌，四个门禁脚本在提交前对拍：端点表与后端路由、文档里的引用与路由表、命名规约、主题令牌的 WCAG 对比度。测试用 Node 内置 test runner 加 python unittest，零测试框架。',
+      '设计上能核的部分都写进了 docs/design.md——界面唯一依据。颜色、字号、间距全部走令牌，三道门禁脚本在提交前对拍：文档里的引用与路由表、命名规约、主题令牌的 WCAG 对比度。测试用 Node 内置 test runner，零测试框架。',
     ],
     points: [
       '运行时依赖只有 Vue 与 Vue Router；展示字体是一枚自托管 woff2，全站不引 CDN',
-      '后端缺席时整站回落到本地种子数据，Pages 上那份只读镜像照样能读完全部内容',
+      '整站是构建期定稿的静态产物：文章与配置随构建进 dist，页面加载后不再请求任何接口',
       '抽屉与三处灯箱都有焦点陷阱（关闭后焦点回到触发它的那一枚），减弱动效下有完整的静态降级',
-      'GitHub Pages 镜像已绑 escaping.top，带登录与计数的完整版留在自建服务器上',
+      '已绑自定义域名 escaping.top；Vercel 上另有一份只读镜像',
     ],
-    stack: 'Vue 3 · Vite 5 · Vue Router 4 · Canvas 2D · Python 3 标准库',
+    stack: 'Vue 3 · Vite 5 · Vue Router 4 · Canvas 2D',
   },
   {
     name: 'mathmodel-kit',

@@ -1,6 +1,6 @@
 // src/lib/markdown.js 的行为钉子
 // 重点盯两类：① docs/manual.md §2.2 记的那批"评审查出、自查全漏"的缺陷不许复活；② 渲染结果会进 v-html，
-// 而 /api/posts 的写权限是 admin 或 owner（api.py 的 _post_write），所以"作者=可信"不成立，
+// 而文章正文来自带 frontmatter 的 Markdown（引用、转载、别人提的 PR 都可能进来），所以"作者=可信"不成立，
 // 链接与图片的 URL 口径必须当安全边界看。
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -1,30 +1,10 @@
 <script setup>
 // 新版共振：歌单快照（运行时零外部请求）+ 卡面聚光、曲目行左缘标记
-import { computed, onMounted, ref } from 'vue'
-import { records, loadRecords, syncRecords } from '../lib/records.js'
+import { computed, ref } from 'vue'
+import { records } from '../lib/records.js'
 import { music, tracks, playIndex, toggleMusic } from '../lib/music.js'
 import { onLens } from '../lib/lens.js'
-import { isOwner } from '../lib/auth.js'
 import { N, navLabel } from '../config/narrative.js'
-
-const syncing = ref(false)
-const syncMsg = ref('')
-const syncErr = ref(false)
-async function onSync() {
-  syncing.value = true
-  syncMsg.value = ''
-  const r = await syncRecords()
-  if (r && Array.isArray(r.songs)) {
-    Object.assign(records, r)
-    syncErr.value = false
-    syncMsg.value = `已同步 ${r.songs.length} 首`
-  } else {
-    syncErr.value = true
-    syncMsg.value = '同步失败'
-  }
-  syncing.value = false
-}
-onMounted(loadRecords)
 
 // 再点当前曲 = 暂停/继续，点别的行 = 换曲；与顶栏那张卡走同一条通道
 function onSong(i) {
@@ -81,11 +61,6 @@ const shownSongs = computed(() =>
           <p class="en-mono meta">{{ records.songs.length }} 首 · SYNC {{ records.updated }}</p>
         </div>
         <div class="fh-acts">
-          <template v-if="isOwner()">
-            <button class="en-btn en-btn-sm en-btn-ghost" type="button" :disabled="syncing" @click="onSync">
-              {{ syncing ? '同步中…' : '同步歌单' }}
-            </button>
-          </template>
           <a class="en-btn en-btn-sm en-btn-ghost" :href="records.url" target="_blank" rel="noopener noreferrer">
             在 QQ 音乐打开<span aria-hidden="true">↗</span>
           </a>
@@ -99,7 +74,6 @@ const shownSongs = computed(() =>
           >
             {{ listOpen ? '收起 ↑' : `展开其余 ${records.songs.length - PREVIEW} 首 ↓` }}
           </button>
-          <span v-if="syncMsg" :class="syncErr ? 'en-note-err' : 'en-note-ok'">{{ syncMsg }}</span>
         </div>
       </div>
       <ol id="qq-tracks" class="tracks">
@@ -122,7 +96,7 @@ const shownSongs = computed(() =>
 
 /* 曲目表整张进一张卡：卡内只留列表自己的分隔线。
    表头一行负责说清"这是哪份表、多少首、什么时候同步的"，
-   右边三个动作（同步 / 去 QQ / 折叠）全部是对这张表的操作，所以不放头卡 */
+   右边两个动作（去 QQ / 折叠）全部是对这张表的操作，所以不放头卡 */
 .tracklist {
   min-height: 0;
   gap: var(--space-1);

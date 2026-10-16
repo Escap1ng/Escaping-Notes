@@ -10,7 +10,6 @@
 [![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
 [![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/StarTrails.vue)
-[![Backend](https://img.shields.io/badge/Backend-Python%203-3776ab?logo=python&logoColor=white)](server/api.py)
 [![Content](https://img.shields.io/badge/Content-CC%20BY--NC--SA%204.0-4d4d4d)](#license--usage-terms)
 [![Code](https://img.shields.io/badge/Code-Personal%20Use%20Only-d42b2b)](#license--usage-terms)
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
@@ -47,16 +46,13 @@ Trails are only painted inside the landing screen. But **the deposition is site-
 - **Dual themes** — dark (cold white / warm white / amber trails) and light (astronomical dry plate: slate/graphite trails + vermilion accents); trail colour temperature follows magnitude (dim stars cool, a few bright stars warm). **Switching theme no longer swaps the mountain** — the dark landing screen is a darkened bake of the same framing (`plate-hero-deep.jpg`) and both themes share one ridge polyline. Each theme deposits its own plate (to keep colours from bleeding); the default is light and the first frame deliberately ignores `prefers-color-scheme`, because the landing screen is a bright photograph
 - **Landing typography** — the landscape strip is pinned to the bottom edge with its height derived from the photo itself (`.hero-plate` height = `clamp(54svh, 31vw, 70svh)`; 31vw is the photo's own cover height, so wide windows raise the fold and nothing gets cropped, while squarer windows keep the lower 54% and leave the upper half for type); trails are masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px; the site name is typed out character by character (first keystroke after 260ms, 82ms per character, caret fades 1500ms after the last one) and only then does the sixteen-character manifesto release (0.9s reveal, second line 0.18s behind); the whole text block sinks at 0.25× scroll speed and fades out
 - **Below the fold** — a drawer holding one local-time readout, three featured cards and the last five updates (the whole card links to `/updates`), pulled up from below the first time it enters the viewport; it rides on **one shared photographic plate for the whole site** — five slots on a carousel, 10s each (50s cycle), and on the dark theme all five tokens point to the same file so nothing changes at night. How blurred the plate is, is a runtime parameter: a 0–12px slider in the settings card, defaulted to full, remembered in `localStorage`; **card colour is a runtime parameter too**: two radios in the same card — opaque (**the default**: pure white on the light theme, an opaque ink face on the dark one, one setting with two surfaces to match it) or translucent (the photo shows through the card)
-- **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (6 spacing / 11 type-size / 4 line-height / 3 weight steps), card tokens, buttons in "2 sizes × 4 semantics", inputs and filter chips sharing the card surface (the login / admin forms stay underline-style), three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
+- **Unified design system** — every screen is assembled from one set of tokens and primitives: four scales (6 spacing / 11 type-size / 4 line-height / 3 weight steps), card tokens, buttons in "2 sizes × 4 semantics", inputs and filter chips sharing the card surface, three-state notices, single-character icons; no raw font sizes or spacings inside components (fluid display sizes use `clamp()`), so changing a scale updates the whole site
 - **Canvas 2D rendering** — trails are drawn frame by frame with an offscreen accumulation buffer (280 stars, 140 on viewports ≤720px, and multiplied by 0.65 on the dark theme); no third-party UI kits, chart libraries or font CDNs — Vue and Vue Router are the only runtime dependencies, and the display faces are **two** self-hosted subset woff2 files (a serif for display text, a Didone for the masthead)
-- **Graceful degradation** — if the API is unreachable or times out (10s reads, 60s uploads) the site falls back to the bundled seeds in `src/config/`: still a complete offline plate, readable end to end with no backend at all
 - **Accessibility** — focus traps in the header drawer, the player card, the settings card and both lightboxes (focus returns to the element that opened them), `Esc` or a click outside the reading plate returns from either detail page to its list, route changes announced to screen readers (`role="status"`), a focusable skip link and `#main`, ≥44px touch targets for buttons / links / chips under `pointer: coarse`, and a full static fallback under `prefers-reduced-motion` (title appears complete, trails are pre-computed as one 380-step plate, the carousel stops on its first slot)
 - **Performance** — the landscape plate lives on `App.vue`, not in each page, so routing never repaints it; the landing photo (this page's LCP element) is `preload`ed by the inline first-paint script for the active theme, so it starts downloading alongside the stylesheet instead of after it; the `--shift` scroll depth caches its extreme instead of reading `scrollHeight` per frame (which is a reflow per frame); resize is debounced 150ms; the drawer's `IntersectionObserver` disconnects after one pull; card glows move by transform; the persistent header surface avoids `backdrop-filter` — glass is reserved for the surfaces that genuinely need isolating from the plate (reading panel, landing drawer, nav drawer, both lightboxes)
 - **Reading legibility (stated plainly)** — a scrim-free landscape photo **cannot** reach WCAG AA for naked text: the worst measured point sits at 1.0–1.8:1 regardless of gradient shape (three shapes were tried — single vertical, double scrim top and bottom, fade-in from the top). So the work is divided: the plate is scenery, and body copy always lands on `.sheet` / `.en-glass` / `.en-card`, where the foreground starts at 5.5:1. `npm run check:contrast` recomputes the theme tokens against a flat ground before every commit (dark `--text-0` 18.38:1, light 16.90:1 against a 7:1 bar) — but that checks tokens against a solid colour, **not** the composited photo
 - **Feedback loop** — skeleton cards while the archive loads (3 of them), distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query (shareable, survives reload)
 - **Gallery** — `/gallery` pins every image the site has used to one wall of Polaroids: 9 site-owned plates (two hero bands, five light plates, the dark scrim plate, `og.png`) plus every article cover, deduplicated by src; tilt is ±2.4° hashed from the src, entry staggers 60ms per card (capped at 12), columns run 3/2/1; the lightbox `Teleport`s to `body` with ←/→ paging, Esc to close and >50px swipes on touch
-- **Full-featured admin** — `/admin` splits into a "users" tab (admin) and "posts + settings" (owner), where settings edits updates, projects, gear and the playlist; auth is an `Authorization: Bearer` token (7-day life, kept in `localStorage`), rate-limited at 30 requests / 60s per IP counting POSTs only; **there is no self-registration endpoint** — accounts are created by the owner alone; the "sync playlist" button on the Music page is owner-only and calls `POST /api/sync/records`, which re-fetches the public QQ Music playlist server-side
-
 ## Two load-bearing designs, in figures
 
 ### The plate layer hangs on `App.vue` — one `fixed` containing-block trap
@@ -78,13 +74,12 @@ Now that the plate persists across routes, `fall` is the only transition left: t
 | Frontend | Vue 3 (Composition API) + Vite 5 + Vue Router 4 |
 | Rendering | Canvas 2D with an offscreen accumulation buffer (long-exposure plate simulation) |
 | Styling | Plain CSS + custom-property tokens (one file, `site.css`: structural scales + the two theme palettes + site-wide primitives) |
-| Backend | Single-file Python 3 stdlib server (`server/api.py`), no extra dependencies |
-| Testing | Node's built-in `node --test` + `python -m unittest`, no test framework |
-| Deployment | GitHub Pages / Vercel / nginx + systemd |
+| Testing | Node's built-in `node --test`, no test framework |
+| Deployment | GitHub Pages / Vercel (read-only mirror) |
 
 ## Quick Start
 
-Requirements: Node.js **18+**; Python 3.9+ optional (read-only browsing needs no backend).
+Requirements: Node.js **18+**.
 
 ```bash
 # Clone and install
@@ -92,15 +87,12 @@ git clone https://github.com/Escap1ng/Escaping-Notes.git
 cd Escaping-Notes
 npm install
 
-# Run the frontend (dev; /api is proxied to 127.0.0.1:8787 by Vite)
+# Run the dev server
 npm run dev
 
-# Run the backend (another terminal; without it the site runs read-only + local mode)
-python server/api.py
-
 # Production builds
-npm run build          # own domain (history router) + emits dist/rss.xml, dist/sitemap.xml
-npm run build:pages    # GitHub Pages mirror (hash router)
+npm run build          # default build (history router) + emits dist/rss.xml, dist/sitemap.xml
+npm run build:pages    # Pages build (hash router — the one served at escaping.top)
 npm run preview        # preview dist/ locally
 ```
 
@@ -111,7 +103,7 @@ npm run preview        # preview dist/ locally
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` / `build:pages` | Production builds; both use `base: '/'` — the only difference is `VITE_DEPLOY=pages` (`.env.pages`) switching the router to hash mode |
 | `npm run preview` | Serve `dist/` the way production would |
-| `npm run test` | 13 test files (12 `.mjs` + 1 `.py`): frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the card-surface setting never drifting apart (storage key / mode values / gate selector spelled identically in three places, the default being the base block's opaque value, and `--card-solid` defined for both themes with the light one exactly white), the first-paint theme, the preloaded landing photo matching `--hero-img` in `site.css`, the landing copy contract (the two fields the hero needs must exist in `narrative.js`, and no view may reference a field that isn't there — deleting one fails silently as empty text), pointer-feedback consistency (durations and offsets must come from the four tokens, or be listed as an explicit exception), token single source (no token defined twice, nothing defined for only one theme), the gallery list matching the asset manifest, project write-ups surviving a save from `/admin`, and both detail pages sharing one return mechanism; the `.py` file is a cross-language pair — one article must parse the same under `frontmatter.js` and `api.py` |
+| `npm run test` | 12 `.mjs` test files: frontmatter/markdown parsing, CRLF, the URL injection surface, the three blur defaults never drifting apart, the card-surface setting never drifting apart (storage key / mode values / gate selector spelled identically in three places, the default being the base block's opaque value, and `--card-solid` defined for both themes with the light one exactly white), the first-paint theme, the preloaded landing photo matching `--hero-img` in `site.css`, the landing copy contract (the two fields the hero needs must exist in `narrative.js`, and no view may reference a field that isn't there — deleting one fails silently as empty text), pointer-feedback consistency (durations and offsets must come from the four tokens, or be listed as an explicit exception), token single source (no token defined twice, nothing defined for only one theme), the gallery list matching the asset manifest, the three project write-up fields being filled in and detail-page URLs round-tripping without collisions, and both detail pages sharing one return mechanism |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
 | `npm run art:build` | Redraw the two plates at the top of this page (constants are read out of the source by regex and it throws if they are gone, so re-run after touching star-trail parameters) |
@@ -119,15 +111,14 @@ npm run preview        # preview dist/ locally
 | `npm run cover:build` | Re-bake the article covers in `public/posts/*.jpg` (originals live in `plates-src/`, which is not committed; re-run after changing them, and commit the output) |
 | `npm run font:build` | Re-subset the display font (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
 | `npm run font:build:didone` | Re-subset the masthead Didone (Playfair Display, uppercase and space only, 3.6 KB out; the variable source TTF lives in `fonts-src/` and is not committed — fetch steps are written in the script header; the output is committed) |
-| `npm run check` | Runs the four gates below in sequence (api / docs / naming / contrast) — the one command to run before committing |
-| `npm run check:api` | Diffs the endpoint table in `docs/api.md` against the routes in `server/api.py`, both ways; non-zero exit on drift |
+| `npm run check` | Runs the three gates below in sequence (docs / naming / contrast) — the one command to run before committing |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the README route table matches `src/router` |
 | `npm run check:naming` | Naming-convention scan; non-zero exit on a violation |
 | `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `site.css`; non-zero exit if a text token fails |
 
 ## Route Map
 
-All 12 routes are lazy-loaded and each carries `meta.t` for the document title and the screen-reader announcement; the header nav shows the first 7 only (`/login` and `/admin` stay out of the nav).
+All 10 routes are lazy-loaded and each carries `meta.t` for the document title and the screen-reader announcement; the header nav shows the first 7 only.
 
 | Route | Page | What it is |
 | --- | --- | --- |
@@ -140,16 +131,13 @@ All 12 routes are lazy-loaded and each carries `meta.t` for the document title a
 | `/projects` | Projects | Grid of project cards |
 | `/projects/:slug` | Project write-up | One project on the same frosted-glass plate as an article; `Esc` or a click outside the plate returns to the list |
 | `/about` | About | Bio · live counters · gear · friend links |
-| `/login` | Log in | utility page |
-| `/admin` | Console | Editing back end |
 
-> The twelfth route is the catch-all: anything unmatched renders the 404 page, titled 这里没有页面 ("there is no page here") — site copy is Chinese-only.
+> The tenth route is the catch-all: anything unmatched renders the 404 page, titled 这里没有页面 ("there is no page here") — site copy is Chinese-only.
 
 ## Project Structure
 
 ```text
 ├── index.html             # Shell: inline first-paint script (theme + plate blur + card surface + preloading the landing photo for that theme, so none of them flashes), SEO/OG metadata
-├── server/api.py          # Backend: content / auth / RSS / OG injection / playlist sync, listens on 127.0.0.1:8787
 ├── content/posts/         # Markdown posts (frontmatter)
 ├── public/                # Static assets: favicon, robots.txt, og.png, plus three derived-asset dirs that **must be committed**
 │                          #   plates/ (backdrops) · posts/ (covers) · audio/ (self-hosted tracks) — see "Scripts" for the bake commands
@@ -160,41 +148,35 @@ All 12 routes are lazy-loaded and each carries `meta.t` for the document title a
 │   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png (Node built-ins only)
 │   ├── build_readme_art.mjs # the two plates above: recomputed from StarTrails' constants
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1 # backdrop & cover baking (PowerShell + System.Drawing; cannot run on CI)
-│   ├── check_api_doc.py   #   docs/api.md ⇄ server/api.py route diff (with a --self negative control)
 │   ├── check_doc_refs.py  #   drift scan over doc references / § numbers / the README route table
 │   ├── check_naming.py    #   naming-convention scan
 │   ├── check_contrast.mjs #   theme-token WCAG contrast audit
 │   ├── sync_records.py    #   fetch public QQ playlist → src/config/records.js (Python 3 stdlib; read-only mirrors)
 │   ├── data/              #   script input data (the GB2312 level-1 character table used by build_font)
 │   └── lib/               #   modules shared between scripts (PNG encoder, used by build_seo and build_readme_art)
-├── docs/                  # design.md design spec · manual.md handbook · api.md backend API contract
+├── docs/                  # design.md design spec · manual.md handbook
 │   └── assets/readme/     # README figures (how they are made, and how to swap in real screenshots)
-├── tests/                 # Zero-dependency safety net: node --test + unittest, run by `npm run test`
+├── tests/                 # Zero-dependency safety net: node --test, run by `npm run test`
 └── src/
     ├── assets/fonts/      # Two self-hosted subset woff2 files (serif + masthead Didone), weight 700 + OFL licence
     ├── components/        # seven flat: StarTrails the camera · HorizonHero the landing type layer · SiteHeader bar + drawer · SiteFooter · MusicCard the player card · SettingsCard the plate-blur slider + card-surface radios · SearchCard the header search card
     ├── config/            # narrative.js copy layer · site.js site info · 6 content-seed files (records.js is generated — don't hand-edit)
-    ├── lib/               # api / auth / content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
+    ├── lib/               # content / posts / frontmatter / markdown / theme / storage / music / records / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / projects
     ├── styles/            # site.css, one file: structural scale + the two theme palettes + site-wide primitives
-    └── views/             # 12 views, one file each, flat: 10 content pages + AdminView / LoginView
+    └── views/             # 10 views, one file each, flat
 ```
 
 ## Deployment
 
-Full steps for all three targets (Vercel mirror / GitHub Pages mirror / self-hosted nginx + systemd), including the nginx config and ICP filing notes, live in **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)** (Chinese). Key points:
+Full steps for both targets (GitHub Pages / Vercel read-only mirror) live in **[docs/manual.md §4](docs/manual.md#4-上传方法部署上线)** (Chinese). Key points:
 
-- The GitHub Pages mirror is bound to the apex domain `escaping.top` (`www` is reserved for the self-hosted server); DNS records, verification commands and the certificate steps are in `docs/manual.md` §4.2
+- GitHub Pages is bound to the apex domain `escaping.top`; DNS records, verification commands and the certificate steps are in `docs/manual.md` §4.2
 - Because the domain is bound at the root, **both** builds use `base: '/'` — `build:pages` no longer carries the repository name, it only changes the routing mode
-- Login, publishing and cross-device view counts need the backend — only a self-hosted server runs the full version; both free platforms are read-only mirrors
-- Always enable HTTPS once login is involved
-- Self-hosting requires the `SITE_DIST` and `SITE_DATA` environment variables (to match the /opt + /var/www layout in the handbook); without them server-side meta injection and `/rss.xml` return 404
-- Backup = copy the server's `data/` directory
 
 ## Documentation
 
 - [docs/design.md](docs/design.md) — the single source of truth for the interface design (concept, colour system, component contracts, developer guide; Chinese)
 - [docs/manual.md](docs/manual.md) — handbook for editing, adapting and deploying (Chinese)
-- [docs/api.md](docs/api.md) — backend API contract: endpoint table, auth and rate limits, status codes, storage / fail-closed boundary, known issues; ships with `npm run check:api`, which diffs the doc against `server/api.py` both ways (Chinese)
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) — where these four figures come from, how to re-run them, and what to do if you want real screenshots
 
 ## License & Usage Terms
@@ -204,7 +186,7 @@ Two things are licensed separately here: **blog content** is under CC BY-NC-SA 4
 | Subject | Terms |
 | --- | --- |
 | **Blog content** — article text, original images and copy on this site | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): you may copy, adapt and redistribute it, with attribution, for non-commercial purposes only, and derivatives must be published under the same licence |
-| **Source code & design** — `src/`, `server/`, `scripts/`, `docs/`, the visual and interaction design and the star-trail device | the non-commercial notice, i.e. the five items below |
+| **Source code & design** — `src/`, `scripts/`, `docs/`, the visual and interaction design and the star-trail device | the non-commercial notice, i.e. the five items below |
 | **Fonts** | the two display subsets are derived from Noto Serif SC and Playfair Display respectively (both SIL OFL 1.1); the full licence is at [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
 | **Third-party material** | embedded playlists, blogroll links and off-site content keep their own terms and are not covered by this section |
 

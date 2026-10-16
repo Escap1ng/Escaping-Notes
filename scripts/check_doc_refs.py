@@ -19,8 +19,8 @@ if hasattr(sys.stdout, 'reconfigure'):
 用法：python scripts/check_doc_refs.py
 """
 
-DOCS = ['README.md', 'README.en.md', 'docs/design.md', 'docs/manual.md', 'docs/api.md']
-CODE_SECTIONED = ['src/styles/site.css', 'server/api.py', 'src/lib/sky.js']
+DOCS = ['README.md', 'README.en.md', 'docs/design.md', 'docs/manual.md']
+CODE_SECTIONED = ['src/styles/site.css', 'src/lib/sky.js']
 
 # 文档里作为"示例/待创建/构建产物"出现的路径，不是引用
 EXAMPLES = {

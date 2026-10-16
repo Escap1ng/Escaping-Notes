@@ -11,8 +11,7 @@ import { N } from '../config/narrative.js'
 
 const route = useRoute()
 const p = computed(() => findProject(content.projects, route.params.slug))
-// 没连上服务器之前不下"没有这个项目"的结论：种子那份先撑着，等 content.ready 说话
-const missing = computed(() => content.ready && !p.value)
+const missing = computed(() => !p.value)
 
 useDetailExit('/projects')
 

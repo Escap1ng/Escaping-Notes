@@ -6,7 +6,6 @@
 const PREFIX = 'en-'
 
 export const KEYS = {
-  token: `${PREFIX}token`, // 登录令牌，api.js 每次请求随 Authorization 头带上
   theme: `${PREFIX}theme`, // 主题：'well' 深色 / 'out' 浅色。index.html 的首帧内联脚本按同样的
   // 字面量读它，并在没存过时直接写 'out'——首开浅色的默认值只在那一处决定；改键名必须同步改那边。
   volume: `${PREFIX}vol`, // 播放器音量 0–1
@@ -16,7 +15,6 @@ export const KEYS = {
   // index.html 的首帧内联按字面量读——只有偏离默认档那一档（glass）需要写上属性。
   // 四处口径（这里的键名、surface.js 的两档值、index.html、site.css 的 [data-card-surface]）
   // 由 tests/card-surface.test.mjs 钉住。
-  viewed: `${PREFIX}viewed-`, // 本次会话是否已计过数，只活到关标签页，所以放 sessionStorage
 }
 
 export function read(key, fallback = null, area = localStorage) {
@@ -34,11 +32,6 @@ export function write(key, value, area = localStorage) {
     if (value === null || value === undefined) area.removeItem(key)
     else area.setItem(key, String(value))
   } catch {
-    /* 写不进去就不写：这些都只是偏好与会话标记，丢了不影响内容可读 */
+    /* 写不进去就不写：这些都只是偏好，丢了不影响内容可读 */
   }
-}
-
-// 只有这一处需要按 slug 拼键，所以拼法也收在这里，调用点不出现前缀字面量
-export function viewedKey(slug) {
-  return `${KEYS.viewed}${slug}`
 }

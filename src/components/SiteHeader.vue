@@ -3,7 +3,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { content } from '../lib/content.js'
-import { auth, logout } from '../lib/auth.js'
 import { theme, toggleTheme } from '../lib/theme.js'
 import { music } from '../lib/music.js'
 import { debounce } from '../lib/debounce.js'
@@ -196,12 +195,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         </svg>
       </button>
 
-      <div v-if="auth.user" class="auth en-mono">
-        <RouterLink to="/admin" class="auth-link">ADMIN</RouterLink>
-        <span class="auth-name">{{ auth.user.nickname }}</span>
-        <button class="auth-link" type="button" @click="logout">登出</button>
-      </div>
-
       <button
         class="burger ico-btn"
         type="button"
@@ -260,12 +253,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
               <span class="sheet-arrow" aria-hidden="true">→</span>
             </RouterLink>
           </nav>
-
-          <div v-if="auth.user" class="sheet-auth en-mono">
-            <RouterLink to="/admin" class="en-btn en-btn-quiet" @click="closeDrawer">ADMIN</RouterLink>
-            <span class="sheet-name">{{ auth.user.nickname }}</span>
-            <button class="en-btn en-btn-quiet" type="button" @click="logout(); closeDrawer()">登出</button>
-          </div>
 
           <p class="sheet-foot en-mono">// Escap1ng · 仍在坠入</p>
         </div>
@@ -423,8 +410,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 /* 右侧按钮统一：同高 32px 发丝胶囊框线（与 .en-btn-sm 同语言，仅形态更紧凑） */
-.ico-btn,
-.auth-link {
+.ico-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-0);
@@ -461,8 +447,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   stroke-linejoin: round;
 }
 
-.ico-btn:hover,
-.auth-link:hover {
+.ico-btn:hover {
   color: var(--cold);
   border-color: var(--cold);
   transform: translateY(var(--lift));
@@ -484,21 +469,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--text-1);
   border-color: var(--line);
   transform: none;
-}
-
-.auth {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.auth-name {
-  color: var(--hot);
-  /* 宽度上限兜底：极长昵称以省略号截断，而不是把右侧入口挤出视口 */
-  max-width: 10ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .burger {
@@ -608,20 +578,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--cold);
 }
 
-/* 抽屉内的管理入口（移动端顶栏隐藏 auth 时的兜底）：复用 .en-btn-quiet */
-.sheet-auth {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding-top: var(--space-1);
-  font-size: var(--fs-xs);
-}
-
-.sheet-name {
-  color: var(--hot);
-}
-
 .sheet-foot {
   padding-top: var(--space-2);
   border-top: 1px solid var(--line);
@@ -666,16 +622,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 /* 右上角四枚自 2026-10-09 起就是纯图标 32px 方（不再有文字档），
    所以原先"≤1400px 收起文字"那一档已无消费者，删掉 */
 
-/* 昵称是顶栏唯一宽度不可控的元素：1240px 以下先收起，
-   否则会把「管理/登出」挤出可视区（html 的 overflow-x: clip 会静默裁掉，用户无从发现） */
-@media (max-width: 1240px) {
-  .auth-name {
-    display: none;
-  }
-}
-
 /* 导航整条实测 497px（「映像」进来之后是 7 枚 × 67.6px + 6 × 4px 间距，本机 Chrome 量的），
-   与品牌 / 右上角四枚 / 登录后的管理入口相加超过 1280px，故折叠断点从 1200 抬到 1280。
+   与品牌 / 右上角四枚相加超过 1280px，故折叠断点从 1200 抬到 1280。
    加一枚导航实打实要 72px——这个数别凭感觉估，估小了就是 1201~1279px 那一段整条溢出被裁 */
 @media (max-width: 1280px) {
   .en-header {
@@ -687,10 +635,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   .burger {
     display: inline-flex;
   }
-  /* 顶栏容不下管理入口：移到抽屉（.sheet-auth） */
-  .auth {
-    display: none;
-  }
 }
 
 @media (max-width: 480px) {
@@ -699,7 +643,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   }
 }
 
-/* 触控设备：顶栏按钮与抽屉内的文字入口一律撑到 44px（放在断点之后才能压过 32px 的宽度） */
+/* 触控设备：顶栏按钮与抽屉内的关闭键一律撑到 44px（放在断点之后才能压过 32px 的宽度） */
 @media (pointer: coarse) {
   .ico-btn {
     height: 44px;
@@ -707,10 +651,6 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     min-width: 44px;
     padding: 0;
     justify-content: center;
-  }
-  /* 带文字的入口只加高不加宽，宽度交给内容 */
-  .auth-link {
-    height: 44px;
   }
   .sheet-close {
     width: 44px;
@@ -722,8 +662,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   .mark {
     animation: none;
   }
-  .ico-btn:hover,
-  .auth-link:hover {
+  .ico-btn:hover {
     transform: none;
   }
   .sheet-link,

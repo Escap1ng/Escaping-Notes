@@ -2,19 +2,17 @@
 title: 怎么写、怎么发：本博客的写作与上传
 date: 2026-10-10
 tags: [手册]
-summary: 从一枚 md 文件到 escaping.top 上的一张底片：frontmatter 写哪几行、封面从哪儿烘出来、/admin 与仓库种子各管哪一段、三种上线方式怎么选。
+summary: 从一枚 md 文件到 escaping.top 上的一张底片：frontmatter 写哪几行、封面从哪儿烘出来、站点内容存在哪里、上线怎么走。
 image: /posts/writing-and-uploading.jpg
 ---
 
 ![暮色里覆雪的富士山压着一带云，山脚铺开一座城；右侧五重塔的剪影横出一轮落日星芒](/posts/writing-and-uploading.jpg)
 
-这台相机怎么进一卷新底片，说清楚只要三句话：**正文是一个 md 文件，封面是从原图烘出来的派生素材，上线是一次 push 或一次后台保存**。下面把这三句摊开——它同时也是 `docs/manual.md` §2.2 与 §4 那两节的一份读者版。
+这台相机怎么进一卷新底片，说清楚只要三句话：**正文是一个 md 文件，封面是从原图烘出来的派生素材，上线是一次 push**。下面把这三句摊开——它同时也是 `docs/manual.md` §2.2 与 §4 那两节的一份读者版。
 
-## 两条路，一条主一条备
+## 只有一条路：改仓库里的文件
 
-日常发文走 `/admin` 的网页编辑器：登录后填表、保存即生效，不碰代码。这条路要后端，而后端只有自建服务器那一条路会跑起来（`www.escaping.top`）——Pages 与 Vercel 那两份是只读镜像，登录与发文在镜像上自动禁用。
-
-另一条路是仓库里的 `content/posts/*.md`。它同时是三样东西：服务器数据为空时的**初始种子**、无后端镜像的**内容来源**、以及批量修改的**通道**。阅读端不关心你走的哪条：`src/lib/posts.js` 先请求 `/api/posts`，拿不到（后端没起、超时、或者站点本身就是镜像）就回退打包进构建产物的那批 md。所以「后端挂了」不等于「文章没了」，这是设计而不是巧合。
+站内没有后台。文章就是仓库里的 `content/posts/*.md`，站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）就是 `src/config/*.js`——改完 push，GitHub Actions 重新构建，线上就是新的。没有一份内容躺在别处等着同步，也没有"必须在网页上改才生效"的东西。
 
 ## 写作：一个文件就是一篇
 
@@ -38,7 +36,7 @@ image: /posts/writing-and-uploading.jpg
 
 - `#` 让给文章标题，正文从 `##` 起，所以实际渲染出来最高到 h6。
 - 表格第二行那行分隔符**必须**写，缺了整段会按普通文字排版。列对齐由它上面的冒号决定：`:---` 左、`---:` 右、`:---:` 居中。
-- 链接与图片的地址只接受站内相对路径、锚点、`http(s):`、`mailto:`、`tel:`。写成 `javascript:` 之类的不会变成链接，只保留可见文字。原因不是排版而是权限：读者登录后令牌就存在他自己浏览器的 `localStorage` 里，一个点下去就能执行的地址足以把它取走。
+- 链接与图片的地址只接受站内相对路径、锚点、`http(s):`、`mailto:`、`tel:`。写成 `javascript:` 之类的不会变成链接，只保留可见文字。原因不是排版而是安全：正文会经 `v-html` 渲染给每一个读者，一条能点就能执行的地址足以在访客的浏览器里跑任意脚本。
 - 插图先放进 `public/images/`，正文里用「感叹号 + 方括号包 alt + 圆括号包路径」的语法引用它。alt 要真的描述画面——读屏靠它，图挂了也靠它。
 
 字数与阅读时长不用你写：正文按 400 字一分钟现算，卡片脚线上那行「N 字 · M 分钟」是读文件读出来的。
@@ -57,26 +55,23 @@ image: /posts/writing-and-uploading.jpg
 
 `public/posts/` 与 `public/plates/` 这两批派生物**必须进仓库**。原因很实在：烘图脚本跑在 Windows PowerShell + System.Drawing 上，Pages 的 ubuntu runner 执行不了，CI 里也装不了 PIL 或 sharp。仓库里这一份就是唯一的一份，加一条忽略规则的后果还是静默的——构建不报错，线上每张 `/posts/*.jpg` 都是 404。
 
-## 上传：先选身份，再选方式
+## 上传：push 即上线
 
 发之前跑一遍自检：
 
 ```powershell
 npm run build       # 出 dist/（含 rss.xml / sitemap.xml），无报错即合格
 npm test            # frontmatter 解析、Markdown 渲染、底片清单与 site.css 对拍
-npm run check       # api 文档 vs 路由、文档死链与节号、命名规约，漂移即退出码非 0
+npm run check       # 文档死链与节号、命名规约、主题令牌对比度，漂移即退出码非 0
 npm run preview     # 本地模拟线上环境，浏览器过一眼
 ```
 
-| 方式 | 落在哪 | 能做什么 |
+| 方式 | 落在哪 | 是什么 |
 | --- | --- | --- |
-| GitHub Pages | `escaping.top`（当前测试期主用） | 只读。`git push` 后 Actions 自动构建，文章读打包种子，登录与发文禁用 |
-| Vercel | `xxx.vercel.app` | 只读。同样 push 即部署，适合当第二个出口 |
-| 自建服务器 + nginx | `www.escaping.top` | 完整版。登录、发文、全站计数都要那个后端 |
+| GitHub Pages | `escaping.top`（主线） | `git push` 后 Actions 自动构建并发布。文章与配置都在构建期打包 |
+| Vercel | `xxx.vercel.app` | 另一份出口，同样 push 即部署，看到的是一模一样的内容 |
 
-自建服务器那条的实际动作是：本地 `npm run build`，把 `dist/` 传上去，再跑单文件的 Python 后端（零第三方依赖，约 20MB 内存），nginx 把 `/api/` 反代给它。前端在 API 不可达时自动降级，不报错。
-
-有一处坑要单独说：SEO 产物（`sitemap.xml` / `rss.xml`）取的是 `content/posts/` 与服务器 `data/posts/` 的**并集**，按文件名去重、`data/` 优先。这意味着构建机必须**看得见** `server/data/posts/` 才能把后台发的文章收进产物——本地很久没跑后端时那目录可能只是早期副本，从后台发了新文章后请先从服务器同步一次再 `npm run build`。后台发的文章不进 git，它的备份就是复制服务器上的 `data/` 目录。
+两种方式都是纯静态托管，没有服务端能动态生成东西：`sitemap.xml` 与 `rss.xml` 由构建期的 `scripts/build_seo.mjs` 依 `content/posts/` 生成，随站点一起发布。
 
 ## 发完之后会自动变的三处
 

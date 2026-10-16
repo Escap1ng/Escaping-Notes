@@ -18,8 +18,7 @@ export const site = {
   gear: [
     { name: 'Vue 3', note: '视图层与响应式；运行时只依赖它和 vue-router' },
     { name: 'Vite', note: '三档构建：dev / build / build:pages' },
-    { name: 'Python', note: '后端是单文件 api.py，只用标准库' },
-    { name: 'nginx', note: '自建服务器那侧的反代与证书' },
+    { name: 'GitHub Actions', note: 'push 即构建并发布到 Pages' },
     { name: 'Canvas 2D', note: '星轨逐帧绘制，无 WebGL、无图表库' },
   ],
 }

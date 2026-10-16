@@ -28,15 +28,18 @@ const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 /* 折线声波的高度与相位：哈希噪声经邻域平滑（不规则但相邻相近，仍舒缓），
    再叠一层慢涨落给出整体起伏；相位加抖动，去掉整齐行波的机械感。
    全部由下标确定，同一屏永远同一排，不随刷新跳变。
-   根数按视口宽补：一节 = 竖条 6px + 间隙 1px（抄 .wave i 的 max-width 与 .wave 的 gap 两枚常数），
-   240 节铺到 1679px 就顶满，更宽的屏右侧会剩一段空白。所以 ≤1679px 恒为 240 根（现状一寸不动），
-   再宽按每 7px 一根往上加。涨落与相位都是按根算的，节距不变则画面尺度不变——补根只是把这条带接长。 */
+   粗细是设计值，不是视口宽除出来的商：一节 = 竖条 BAR_W + 间隙 BAR_GAP，根数按视口宽补，
+   于是每根在任何屏上都是同样的 4px。旧口径是 ≤1679px 恒 240 根、宽度靠 flex 拉伸，实测
+   （DPR 1）1123px 上只有 3.672/3.688 两种宽交替、整排都压在半列栅格上，390px 上顶到
+   min-width 地板成 1px 且整排 479px 被 html 的 overflow-x 裁掉 45 根。节距恒定还顺带把
+   涨落与相位的物理尺度钉住：swell 那层慢波一轮 = 2π/0.083 ≈ 75.7 根 = 378px，各视口一致
+   （旧口径在同一屏上是 352~355px，随容器宽漂）。BAR_W/BAR_GAP 由模板写成 CSS 变量交给样式，一处真值。 */
 const frac = (x) => x - Math.floor(x)
 const noise = (i) => frac(Math.sin(i * 127.1 + 311.7) * 43758.5453)
 const smooth = (i) => (noise(i - 1) + 2 * noise(i) + noise(i + 1)) / 4
-const PITCH = 7
-const MIN_BARS = 240
-const barCount = () => Math.max(MIN_BARS, Math.ceil((innerWidth + 1) / PITCH)) // n 根占 7n−1 px，+1 才刚好不留余量
+const BAR_W = 4
+const BAR_GAP = 1
+const barCount = () => Math.ceil((innerWidth + 1) / (BAR_W + BAR_GAP)) // n 根占 (BAR_W+BAR_GAP)·n−1 px，+1 才刚好不留余量
 const waveCount = ref(barCount())
 const onWaveResize = debounce(() => {
   waveCount.value = barCount()
@@ -99,7 +102,7 @@ onUnmounted(() => {
 
     <section ref="drawerEl" class="drawer" :class="{ open }">
       <!-- 折线声波：骑在首屏/抽屉接缝上上下对称、排密到相接，读成一条穿过地平线的不断波形；装饰层 -->
-      <div class="wave" aria-hidden="true">
+      <div class="wave" aria-hidden="true" :style="{ '--wave-w': BAR_W + 'px', '--wave-gap': BAR_GAP + 'px' }">
         <i v-for="(w, i) in wave" :key="i" :style="{ '--h': w.h, '--d': w.d }"></i>
       </div>
 
@@ -213,9 +216,9 @@ onUnmounted(() => {
 }
 
 /* 折线声波：整排以接缝为中线上下对称（transform-origin center），上半压进首屏山脊、
-   下半落进抽屉留白，读成一道穿过地平线的波。竖线 flex 等分铺满整屏宽（gap 1px 相接成
-   一条不断的带），窄屏自动变细、宽屏到 6px 封顶。封顶不等于铺满：240 根 ×(6+1) 只有
-   1679px，宽于它的屏右侧会空出一段——所以根数跟着视口走（见 script 里的 PITCH）。 */
+   下半落进抽屉留白，读成一道穿过地平线的波。每根恒为 var(--wave-w)、间隙 var(--wave-gap)，
+   两个值由 script 经模板写成 CSS 变量（真值只有一处）；铺满整屏宽靠的是**根数**跟着视口走，
+   不再靠拉伸竖条。所以粗细与节距在任何屏上一致，最后一根会随容器边缘裁掉几 px。 */
 .wave {
   position: absolute;
   left: 0;
@@ -225,19 +228,17 @@ onUnmounted(() => {
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 1px;
+  gap: var(--wave-gap);
   height: 140px;
   pointer-events: none;
 }
 
 .wave i {
-  flex: 1 1 0;
-  min-width: 1px;
-  max-width: 6px;
+  flex: 0 0 var(--wave-w);
   height: calc(var(--h) * 1px);
   border-radius: 2px;
-  background: color-mix(in srgb, var(--cold) 90%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--cold) 45%, transparent);
+  background: var(--wave-ink);
+  box-shadow: 0 0 4px var(--wave-glow);
   transform-origin: center;
   animation: wave-breathe 2.6s ease-in-out infinite;
   animation-delay: var(--d);

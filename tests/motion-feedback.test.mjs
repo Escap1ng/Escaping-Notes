@@ -32,7 +32,6 @@ const VUE_FILES = [
   'src/views/AboutView.vue',
   'src/views/PostView.vue',
   'src/views/ProjectView.vue',
-  'src/views/AdminView.vue',
 ]
 
 /* 不是指针反馈、因此允许写裸秒数的地方：入场 / 开合 / 打字机 / sheen / 减弱动效开关。

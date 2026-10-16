@@ -5,10 +5,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { loadPost, loadPosts } from '../lib/posts.js'
 import { renderMarkdown } from '../lib/markdown.js'
-import { api } from '../lib/api.js'
 import { trapFocus } from '../lib/focus.js'
 import { useDetailExit } from '../lib/exit.js'
-import { read, viewedKey, write } from '../lib/storage.js'
 import { N } from '../config/narrative.js'
 
 const route = useRoute()
@@ -16,7 +14,6 @@ const post = ref(null)
 const missing = ref(false)
 const htmlBody = ref('')
 const all = ref([])
-const views = ref(null)
 const copied = ref(false)
 const lightbox = ref('')
 const lightboxEl = ref(null)
@@ -76,17 +73,6 @@ onMounted(async () => {
   htmlBody.value = renderMarkdown(p.body).html
   document.title = `${p.title} · Escaping Notes`
 
-  // 同一会话只计一次数：这个标记只该活到关标签页，所以走 sessionStorage
-  const seen = viewedKey(slug)
-  if (!read(seen, null, sessionStorage)) {
-    write(seen, '1', sessionStorage)
-    await api('/api/view', { method: 'POST', body: { slug } })
-  }
-  // 读数只有服务端那一份：后端缺席（Pages 镜像）时显示 `--`。原先那笔落 localStorage 的
-  // 累计数 2026-10-10 撤除——它每次进页自增、只有本机看得见，摆在 VIEWS 后面就是冒充全站读数。
-  const stats = await api('/api/stats')
-  if (stats && typeof stats[slug] === 'number') views.value = stats[slug]
-
   addEventListener('keydown', onLightboxKey)
 })
 
@@ -113,8 +99,7 @@ onUnmounted(() => {
           <p class="en-eyebrow">{{ post.date }}</p>
           <h1 class="title">{{ post.title }}</h1>
           <p class="meta en-mono">
-            {{ post.words }} 字 · {{ post.minutes }} 分钟 ·
-            VIEWS {{ views ?? '--' }}
+            {{ post.words }} 字 · {{ post.minutes }} 分钟
             <button class="en-btn en-btn-sm en-btn-quiet" type="button" @click="copyLink">
               {{ copied ? N.reader.copied : N.reader.copy }}
             </button>
