@@ -7,7 +7,9 @@ import assert from 'node:assert/strict'
 
 import {
   INDEX_NAME,
+  aliasClashes,
   assetUrl,
+  findAlias,
   isPublished,
   normalizeRoll,
   parseFrontmatter,
@@ -172,6 +174,54 @@ test('原图与稿子都不上线：isPublished 是唯一的排除口径', () =>
   assert.equal(isPublished('.DS_Store'), false)
   assert.equal(isPublished('cover.jpg'), true)
   assert.equal(isPublished('dune.jpg'), true)
+})
+
+/* ---------------- 草稿与旧 slug ---------------- */
+
+const withField = (line) => GOOD_MD.replace('alt: 一张图', `alt: 一张图\n${line}`)
+
+test('draft 只认明确写法：true 进草稿档、false 照常、认不出与留空都报', () => {
+  const on = make(withField('draft: true'))
+  assert.equal(on.record.draft, true)
+  assert.deepEqual(on.problems, [])
+  assert.equal(make(withField('draft: false')).record.draft, false)
+  assert.equal(make(withField('draft: 1')).record.draft, true)
+  assert.equal(make(GOOD_MD).record.draft, false) // 不写这个键就是正常发布
+  assert.ok(make(withField('draft: 还没写完')).problems.some((p) => p.includes('不认识')))
+  // 光一行 `draft:` 既不算开也不算关：手滑删掉值就等于把草稿偷偷发出去，必须响
+  assert.ok(make(withField('draft:')).problems.some((p) => p.includes('不认识')))
+})
+
+test('movedFrom 登记旧 slug：合口径就记进 record，写歪或写自己也报', () => {
+  const ok = make(withField('movedFrom: [old-name, older-2]'))
+  assert.deepEqual(ok.record.movedFrom, ['old-name', 'older-2'])
+  assert.deepEqual(ok.problems, [])
+  assert.deepEqual(make(GOOD_MD).record.movedFrom, [])
+  // 不带方括号的写法等价（与 tags 同一条）
+  assert.deepEqual(make(withField('movedFrom: old-name')).record.movedFrom, ['old-name'])
+  assert.ok(make(withField('movedFrom: [Old Name]')).problems.some((p) => p.includes('合法的 slug')))
+  assert.ok(make(withField(`movedFrom: [${SLUG}]`)).problems.some((p) => p.includes('本卷自己的名字')))
+})
+
+test('别名改道：现名优先、草稿不认领；跨卷撞名由 aliasClashes 报', () => {
+  const rolls = [
+    { slug: 'a', draft: false, movedFrom: ['old-a'] },
+    { slug: 'b', draft: true, movedFrom: ['old-b'] },
+  ]
+  assert.equal(findAlias(rolls, 'old-a'), 'a')
+  assert.equal(findAlias(rolls, 'a'), null) // 真身在场，别名不得插队
+  assert.equal(findAlias(rolls, 'old-b'), null) // 草稿不该从旧网址漏出去
+  assert.equal(findAlias(rolls, 'no-such'), null)
+  assert.equal(findAlias(rolls, ''), null)
+  assert.deepEqual(aliasClashes(rolls), [])
+  // 两记假：旧名撞上另一卷的现名、两卷认领同一个旧名
+  assert.ok(aliasClashes([...rolls, { slug: 'old-a', draft: false, movedFrom: [] }]).some((c) => c.includes('现名')))
+  assert.ok(
+    aliasClashes([
+      { slug: 'x', draft: false, movedFrom: ['dup'] },
+      { slug: 'y', draft: false, movedFrom: ['dup'] },
+    ]).some((c) => c.includes('两卷'))
+  )
 })
 
 /* ---------------- 素材网址的解析：dev 中间件唯一的越界面 ---------------- */

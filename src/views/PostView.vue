@@ -66,6 +66,8 @@ onMounted(async () => {
   const [p, list] = await Promise.all([loadPost(slug), loadPosts()])
   all.value = list
   if (!p) {
+    // 旧 slug 的改道在 router 的 beforeResolve 里做（见 src/router/index.js）：
+    // 走到这里说明它不是任何一卷的别名，也不是草稿，那就是真没有这一篇
     missing.value = true
     return
   }

@@ -246,6 +246,11 @@
 
 字段口径、派生与校验全在 `src/lib/schema.js`，**这一份同时被两个岸 import**：浏览器那一岸（`src/lib/posts.js` 打包进产物）与 Node 那一岸（`scripts/check_content.mjs` 当门禁、`scripts/build_seo.mjs` 出 sitemap/RSS）。所以这个文件不许带 `import.meta.*`、`node:fs`、`vue`——带上任何一样另一岸就 import 不动，那一岸只能再抄一份解析。过去就是这么抄的：`tags` 从来没进过 RSS，缺 `title` 时页面给空串而 RSS 给 slug。`tests/content-rolls.test.mjs` 扫全部跟踪代码，出现第二条 frontmatter 正则就红。
 
+键一共八个。六个是给人看的（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），另外两个管**发不发布**，各只有一处判据：
+
+- `draft: true` —— 草稿只在 `npm run dev` 里露面。判据是 `schema.isLive(post)`，浏览器那一岸（列表、精选、映像柜、关于页读数）与 Node 那一岸（RSS、sitemap、按页壳、连 `vite.config.js` 拷素材那一步）问的都是它，所以"页面上没有、RSS 里却有"这种半发布在结构上不成立。回执那一行标【草稿：只在 dev 可见，不进产物】——漏标比漏发更坑，人会以为已经发出去了。
+- `movedFrom: [旧slug]` —— 一卷的目录名就是它的网址，改名后旧链接靠这个键改道（`findAlias`：现名永远优先，草稿不认领别名）。改道挂在 `router.beforeResolve`，**不在详情页里跳**——视图自己 `router.replace` 就绕开了 `lib/exit.js` 立的那条"程序化跳转只此一处"。表由构建期算好（`vite.config.js` 把 `rollRoutes.alias` 塞进 `virtual:rolls`），路由只查一张几百字节的表：为深链上的一次跳转把整条取数链拖进入口 chunk 不值（试过静态 import，入口 chunk 从 134.06 kB 涨到 141.00 kB）。两种只有拿全集才判得出的碰撞由 `aliasClashes` 兜住：旧名撞上另一卷的现名、或两卷认领同一个旧名——都是"链接随机跳到某一篇"的形状，所以直接拦。
+
 门禁走构建：`npm run build` 先打一份**发文回执**（每卷一行：日期 / 字数 / 时长 / 封面 / 标签），任一判据红就不出产物；`npm run dev` 只打印不拦（半篇稿子要能接着写）。判据本身由 `tests/schema.test.mjs` 逐条拿假样本验一遍——检查器必须能失败。
 
 同一趟构建还产出**按页静态壳**（§6.3）：把 `dist/index.html` 的 head 换成这一页自己的标题、网址与封面，写成 `dist/blog/<slug>/index.html` 等真实文件。壳是同一份应用，版式与观感一点没动，所以这一节的内容层口径也管着它——封面上进 `og:image` 的那张文件，就是这一卷目录里的那枚 `cover.jpg`。

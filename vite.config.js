@@ -8,7 +8,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { exitCode, formatReceipt, inspectPosts } from './scripts/check_content.mjs'
 import { publishedAssets, readRolls } from './scripts/lib/rolls.mjs'
-import { parseRollUrl } from './src/lib/schema.js'
+import { findAlias, isLive, parseRollUrl } from './src/lib/schema.js'
 
 // ---------- 一卷底片 = 一个目录 = 一段 URL 前缀 ----------
 // content/posts/<slug>/ 里的素材（除 index.md 与 *-src.* 原图）上线到 /blog/<slug>/<文件名>。
@@ -69,7 +69,21 @@ function postRolls() {
       if (id !== RESOLVED) return
       if (!rolls.length) scan()
       const map = Object.fromEntries(rolls.map((r) => [r.slug, r.files]))
-      return `export const rollFiles = ${JSON.stringify(map)}\n`
+      // 一并算好"哪些卷发得出去"与"旧名 → 现名"：router 的改道守卫只查这张表，不用把整条
+      // 取数链拖进入口 chunk。规则仍只有一处实现——schema 的 isLive 与 findAlias，这里只是
+      // 把候选旧名递过去（现名优先、草稿不认领，都由 findAlias 判）
+      const records = rolls.map((r) => r.record).filter(Boolean)
+      const live = records.filter(isLive).map((r) => r.slug)
+      const alias = {}
+      for (const r of records) {
+        for (const from of r.movedFrom) {
+          if (alias[from] === undefined) {
+            const hit = findAlias(records, from)
+            if (hit) alias[from] = hit
+          }
+        }
+      }
+      return `export const rollFiles = ${JSON.stringify(map)}\nexport const rollRoutes = ${JSON.stringify({ live, alias })}\n`
     },
 
     configureServer(server) {
@@ -100,6 +114,8 @@ function postRolls() {
 
     closeBundle() {
       for (const roll of rolls) {
+        // 草稿的素材也不进产物：只漏一张封面等于把"这篇在写"这件事挂在可枚举的网址上
+        if (!roll.record || !isLive(roll.record)) continue
         for (const a of publishedAssets(roll)) {
           mkdirSync(dirname(join(outDir, 'blog', roll.slug, a.name)), { recursive: true })
           cpSync(a.path, join(outDir, 'blog', roll.slug, a.name))

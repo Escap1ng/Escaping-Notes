@@ -9,6 +9,7 @@
 // 全都是"构建绿、线上 404 或空块"。构建本身会红，才是作者每次都会经过的那一道。
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { aliasClashes } from '../src/lib/schema.js'
 import { readRolls } from './lib/rolls.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -21,6 +22,8 @@ export function inspectPosts(root = process.cwd()) {
     for (const p of r.problems) problems.push(`${r.slug} — ${p}`)
     for (const n of r.notes) notes.push(`${r.slug} — ${n}`)
   }
+  // 跨卷的判据必须拿全集才查得出来（旧名撞上一卷现名、两卷认领同一个旧名）
+  for (const c of aliasClashes(rolls.map((r) => r.record).filter(Boolean))) problems.push(`别名 — ${c}`)
   return { rolls, problems, notes }
 }
 
@@ -34,7 +37,9 @@ export function formatReceipt({ rolls, problems, notes }) {
     const p = r.record
     lines.push(
       `  ${p.slug.padEnd(28)} ${p.date}  ${String(p.words).padStart(5)} 字 · ${String(p.minutes).padStart(2)} 分钟` +
-        `  封面${p.cover ? ' ✓' : ' —'}  标签 ${p.tags.join(' / ') || '—'}`
+        `  封面${p.cover ? ' ✓' : ' —'}  标签 ${p.tags.join(' / ') || '—'}` +
+        (p.draft ? '  【草稿：只在 dev 可见，不进产物】' : '') +
+        (p.movedFrom.length ? `  旧名 → ${p.movedFrom.join(', ')}` : '')
     )
   }
   for (const n of notes) lines.push(`  提示  ${n}`)

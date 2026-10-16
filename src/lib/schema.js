@@ -15,7 +15,10 @@ export const COVER_NAMES = ['cover.jpg', 'cover.jpeg', 'cover.png']
 
 // frontmatter 只认这几个键。写错的键（titlee、data…）会被报出来而不是静默失效——
 // 静默是站内最难查的一类：页面照样渲染，只是那块永远是空的。
-export const POST_KEYS = ['title', 'date', 'tags', 'summary', 'imagePos', 'alt']
+export const POST_KEYS = ['title', 'date', 'tags', 'summary', 'imagePos', 'alt', 'draft', 'movedFrom']
+
+// 写成数组的两个键（`tags: [甲, 乙]` 与 `movedFrom: [旧slug]`）：方括号可省，逗号分隔。
+const LIST_KEYS = ['tags', 'movedFrom']
 
 // 卷目录里 `*-src.jpg` 是烘图的**输入**（原图），既不提交也不上线，只有烘出来的
 // cover.jpg 与正文引用的素材上线。这条判据两端共用：构建期拷哪些文件、校验时忽略哪些文件，
@@ -30,6 +33,10 @@ const DATE_OK = /^\d{4}-\d{2}-\d{2}$/
 const SLUG_OK = /^[a-z0-9][a-z0-9-]*$/
 // imagePos 会被写进 style 属性，所以只放行取值字符，其余一律回落 center。
 const POS_OK = /^[-\d.%a-z ]{1,24}$/i
+// draft 的两种明确写法。`draft:` 光杆（值为空）既不算开也不算关，直接报——
+// 手滑删掉一个值就等价于偷偷把草稿发出去，这种事不该静默。
+const DRAFT_ON = /^(1|true|yes)$/i
+const DRAFT_OFF = /^(0|false|no)$/i
 const IMG_EXT = /\.(jpe?g|png|gif|webp|svg|avif)$/i
 // 正文里的图片语法：与 src/lib/markdown.js 认的那一条同一形状，改动要同时改那边。
 const MD_IMG = /!\[([^\]]*)\]\(([^)\s]+)\)/g
@@ -77,8 +84,8 @@ export function parseFrontmatter(raw) {
       if (i < 0) continue
       const k = line.slice(0, i).trim()
       let v = line.slice(i + 1).trim()
-      if (k === 'tags') {
-        meta.tags = v
+      if (LIST_KEYS.includes(k)) {
+        meta[k] = v
           .replace(/^\[|\]$/g, '')
           .split(',')
           .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
@@ -212,6 +219,22 @@ export function normalizeRoll({ slug, raw, files, dirs = [] }) {
     }
   }
 
+  // `draft` 只认写得明白的那几种。空值（光一行 `draft:`）不当作"是草稿"也不当作"不是"，
+  // 而是报出来：把值删掉就等于偷偷发出去，这种口径不能靠猜。
+  const draftRaw = 'draft' in meta ? meta.draft : ''
+  const draft = DRAFT_ON.test(draftRaw)
+  if ('draft' in meta && !DRAFT_ON.test(draftRaw) && !DRAFT_OFF.test(draftRaw)) {
+    problems.push(`\`draft: ${draftRaw || '（空）'}\` 不认识，只接受 true/false——留空不算"是草稿"也不算"不是"`)
+  }
+
+  // `movedFrom` 登记这篇以前用过的 slug：目录名一改，旧链接就靠它改道到新网址。
+  // 跨卷的碰撞（两卷认领同一个旧名、旧名撞上一卷现名）由门禁在全集上查，这里只查单卷能判的。
+  const movedFrom = meta.movedFrom || []
+  for (const from of movedFrom) {
+    if (!SLUG_OK.test(from)) problems.push(`\`movedFrom\` 里的 \`${from}\` 不是合法的 slug（小写字母 / 数字 / 短横线）`)
+    if (from === slug) problems.push(`\`movedFrom\` 里写着本卷自己的名字 \`${slug}\`：那是当前网址，不用登记`)
+  }
+
   const record = {
     slug,
     url: postUrl(slug),
@@ -221,6 +244,8 @@ export function normalizeRoll({ slug, raw, files, dirs = [] }) {
     summary,
     alt,
     imagePos: focus,
+    draft,
+    movedFrom,
     cover: coverName ? assetUrl(slug, coverName) : '',
     // 字数按作者写的正文计，不含这里构造出来的封面行（URL 那一串不该计进"多少字"）
     ...stats(bodyOut),
@@ -229,5 +254,35 @@ export function normalizeRoll({ slug, raw, files, dirs = [] }) {
   return { record, problems, notes }
 }
 
+// 「这一卷发不发得出去」也只此一处：浏览器那一岸（列表、精选、映像柜、关于页读数）与
+// Node 那一岸（RSS、sitemap、静态壳）都问它，免得出现"页面上没有、RSS 里却有"这种半发布。
+export const isLive = (post) => !post.draft
+
 // 全站只此一处排序：文章列表、首页精选、映像柜、RSS、sitemap 都跟着它。
 export const sortByDate = (items) => [...items].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+// 旧 slug → 现 slug。PostView 报「这里没有这篇」之前先问这一句。
+// 两条规矩：现名永远优先（别名不得盖住一篇真身），草稿不认领别名（那等于从旧网址漏出
+// 一篇没打算发的稿子）。
+export function findAlias(rolls, slug) {
+  if (!slug || rolls.some((r) => r.slug === slug)) return null
+  const hit = rolls.find((r) => !r.draft && (r.movedFrom || []).includes(slug))
+  return hit ? hit.slug : null
+}
+
+// 跨卷的两类碰撞——单卷判不出来，所以门禁拿全集跑这一条：
+//   ① 两卷认领同一个旧名：那条旧链接该跳到哪一篇，取决于谁先被读到，这是运气不是设计；
+//   ② 某个旧名正好是另一卷的现名：登记方把别人正在用的网址抢走了。
+export function aliasClashes(rolls) {
+  const owned = new Set(rolls.map((r) => r.slug))
+  const claimed = new Map()
+  const bad = []
+  for (const r of rolls) {
+    for (const from of r.movedFrom || []) {
+      if (owned.has(from)) bad.push(`\`${from}\` 是一卷的现名，却被 \`${r.slug}\` 登记成旧名——那篇自己的网址会被抢走`)
+      else if (claimed.has(from)) bad.push(`\`${from}\` 被两卷同时登记成旧名（${claimed.get(from)} 与 ${r.slug}）`)
+      else claimed.set(from, r.slug)
+    }
+  }
+  return bad
+}
