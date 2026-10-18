@@ -2,35 +2,18 @@
 
 # Escaping Notes · 逃逸笔记
 
-**STAR TRAILS · A Long-Exposure Notebook**
+**STAR TRAILS · 一次对夜空的长曝光**
 
 > 掷墨入渊，星惊不复；藏光于页，潮退犹闻。
 
-[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Vue Router](https://img.shields.io/badge/Vue%20Router-4-42b883?logo=vuedotjs&logoColor=white)](https://router.vuejs.org/)
-[![Canvas 2D](https://img.shields.io/badge/Canvas%202D-Star%20Trails-1a9fff)](src/components/StarTrails.vue)
-[![Content](https://img.shields.io/badge/Content-CC%20BY--NC--SA%204.0-4d4d4d)](#许可与使用声明)
-[![Code](https://img.shields.io/badge/Code-Personal%20Use%20Only-d42b2b)](#许可与使用声明)
-[![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
+[**在线体验 → escaping.top**](https://escaping.top)
 
-**[在线体验](https://escaping.top)**
+[![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
+[![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Personal%20Use-4d4d4d)](#许可与使用声明)
 
 [中文](README.md) · [English](README.en.md)
 
 </div>
-
----
-
-## 关于项目
-
-Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜空的长曝光——首页架着一台相机替我数着时间：文章、动态、音乐、映像、项目，都记在同一张底片上。这台相机的三条设定——
-
-- **滚动即时间**：首屏之内越往下滑，曝光窗口越长、天空转得越快（流速 1 → 2.2 倍）；滚过 1.1 倍视口高就到底
-- **指针即时间膨胀**：光标 180px 半径内的星轨局部加速卷曲，越靠中心越快（最高 2.8 倍）
-- **流星即叙事**：每 6–9 秒随机落一颗，单颗活 900ms，同时在场最多 9 颗；播放器在放歌时间隔压向最短值，停下即自然回弹
-
-星轨只在首页那一格里画。但**沉积是全站累积的**：底片像素与全站时钟都是 `src/lib/sky.js` 里的单例，换页不重铺，回到首页还是那圈越积越密的弧。折线以下交给照片。
 
 <table>
   <tr>
@@ -39,133 +22,129 @@ Escaping Notes 是一个个人博客与记录站，把书写当作一次对夜�
   </tr>
 </table>
 
-> 左 深色 / 右 浅色：两张都是**按站点同一套常数离线复算的星轨底片**（`npm run art:build`），不是站点截图——**它们只画星轨层**；首屏实际还有一条照片地景横带、山体沿脊线遮挡星轨，以及逐字打出的站名。它们复算的正是 `prefers-reduced-motion` 用户实际看到的那张稳态底片。出图提了 ×2.8 / ×1.6 一档冲印增益，**实际观感更暗**。
+左 深色 / 右 浅色。两张都不是截图，是按站点同一套常数离线复算的底片（`npm run art:build`），只画星轨层，复算的是 `prefers-reduced-motion` 用户看到的那张稳态底片。出图提了 ×2.8 / ×1.6 一档冲印增益，站点实际观感比这两张暗。
 
-## 特性
+---
 
-- **双主题**：深色（冷白/暖白/琥珀星轨）与浅色（天文干版底片：板岩/石墨轨迹 + 朱砂点睛），色温跟星等走（暗星冷、少数亮星抽暖）；**切换主题不换山**——暗色首屏是同一取景的压暗版（`plate-hero-deep.jpg`），两套共用一条山脊折线；底片本身按主题各沉积一张（防串色）；默认浅色，首帧刻意不读系统 `prefers-color-scheme`（首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上）
-- **首屏排版**：地景横带钉在底边，高度按照片自己算（`.hero-plate` 高 = `clamp(54svh, 31vw, 70svh)`——31vw 就是照片按 cover 铺满宽度时自身的高度，所以宽窗口自动抬高折线、一寸不缺；够方的窗口仍是下沿 54%，上半屏整片留给排版）；星轨以 `destination-in` 沿山脊被遮住，脊线附近保留到六成亮度、26px 羽化；站名逐字打出（起笔 260ms、每字 82ms、打满 1500ms 后光标淡退），打完才放行十六字宣言（0.9s 揭开，第二行晚 0.18s）；文字块随滚动以 0.25 倍速下沉并淡出
-- **折线以下**：抽屉里是一枚本地时刻读数、三张精选卡、最近五条动态（整卡链向 `/updates`），首次进入视口时从下方拉出一次；它压在一张**全站共用**的照片底片上——五张轮播、每张 10s（周期 50s），深色主题五档指向同一张，所以夜里不跳景；模糊程度是运行时参数：设置卡里一条 0–12px 滑杆，默认拉满，偏好记在 `localStorage`；**卡片颜色也是运行时参数**：设置卡里两档单选，不透底（**默认**——浅色主题下是纯白、深色主题下是不透底的墨面，同一档语义两个色面）与半透明（卡面透出一底下的照片）
-- **统一设计系统**：全部界面由同一套令牌与基元搭成——四组刻度（间距 6 档 / 字号 11 档 / 行高 4 档 / 字重 3 档）、卡片令牌、按钮「2 尺寸 × 4 语义」、输入与筛选胶囊取同一块卡面色面、状态三态提示、单字符图标；组件内不写裸字号与裸间距（流体展示字号用 `clamp()` 表达），改刻度即全站同步
-- **Canvas 2D 渲染**：星轨由离屏累积缓冲逐帧绘制（暗色主题星数再乘 0.65、≤720px 视口从 280 降到 140 颗）；无第三方 UI 库、图表库或字体 CDN——运行时依赖只有 Vue 与 Vue Router，展示层字形是**两枚**自托管 woff2 子集（正文衬线 + 刊头 Didone）
-- **无障碍**：顶栏抽屉、播放器卡、设置卡与两处灯箱都有焦点陷阱（关闭后焦点回到触发元素）、详情页 `Esc` 或点正文底板以外的空白即退回列表、路由切换向读屏播报（`role="status"`）、跳转链接与 `#main` 可聚焦、触屏（`pointer: coarse`）下按钮/链接/标签最小高 44px、`prefers-reduced-motion` 下有完整静态降级（打字机直接给全文、星轨离线冲一张 380 步稳态底片、轮播停掉只留第一张）
-- **性能**：风景底片挂在 `App.vue` 上而不是每个页面里，不随路由重画；首屏那张地景（本页的 LCP 元素）由 `index.html` 首帧脚本按当前主题 `preload`，与样式表并行起跑，不再排在 CSS 之后；`--shift` 的滚动深度只缓存极值，不每帧读 `scrollHeight`（那等于每帧一次重排）；resize 去抖 150ms；抽屉用 `IntersectionObserver` 拉出一次即断开；卡面光斑走 transform；常驻的顶栏表面不用 `backdrop-filter`——玻璃只留给真正要与底片隔开的那几层浮起表面（阅读底板、首页抽屉、导航抽屉、两处灯箱）
-- **阅读可读性（照实说）**：一张无纱的风景照片上放裸字到不了 WCAG AA——实测最坏点在 1.0~1.8:1，与渐变形状无关（试过竖向单条、上下双纱、顶部淡入三种形状）。所以结论是**分工**：底片只当风景，正文一律落在 `.sheet` / `.en-glass` / `.en-card` 上，那里的前景从 5.5:1 起；`npm run check:contrast` 每次提交前重算主题令牌对平底的对比（深色 `--text-0` 18.38:1 / 浅色 16.90:1，判据 7:1），但它核的是令牌对纯色底，**不等于**核照片合成底
-- **反馈闭环**：文章列表有骨架屏（3 张），「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query（可分享、刷新不丢）
-- **映像柜**：`/gallery` 把全站用过的图摊成一墙拍立得——站点自有 9 张（首屏两张 + 浅色五张 + 深色压暗底 + `og.png`）加全部文章封面，按 src 去重；倾斜 ±2.4° 由 src 哈希决定，进场每张错开 60ms（最多 12 张），列数 3/2/1；灯箱 `Teleport` 到 `body`，键盘 ←/→ 翻页、Esc 关闭，触屏横滑 >50px 翻页
-## 读图：两处承重设计
+## 这台相机在数时间
+
+把书写当作对夜空长曝光：首页架着一台相机替我数着时间，文章、动态、音乐、映像、项目都记在同一张底片上。三条设定——
+
+- **滚动即时间**：首屏之内越往下滑，曝光窗口越长、天空转得越快（1 → 3.2 倍）；滚过 1.1 倍视口高就到底
+- **指针即时间膨胀**：光标 180px 半径内的星轨局部加速卷曲，越靠中心越快（最高 2.8 倍）
+- **流星即叙事**：每 6–9 秒随机落一颗，单颗活 900ms，同屏最多九颗；播放器放歌时间隔压到四成，停下即自然回弹
+
+星轨只在首页那一格里画，沉积却是全站累积的：底片像素与全站时钟都是 `src/lib/sky.js` 里的单例，换页不重铺，回到首页还是那圈越积越密的弧。折线以下交给照片。
+
+流速曲线、遮罩剖面与流星参数记在 [docs/design.md](docs/design.md) §3。
+
+## 界面
+
+- 双主题不换山：深色首屏是同一取景的压暗版，两套共用一条山脊折线；底片按主题各沉积一张，防串色
+- 默认浅色，首帧刻意不读系统 `prefers-color-scheme`——首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上
+- 星轨由离屏累积缓冲逐帧绘制（Canvas 2D），沿山脊以 `destination-in` 遮挡，脊线附近保留到六成亮度、26px 羽化
+- 底片模糊与卡面颜色是运行时参数：设置卡里一条 0–12px 滑杆（默认拉满）与两档单选（不透底 / 半透明），偏好记在 `localStorage`
+- 全部界面由同一套令牌与基元搭成：刻度四组（间距 6 档 / 字号 11 档 / 圆角 3 档 / 指针反馈 4 枚）、卡片令牌一组，按钮「2 尺寸 × 4 语义」。组件内不写裸字号与裸时长，改刻度即全站同步
+- 折线以下压在一张全站共用的照片底片上：五档轮播每张 10s，深色主题五档指向同一张，夜里不跳景
+- 焦点陷阱在顶栏抽屉、搜索卡、播放器卡、设置卡与两处灯箱，关闭后焦点回到触发元素；`Esc` 或点正文底板以外的空白即退回列表；路由切换由 `App.vue` 的 `aria-live` 区域播报当前页
+- `prefers-reduced-motion` 下有完整的静态降级（星轨停在稳态底片、轮播不转、转场不糊）；触控目标最小 44px，复用基元即自动满足
+- 列表有骨架屏，「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query，可分享、刷新不丢
+- `/gallery` 把全站用过的图摊成一墙拍立得，倾斜由 src 哈希决定、进场逐张错开；灯箱 `Teleport` 到 `body`，键盘翻页与触屏横滑都通
+- 运行时依赖只有 Vue 与 Vue Router，没有第三方 UI 库、图表库或字体 CDN；展示层字形是两枚自托管 woff2 子集（正文衬线 + 刊头 Didone）
+- 底片挂在 `App.vue` 上而不是每个页面里，不随路由重画；首屏那张地景是首页的 LCP 元素，由 `index.html` 首帧脚本按当前主题 `preload`，与样式表并行起跑；常驻顶栏不用 `backdrop-filter`，玻璃只给阅读底板、首页抽屉、导航抽屉与两处灯箱
+- 一张无纱的风景照片上放裸字到不了 WCAG AA，实测最坏点 1.0~1.8:1，与渐变形状无关。所以底片只当风景，正文一律落在卡面与阅读底板上。`npm run check:contrast` 每次提交前重算主题令牌对纯色底，核不到照片合成底
+
+## 两处承重设计
 
 ### 底片层挂在 `App.vue` 上——一处 `fixed` 的包含块陷阱
 
 <img src="docs/assets/readme/plate-layer.svg" alt="全站风景底片的剖面图：照片只在上沿全亮、18% 到 78% 沉回页面底色，五档轮播各自的时序，以及裸字与卡面上前景对比度的实测值" width="920">
 
-折线以下那张风景是 `App.vue` 里一层 `position: fixed` 的 `.sub-plate`，首页抽屉与全部次级页共用它。它必须挂在 `App` 上：`fall` 转场给页根加了 `filter`，而 **`filter` 会成为 `position: fixed` 后代的包含块**——同一层挂在 `HomeView` 里时实测被解析成 `.home` 的盒子（587×1629、跟着滚动），根本不是"不动的底图"。另一半承重的是**每一档轮播自带一份压暗渐变**（`transparent 18% → var(--ink-0) 78%`）：渐变若只在父层写一次，浮上来的那张会盖掉压暗，文字对比当场没了。模糊不烘进素材，是 `--plate-blur` 这个运行时参数，图层因此向四周多撑 3 倍模糊半径，免得边缘淡进透明露出一圈白边。这三条的实测过程记在 `src/App.vue` 与 `src/lib/plate.js` 的注释里。
+折线以下那张风景是 `App.vue` 里一层 `position: fixed` 的 `.sub-plate`，首页抽屉与全部次级页共用它。它必须挂在 `App` 上：`fall` 转场给页根加了 `filter`，而 `filter` 会成为 `position: fixed` 后代的包含块——同一层挂在 `HomeView` 里时实测被解析成 `.home` 的盒子（587×1629、跟着滚动），跟着文档走，不是不动的底图。另一半是每一档轮播自带一份压暗渐变：渐变若只在父层写一次，浮上来的那张会盖掉压暗，文字对比就掉下去了。三条决定的实测过程记在 `src/App.vue` 与 `src/lib/plate.js` 的注释里。
 
 ### `fall` 叠影——两页同时在场 260ms
 
 <img src="docs/assets/readme/fall-timing.svg" alt="fall 转场的时序图：进入方 0.44 秒与离开方 0.26 秒并行，进出场重叠 260 毫秒" width="920">
 
-底片跨路由常驻之后，换页只剩 `fall` 一处转场：进入方 0.44s（模糊 15px→0、scale 0.88→1）、离开方 0.26s（0→12px、scale→0.9）并行跑，不用 `out-in`，重叠的那 **260ms** 两页同时在场、都带模糊，叠影就是这层影。这 260ms 里底片必须是同一张还在感光的像素，所以 `src/lib/sky.js` 的 `claimPlate()` **只锁沉积、不锁重绘**——交出底片那台照样每帧 draw 同一张底片，否则它会在淡出的 260ms 里冻在半帧上，那正是「切换顿挫」的真正来源。如今星轨只剩首页一台相机，转场期不再有两台并存，这段互斥实际不会触发，留着是当护栏。
+底片跨路由常驻之后，换页只剩 `fall` 一处转场：进入方与离开方并行跑，不用 `out-in`，重叠的 260ms 里两页同时在场、都带模糊，叠影就是这层影。这 260ms 里底片必须是同一张还在感光的像素，所以 `src/lib/sky.js` 的 `claimPlate()` 只锁沉积、不锁重绘，交出底片那台照样每帧 draw——否则它会在淡出途中冻在半帧上，切换顿挫就是这么来的。
 
-## 技术栈
+## 跑起来
 
-| 层 | 选型 |
-| --- | --- |
-| 前端 | Vue 3（Composition API）+ Vite 5 + Vue Router 4 |
-| 渲染 | Canvas 2D 离屏累积缓冲（长曝光底片模拟） |
-| 样式 | 原生 CSS + 自定义属性令牌（`site.css` 一个文件：结构刻度 + 两套主题配色 + 全站基元） |
-| 测试 | Node 内置 `node --test`，零测试框架 |
-| 部署 | GitHub Pages / Vercel（只读镜像） |
-
-## 快速开始
-
-要求：Node.js **22+**（`npm test` 交给 node 自己展开测试目录里的用例，那是 21 之后才有的能力；CI 与作者本机跑的是 24）。
+要求：Node.js 22 以上（`npm test` 交给 node 自己展开测试目录里的用例，那是 21 之后才有的能力；CI 与作者本机跑的是 24）。
 
 ```bash
-# 克隆并安装
 git clone https://github.com/Escap1ng/Escaping-Notes.git
-cd Escaping-Notes
-npm install
+cd Escaping-Notes && npm install
 
-# 启动开发服务器
-npm run dev
-
-# 生产构建
-npm run build          # 发文回执 + dist/（rss.xml、sitemap.xml、每条路由一份静态壳）
-npm run preview        # 本地预览 dist/
+npm run dev              # 开发服务器，改文件即时热更
+npm run build            # 发文回执 + dist/（rss.xml、sitemap.xml、每条路由一份静态壳）
+npm run check            # 四道门禁连跑（content / docs / naming / contrast），提交前跑这条
+npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 ```
 
 ### 常用脚本
 
 | 命令 | 说明 |
 | --- | --- |
-| `npm run dev` | Vite 开发服务器，改文件即时热更 |
-| `npm run build` | 生产构建（站内只有一种路由模式：history，`base` 固定 `/`）。先打**发文回执**并逐卷校验内容，红则不出产物；随后 `build_seo.mjs` 出 `rss.xml`、`sitemap.xml` 与**按页静态壳**——每一卷文章、每个项目、每条导航在 `dist/` 里都有自己的 `index.html`（head 写的是这一页的标题与封面），外加一份 `404.html` |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
-| `npm run test` | `tests/` 下的 `.mjs` 用例全收（条数不写在这里，`npm test` 自己报）：内容层（frontmatter 解析、CRLF、每一条发文判据都拿假样本验一遍、真读 `content/posts/` 跑门禁、验"两个岸共用一份口径"没有第二份解析）、发布层（按页静态壳的 head 改写与落点、sitemap 推广的每条网址都必须有文件顶着、旧 `#/` 链接的放行与拦截、站内只有一种路由模式）、markdown 渲染与 URL 注入面、底片模糊三处默认值不漂移、卡面档位不漂移（键名 / 档位值 / 门控选择器三处同字面量、默认档就是基础块那个不透底值、`--card-solid` 两套主题各一份且浅色那枚是纯白）、首帧主题、首屏 hero 预加载与 `site.css` 的 `--hero-img` 同值、首屏文案契约（`narrative.js` 里必须真有首屏要的那两样，视图不许引用不存在的字段——删字段是静默失败，只会渲染成空文本）、指针反馈一致性（时长与位移只准取四枚令牌，例外须显式写进名单）、令牌单一来源（同一枚不许两处定义、一套主题有的另一套也必须有）、映像柜与素材名单一致、项目介绍三件写满且详情页 URL 往返不撞车、两张详情页共用同一处返回机制（不许各抄一份） |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、带全文与标签，`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
-| `npm run art:build` | 重绘本页顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
-| `npm run bg:build` | 重烘站点底图 `public/plates/*.jpg`（首屏地景亮/暗两张 + 抽屉五张轮播 + 抽屉深色压暗底；原图在 `plates-src/`，需本机 PowerShell；产物需提交） |
-| `npm run cover:build` | 重烘文章封面：逐卷读 `content/posts/<slug>/`，把同目录里那张 `*-src.jpg` 就地烘成 `cover.jpg`（原图不进仓库也不上线；脚本里没有映射表，需本机 PowerShell；产物需提交） |
-| `npm run font:build` | 重切展示层子集字体（需要本机装有 Noto Serif SC；产物已提交，日常不用跑） |
-| `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格，产物 3.6KB；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部；产物已提交） |
-| `npm run check` | 下面四道门禁连跑（content / docs / naming / contrast），提交前跑这一条 |
-| `npm run check:content` | 发文门禁与回执：逐卷读 `content/posts/`，日期写歪 / 键名拼错 / 正文引用了本卷没有的图都会在这里红（`npm run build` 与 CI 都含它） |
-| `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对 README 路由表与 `src/router` 一致 |
+| `npm run art:build` | 重绘 README 顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
+| `npm run bg:build` | 重烘站点底图 `public/plates/*.jpg`（原图在 `plates-src/`，需本机 PowerShell，产物需提交） |
+| `npm run cover:build` | 重烘文章封面：逐卷把 `content/posts/<slug>/` 里那张 `*-src.jpg` 就地烘成 `cover.jpg`（脚本里没有映射表，同上） |
+| `npm run font:build` | 重切正文衬线子集（需本机装有 Noto Serif SC；产物已提交，日常不用跑） |
+| `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部） |
+| `npm run check:content` | 发文门禁与回执：日期写歪 / 键名拼错 / 正文引用了本卷没有的图都会在这里红（`npm run build` 与 CI 都含它） |
+| `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对下面的路由表与 `src/router` 一致 |
 | `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
 | `npm run check:contrast` | 从 `site.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
 
+`npm test` 的口径按 `tests/` 的文件名分组：内容层（发文判据逐条拿假样本验一遍，且证明两个岸共用一份解析、取数只许走那道门、草稿与别名的规则）、发布层（按页静态壳的 head 与落点、sitemap 里每条网址都有文件顶着、旧 `#/` 链接的放行与拦截、站内只有一种路由模式）、渲染与 URL 注入面、参数不漂移（底片模糊三处默认值、卡面档位、首帧主题、hero 预加载与 `site.css` 同值）、文案契约、指针反馈与令牌的单一来源、映像柜与素材名单一致、项目介绍三件写满、两处详情页共用同一处返回机制。
+
+## 往里加东西
+
+站内没有后台，改的都是仓库里的文件，push 即上线：
+
+- **写一篇文章 = 建一个目录**。`content/posts/<slug>/index.md`，目录名就是网址（`/blog/<slug>`）。封面不用登记路径：同目录里有 `cover.jpg`，它就是封面——列表那格、正文顶部那张满栏图、映像柜、分享卡四处共用同一张。原图以 `-src.jpg` 收尾丢进同一目录，`npm run cover:build` 就地烘；正文插图也放这一卷里，只写文件名，写错或漏放会在构建时被拦。
+- frontmatter 六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
+- **站点自有内容**（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）在 `src/data/`，一类一份文件，进界面只经 `src/data/index.js` 那一道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
+- **构建就是发文自检**。`npm run build` 先逐卷校验再出产物：日期写歪、键名拼错、正文引用了本卷没有的图、两个旧名撞车，任一条红就不发布。跑绿之后顺手产出 `rss.xml`、`sitemap.xml` 与每条路由一份静态壳。
+
 ## 页面地图
 
-10 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航只放前 7 条。
+10 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航放 7 条，两条 `:slug` 详情页与最后那条 catch-all 不在栏上——任何未匹配的路由都落到「这里没有页面」。
 
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
 | `/` | 首页 · 长曝光星轨 | 照片地景 + 星轨 + 打字机站名 + 抽屉 |
-| `/blog` | 文章 | 文章归档，标签/关键词筛选进 URL |
+| `/blog` | 文章 | 归档，标签/关键词筛选进 URL |
 | `/blog/:slug` | 正文 | 单篇正文，玻璃底板 + 封面图可点进灯箱 |
 | `/updates` | 动态 | 短记录流水 |
 | `/records` | 音乐 | 自托管曲目表 + 播放器卡 |
 | `/gallery` | 映像 | 全站用图墙 |
 | `/projects` | 项目 | 项目卡片栅格 |
-| `/projects/:slug` | 项目介绍 | 单个项目，与文章页同一块玻璃底板；`Esc` 或点空白退回列表 |
+| `/projects/:slug` | 项目介绍 | 与文章页同一块玻璃底板；`Esc` 或点空白退回列表 |
 | `/about` | 关于 | 自述 · 实时读数 · 装备 · 友链 |
+| `/:pathMatch(.*)*` | 404 | 未匹配路由的兜底页，标题与页内大字同一句「这里没有页面」 |
 
-> 第 10 条是 catch-all：任何未匹配路由落到 404 ——「这里没有页面」。
-
-## 项目结构
+## 目录结构
 
 ```text
-├── index.html             # 壳层：首帧内联脚本（主题 + 底片模糊 + 卡面档位 + 按主题预加载首屏地景，都不闪一下）、SEO/OG 元信息
+├── index.html             # 壳层：首帧内联脚本（主题 / 底片模糊 / 卡面档位 / 按主题预加载首屏地景，都不闪一下）+ SEO/OG 元信息
 ├── content/posts/         # 文章：一篇一个目录（`<slug>/index.md` + 它的封面与插图），目录名就是网址
-├── public/                # 静态资源：favicon、robots.txt、og.png，以及两个**必须入库**的派生素材目录
-│                          #   plates/（底图）· audio/（自托管音轨）——重烘命令见「常用脚本」；文章封面不在这儿，它躺在自己那一卷目录里
-│                          #   原图（plates-src/ · music/ · /1/ · 各卷的 *-src.*）在 .gitignore 里，别当泄漏报
-├── scripts/               # 构建期与内容刷新脚本（命名按动词分族）
-│   ├── build_font.mjs     #   展示层子集字体裁切（Node，依赖 devDep `subset-font`）
-│   ├── build_font_didone.mjs #  刊头 Didone 子集裁切（同一套 devDep，只留大写与空格）
-│   ├── build_seo.mjs      #   rss.xml / sitemap.xml / og.png（纯 Node 内置模块；frontmatter 解析走 src/lib/schema.js，与浏览器同一份）
-│   ├── build_readme_art.mjs # 本页顶部两张底片图：按 StarTrails 常数离线复算
-│   ├── build_plate_bg.ps1 / build_post_covers.ps1 # 底图与封面烘图（PowerShell + System.Drawing，CI 上跑不了）
-│   ├── check_content.mjs  #   发文门禁与回执（逐卷读盘校验；构建与 CI 都跑它）
-│   ├── check_doc_refs.py  #   文档引用 / § 节号 / README 路由表 的漂移扫描
-│   ├── check_naming.py    #   命名规约扫描
-│   ├── check_contrast.mjs #   主题令牌 WCAG 对比度审计
-│   ├── sync_records.py    #   抓 QQ 公开歌单 → 生成 src/data/records.js（Python3 标准库；只读镜像用）
-│   ├── data/              #   脚本输入数据（GB2312 一级字表，build_font 用）
-│   └── lib/               #   脚本间共用模块（PNG 编码器；读卷清单 rolls.mjs）
-├── docs/                  # design.md 设计依据 · manual.md 使用手册
-│   └── assets/readme/     # README 配图（含生成方式与换真截图的步骤）
-├── tests/                 # 零依赖防护网：node --test，跑 npm run test
+├── public/                # favicon、robots.txt、og.png + 两个必须入库的派生素材目录（plates/ · audio/）
+├── scripts/               # 构建期与内容刷新脚本，命名按动词分族（build_* / check_* / sync_*）
+├── tests/                 # 零依赖防护网：node --test
+├── docs/                  # design.md 设计依据 · manual.md 使用手册 · assets/readme/ README 配图
 └── src/
-    ├── assets/fonts/      # 两枚自托管子集 woff2（正文衬线 + 刊头 Didone），均 700 字重 + OFL 许可
-    ├── components/        # 平铺七件：StarTrails 星轨相机 · HorizonHero 首屏排版 · SiteHeader 顶栏+抽屉 · SiteFooter · MusicCard 播放器卡 · SettingsCard 底片模糊滑杆 + 卡片颜色两档 · SearchCard 顶栏搜索卡
-    ├── data/              # 站点自有内容全在这一目录：index.js 是唯一的取数门 · narrative.js 文案层 · site.js 站点信息 · 6 份数据（records.js 由脚本生成，勿手改）
-    ├── lib/               # posts / schema / markdown / theme / storage / music / gallery / plate / surface / ridge / lens / shift / sky / debounce / focus / exit / legacy / projects（取数不再经过这里，见 data/index.js）
-    ├── styles/            # site.css 一个文件：结构刻度 + 两套主题配色 + 全站基元
+    ├── components/        # 平铺七件：星轨相机 / 首屏排版 / 顶栏+抽屉 / 页脚 / 播放器卡 / 设置卡 / 搜索卡
+    ├── data/              # 站点自有内容全在这一目录，index.js 是唯一的取数门
+    ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · markdown · theme / storage / …
+    ├── styles/site.css    # 唯一的样式表：结构刻度 + 两套主题配色 + 全站基元
     └── views/             # 10 个视图平铺，一页一个文件
 ```
+
+原图（`plates-src/` · `music/` · `fonts-src/` · 各卷的 `*-src.*`）在 `.gitignore` 里，别当泄漏报。逐文件的注解版见 **[docs/manual.md §0](docs/manual.md)**。
 
 ## 部署
 
@@ -180,7 +159,7 @@ npm run preview        # 本地预览 dist/
 
 - [docs/design.md](docs/design.md) —— 界面设计唯一依据（概念、色彩与令牌、组件契约、开发指南）
 - [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 部署 / 常见问题）
-- [docs/assets/readme/README.md](docs/assets/readme/README.md) —— 本页四张配图的来源、重跑方式与「想换真截图该怎么做」
+- [docs/assets/readme/README.md](docs/assets/readme/README.md) —— README 四张配图的来源、重跑方式与「想换真截图该怎么做」
 
 ## 许可与使用声明
 
