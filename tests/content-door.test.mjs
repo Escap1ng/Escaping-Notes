@@ -83,7 +83,7 @@ test('那道门不带 vue：Node 这一岸 import 得动，两个岸读的是同
   assert.equal(content.site.url.replace(/\/+$/, ''), 'https://escaping.top')
   assert.ok(content.projects.length >= 1 && content.playlist.length >= 1)
   assert.match(content.site.avatar, /^https:\/\//)
-  assert.ok(content.plates.some((p) => p.src === '/plates/plate-hero.jpg'))
+  assert.ok(content.plates.some((p) => p.src === '/plates/plate-bg-paper1.jpg'))
   // build_seo 也必须走门，而不是自己再 import 两份数据文件
   const seo = src('scripts/build_seo.mjs')
   assert.ok(seo.includes("from '../src/data/index.js'"), 'SEO 那一岸没接门')

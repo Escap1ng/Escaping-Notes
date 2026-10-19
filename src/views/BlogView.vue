@@ -1,5 +1,7 @@
 <script setup>
-// 归档页：三列封面卡，宽屏一行三篇、依次收到两列与一列，带搜索与标签筛选
+// 归档页：四枚全站读数 + 带计数的标签胶囊 + 三列封面卡。
+// 搜索只有右上角那一张卡：这里不再放第二格输入框，但**仍然认 ?q=**——
+// 卡里的 Enter 与「看全部 N 篇」把词交回本页，落地后由下面那条筛选回显说清"现在在看什么"。
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loadPosts } from '../lib/posts.js'
@@ -27,7 +29,7 @@ watch([tag, q], () => {
   if (q.value) query.q = q.value
   router.replace({ query })
 })
-// URL → 状态（浏览器前进/后退、外部链接进入）
+// URL → 状态（浏览器前进/后退、外部链接进入、搜索卡交回词）
 watch(
   () => route.query,
   (qs) => {
@@ -38,10 +40,31 @@ watch(
   }
 )
 
+// 标签按命中数倒序（并列按名字）：胶囊是这一页唯一的筛选入口，常用的排前面
 const tags = computed(() => {
-  const s = new Set()
-  posts.value.forEach((p) => (p.tags || []).forEach((t) => s.add(t)))
-  return [...s]
+  const m = new Map()
+  posts.value.forEach((p) => (p.tags || []).forEach((t) => m.set(t, (m.get(t) || 0) + 1)))
+  return [...m]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans-CN'))
+})
+
+/* 四枚读数算的是**全站**的账，不跟着筛选变：筛选后的篇数已经写在下面那条回显里，
+   两处都变会让人读不出"是站点变小了还是筛过了"。没算到时给 --，与关于页同一档口径。 */
+const stats = computed(() => {
+  let words = 0
+  let latest = ''
+  for (const p of posts.value) {
+    words += Number(p.words) || 0
+    if (p.date > latest) latest = p.date
+  }
+  const show = (v) => (loading.value ? '--' : v)
+  return [
+    { k: '文章 · POSTS', v: show(posts.value.length) },
+    { k: '标签 · TAGS', v: show(tags.value.length) },
+    { k: '总字数 · WORDS', v: show(words.toLocaleString('en-US')) },
+    { k: '最近更新 · LATEST', v: show(latest), wide: true },
+  ]
 })
 
 const filtered = computed(() =>
@@ -53,6 +76,19 @@ const filtered = computed(() =>
   })
 )
 
+// 回显那一句按激活了哪几样拼：只有搜索 / 只有标签 / 两样都有
+const filterText = computed(() => {
+  const parts = []
+  if (q.value.trim()) parts.push(`搜索「${q.value.trim()}」`)
+  if (tag.value) parts.push(`标签「${tag.value}」`)
+  return `${parts.join(' · ')} · ${filtered.value.length} 篇`
+})
+
+function clearFilters() {
+  tag.value = ''
+  q.value = ''
+}
+
 </script>
 
 <template>
@@ -60,27 +96,33 @@ const filtered = computed(() =>
     <h2 class="en-h2">{{ navLabel('/blog') }}</h2>
     <p class="en-lede">{{ N.notes.archive }}</p>
 
-    <div class="tools">
-      <input
-        v-model="q"
-        class="en-field search"
-        type="search"
-        placeholder="搜索标题 / 摘要 / 标签"
-        aria-label="搜索文章"
-      />
-      <div class="chips">
-        <button class="en-chip" :class="{ on: !tag }" type="button" @click="tag = ''">全部</button>
-        <button
-          v-for="t in tags"
-          :key="t"
-          class="en-chip"
-          :class="{ on: tag === t }"
-          type="button"
-          @click="tag = tag === t ? '' : t"
-        >
-          {{ t }}
-        </button>
-      </div>
+    <!-- 四枚读数：与关于页那三枚同一张卡面、同一套字号（.stat / .sv / .sk 的写法照它） -->
+    <ul class="stats" :aria-busy="loading">
+      <li v-for="s in stats" :key="s.k" class="en-card stat en-lens" @pointermove="onLens">
+        <span class="sv" :class="{ wide: s.wide }">{{ s.v }}</span>
+        <span class="sk en-mono">{{ s.k }}</span>
+      </li>
+    </ul>
+
+    <p v-if="q.trim() || tag" class="filter en-mono">
+      <span class="said">{{ filterText }}</span>
+      <button class="clear" type="button" @click="clearFilters">清除筛选 ✕</button>
+    </p>
+
+    <div class="chips" role="group" aria-label="按标签筛">
+      <button class="en-chip" :class="{ on: !tag }" type="button" @click="tag = ''">
+        全部<span class="n">{{ loading ? '--' : posts.length }}</span>
+      </button>
+      <button
+        v-for="t in tags"
+        :key="t.name"
+        class="en-chip"
+        :class="{ on: tag === t.name }"
+        type="button"
+        @click="tag = tag === t.name ? '' : t.name"
+      >
+        {{ t.name }}<span class="n">{{ t.count }}</span>
+      </button>
     </div>
 
     <ul class="cards" :aria-busy="loading">
@@ -131,23 +173,99 @@ const filtered = computed(() =>
   padding-top: var(--page-top);
 }
 
-.tools {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-3);
+/* 读数一排四枚：卡面走 .en-card，这里只改形态（关于页那三枚同一套路）。
+   断点只加一档 900px 折两列，往下不再折一列——实测 320px 上两列各 114px、
+   卡内可用 80px，最宽那枚读数（日期）见下面 .sv.wide 的字号。 */
+.stats {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
-.search {
-  width: min(100%, 320px);
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.stat {
+  min-height: 0;
+  align-items: center;
+  gap: var(--space-0);
+  padding: var(--space-2);
+  text-align: center;
+}
+
+.sv {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+  color: var(--text-0);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 日期那一枚是 10 个字符，不是 1–4 个：整排字号是"个数"的手感，只有它得让一档，
+   并换等宽体（否则数字不等宽，读数一换就抖）。下限 14px 是量出来的：15px 时它在
+   320px 的两列卡里正好贴满卡内（80 / 80），14px 时占 75px、余 5px。 */
+.sv.wide {
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 2.4vw, 28px);
+  letter-spacing: 0.02em;
+}
+
+.sk {
+  font-size: var(--fs-3xs);
+}
+
+/* 筛选回显：页内没有搜索框了，这一行是"为什么列表只剩这些"的唯一交代。
+   只在真筛了的时候出现，不占常驻位 */
+.filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  font-size: var(--fs-2xs);
+  color: var(--text-1);
+}
+
+.filter .said {
+  color: var(--text-0);
+}
+
+.clear {
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 2px var(--space-1);
+  background: none;
+  color: var(--text-1);
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+
+.clear:hover {
+  color: var(--cold);
+  border-color: var(--cold);
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
-  padding-bottom: var(--space-0);
+  margin-bottom: var(--space-3);
+}
+
+/* 胶囊里的计数：与标签名同一枚胶囊，靠字号与色分主次（间距吃 .en-chip 自己的 gap）。
+   等宽数字，筛与不筛之间宽度不跳 */
+.en-chip .n {
+  font-size: var(--fs-3xs);
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 三列封面卡：宽屏一行三篇，≤900px 两篇，≤720px 一篇 */

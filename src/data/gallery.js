@@ -1,17 +1,12 @@
-// 映像柜（/gallery）里站点自己的那几张底片。
-// 文章封面由 src/lib/gallery.js 从 frontmatter 的 image 自动收，不需要在这里登记；
-// 这里只补「站点在用、但不属于任何文章」的图——也就是 site.css 的 --plate-img / --hero-img
-// 与分享卡。跑 npm test 会核对：这个清单与 site.css 里出现的 /plates/ 路径必须互相咬合，
-// 换底片时漏改这里，映像柜就会挂着已经不在用的那张。
+// 映像柜（/gallery）里站点自己的底片：只收浅色抽屉轮播的那三张。
+// 文章封面由 src/lib/gallery.js 从各卷目录自动收，不需要在这里登记；
+// 首屏地景（亮 / 暗两张）、深色压暗底与分享卡都不上墙。
+// 跑 npm test 会核对：清单恰好是这三张，且每张仍被 site.css 引用。
 export const sitePlates = [
-  { src: '/plates/plate-hero.jpg', title: '首屏的地平线' },
-  { src: '/plates/plate-hero-deep.jpg', title: '首屏的地平线 · 夜色' },
-  // 「其一…其三」是墙上的顺序，不是文件名里的号：paper2 / paper5 / paper6 三档空着——paper2
-  // 搬去当第三篇《怎么写、怎么发》的封面（见 scripts/build_post_covers.ps1），paper5 已删除，
+  // 「其一…其三」是墙上的顺序，不是文件名里的号：paper2 搬去当第三篇
+  // 《怎么写、怎么发》的封面（见 scripts/build_post_covers.ps1），paper5 已删除，
   // paper6 暂存到 photos-src/ 待用。
   { src: '/plates/plate-bg-paper1.jpg', title: '浅色底片 · 其一' },
   { src: '/plates/plate-bg-paper3.jpg', title: '浅色底片 · 其二' },
   { src: '/plates/plate-bg-paper4.jpg', title: '浅色底片 · 其三' },
-  { src: '/plates/plate-bg-deep.jpg', title: '深色那张压暗底' },
-  { src: '/og.png', title: '分享卡 · 1200×630' },
 ]
