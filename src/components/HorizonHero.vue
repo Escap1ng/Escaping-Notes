@@ -117,7 +117,10 @@ onUnmounted(() => {
   --peak-y: calc(var(--svh) - var(--band-h) + 0.208 * max(var(--band-h), 31vw));
   /* lockup 自己的高：站名一行 + --space-3 那口气 + 宣言两行。字号/行高都引下面那两条规则
      用的同一组令牌，改字号不会让这里的推算悄悄失准 */
-  --fs-hero-title: clamp(40px, 7vw, 96px);
+  /* 40px 的刊头整行约 9.38em 宽：375px 视口刚好贴边，360 上左右各被裁 7.6px、
+     320 上各裁 27.6px（2026-10-19 实测）。10.5vw 只在窄屏收口：360→37.8px、
+     320→33.6px，375–381 之间 39.4px，381px 以上仍回原 clamp 的 40px，宽屏一字不改。 */
+  --fs-hero-title: min(clamp(40px, 7vw, 96px), 10.5vw);
   --lh-hero-title: 1.1;
   --fs-manifesto: clamp(14px, 2vw, 22px);
   --lh-manifesto: 1.8;

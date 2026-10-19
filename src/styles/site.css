@@ -1447,6 +1447,17 @@ html:root .en-prose th {
   background: var(--ink-1);
 }
 
+/* 窄屏表格横向滚动：三列表格在 320px 上宽 331px，最后一列会顶出视口；html 的
+   overflow-x: clip 让那 44px 连滚都滚不到。display:block 不改变行/列布局（实测
+   th/td 的 top/left/width 逐项不变），只是把滚动交给表格自己。 */
+@media (max-width: 720px) {
+  html:root .en-prose table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
 /* ---------- 10. 沿用旧组件页面的协调化 ----------
    这一段服务的 .page / .page-title 原先归登录 / 管理两页（2026-10-16 随其后端一起下线），
    现在零消费方。表单（.field）与按钮已统一为 .en-* 的同一套规格，不再需要覆盖——

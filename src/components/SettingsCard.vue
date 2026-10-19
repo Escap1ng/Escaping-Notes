@@ -221,5 +221,14 @@ onUnmounted(() => {
   .opt {
     min-height: 44px;
   }
+  /* 28px 的关闭键保持原样，热区用不可见的 ::before 撑到 44×44 */
+  .close {
+    position: relative;
+  }
+  .close::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
 }
 </style>
