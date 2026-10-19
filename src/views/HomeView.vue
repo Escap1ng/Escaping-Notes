@@ -249,7 +249,8 @@ onUnmounted(() => {
   height: calc(var(--h) * 1px);
   /* 上半截由 ::before 接着往上长，接口处不圆角，整根读作一条 */
   border-radius: 0 0 2px 2px;
-  background: var(--wave-ink);
+  /* 接缝（元素中线）是原色，往下沉到 --wave-ink-bottom；上半截的提亮交给 ::before */
+  background: linear-gradient(to bottom, var(--wave-ink) 50%, var(--wave-ink-bottom));
   box-shadow: 0 0 4px var(--wave-glow);
   transform-origin: center;
   animation: wave-breathe 3.4s ease-in-out infinite;
@@ -264,7 +265,8 @@ onUnmounted(() => {
   bottom: 100%;
   height: calc(var(--h) * 1px * (var(--wave-up) - 1) / 2);
   border-radius: 2px 2px 0 0;
-  background: var(--wave-ink);
+  /* 从顶端提亮色落回接缝色，与 i 的 0% 端严格同色，接口不出台阶 */
+  background: linear-gradient(to bottom, var(--wave-ink-top), var(--wave-ink));
   box-shadow: 0 0 4px var(--wave-glow);
 }
 
