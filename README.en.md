@@ -24,6 +24,23 @@
 
 Left dark / right light. Neither is a screenshot: both are plates recomputed from the site's own constants (`npm run art:build`), drawing the trail layer only, and recomputing the steady-state plate that `prefers-reduced-motion` users are shown. They were lifted by a ×2.8 / ×1.6 developing gain, so the site itself is darker than they look.
 
+A personal blog that treats writing as a long exposure of the night sky: the landing screen is a camera left open, and posts, updates, music, images and projects all land on the same plate. Fully static, fixed at build time, publish on push.
+
+**Stack**: Vue 3 · Vue Router 4 · Vite 5 · Canvas 2D. No backend, no third-party UI kit, no font CDN.
+
+**Contents**
+
+- [The camera keeps the exposure](#the-camera-keeps-the-exposure)
+- [Interface](#interface)
+- [Two load-bearing designs](#two-load-bearing-designs)
+- [Quick start](#quick-start)
+- [Adding things](#adding-things)
+- [Route Map](#route-map)
+- [Project Structure](#project-structure)
+- [Deployment](#deployment)
+- [Documentation](#documentation)
+- [License & Usage Terms](#license--usage-terms)
+
 ---
 
 ## The camera keeps the exposure
@@ -34,27 +51,36 @@ This is a personal blog and journal that treats writing as a long exposure of th
 - **Pointer as time dilation:** trails within a 180px cursor radius locally accelerate and curl, fastest at the centre (up to 2.8×)
 - **Meteors as narrative:** one falls every 6–9s, lives 900ms, at most 9 in frame; while the player is running the gap is squeezed to 40% of its range and relaxes back on its own
 
-Trails are painted only inside the landing screen, but the deposition is site-wide: the plate pixels and the clock are singletons in `src/lib/sky.js`, so changing routes never re-lays the plate, and coming back to the top finds the same arcs denser. Below the fold, photographs take over.
+Trails are painted only inside the landing screen; the plate pixels and the site clock are singletons in `src/lib/sky.js`. Changing routes never re-lays the plate, and when you return the arcs continue from the previous exposure. Below the fold, photographs take over.
 
 Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md](docs/design.md) §3.
 
 ## Interface
 
+**Visual**
+
 - Switching theme no longer swaps the mountain: the dark landing screen is a darkened bake of the same framing, both themes share one ridge polyline, and each theme deposits its own plate to keep colours from bleeding
 - The default is light and the first frame deliberately ignores `prefers-color-scheme`: the landing screen is a bright photograph, and following the system into dark would float a bright image on black
 - Trails are drawn frame by frame with an offscreen accumulation buffer (Canvas 2D) and masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px
-- Plate blur and card surface are runtime parameters: a 0–12px slider (defaulted to full) and two radios (opaque / translucent) in the settings card, remembered in `localStorage`
-- Every screen is assembled from one set of tokens and primitives: four scale groups (6 spacing steps, 11 type sizes, 3 radii, 4 pointer-feedback tokens), a card token group, buttons in "2 sizes × 4 semantics". No raw font sizes or durations inside components, so changing a scale updates the whole site
-- Below the fold everything rides on one photographic plate shared site-wide: five slots on a carousel, 10s each, and on the dark theme all five tokens point to the same file so nothing changes at night
-- Focus traps live in the header drawer, the search card, the player card, the settings card and both lightboxes, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; route changes are announced through the live region in `App.vue`
-- `prefers-reduced-motion` gets a full static fallback (trails settle on the steady-state plate, the carousel stops, transitions do not blur), and touch targets are at least 44px — reusing the primitives gives you that for free
-- Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload
-- `/gallery` pins every image the site has used to one wall of Polaroids, tilt hashed from the src and entry staggered per card; the lightbox `Teleport`s to `body` and answers both keyboard paging and swipes
-- Vue and Vue Router are the only runtime dependencies. There are no third-party UI kits, chart libraries or font CDNs, and the display faces are two self-hosted subset woff2 files (a serif for body, a Didone for the masthead)
-- The landscape plate lives on `App.vue`, not in each page, so routing never repaints it. The landing photo is the home page's LCP element, so the inline first-paint script in `index.html` preloads it for the active theme and it starts alongside the stylesheet. The persistent header avoids `backdrop-filter`; glass is left to the reading panel, the landing drawer, the nav drawer and the two lightboxes
-- A scrim-free landscape photo cannot reach WCAG AA for naked text; the worst measured point is 1.0–1.8:1 regardless of gradient shape. So the plate stays scenery and body copy always lands on cards and reading panels. `npm run check:contrast` recomputes the theme tokens against a solid ground before every commit, which does not cover the composited photo
+- Below the fold everything rides on one photographic plate shared site-wide: five slots on a carousel, 10s each on a 50s cycle, and on the dark theme all five tokens point to the same file so nothing changes at night
+- Every screen is assembled from one set of tokens and primitives: 6 spacing steps, 11 type sizes, 4 line heights, 3 weights, plus 3 radii and 4 pointer-feedback tokens; one card token group; buttons in 2 sizes × 4 semantics. No raw font sizes or durations inside components, so changing a scale updates the whole site
+- Two self-hosted font families: the body serif (Noto Serif SC) is sharded by `unicode-range` so only the used shards load, and the masthead Didone (Playfair Display) is a single uppercase-and-space file. No font CDN
 
-## Two load-bearing designs, in figures
+**Interaction**
+
+- Plate blur and card surface are runtime parameters: a 0–12px slider (defaulted to full) and two radios (opaque / translucent) in the settings card, remembered in `localStorage`
+- Focus traps live in the header drawer, the search card, the player card, the settings card and both lightboxes, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; route changes are announced through the live region in `App.vue`
+- Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload
+- `/gallery` pins every image the site has used to one wall of Polaroids, tilt hashed from the `src` and entry staggered per card; the lightbox `Teleport`s to `body` and answers both keyboard paging and swipes
+
+**Fallback and readability**
+
+- `prefers-reduced-motion` gets a full static fallback: trails settle on the steady-state plate, the carousel stops, transitions do not blur, and the vignette shuts off; touch targets reach 44px and the minimum type size is 11.5px
+- A scrim-free landscape photo cannot reach WCAG AA for naked text; the worst measured point is 1.0–1.8:1 regardless of gradient shape. So the plate stays scenery and body copy always lands on cards and reading panels. `npm run check:contrast` recomputes the theme tokens against a solid ground before every commit, which does not cover the composited photo
+- The plate layer lives on `App.vue`, not in each page, so routing never repaints it. The landing photo is the home page's LCP element, so the inline first-paint script in `index.html` preloads it for the active theme and it starts alongside the stylesheet
+- The persistent header avoids `backdrop-filter`; glass is left to the reading panel (translucent mode), the landing drawer, the nav drawer and the gallery lightbox (including its tape). The article lightbox is a flat backdrop and builds no blur
+
+## Two load-bearing designs
 
 ### The plate layer hangs on `App.vue` — one `fixed` containing-block trap
 
@@ -66,7 +92,7 @@ Below the fold the landscape is one `position: fixed` `.sub-plate` layer living 
 
 <img src="docs/assets/readme/fall-timing.svg" alt="Timing diagram of the fall transition: the 0.44s enter and the 0.26s leave run in parallel and overlap for 260ms" width="920">
 
-Now that the plate persists across routes, `fall` is the only transition left: enter and leave run in parallel without `out-in`, and for the 260ms they overlap both pages are on screen, both blurred; that overlap is the afterimage. During those 260ms it must be the same plate still being exposed, so `claimPlate()` in `src/lib/sky.js` locks deposition only, never redraw, and the camera handing the plate over keeps drawing it every frame. Otherwise it freezes mid-frame while fading out, which is where the stutter on switching came from.
+Now that the plate persists across routes, `fall` is the only transition left: enter and leave run in parallel without `out-in`, and for the 260ms they overlap both pages are on screen, both blurred; that overlap is the afterimage. During those 260ms the plate must stay the same exposed pixels. The star-trail camera now exists only on the home screen, and it is still on screen and drawing every frame as it leaves, so the plate never freezes mid-frame. The `claimPlate()` hand-over lock in `sky.js` (deposition only, never redraw) remains as a guardrail; with a single camera it no longer fires.
 
 ## Quick start
 
@@ -82,32 +108,39 @@ npm run check            # the four gates in sequence (content / docs / naming /
 npm test                 # everything under tests/, no test framework
 ```
 
+CI in `.github/workflows/deploy.yml` runs `npm ci` → `npm test` → `npm run check` → `npm run build`, and only publishes to Pages when all of it is green.
+
 ### Scripts
 
 | Command | Purpose |
 | --- | --- |
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Posting gate and receipt first, then `dist/` (including `rss.xml`, `sitemap.xml` and one static shell per route) |
 | `npm run preview` | Serve `dist/` the way production would |
+| `npm test` | Everything under `tests/`, no test framework |
+| `npm run check` | The four gates in sequence: content / docs / naming / contrast |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, with full text and categories; `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
 | `npm run art:build` | Redraw the two plates at the top of the README (constants are read out of the source by regex and it throws if they are gone, so re-run after touching star-trail parameters) |
 | `npm run bg:build` | Re-bake the site backdrops in `public/plates/*.jpg` (originals live in `plates-src/`, needs local PowerShell, commit the output) |
 | `npm run cover:build` | Re-bake article covers: bakes each roll's own `*-src.jpg` into `cover.jpg` beside it in `content/posts/<slug>/` (no mapping table in the script; same requirements) |
-| `npm run font:build` | Re-subset the body serif and split it into `unicode-range` shards (needs Noto Serif SC locally; the output is committed, so this is rarely needed — re-run when a post title uses a character outside the hot shard) |
+| `npm run font:build` | Re-subset the body serif and split it into `unicode-range` shards (needs Noto Serif SC locally; the output is committed, so this is rarely needed — re-run when a new title uses a character outside the shipped shards) |
 | `npm run font:build:didone` | Re-subset the masthead Didone (Playfair Display, uppercase and space only; the variable source TTF lives in `fonts-src/` and is not committed — fetch steps are in the script header) |
 | `npm run check:content` | The posting gate and receipt: fails on a malformed date, a misspelled frontmatter key, or an image referenced from prose that is not in that roll (also runs inside `npm run build` and in CI) |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the route table below matches `src/router` |
 | `npm run check:naming` | Naming-convention scan; non-zero exit on a violation |
 | `npm run check:contrast` | Recomputes WCAG contrast from the two theme blocks in `site.css`; non-zero exit if a text token fails |
 
-What `npm test` guards is grouped by the filenames in `tests/`: the content layer (every posting rule probed with its own fake sample, a sweep proving both shores share one parser, and the single door all site data must pass through), the release layer (per-page shell heads and placement, every URL advertised in the sitemap backed by a file, legacy `#/` links accepted or rejected, one routing mode only, drafts never shipping), rendering and the URL injection surface, parameters that must never drift (the three blur defaults, the card-surface setting, the first-paint theme, the preloaded landing photo versus `site.css`), the landing copy contract, pointer feedback and token single sourcing, the gallery list against the asset manifest, the three project write-up fields, and both detail pages sharing one return mechanism.
+What `npm test` guards is grouped by the filenames in `tests/`: the content layer (every posting rule probed with its own fake sample, a sweep proving both shores share one parser and that all site data passes through `src/data/index.js`, plus draft and alias rules), the release layer (per-page shell heads and placement, every URL advertised in the sitemap backed by a file, legacy `#/` links accepted or rejected, one routing mode only, drafts never shipping), rendering and the URL injection surface, parameters that must never drift (the blur defaults, the card-surface setting, the first-paint theme, the preloaded landing photo versus `site.css`), the landing copy contract, pointer feedback and token single sourcing, the gallery list against the asset manifest, the three project write-up fields, and both detail pages sharing one return mechanism.
 
 ## Adding things
 
 There is no admin UI — everything is a file in this repo, and pushing publishes it:
 
-- **A post is a directory.** `content/posts/<slug>/index.md`, and the directory name is the URL (`/blog/<slug>`). No path to register for the cover: if the folder contains `cover.jpg`, that is the cover — the archive card, the full-width image on top of the article, the gallery wall and the share card all use the same file. Drop the untouched photo next to it named `*-src.jpg` and run `npm run cover:build` to bake it in place. Inline illustrations live in the same folder and are referenced by bare filename; a typo or a missing file fails the build instead of shipping a broken image.
-- Six frontmatter keys are about display (`title` / `date` / `tags` / `summary` / `alt` / `imagePos`), two are about publishing: `draft: true` keeps a roll visible only in `npm run dev`, and `movedFrom: [old-slug]` keeps links alive after a rename.
-- **Site-owned content** (activity, projects, gear, playlist, plates, friend links) lives in `src/data/`, one file per kind, and reaches the UI only through `src/data/index.js` — that single door. Adding a kind means adding a file and one line on the door; no view gets a second path to the same array.
+- **A post is a directory.** `content/posts/<slug>/index.md`, and the directory name is the URL (`/blog/<slug>`). No path to register for the cover: if the folder contains `cover.jpg`, that is the cover — the archive card, the full-width image on top of the article, the gallery wall and the share card all use the same file; no cover is also valid, and the archive leaves a striped placeholder of the same height. Drop the untouched photo next to it named `*-src.jpg` and run `npm run cover:build` to bake it in place. Inline illustrations live in the same folder and are referenced by bare filename; a typo or a missing file fails the build instead of shipping a broken image.
+- **Frontmatter:** six keys are about display (`title` / `date` / `tags` / `summary` / `alt` / `imagePos`), two are about publishing: `draft: true` keeps a roll visible only in `npm run dev`, and `movedFrom: [old-slug]` keeps links alive after a rename.
+- **Site-owned content:** activity, projects, playlist, plates and friend links each have a data file; gear lives in the `gear` field of `src/data/site.js`; everything reaches the UI only through `src/data/index.js` — that single door. Adding a kind means adding a file and one line on the door; no view gets a second path to the same array.
+- **Site info and copy:** the site name, author, socials, coordinates and gear live in `src/data/site.js`; interface copy lives in `src/data/narrative.js`; appearance tokens live in `src/styles/site.css`.
 - **The build is the pre-flight check.** `npm run build` first validates every roll (a malformed date, a misspelled key, an image referenced from prose that is not in that roll, two rolls claiming one old slug — any of these stops the artefact from being produced), then writes `rss.xml`, `sitemap.xml` and one static shell per route.
 
 ## Route Map
@@ -118,18 +151,21 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 | --- | --- | --- |
 | `/` | Home · long-exposure star trails | Photo landscape band + trails + typed title + drawer |
 | `/blog` | Articles | Archive, tag/keyword filters live in the URL |
-| `/blog/:slug` | Article | A single post on a frosted-glass plate; its cover opens the lightbox |
+| `/blog/:slug` | Article | A single post with its cover placed on top; inline images open the lightbox |
 | `/updates` | Activity | Short-log feed |
-| `/records` | Music | Self-hosted track list + the player card |
+| `/records` | Music | Online listening (self-hosted mp3) + a QQ playlist snapshot; progress and volume live in the header player card |
 | `/gallery` | Gallery | Wall of every image the site has used |
 | `/projects` | Projects | Grid of project cards |
-| `/projects/:slug` | Project write-up | One project on the same frosted-glass plate as an article; `Esc` or a click outside returns to the list |
-| `/about` | About | Bio · live counters · gear · friend links |
+| `/projects/:slug` | Project write-up | Shares the reading panel with an article; `Esc` or a click outside returns to the list |
+| `/about` | About | Bio · three counters · archive / social · friend links · stack |
 | `/:pathMatch(.*)*` | 404 | The fallback for anything unmatched; its tab title and its page heading are the same sentence |
 
 ## Project Structure
 
 ```text
+├── .github/workflows/     # CI: npm ci → test → check → build → GitHub Pages
+├── package.json           # scripts + two runtime dependencies (vue / vue-router)
+├── vite.config.js         # Vite; hands each roll's asset list to the client at build time (virtual:rolls)
 ├── index.html             # Shell: inline first-paint script (theme / plate blur / card surface / preloading the landing photo for that theme, so none of them flashes) + SEO/OG metadata
 ├── content/posts/         # Posts: one directory per post (`<slug>/index.md` plus its own cover and images) — the directory name is the URL
 ├── public/                # favicon, robots.txt, og.png + two derived-asset dirs that must be committed (plates/ · audio/)
@@ -137,6 +173,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 ├── tests/                 # Zero-dependency safety net: node --test
 ├── docs/                  # design.md spec · manual.md handbook · assets/readme/ README figures
 └── src/
+    ├── assets/fonts/      # Self-hosted woff2 subsets + OFL licence
     ├── components/        # seven flat: the camera / landing type layer / header + drawer / footer / player card / settings card / search card
     ├── data/              # everything site-owned lives here, index.js being the single door
     ├── lib/               # sky the plate and the clock · ridge the mask · plate the layer · schema the posting rules · posts the loader · markdown · theme / storage / …
@@ -152,7 +189,8 @@ Full steps for both targets (GitHub Pages / Vercel read-only mirror) live in **[
 
 - GitHub Pages is bound to the apex domain `escaping.top`; DNS records, verification commands and the certificate steps are in `docs/manual.md` §4.2
 - Because the domain is bound at the root, `base` is fixed at `/` and the artefacts carry no repository prefix; there is a single routing mode (history)
-- Pages never falls back to `index.html` for unknown paths, so the build writes a real file per route (`dist/blog/<slug>/index.html`, …) plus a `dist/404.html` — deep links answer 200 instead of 404, and the share card is the article's own cover
+- Pages never falls back to `index.html` for unknown paths, so the build writes a real static shell per route (`dist/blog/<slug>/index.html`, …) plus a `dist/404.html` — deep links to real routes answer 200 instead of 404, and the share card is the article's own cover; misspelled or deleted URLs still get a 404
+- Vercel serves the same artefacts as a read-only mirror; its `vercel.json` rewrites unknown paths to `index.html`, so refreshing any subpage never 404s
 - Legacy `/#/blog/<slug>` links are rewritten to the path form before the app mounts (`src/main.js`), so links already posted elsewhere do not silently land on the home page
 
 ## Documentation
@@ -160,6 +198,7 @@ Full steps for both targets (GitHub Pages / Vercel read-only mirror) live in **[
 - [docs/design.md](docs/design.md) — the single source of truth for the interface design (concept, colour system, component contracts, developer guide; Chinese)
 - [docs/manual.md](docs/manual.md) — handbook for editing, adapting and deploying (Chinese)
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) — where the four README figures come from, how to re-run them, and what to do if you want real screenshots
+- [README.md](README.md) — Chinese version
 
 ## License & Usage Terms
 
