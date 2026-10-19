@@ -1,6 +1,6 @@
 // 取数这一侧的两条规矩：src/config 已经分家成 src/data，而结构化内容只能从一道门进。
-// 为什么钉住：同一份 updates 曾有两条路（列表页走 store、首页直连数据文件），friends 与
-// records 各走各的——那种状态下"改了不生效"要读三个文件才看得出来。跑法：npm test
+// 为什么钉住：同一份 updates 曾有两条路（列表页走 store、首页直连数据文件），那种状态下
+// "改了不生效"要读三个文件才看得出来。跑法：npm test
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -57,7 +57,7 @@ test('结构化内容只有一条路：视图、组件、路由与 lib 都不许
 test('门上的每一项都有人读，没有挂出来却没人用的字段', () => {
   const door = src('src/data/index.js')
   const keys = Object.keys(content)
-  assert.ok(keys.length >= 7, `门上只有 ${keys.length} 项，读盘没读全`)
+  assert.ok(keys.length >= 6, `门上只有 ${keys.length} 项，读盘没读全`)
   const corpus = codeOnly(tracked())
     .filter((f) => f !== 'src/data/index.js')
     .map((f) => src(f))
@@ -81,7 +81,8 @@ test('那道门不带 vue：Node 这一岸 import 得动，两个岸读的是同
   assert.ok(door.includes('Object.freeze'), '全站没人写它，那就冻住：漏写的赋值该当场响')
   // 本文件顶部就是 Node 侧 import 进来的；能跑到这里说明这一岸走得通
   assert.equal(content.site.url.replace(/\/+$/, ''), 'https://escaping.top')
-  assert.ok(content.projects.length >= 1 && content.records.songs.length >= 1)
+  assert.ok(content.projects.length >= 1 && content.playlist.length >= 1)
+  assert.match(content.site.avatar, /^https:\/\//)
   assert.ok(content.plates.some((p) => p.src === '/plates/plate-hero.jpg'))
   // build_seo 也必须走门，而不是自己再 import 两份数据文件
   const seo = src('scripts/build_seo.mjs')

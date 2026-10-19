@@ -6,9 +6,8 @@ import { loadPosts } from '../lib/posts.js'
 import { onLens } from '../lib/lens.js'
 import { N, navLabel } from '../data/narrative.js'
 
-// 头像与友链都从 content 这道门取（records 是 scripts/sync_records.py 生成的快照，
-// 全站只此一份；快照挂在 src/data/index.js 这道门上，那枚两行转手壳已随之删掉）
-const { records, friends } = content
+// 头像与友链都从 content 这道门取（头像地址在 site.avatar，换图只改 src/data/site.js）
+const { friends } = content
 
 const facts = [
   { k: 'OBSERVER', v: () => content.site.author },
@@ -50,11 +49,11 @@ const stats = computed(() => {
     <div class="en-card wide en-lens" @pointermove="onLens">
       <p class="en-eyebrow">自述</p>
       <div class="bio-row">
-        <!-- 头像取歌单封面那张图（外链，与音乐页同源）：显式声明宽高，图到达前就占好位 -->
+        <!-- 头像地址在 site.avatar：显式声明宽高，图到达前就占好位 -->
         <img
-          v-if="records.cover"
+          v-if="content.site.avatar"
           class="avatar"
-          :src="records.cover"
+          :src="content.site.avatar"
           :alt="`${content.site.author} 的头像`"
           width="132"
           height="132"

@@ -95,8 +95,8 @@ const FAKE = {
 test('计划里有导航、每一卷、每一个项目与一份 404，根路径不重复写', () => {
   const plans = planShells(FAKE)
   const files = plans.map((p) => p.file)
-  assert.deepEqual(files.slice(0, 6), ['blog/index.html', 'updates/index.html', 'records/index.html', 'gallery/index.html', 'projects/index.html', 'about/index.html'])
-  assert.deepEqual(files.slice(6), ['blog/jia/index.html', 'blog/yi/index.html', 'projects/Demo-One/index.html', '404.html'])
+  assert.deepEqual(files.slice(0, 5), ['blog/index.html', 'updates/index.html', 'gallery/index.html', 'projects/index.html', 'about/index.html'])
+  assert.deepEqual(files.slice(5), ['blog/jia/index.html', 'blog/yi/index.html', 'projects/Demo-One/index.html', '404.html'])
   assert.ok(!files.includes('index.html'), '站点根那份就是 index.html，不该再写一遍')
   assert.equal(files[files.length - 1], '404.html')
   for (const p of plans) assert.ok(p.url.startsWith('/') && !p.url.endsWith('/'), `${p.url} 的写法要和 sitemap 逐字一致`)

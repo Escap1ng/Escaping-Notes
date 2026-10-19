@@ -1,13 +1,20 @@
 <script setup>
-// 播放器卡片：顶栏「音乐」按钮点开的那一张，全站唯一的播放控制面
-//（右下悬浮读数条已撤）。本身不持有 <audio>——状态与操作全在 lib/music.js 那台引擎里，
-// 所以 /records 页的曲目表与这张卡同时高亮同一首。
+// 播放器卡片：顶栏「音乐」按钮点开的那一张，全站唯一的播放界面
+//（右下悬浮读数条已撤）。本身不持有 <audio>——状态与操作全在 lib/music.js 那台引擎里。
+// 与设置卡 / 搜索卡同一模子：卡头 + 关闭键、Esc 关、点卡外关、焦点陷阱、贴在顶栏下沿右对齐。
 import { music, tracks, current, playIndex, toggleMusic, next, prev, seek, setVolume } from '../lib/music.js'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { trapFocus } from '../lib/focus.js'
 
 const emit = defineEmits(['close'])
 const cardEl = ref(null)
+
+// 载入与失败是两种状态：前者等元数据，后者是文件真的取不到，别让界面一直转圈
+const status = computed(() => {
+  if (music.error) return '无法播放 · 检查音频文件'
+  if (music.loading) return '载入中…'
+  return ''
+})
 
 function fmt(s) {
   if (!Number.isFinite(s) || s < 0) return '--:--'
@@ -50,7 +57,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="cardEl" class="card" :class="{ playing: music.playing }" role="dialog" aria-label="播放器">
+  <div
+    ref="cardEl"
+    id="en-player"
+    class="card"
+    :class="{ playing: music.playing }"
+    role="dialog"
+    aria-labelledby="player-ttl"
+    :aria-busy="music.loading"
+  >
+    <div class="head">
+      <h2 id="player-ttl" class="ttl">播放器</h2>
+      <button class="close" type="button" aria-label="关闭播放器" @click="emit('close')">
+        <span class="en-ico" aria-hidden="true">✕</span>
+      </button>
+    </div>
+
     <div class="now">
       <!-- 星轨符号占位：本地曲目没有封面数据，这枚绕极旋转的弧就是本站的封面 -->
       <svg class="disc" viewBox="0 0 48 48" aria-hidden="true">
@@ -64,24 +86,37 @@ onUnmounted(() => {
       </svg>
       <div class="meta">
         <p class="nt" :title="current?.title">{{ music.started ? current?.title || '--' : '待播' }}</p>
-        <p v-if="music.started && current?.artist" class="na en-mono">{{ current.artist }}</p>
+        <p v-if="status" class="na en-mono" :class="{ err: music.error }" role="status">{{ status }}</p>
+        <p v-else-if="music.started && current?.artist" class="na en-mono">{{ current.artist }}</p>
       </div>
     </div>
 
     <div class="transport">
-      <button class="en-btn en-btn-sm en-btn-quiet t-btn" type="button" aria-label="上一首" @click="prev">
-        <span class="en-ico" aria-hidden="true">«</span>
+      <button class="en-btn t-btn" type="button" aria-label="上一首" @click="prev">
+        <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18.2 6.2 9.4 12l8.8 5.8V6.2Z" fill="currentColor" stroke="none" />
+          <path d="M5.8 6v12" />
+        </svg>
       </button>
       <button
-        class="en-btn en-btn-sm en-btn-primary t-btn play"
+        class="en-btn t-btn play"
         type="button"
         :aria-label="music.playing ? '暂停' : '播放'"
         @click="toggleMusic"
       >
-        <span class="en-ico" aria-hidden="true">{{ music.playing ? '❚' : '▶' }}</span>
+        <svg v-if="music.playing" class="t-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="7" y="5.4" width="3.4" height="13.2" rx="1" fill="currentColor" stroke="none" />
+          <rect x="13.6" y="5.4" width="3.4" height="13.2" rx="1" fill="currentColor" stroke="none" />
+        </svg>
+        <svg v-else class="t-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8.2 5.4v13.2L19 12 8.2 5.4Z" fill="currentColor" stroke="none" />
+        </svg>
       </button>
-      <button class="en-btn en-btn-sm en-btn-quiet t-btn" type="button" aria-label="下一首" @click="next">
-        <span class="en-ico" aria-hidden="true">»</span>
+      <button class="en-btn t-btn" type="button" aria-label="下一首" @click="next">
+        <svg class="t-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5.8 6.2 14.6 12l-8.8 5.8V6.2Z" fill="currentColor" stroke="none" />
+          <path d="M18.2 6v12" />
+        </svg>
       </button>
     </div>
 
@@ -112,7 +147,12 @@ onUnmounted(() => {
           @click="onRow(i)"
         >
           <span class="q-no en-mono" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-          <span class="q-tt">{{ t.title }}</span>
+          <span class="q-tt">
+            <span class="q-name">{{ t.title }}</span>
+            <span v-if="isCur(i)" class="q-eq" :class="{ on: music.playing }" aria-hidden="true">
+              <i></i><i></i><i></i>
+            </span>
+          </span>
           <span class="q-ar en-mono">{{ t.artist }}</span>
         </button>
       </li>
@@ -130,6 +170,7 @@ onUnmounted(() => {
         aria-label="音量"
         @input="setVolume(Number($event.target.value))"
       />
+      <span class="tm" aria-hidden="true"></span>
     </div>
   </div>
 </template>
@@ -147,11 +188,49 @@ onUnmounted(() => {
   gap: var(--space-2);
   width: 320px;
   max-width: calc(100vw - var(--space-3) * 2);
+  /* 矮视口（横屏手机）里卡片不跟着被裁：卡内自己滚，队列仍保留自己的滚动区 */
+  max-height: calc(100vh - var(--space-5));
+  max-height: calc(100dvh - var(--space-5));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-3);
   border: 1px solid var(--card-brd);
   border-radius: var(--r-md);
   background: var(--ink-0);
   box-shadow: 0 22px 60px -34px var(--shadow, rgba(0, 0, 0, 0.6));
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ttl {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+}
+
+.close {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--text-0);
+  border-color: var(--card-brd-hover);
 }
 
 /* ---- 当前曲 + 星轨符号 ---- */
@@ -212,42 +291,89 @@ onUnmounted(() => {
   font-size: var(--fs-2xs);
 }
 
-/* ---- 走带 ---- */
+.na.err {
+  color: var(--hot);
+}
+
+/* ---- 走带：三枚等大热区，图标与顶栏同一套 1.6px 描边 ---- */
 .transport {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .t-btn {
-  min-width: 36px;
-  padding: 0;
-  justify-content: center;
-}
-
-.play {
+  width: 44px;
   min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  color: var(--text-1);
 }
 
-/* ---- 进度 / 音量 ---- */
+.t-btn:hover {
+  color: var(--cold);
+  border-color: var(--line);
+}
+
+.t-ico {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 主动作回到全站唯一强调色（冷蓝）；红色只留作"当前曲"的小记号 */
+.play {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  border-color: transparent;
+  background: var(--cold);
+  color: var(--ink-0);
+}
+
+.play:hover,
+.play:active {
+  color: var(--ink-0);
+}
+
+.play:hover {
+  border-color: transparent;
+  box-shadow: 0 0 0 1px var(--cold), 0 8px 26px -10px var(--cold);
+}
+
+/* ---- 进度 / 音量：两行同一张栅格，滑杆起止点对齐 ---- */
 .scrub,
 .vol {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-1);
 }
 
 .tm {
-  flex-shrink: 0;
+  min-width: 4.5ch;
   font-size: var(--fs-3xs);
   color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.scrub .tm:last-child {
+  text-align: right;
 }
 
 .sl {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  accent-color: var(--signal);
+  height: 20px;
+  accent-color: var(--cold);
 }
 
 .sl:disabled {
@@ -296,12 +422,73 @@ onUnmounted(() => {
   color: var(--text-1);
 }
 
-.q-row .q-tt {
+.q-tt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
   font-family: var(--font-display);
   font-size: var(--fs-sm);
+}
+
+.q-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 当前曲的播放记号：三根小柱，暂停时停住但不消失 */
+.q-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11px;
+  flex: none;
+}
+
+.q-eq i {
+  width: 2px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--hot);
+  transform-origin: bottom;
+}
+
+.q-eq i:nth-child(1) {
+  transform: scaleY(0.45);
+}
+
+.q-eq i:nth-child(2) {
+  transform: scaleY(0.8);
+}
+
+.q-eq i:nth-child(3) {
+  transform: scaleY(0.6);
+}
+
+.q-eq.on i {
+  animation: eq 0.9s ease-in-out infinite;
+}
+
+.q-eq.on i:nth-child(2) {
+  animation-delay: -0.45s;
+  animation-duration: 1.1s;
+}
+
+.q-eq.on i:nth-child(3) {
+  animation-delay: -0.2s;
+  animation-duration: 0.75s;
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 .q-row .q-ar {
@@ -315,8 +502,26 @@ onUnmounted(() => {
   color: var(--hot);
 }
 
+@media (pointer: coarse) {
+  .sl {
+    height: 32px;
+  }
+  /* 28px 的关闭键保持原样，热区用不可见的 ::before 撑到 44×44 */
+  .close {
+    position: relative;
+  }
+  .close::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card.playing .disc .arcs {
+    animation: none;
+  }
+  .q-eq.on i {
     animation: none;
   }
 }

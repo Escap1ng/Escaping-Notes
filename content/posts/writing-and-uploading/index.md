@@ -10,7 +10,7 @@ alt: 暮色里覆雪的富士山压着一带云，山脚铺开一座城；右侧
 
 ## 只有一条路：改仓库里的文件
 
-站内没有后台。文章就是仓库里 `content/posts/<名字>/index.md`，站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）就是 `src/data/*.js`——改完 push，GitHub Actions 先跑 `npm test` 与 `npm run check`，再构建发布。没有一份内容躺在别处等着同步，也没有"必须在网页上改才生效"的东西。
+站内没有后台。文章就是仓库里 `content/posts/<名字>/index.md`，站点内容（动态 / 项目 / 装备 / 音乐 / 映像 / 友链）就是 `src/data/*.js`——改完 push，GitHub Actions 先跑 `npm test` 与 `npm run check`，再构建发布。没有一份内容躺在别处等着同步，也没有"必须在网页上改才生效"的东西。
 
 ## 写作：一卷目录就是一篇
 

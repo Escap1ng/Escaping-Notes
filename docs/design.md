@@ -232,7 +232,7 @@
 | 扩展名按运行方式分 | `src/` 走 Vite → `.js` / `.vue`；`scripts/` 由 node 直接执行 → `.mjs`；Python → PEP 8 snake_case | `build_seo.mjs` |
 | 静态资源 | 全小写 kebab（不带大写 / 空格 / 哈希），`LICENSE` / `README` 惯例大写除外 | `plate-hero-deep.jpg` |
 | CSS 类 | 全站基元统一 `en-` 前缀（`en-card` / `en-btn` / `en-prose`），页面私有的类不带前缀 | §6.4 |
-| 浏览器存储键 | 统一 `en-` 前缀 + 概念名，且**只在 `src/lib/storage.js` 里定义**——别处再写字面量就会拼错而无人报错 | `en-theme`、`en-plate-blur` |
+| 浏览器存储键 | 统一 `en-` 前缀 + 概念名，且**只在 `src/lib/storage.js` 里定义**——别处再写字面量就会拼错而无人报错 | `en-theme`、`en-plate-blur`、`en-track` |
 
 **派生素材必须入库**：`public/plates/`、`content/posts/*/cover.jpg`、`public/audio/` 三处不许忽略——构建机与只读镜像不会重跑 bake（烘培脚本是 Windows PowerShell）。它们的原图（`plates-src/`、`music/`、各卷里的 `*-src.*`）在 `.gitignore` 里，别当泄漏报。
 
@@ -264,8 +264,7 @@
 | `site` | `site.js` | 顶栏 / 页脚 / 关于页 / SEO 那一岸 |
 | `updates` | `updates.js` | `/updates` 与首页抽屉那张最近动态卡 |
 | `projects` | `projects.js` | `/projects` 两页与构建期的壳 |
-| `records` | `records.js`（`sync_records.py` 生成，勿手改） | `/records` 与关于页头像 |
-| `playlist` | `music.js` | 播放器与 `/records` 的在线听歌卡 |
+| `playlist` | `music.js` | 顶栏播放器的曲目队列 |
 | `friends` | `friends.js` | 关于页友链卡 |
 | `plates` | `gallery.js` | 映像柜（站点自有那几张） |
 
@@ -300,13 +299,13 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 | `HorizonHero` | `HomeView` | — | 首页首屏排版层：站名打字机 + 十六字宣言 + 一枚可点的下滑提示（`scroll-cue`，滚过一整屏到折线以下），不画星星、不放文章入口 |
 | `SiteHeader` | `App.vue` | — | 顶部：`N.nav` 导航高亮、主题切换（`data-theme` + `localStorage['en-theme']`）、播放器卡 / 设置卡 / 搜索卡三个开关与抽屉（四张面板互斥，任何时刻只开一张） |
 | `SiteFooter` | `App.vue` | — | 页脚，一条发丝顶线下一行三格（`1fr auto 1fr`）：版权与许可 / 致谢 / 回到顶部，≤720px 叠成三行居中。版权格：`© {年份} {site.author}` + 协议链接（`site.license` 的 `name` 与 `url`，站外故带 `↗`、`rel="license"`）——名字与协议都不写字面量，年份运行时取，免得跨年还要手改一个数字。链接的 `title` 挂 `N.footer.licenseScope`：CC 只覆盖博客内容，源代码与设计不在它下面，这句话放悬停而不是页面上。右格那枚是 `.en-btn-quiet`（仪器字面），`↑` 不写在文案里而是 `.en-ico .en-ico-up`——hover 时它朝自己承诺的方向上移一枚 `--nudge` |
-| `MusicCard` | `SiteHeader` | `@close` | 播放器卡片：走带/进度/音量/队列。本身不持有 `<audio>`——状态与操作在 `lib/music.js`（全站唯一引擎），`/records` 的曲目表读的是同一个 `music.idx` |
+| `MusicCard` | `SiteHeader` | `@close` | 播放器卡片，全站唯一的播放界面。卡头（标题 + 关闭键）/ 走带 / 进度 / 音量 / 队列。走带三枚热区 44×44、播放键 48×48，图标与顶栏同一套 1.6px 描边 SVG；主按钮用 `--cold` 实心，红色只留作"当前曲"的小记号（唱片芯、当前曲名、三根小柱）。两枚滑杆共用一张 `auto 1fr auto` 栅格，起止点对齐。本身不持有 `<audio>`——状态与操作在 `lib/music.js`（全站唯一引擎）；曲目与位置存 `en-track` / `en-track-progress`，Media Session 接系统媒体键，加载与失败各有状态 |
 | `SettingsCard` | `SiteHeader` | `@close` | 设置卡：两枚控件。① 底片模糊滑杆（0–12px，**默认拉满 12**），读写在 `lib/plate.js`；② 卡片颜色两档单选（**不透底 = 默认**，排在第一位 / 半透明），读写在 `lib/surface.js`——不透底那一档的标签跟主题走（浅色「纯白」、深色「实底」），深色下写"纯白"是对着一块近黑卡面说谎。值都不持有，与 `MusicCard` 同一模子（Esc 关、点卡外关、`trapFocus`）。控件一律原生：滑杆 `input[type=range]`、档位 `input[type=radio]` + `accent-color`，不自造 thumb |
 | `SearchCard` | `SiteHeader` | `@close` | 搜索卡：与上面两张同一模子（Esc 关、点卡外关、`trapFocus` 把焦点直接交给那格输入框，所以不写 `autofocus`）。**判据不另起一套**——与 `/blog` 那一格同一个 filter（标题 + 摘要 + 标签，小写包含），空态复用 `N.empty.search`。卡内只列前 6 条（320px 的卡不是归档页），第 7 条起交给底部那枚「在文章列表看全部 N 篇」，它把词交给 `/blog?q=`，于是「搜索词写进 URL」这件事仍然只有归档页一处，卡内不留第二套状态。取数走组件模块级的一份 `loadPosts()` 缓存：卡每次开都重挂一次组件，没这层缓存一次搜索就要把同一份文章取两遍。路由一变即收（顶栏不随路由换，卡是自己那一层） |
 
 ### 6.3 页面路由表
 
-10 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航只放前 7 条（详情页与 404 兜底不进导航）。
+9 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航只放前 6 条（详情页与 404 兜底不进导航）。
 
 | 路由 | 视图 | 标题（`meta.t` / `document.title`） |
 | --- | --- | --- |
@@ -314,15 +313,14 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 | `/blog` | `BlogView` | `文章 · ${site.name}` |
 | `/blog/:slug` | `PostView` | 兜底 `阅读 · ${site.name}`，加载完成后换成文章标题 |
 | `/updates` | `UpdatesView` | `动态 · ${site.name}` |
-| `/records` | `RecordsView` | `音乐 · ${site.name}` |
 | `/gallery` | `GalleryView` | `映像 · ${site.name}` |
 | `/projects` | `ProjectsView` | `项目 · ${site.name}` |
 | `/projects/:slug` | `ProjectView` | 兜底 `项目 · ${site.name}`，加载完成后换成项目名 |
 | `/about` | `AboutView` | `关于 · ${site.name}` |
 | `/:pathMatch(.*)*` | `NotFoundView` | `这里没有页面 · ${site.name}`（与页内 h1 同字，标签页与页面不说两句话） |
 
-> 站内**只有一种路由模式**（history）：Pages 不会把未知路径回退到 `index.html`，所以构建期为每条真实路由写一份 HTML——6 条导航、每一卷文章、每一个项目各一份 `index.html`，加一份 `404.html`（判据与写法见 §5.1 末段与 `scripts/lib/shell.mjs`）。壳里带的是同一个应用，挂载后照常渲染，观感与站内无差；换的只有 head：`title` / `canonical` / `og:*` / `twitter:*` 是这一页自己的。旧的 `#/…` 形状在 `src/main.js` 里于挂载前改道成路径形状，别处贴过的链接不会静默落到首页。
-> 标题那一句的形状只有一处实现：`narrative.js` 的 `pageTitle(subject)`，路由 meta、静态壳与 `PostView` 挂载后改写的那一句都走它；由导航呈现的 7 页把整句写在 `N.nav[].t`，`tests/seo-shell.test.mjs` 对拍两种写法算出来必须相等（站名的字面量在 `src/router/index.js` 里已经不出现了）。
+> 站内**只有一种路由模式**（history）：Pages 不会把未知路径回退到 `index.html`，所以构建期为每条真实路由写一份 HTML——5 条非首页导航、每一卷文章、每一个项目各一份 `index.html`，加一份 `404.html`（判据与写法见 §5.1 末段与 `scripts/lib/shell.mjs`）。壳里带的是同一个应用，挂载后照常渲染，观感与站内无差；换的只有 head：`title` / `canonical` / `og:*` / `twitter:*` 是这一页自己的。旧的 `#/…` 形状在 `src/main.js` 里于挂载前改道成路径形状，别处贴过的链接不会静默落到首页。
+> 标题那一句的形状只有一处实现：`narrative.js` 的 `pageTitle(subject)`，路由 meta、静态壳与 `PostView` 挂载后改写的那一句都走它；由导航呈现的 6 页把整句写在 `N.nav[].t`，`tests/seo-shell.test.mjs` 对拍两种写法算出来必须相等（站名的字面量在 `src/router/index.js` 里已经不出现了）。
 > **`document.title` 只在内容加载完成时往前写一次，离开页面时不复位**：`router.afterEach` 与新页挂载都排在本次卸载之后，卸载里写兜底值会把「文章 · Escaping Notes」覆成站名（§9 第 20 条）。
 
 ### 6.4 基元与特异度陷阱（改样式前必读）
@@ -346,7 +344,7 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 
 | 字段 | 类型 | 用途 |
 | --- | --- | --- |
-| `nav` | Array | 顶部导航 `{to,label,code}`（`code` 是序号，`00` 首页…`06` 关于）。**加一枚导航会把折叠断点顶高一档**：单枚实测 67.6px + 4px 间距，见 §8「映像」条与 `SiteHeader.vue` |
+| `nav` | Array | 顶部导航 `{to,label,code}`（`code` 是序号，`00` 首页…`05` 关于）。**加一枚导航会把折叠断点顶高一档**：单枚实测 67.6px + 4px 间距，见 §8「映像」条与 `SiteHeader.vue` |
 | `navLabel(to)` | 函数 | 各页 `<h2>` 取的就是 `nav` 里那枚标签，不各抄一份字面量（两处各写一遍，改名只会改到一处） |
 | `heroTitle` / `manifesto` | String / Array | 首屏站名（打字机逐字打出的文本）与对偶联宣言（两半句各一行，十六字）——**文学位之一** |
 | `drawer` | Object | 首屏之下抽屉的读数与眉标：`clock/featured/recent` |
@@ -381,8 +379,7 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
   - **卡面与详情同源**：`name` / `desc` / `year` / `url` 与介绍三件（`detail` 段落 / `points` 要点 / `stack`）都写在 `src/data/projects.js` 一处，改的是同一份数据。
   - **返回机制只有一处实现**：`src/lib/exit.js` 的 `useDetailExit(listPath, canExit)`，`/blog/:slug` 与 `/projects/:slug` 共用，认两种动作——**Esc** 与**点阅读底板以外的空白**。三条判据都是量出来的，不是推的：① 一律 `router.replace(列表)`，不用后退——从深链接（分享进来、或刷新过）直接落在详情页时 `history.state.back` 并不为 null，实测按 Esc 退回的是**首页**而不是列表（§9 第 16 条）；`replace` 之后浏览器后退仍然回到进列表之前那一页，行为可预测，也不需要兜底分支。② 判据挂在 `document` 而不是页根——页根的盒子到板子底部就结束，板子下面那片空白属于 `main`，只挂页根会漏掉最容易点中的那块区域。③ 按下与抬起都要落在空白才算一次"点空"——否则从正文里拖选文字、松手在板外时 `click` 会被发到两者的共同祖先，读着读着就被退回列表。`[role="dialog"]` 里的点击一律不算空白（灯箱自己吃点击与 Esc），灯箱开着时 `canExit` 返回 false，Esc 先归灯箱。`tests/detail-exit.test.mjs` 钉住"两张详情页不许各抄一份跳转"，带负向对照（同一把尺子量实现方必须抓到 `router.replace(`；尺子先剥注释，否则注释里写一句"不用后退"都会让它假红）。
 - **动态 `/updates`**：页顶是 `.en-h2` 一行标题 + `.en-lede` 一句导语（「中文 · 英文」双语 eyebrow 与 `N.sections` 已整体撤除，界面只说人话，见 §7）。内容是**一条一枚满宽卡**，不再走两列栅格 `.en-cards`——一句话的动态摆成两列，读起来是两栏报纸而不是流水账。卡面仍是 §6d 那一张（`min-height` 收回 0、内部横排 `脉冲点 · 日期 · 正文`），hover 走卡面那条共用的边线/填充亮 + 指针透镜光斑（`en-lens`），卡内另有脉冲点放大、日期冷移、正文右移 `--nudge` 三个小动作；脉冲点按序号冷/热交替，日期走 `.en-mono`。日期列宽取 `max-content` 而不是 `10ch`——`ch` 在栅格列上按**容器**的字体度量算（这里是 body 的 sans），换一台机器 mono 就不是那个宽度了，而所有日期都是十个字符，`max-content` 天然让各行正文对齐在同一条竖线上。≤720px 日期与正文不再并排（并排只剩一行七八个字），日期另起一行、正文仍缩进到日期之下。
-- **音乐 `/records`**：两张卡。「在线听歌」卡（站内自托管 mp3 的曲目表，卡内两列，行内 `序号 ▶ 曲名 · 艺术家` 紧跟不顶右边缘，点一行即播、当前曲红移；`music.started` 把关，没按下过之前没有"当前曲"——否则第一行会一直红着、看着像已经在播）、整张 QQ 曲目表（卡内两列、每行 `3ch 1fr auto`；表头左边 `音源 · QQ 音乐` + `N 首 · SYNC 时间`，右边动作组：在 QQ 音乐打开 ↗ / 折叠开关「展开其余 N 首 ↓」「收起 ↑」（`aria-expanded` + `aria-controls`，默认只列前 8 首——几十首时它是档案，不该把整页拖长压住真正能播的那一张））。别把听歌卡与别的卡并排：曲目会一首首加上去，第 5 首起就会把整行拉高。**两张卡的曲目行吃同一份规则**（`RecordsView` scoped 里 `.song, .track` 并写）：聚光只挂卡，一枚光斑在卡里跟指针走，行内不各挂一枚（各挂会在指针处叠两层，被指到的那行洗得比别处重）；行被指到时三个动作——左缘 2px 标记从顶上长满、序号放大 1.15、曲名冷移并让出一枚 `--nudge`，外加 5% 冷底。左缘标记用行的 `::before`，不用卡面配方那枚 `<span class="bar">`（见 §6d 的子代选择器）。当前曲的红移排在 hover 的冷移之后，所以播着的那行被指到仍是红的。
-- **关于 `/about`**：按「自述 → 三枚读数 → 档案 | SOCIAL → 友链 → 技术栈」排。自述卡满宽（左侧 132px 头像取 `records.cover`、`--r-md` 圆角、不吃 hover 动效，≤720px 收到正文上方）；读数三枚一排（`.stats` 三列，900px 折单列），数字由 `loadPosts()` 现算——篇数 / 去重标签数 / `words` 求和，**没算出来之前显示 `--` 而不是 0**（"还没算到"≠"一个都没有"，与 §2 原则 5 同一条）；档案与 SOCIAL 两列并排、友链 `.wide` 满宽，三张卡在两列栅格里不留孤枚；技术栈另起一栅格（`auto-fill` 按 190px 起排，一行放得下几枚放几枚；不锁两列是因为 5 条锁两列必落单），每项一枚卡（名字 `--font-display` + 一句说明），卡内边距收到一档 `--space-2`——190px 的卡吃默认 32px 侧边距只剩 134px 正文，一句说明要折四行，收完是两行。`gear` 因此从纯字符串改成 `{name, note}`（写在 `src/data/site.js`），关于页只认这一种形状。
+- **关于 `/about`**：按「自述 → 三枚读数 → 档案 | SOCIAL → 友链 → 技术栈」排。自述卡满宽（左侧 132px 头像取 `site.avatar`、`--r-md` 圆角、不吃 hover 动效，≤720px 收到正文上方）；读数三枚一排（`.stats` 三列，900px 折单列），数字由 `loadPosts()` 现算——篇数 / 去重标签数 / `words` 求和，**没算出来之前显示 `--` 而不是 0**（"还没算到"≠"一个都没有"，与 §2 原则 5 同一条）；档案与 SOCIAL 两列并排、友链 `.wide` 满宽，三张卡在两列栅格里不留孤枚；技术栈另起一栅格（`auto-fill` 按 190px 起排，一行放得下几枚放几枚；不锁两列是因为 5 条锁两列必落单），每项一枚卡（名字 `--font-display` + 一句说明），卡内边距收到一档 `--space-2`——190px 的卡吃默认 32px 侧边距只剩 134px 正文，一句说明要折四行，收完是两行。`gear` 因此从纯字符串改成 `{name, note}`（写在 `src/data/site.js`），关于页只认这一种形状。
 - **映像 `/gallery`**：全站用过的图摊成一墙拍立得。取数在 `src/lib/gallery.js`：文章封面（各卷目录里的 `cover.jpg`，随 `loadPosts()` 的 date 倒序落位）+ `src/data/gallery.js` 登记的站点自有底片，按 `src` 去重，所以一墙只有一张真图、不会有重影。**整张原图按自身比例上墙，不裁 3:2**——这一页要的是「这张图本来长什么样」，`imagePos` 在这里没有消费者（选焦点是列表页那格的活）。那份清单与 `site.css` 里出现的 `url('/plates/…')` 由 `npm test` 对拍（`tests/gallery-plates.test.mjs`，两侧都非空才作数），换底片漏登记就会红。
   - **白框与胶带是两枚令牌**：`--polar`（深色 = 冷灰石板 `#1e2733`，浅色 = 纯白相纸）与 `--tape`（半透美纹纸），两套主题各一份；框影复用 `--shadow` 叠两档，不新造令牌。胶带是全站唯一一处**材料色**，不参与 §4.1 的双色语义——它讲的是纸胶带，不是强调色。
   - **歪斜角按 `src` 哈希**（`tiltFor()`，值域 ±2.4°）而不是 `Math.random()`：随机角等于每次进页整墙重摆一次，读起来是抖动而不是手作。
@@ -390,7 +387,7 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
   - **灯箱 `Teleport` 到 `body`**：`main` 是 `z-index: 2` 的层叠上下文，框内的关闭/翻页按钮留在页内会被顶栏（`z-index: 60`）压住、点不到。`/blog/:slug` 那盏单图灯箱四角无按钮，才躲过同一件事——两页不是同一个问题，别顺手合并成一套。键盘 ←/→ 翻页、Esc 关闭、触屏横滑 >50px 翻页、Tab 锁在框内（`lib/focus.js`）；只有遮罩和那层糊底负责「点空即关」，照片与按钮都不关框。图标只用 `✕ « »` 三枚单字符。
   - **列数沿用既有断点**：三列 → ≤900px 两列 → ≤720px 单列，与 `/blog` 那面封面墙同一节奏，不新造一档。取数期间先立三格骨架，否则空墙会读成「这站没有图」而不是「还在拿」。
   - **代价**：九张图约 5.3 MB（实测 5,547,925 B），其中首屏那两张占 2.1 MB——`plate-hero.jpg` 1.5 MB、`plate-hero-deep.jpg` 0.62 MB；两张只有当前主题那张进首屏（`--hero-img` 两套各自定义），另一张只在映像柜里被拉。`loading="lazy"` 只让头一屏先下。
-  - **顶栏随之改档**：一枚导航实测 67.6px + 4px 间距，七枚整条 497px，故折叠断点 1200 → **1280**（`SiteHeader.vue` 里 CSS 与 `onResize` 两处同值）。只调 CSS 不调 JS 的话，1201~1280px 这段会整条溢出、被 `html` 的 `overflow-x: clip` 静默裁掉，用户在抽屉外点不到那几枚。
+  - **顶栏随之改档**：一枚导航实测 67.6px + 4px 间距，六枚整条 424.8px；折叠断点 1280 是加「映像」时抬高的值，现为保守值（`SiteHeader.vue` 里 CSS 与 `onResize` 两处同值）。只调 CSS 不调 JS 的话，两处会不同步，窄屏那段会整条溢出、被 `html` 的 `overflow-x: clip` 静默裁掉，用户在抽屉外点不到那几枚。
 - **卡片表面 `.en-card` / `.en-cards` / `.en-shot`**（`site.css` §6d）：全站唯一的一张卡面——边、角、底、hover、内边距、210px 最小高，取值来自 `--card-*`；**每张卡 hover 都亮边亮底并带跟随指针的冷色透镜**（不分是否可点，§4.6）。`.en-cards` 是它的两列栅格（≤880px 收单列），`/blog` 用自己的三列 `.cards`。页面里的配方是 `class="en-card en-lens"` 加一个 `<span class="bar">` 光带（光带属 `.en-lens`，`site.css` §6b；规则写成 `.en-lens > .bar` 只认自己那一枚——写成后代的话，卡内再嵌一枚 `.en-lens` 时父卡 hover 会把所有后代的标记一起点亮，读作一排竖线），**带封面的那张再加 `en-flush`**（收掉卡面内边距让图贴边，留白交给卡内的信息体）。卡内只剩各自的排版：`/blog` 留 `.card { flex: 1 }` + `.body`，首页精选留 `.pick-body`。全站唯一一处**故意不用** `.en-card` 的是 `/gallery` 那面拍立得墙（理由见 manual §3.1.1）。
 - **404**：「这里没有页面」+ 两条出口（回到首页 / 查看文章）。
 - **浅色主题**：同套冷暖逻辑，色相换为冷灰白底 + 深蓝/朱砂。默认浅色，**首帧刻意不读系统 `prefers-color-scheme`**——首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上（`index.html` 只认「存储值 → 否则浅色」）。

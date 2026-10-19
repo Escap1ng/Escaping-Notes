@@ -168,6 +168,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         type="button"
         :disabled="!music.available"
         :aria-expanded="player"
+        aria-controls="en-player"
         :aria-label="music.available ? (player ? '播放器：收起' : '播放器：展开') : '播放器：暂无曲目'"
         :title="music.available ? (player ? '收起播放器' : '打开播放器') : '暂无曲目可播'"
         @click="togglePlayer"
@@ -453,13 +454,13 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   transform: translateY(var(--lift));
 }
 
-/* 播放中：红移标示；歌单为空：置灰 */
+/* 播放中：红移标示；曲目为空：置灰 */
 .music-btn.on {
   color: var(--hot);
   border-color: color-mix(in srgb, var(--hot) 45%, transparent);
 }
 
-/* 不可用的图标按钮（音乐歌单为空）：置灰 */
+/* 不可用的图标按钮（音乐曲目为空）：置灰 */
 .ico-btn:disabled {
   opacity: 0.45;
   cursor: default;
@@ -622,9 +623,9 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 /* 右上角四枚自 2026-10-09 起就是纯图标 32px 方（不再有文字档），
    所以原先"≤1400px 收起文字"那一档已无消费者，删掉 */
 
-/* 导航整条实测 497px（「映像」进来之后是 7 枚 × 67.6px + 6 × 4px 间距，本机 Chrome 量的），
-   与品牌 / 右上角四枚相加超过 1280px，故折叠断点从 1200 抬到 1280。
-   加一枚导航实打实要 72px——这个数别凭感觉估，估小了就是 1201~1279px 那一段整条溢出被裁 */
+/* 导航整条实测 424.8px（6 枚 × 67.6px + 5 × 4px 间距，本机 Chrome 量的）。
+   折叠断点 1280 沿用加「映像」时抬高的值，现为保守值；加一枚导航实打实多 72px，
+   这个数别凭感觉估，估小了就是整条溢出被裁 */
 @media (max-width: 1280px) {
   .en-header {
     padding: var(--space-1) var(--space-2);

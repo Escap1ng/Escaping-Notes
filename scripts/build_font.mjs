@@ -38,7 +38,7 @@ const PUNCT = '—…“”‘’《》、。，；：！？（）·〈〉「」
 
 // 只扫文本文件：content/posts 里还有封面与正文插图，按 utf8 读二进制会把乱码当成"用字"
 const TEXT_FILE = /\.(md|vue|js|mjs|json|html|txt)$/i
-// 扫描全站可渲染文案：文章标题/正文小标题、narrative/site/records 等配置、页面与组件文字
+// 扫描全站可渲染文案：文章标题/正文小标题、narrative/site 等配置、页面与组件文字
 const SCAN = ['content/posts', 'src/data', 'src/views', 'src/components', 'index.html']
 
 const isCJK = (ch) => /[\u3400-\u9fff\uf900-\ufaff]/.test(ch)

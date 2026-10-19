@@ -70,6 +70,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 
 - Plate blur and card surface are runtime parameters: a 0–12px slider (defaulted to full) and two radios (opaque / translucent) in the settings card, remembered in `localStorage`
 - Focus traps live in the header drawer, the search card, the player card, the settings card and both lightboxes, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; route changes are announced through the live region in `App.vue`
+- The player remembers the last track and position across reloads, answers OS media keys, and states "cannot play" when the audio file is missing instead of loading forever
 - Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload
 - `/gallery` pins every image the site has used to one wall of Polaroids, tilt hashed from the `src` and entry staggered per card; the lightbox `Teleport`s to `body` and answers both keyboard paging and swipes
 
@@ -145,7 +146,7 @@ There is no admin UI — everything is a file in this repo, and pushing publishe
 
 ## Route Map
 
-All 10 routes are lazy-loaded and each carries `meta.t` for the document title and the screen-reader announcement; the header nav shows 7 of them, and the two `:slug` detail pages plus the trailing catch-all are not on the bar — anything unmatched renders 这里没有页面 ("there is no page here"); site copy is Chinese-only.
+All 9 routes are lazy-loaded and each carries `meta.t` for the document title and the screen-reader announcement; the header nav shows 6 of them, and the two `:slug` detail pages plus the trailing catch-all are not on the bar — anything unmatched renders 这里没有页面 ("there is no page here"); site copy is Chinese-only.
 
 | Route | Page | What it is |
 | --- | --- | --- |
@@ -153,7 +154,6 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 | `/blog` | Articles | Archive, tag/keyword filters live in the URL |
 | `/blog/:slug` | Article | A single post with its cover placed on top; inline images open the lightbox |
 | `/updates` | Activity | Short-log feed |
-| `/records` | Music | Online listening (self-hosted mp3) + a QQ playlist snapshot; progress and volume live in the header player card |
 | `/gallery` | Gallery | Wall of every image the site has used |
 | `/projects` | Projects | Grid of project cards |
 | `/projects/:slug` | Project write-up | Shares the reading panel with an article; `Esc` or a click outside returns to the list |
@@ -169,7 +169,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 ├── index.html             # Shell: inline first-paint script (theme / plate blur / card surface / preloading the landing photo for that theme, so none of them flashes) + SEO/OG metadata
 ├── content/posts/         # Posts: one directory per post (`<slug>/index.md` plus its own cover and images) — the directory name is the URL
 ├── public/                # favicon, robots.txt, og.png + two derived-asset dirs that must be committed (plates/ · audio/)
-├── scripts/               # Build-time and content-refresh scripts, named by verb family (build_* / check_* / sync_*)
+├── scripts/               # Build-time and content-refresh scripts, named by verb family (build_* / check_*)
 ├── tests/                 # Zero-dependency safety net: node --test
 ├── docs/                  # design.md spec · manual.md handbook · assets/readme/ README figures
 └── src/
@@ -178,7 +178,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
     ├── data/              # everything site-owned lives here, index.js being the single door
     ├── lib/               # sky the plate and the clock · ridge the mask · plate the layer · schema the posting rules · posts the loader · markdown · theme / storage / …
     ├── styles/site.css    # the only stylesheet: structural scales + the two theme palettes + site-wide primitives
-    └── views/             # 10 views, one file each, flat
+    └── views/             # 9 views, one file each, flat
 ```
 
 Originals (`plates-src/` · `music/` · `fonts-src/` · each roll's `*-src.*`) are gitignored — do not report that as a leak. The file-by-file annotated version is in **[docs/manual.md §0](docs/manual.md)** (Chinese).
@@ -209,7 +209,7 @@ Two things are licensed separately here: **blog content** is under CC BY-NC-SA 4
 | **Blog content** — article text, original images and copy on this site | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): you may copy, adapt and redistribute it, with attribution, for non-commercial purposes only, and derivatives must be published under the same licence |
 | **Source code & design** — `src/`, `scripts/`, `docs/`, the visual and interaction design and the star-trail device | the non-commercial notice, i.e. the five items below |
 | **Fonts** | the display subsets (body serif split into unicode-range shards) and the masthead Didone are derived from Noto Serif SC and Playfair Display respectively (both SIL OFL 1.1); the full licence is at [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
-| **Third-party material** | embedded playlists, blogroll links and off-site content keep their own terms and are not covered by this section |
+| **Third-party material** | embedded blogroll links and off-site content keep their own terms and are not covered by this section |
 
 The five items below govern only the "source code & design" row above:
 

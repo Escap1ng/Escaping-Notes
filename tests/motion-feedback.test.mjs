@@ -26,7 +26,6 @@ const VUE_FILES = [
   'src/components/MusicCard.vue',
   'src/views/ProjectsView.vue',
   'src/views/BlogView.vue',
-  'src/views/RecordsView.vue',
   'src/views/UpdatesView.vue',
   'src/views/GalleryView.vue',
   'src/views/AboutView.vue',
@@ -72,7 +71,6 @@ test('卡面 hover 不分角色，且每张卡都带指针透镜', () => {
     'src/views/BlogView.vue',
     'src/views/HomeView.vue',
     'src/views/ProjectsView.vue',
-    'src/views/RecordsView.vue',
     'src/views/UpdatesView.vue',
     'src/views/AboutView.vue',
   ]
