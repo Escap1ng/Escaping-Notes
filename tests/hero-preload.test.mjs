@@ -43,7 +43,7 @@ function bootScript(html) {
 
 // 跑 index.html 里那段真脚本，收它挂进 <head> 的元素。桩的依赖面就是脚本用到的那些：
 // documentElement.dataset / style.setProperty / createElement / head.appendChild。
-function runBoot(code, stored) {
+function runBoot(code, stored, path = '/') {
   const appended = []
   const doc = {
     documentElement: { dataset: {}, style: { setProperty() {} } },
@@ -53,6 +53,7 @@ function runBoot(code, stored) {
   const ctx = {
     document: doc,
     localStorage: { getItem: (k) => (k === 'en-theme' ? stored : null), setItem: () => {} },
+    location: { pathname: path },
   }
   new Function(...Object.keys(ctx), code)(...Object.values(ctx))
   return { theme: doc.documentElement.dataset.theme, appended }
@@ -93,6 +94,17 @@ test('没存过 / 存过垃圾值时，预加载跟着浅色那张（与首开�
     const r = runBoot(code, stored)
     assert.equal(r.theme, 'out', `stored=${JSON.stringify(stored)} 该落浅色`)
     assert.equal(preloadOf(r)[0].href, hero.out.url, '预加载的那张必须跟着兜底档走')
+  }
+})
+
+test('非首页不预载 hero：那块地景只在首页', () => {
+  const code = bootScript(src('index.html'))
+  for (const path of ['/blog', '/blog/hello-world', '/updates', '/about', '/404.html']) {
+    assert.equal(
+      preloadOf(runBoot(code, 'out', path)).length,
+      0,
+      `${path} 也挂了 hero preload——次级页与首页共用首帧脚本，不判路径就是白下 1.5MB`
+    )
   }
 })
 

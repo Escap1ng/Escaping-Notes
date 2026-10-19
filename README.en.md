@@ -92,7 +92,7 @@ npm test                 # everything under tests/, no test framework
 | `npm run art:build` | Redraw the two plates at the top of the README (constants are read out of the source by regex and it throws if they are gone, so re-run after touching star-trail parameters) |
 | `npm run bg:build` | Re-bake the site backdrops in `public/plates/*.jpg` (originals live in `plates-src/`, needs local PowerShell, commit the output) |
 | `npm run cover:build` | Re-bake article covers: bakes each roll's own `*-src.jpg` into `cover.jpg` beside it in `content/posts/<slug>/` (no mapping table in the script; same requirements) |
-| `npm run font:build` | Re-subset the body serif (needs Noto Serif SC locally; the output is committed, so this is rarely needed) |
+| `npm run font:build` | Re-subset the body serif and split it into `unicode-range` shards (needs Noto Serif SC locally; the output is committed, so this is rarely needed — re-run when a post title uses a character outside the hot shard) |
 | `npm run font:build:didone` | Re-subset the masthead Didone (Playfair Display, uppercase and space only; the variable source TTF lives in `fonts-src/` and is not committed — fetch steps are in the script header) |
 | `npm run check:content` | The posting gate and receipt: fails on a malformed date, a misspelled frontmatter key, or an image referenced from prose that is not in that roll (also runs inside `npm run build` and in CI) |
 | `npm run check:docs` | Checks that every file path and section reference in the docs still resolves, and that the route table below matches `src/router` |
@@ -169,7 +169,7 @@ Two things are licensed separately here: **blog content** is under CC BY-NC-SA 4
 | --- | --- |
 | **Blog content** — article text, original images and copy on this site | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): you may copy, adapt and redistribute it, with attribution, for non-commercial purposes only, and derivatives must be published under the same licence |
 | **Source code & design** — `src/`, `scripts/`, `docs/`, the visual and interaction design and the star-trail device | the non-commercial notice, i.e. the five items below |
-| **Fonts** | the two display subsets are derived from Noto Serif SC and Playfair Display respectively (both SIL OFL 1.1); the full licence is at [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
+| **Fonts** | the display subsets (body serif split into unicode-range shards) and the masthead Didone are derived from Noto Serif SC and Playfair Display respectively (both SIL OFL 1.1); the full licence is at [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
 | **Third-party material** | embedded playlists, blogroll links and off-site content keep their own terms and are not covered by this section |
 
 The five items below govern only the "source code & design" row above:

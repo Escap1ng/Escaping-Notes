@@ -128,4 +128,7 @@ function postRolls() {
 export default defineConfig(() => ({
   base: '/',
   plugins: [vue(), postRolls()],
+  // 视图是按路由动态 import 的：没有清单，build_seo 就不知道这一页该预载哪块 JS，
+  // 首帧会排成 HTML → 入口 chunk → 视图 chunk 两跳。清单只在构建期读，不进浏览器。
+  build: { manifest: true },
 }))
