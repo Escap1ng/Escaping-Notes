@@ -140,6 +140,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 
 - **写一篇文章 = 建一个目录**。`content/posts/<slug>/index.md`，目录名就是网址（`/blog/<slug>`）。封面不用登记路径：同目录里有 `cover.jpg`，它就是封面——列表那格、正文顶部那张满栏图、映像柜、分享卡四处共用同一张；没有封面也是合法状态，列表留一张等高的斜纹空版。原图以 `-src.jpg` 收尾丢进同一目录，`npm run cover:build` 就地烘；正文插图也放这一卷里，只写文件名，写错或漏放会在构建时被拦。
 - **frontmatter**：六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
+- **发文即进动态**：每一卷已发布文章按 `date` 自动进 `/updates` 与首页最近动态，链向正文；`src/data/updates.js` 只记文章之外的事，别再手写「某篇上线」。合并口径在 `src/lib/feed.js`，同一天文章排在手写条目前。
 - **站点自有内容**：动态 / 项目 / 音乐 / 映像 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
 - **改站点信息与文案**：站点名、作者、社交、坐标、装备在 `src/data/site.js`；界面文案在 `src/data/narrative.js`；外观令牌在 `src/styles/site.css`。
 - **构建就是发文自检**。`npm run build` 先逐卷校验再出产物：日期写歪、键名拼错、正文引用了本卷没有的图、两个旧名撞车，任一条红就不发布。跑绿之后顺手产出 `rss.xml`、`sitemap.xml` 与每条路由一份静态壳。
@@ -153,7 +154,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 | `/` | 首页 · 长曝光星轨 | 照片地景 + 星轨 + 打字机站名 + 抽屉 |
 | `/blog` | 文章 | 归档，搜索词与标签筛选写进 URL |
 | `/blog/:slug` | 正文 | 单篇正文 + 自动置顶的封面；文中图片可点进灯箱 |
-| `/updates` | 动态 | 短记录流水 |
+| `/updates` | 动态 | 手写动态与发文自动条目，文章条可点进正文 |
 | `/gallery` | 映像 | 全站用图墙 |
 | `/projects` | 项目 | 项目卡片栅格 |
 | `/projects/:slug` | 项目介绍 | 与文章页共用阅读底板；`Esc` 或点空白退回列表 |
@@ -176,7 +177,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
     ├── assets/fonts/      # 自托管 woff2 子集 + OFL 许可
     ├── components/        # 平铺七件：星轨相机 / 首屏排版 / 顶栏+抽屉 / 页脚 / 播放器卡 / 设置卡 / 搜索卡
     ├── data/              # 站点自有内容全在这一目录，index.js 是唯一的取数门
-    ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · markdown · theme / storage / …
+    ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · feed 动态合并 · markdown · theme / storage / …
     ├── styles/site.css    # 唯一的样式表：结构刻度 + 两套主题配色 + 全站基元
     └── views/             # 9 个视图平铺，一页一个文件
 ```

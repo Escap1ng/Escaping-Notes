@@ -39,6 +39,11 @@ export const N = {
     projects: '做过的东西，点开卡片看介绍。',
   },
 
+  // 动态时间线里文章自动条目的前缀（标题由 src/lib/feed.js 拼上去）
+  feed: {
+    post: '新文上线',
+  },
+
   // 映像柜（/gallery）：墙上那行的计数与放大提示。照片的歪斜角不在这里，
   // 它按 src 哈希算出（src/lib/gallery.js），同一张图永远同一个姿态
   gallery: {

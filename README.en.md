@@ -140,6 +140,7 @@ There is no admin UI — everything is a file in this repo, and pushing publishe
 
 - **A post is a directory.** `content/posts/<slug>/index.md`, and the directory name is the URL (`/blog/<slug>`). No path to register for the cover: if the folder contains `cover.jpg`, that is the cover — the archive card, the full-width image on top of the article, the gallery wall and the share card all use the same file; no cover is also valid, and the archive leaves a striped placeholder of the same height. Drop the untouched photo next to it named `*-src.jpg` and run `npm run cover:build` to bake it in place. Inline illustrations live in the same folder and are referenced by bare filename; a typo or a missing file fails the build instead of shipping a broken image.
 - **Frontmatter:** six keys are about display (`title` / `date` / `tags` / `summary` / `alt` / `imagePos`), two are about publishing: `draft: true` keeps a roll visible only in `npm run dev`, and `movedFrom: [old-slug]` keeps links alive after a rename.
+- **Publishing a post adds it to the activity feed.** Every live post becomes a dated entry linking to the article, merged with the hand-written notes in `src/data/updates.js` (`src/lib/feed.js`); on the same date posts come before notes. Notes are for everything that is not a post — do not hand-write an "article is live" line.
 - **Site-owned content:** activity, projects, playlist, plates and friend links each have a data file; gear lives in the `gear` field of `src/data/site.js`; everything reaches the UI only through `src/data/index.js` — that single door. Adding a kind means adding a file and one line on the door; no view gets a second path to the same array.
 - **Site info and copy:** the site name, author, socials, coordinates and gear live in `src/data/site.js`; interface copy lives in `src/data/narrative.js`; appearance tokens live in `src/styles/site.css`.
 - **The build is the pre-flight check.** `npm run build` first validates every roll (a malformed date, a misspelled key, an image referenced from prose that is not in that roll, two rolls claiming one old slug — any of these stops the artefact from being produced), then writes `rss.xml`, `sitemap.xml` and one static shell per route.
@@ -153,7 +154,7 @@ All 9 routes are lazy-loaded and each carries `meta.t` for the document title an
 | `/` | Home · long-exposure star trails | Photo landscape band + trails + typed title + drawer |
 | `/blog` | Articles | Archive, tag/keyword filters live in the URL |
 | `/blog/:slug` | Article | A single post with its cover placed on top; inline images open the lightbox |
-| `/updates` | Activity | Short-log feed |
+| `/updates` | Activity | Hand-written notes plus automatic post entries; post entries link to the article |
 | `/gallery` | Gallery | Wall of every image the site has used |
 | `/projects` | Projects | Grid of project cards |
 | `/projects/:slug` | Project write-up | Shares the reading panel with an article; `Esc` or a click outside returns to the list |
@@ -176,7 +177,7 @@ All 9 routes are lazy-loaded and each carries `meta.t` for the document title an
     ├── assets/fonts/      # Self-hosted woff2 subsets + OFL licence
     ├── components/        # seven flat: the camera / landing type layer / header + drawer / footer / player card / settings card / search card
     ├── data/              # everything site-owned lives here, index.js being the single door
-    ├── lib/               # sky the plate and the clock · ridge the mask · plate the layer · schema the posting rules · posts the loader · markdown · theme / storage / …
+    ├── lib/               # sky the plate and the clock · ridge the mask · plate the layer · schema the posting rules · posts the loader · feed the activity merge · markdown · theme / storage / …
     ├── styles/site.css    # the only stylesheet: structural scales + the two theme palettes + site-wide primitives
     └── views/             # 9 views, one file each, flat
 ```

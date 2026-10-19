@@ -3,6 +3,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import HorizonHero from '../components/HorizonHero.vue'
 import { loadPosts } from '../lib/posts.js'
+import { mergeFeed } from '../lib/feed.js'
 import { content } from '../data/index.js'
 import { onLens } from '../lib/lens.js'
 import { debounce } from '../lib/debounce.js'
@@ -13,10 +14,10 @@ const drawerEl = ref(null)
 const open = ref(false)
 
 const featured = computed(() => posts.value.slice(0, 3))
-// 最近动态卡：updates 是 newest-first 的静态时间线（src/data/updates.js，§2.3 约定新条目加在最前），
-// 取前 5 条；整卡链向 /updates。首页不再有页内目录，页面导航只留顶栏。
-// 走 content 这道门而不是直连数据文件——`/updates` 那一页读的是同一份，两条路迟早分叉。
-const recent = content.updates.slice(0, 5)
+// 最近动态卡 = 手写动态 + 已发布文章（lib/feed.js 统一合并、按日期倒序），取前 5 条；
+// 整卡链向 /updates。首页不再有页内目录，页面导航只留顶栏。
+// 文章取数与上面三格精选同源（posts），所以新文一发就会自己出现在这里，不用再手补动态。
+const recent = computed(() => mergeFeed(content.updates, posts.value).slice(0, 5))
 
 /* 一枚读数：本地时刻与日期星期。
    （「本次停留 / 这一夜已曝」计时读数 2026-10-09 删除——它数的是打开页面后的秒数，
@@ -147,7 +148,7 @@ onUnmounted(() => {
 
         <h2 class="en-eyebrow sec">{{ N.drawer.recent }}</h2>
         <RouterLink to="/updates" class="en-card feed en-lens" aria-label="最近动态 · 查看全部" @pointermove="onLens">
-          <span v-for="u in recent" :key="u.date + u.text" class="feed-row">
+          <span v-for="u in recent" :key="u.key" class="feed-row">
             <span class="feed-date en-mono">{{ u.date }}</span>
             <span class="feed-text">{{ u.text }}</span>
           </span>
@@ -374,7 +375,7 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* 最近动态卡：updates 前 5 条，整卡链向 /updates。日期走热色（§4.1：日期属"当前/深度"） */
+/* 最近动态卡：手写动态与发文自动条目合并后的前 5 条，整卡链向 /updates。日期走热色（§4.1：日期属"当前/深度"） */
 .feed {
   display: block;
   padding: var(--card-pad) var(--card-pad-lg);
