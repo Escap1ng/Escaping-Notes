@@ -10,8 +10,8 @@
      4. `html:root[data-theme='out']`         浅色配色
    概念：首页是一台架好的相机在长曝光；滚动 = 这一夜的曝光在加速（晕影收紧、天空转快）。
    色彩取自夜空的两副面孔，语义严格分工：
-     --cold  冷 = 交互（hover / 链接 / 焦点 / 星轨节点）
-     --hot   热 = 深度（进度 / 强调 / 当前项）
+     --cold  冷 = 交互与强调（hover / 链接 / 焦点 / 进度 / 正文记号）
+     --hot   热 = 状态（当前播放 / 错误 / 破坏性动作）
      --white 高光 = 仅星核与 ≤2px 高光
    为什么站级规则挂 `html:root`：要的是它那 (0,1,1) 的特异性——`:root` 恒等于文档根 <html>，
    这个写法与退役前的 `html[data-skin='neo']` 逐位同宽，所以去掉那个属性时层叠一字没变。
@@ -295,9 +295,12 @@ html:root {
   --nudge: 4px;
   --lift: -2px;
 
-  /* 品牌色：顶栏吸积环签名专用。跨主题固定为深色三档色温——
-     它是全站的视觉锚点，浅色主题下也保持同一枚环，故不放进主题块。 */
+  /* 品牌色：顶栏吸积环签名专用。--brand-cold 是固定的核心色温，
+     --brand-ring 是它按主题兑入 --cold 后的环面色。固定色在浅底上只有 1.61:1（读成"禁用"），
+     兑过之后浅色约 #5085ea（3.26:1）；深色 --cold 本身就是 #8ec9ff，混完不变。
+     用 color-mix 而不是两块各写一枚字面量：主题一改环跟着走，不会留下第二份色值。 */
   --brand-cold: #8ec9ff;
+  --brand-ring: color-mix(in srgb, var(--brand-cold) 45%, var(--cold));
   --brand-hot: #ff5c39;
 
   /* 暗带契约（§3.3）：文字底下的天空必须被压低，天空只在带外全亮。
@@ -335,11 +338,11 @@ html:root {
                    <html>。用户拖到 0 时 App.vue 那条 filter 规则整个不匹配（门控是
                    html[data-plate-blur]），那一档才真的不建渲染面。三处默认值必须同口径：
                    这里、lib/plate.js 的 BLUR_DEFAULT、index.html 首帧内联，由测试钉住。
-     --plate-cycle 轮播一整圈的时长 = 5 张 × 每张 10s。每张占其中一格，关键帧只有一条
+     --plate-cycle 轮播一整圈的时长 = 3 张 × 每张 10s。每张占其中一格，关键帧只有一条
                    （见 App.vue 的 plate-slot），逐层用 animation-delay 错开，所以加一张就是
                    这里 +10s、再加一层 <i>。要改节奏只改这里，别去动 @keyframes。 */
   --plate-blur: 12px;
-  --plate-cycle: 50s;
+  --plate-cycle: 30s;
 
   /* 运行时由 App.vue 写入：滚动深度 0..1 */
   --shift: 0;
@@ -381,11 +384,9 @@ html:root:not([data-theme='out']) {
   --tape: rgba(252, 211, 77, 0.22);
   --void-a: rgba(2, 2, 4, 0.34); /* 运动模糊覆盖色 */
   --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬色：当前零消费方。首屏那条压在照片带上的白纱已删——它把山脚抬到和天空同亮度，是"上下割裂"的一半。留着是因为跟随底色的语义色必须两套主题各自定义，只删一套会让使用处整条失效；要退役就连下面那行一起删。 */
-  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 深色不轮播：五档指向同一张压暗底，避免夜里换景跳变 */
+  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 深色不轮播：三档指向同一张压暗底，避免夜里换景跳变 */
   --plate-img-2: url('/plates/plate-bg-deep.jpg');
   --plate-img-3: url('/plates/plate-bg-deep.jpg');
-  --plate-img-4: url('/plates/plate-bg-deep.jpg');
-  --plate-img-5: url('/plates/plate-bg-deep.jpg');
   --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
 
   /* 阅读底板（.en-glass，文章页与项目详情页共用）的填充已并给卡面那枚 --card-bg，
@@ -415,10 +416,10 @@ html:root[data-theme='out'] {
   --text-1: #55606f;
   --line: rgba(14, 20, 29, 0.15);
 
-  /* 两枚强调色按 scripts/check_contrast.mjs 的浅色判据定（对 --ink-0 必须 ≥5.5:1）：
+  /* 两枚语义色按 scripts/check_contrast.mjs 的浅色判据定（对 --ink-0 必须 ≥5.5:1）：
      旧值 #2563eb / #c2410c 各自只有 4.73:1 与 4.74:1，差半档——不是口味偏亮，是不达标。
      各往深一档取同族色，观感仍是鲜蓝 / 焦橙，实测 6.13:1 与 6.68:1，余量 0.6 以上。
-     --hot 同时是 ::selection 的底色、压的是 --ink-0 浅字，加深只会更好读。 */
+     --hot 只留给当前播放与错误，仍按同一判据取深一档。 */
   --cold: #1d4ed8;
   --hot: #9a3412;
   --white: #24405f;
@@ -447,14 +448,13 @@ html:root[data-theme='out'] {
      (242,245,249) = --ink-0 的字节值，改底色时这两处要一起动。 */
   --void-a: rgba(242, 245, 249, 0.34);
   --scrim: rgba(242, 245, 249, 0.78); /* 文字底衬色：当前零消费方，理由见深色那一条——要退役就两处一起删 */
-  /* 折线以下轮播的五张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
-     里的那张 jpg），不是第几张：paper2 空着——它搬去当第三篇《怎么写、怎么发》的封面了。
-     别为了序号连贯重烘改名，映像柜与 build_plate_bg.ps1 都按源图号认它。 */
+  /* 折线以下轮播的三张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
+     里的那张 jpg），不是第几张：paper2 / paper5 / paper6 三档空着——paper2 搬去当第三篇
+     《怎么写、怎么发》的封面，paper5 已删除，paper6 暂存到 photos-src/ 待用。别为了序号连贯
+     重烘改名，映像柜与 build_plate_bg.ps1 都按源图号认它。 */
   --plate-img: url('/plates/plate-bg-paper1.jpg');
   --plate-img-2: url('/plates/plate-bg-paper3.jpg');
   --plate-img-3: url('/plates/plate-bg-paper4.jpg');
-  --plate-img-4: url('/plates/plate-bg-paper5.jpg');
-  --plate-img-5: url('/plates/plate-bg-paper6.jpg');
   --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面。暗色是同一张取景的压暗版（plate-hero-deep），两套共用一条山脊折线 */
 
   /* 阅读底板的兜底色：同深色块那一条——底板填充走 --card-bg，这里只在浏览器不支持
@@ -495,7 +495,7 @@ html:root main {
 }
 
 html:root ::selection {
-  background: var(--hot);
+  background: var(--cold);
   color: var(--ink-0);
 }
 
@@ -552,7 +552,7 @@ html:root ::-webkit-scrollbar-track {
   background: transparent;
 }
 html:root ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--hot) 40%, transparent);
+  background: color-mix(in srgb, var(--text-1) 70%, transparent);
   border-radius: var(--r-pill);
 }
 
@@ -639,7 +639,7 @@ html:root main.en-sub {
    三种状态只用两个色 + 一个中性：
      info（默认，= .en-note 的中性色）→ --text-1，用于"降级/提示"这类非错误信息
      ok                               → --cold（交互色 = 一切正常，可继续交互）
-     err                              → --hot（深度色 = 需要你注意/不可继续）
+     err                              → --hot（状态色 = 需要你注意/不可继续）
    统一以 "//" 前缀起头，与全站眉标同构；不再新增 .err/.warn/.notice 之类的一次性类。 */
 .en-note-ok,
 .en-note-err,
@@ -691,7 +691,7 @@ html:root main.en-sub {
 /* ---------- 6. 按钮 / 胶囊 / 输入 ----------
    按钮体系（全站唯一）：两个尺寸 × 四种语义，其它形态都由此组合。
      尺寸  .en-btn（默认：表单提交、页面主/次动作）· .en-btn-sm（表格行、工具条里的密集操作）
-     语义  .en-btn-primary（热色实心，仅"深度方向"的主动作）
+     语义  .en-btn-primary（冷色实心，主/次导航动作用）
            .en-btn-ghost  （发丝描边，次级动作）
            .en-btn-danger （描边 + hover 转热色，破坏性动作：删除/禁用）
            .en-btn-quiet  （无框纯文字，附注动作：复制/回顶/退出登录）
@@ -753,14 +753,14 @@ html:root main.en-sub {
   box-shadow: none;
 }
 
-/* 红移实心：仅用于「深度方向」的主动作 */
+/* 冷移实心：主/次导航动作 */
 .en-btn-primary {
-  background: var(--hot);
+  background: var(--cold);
   color: var(--ink-0);
 }
 
 .en-btn-primary:hover {
-  box-shadow: 0 0 0 1px var(--hot), 0 8px 26px -10px var(--hot);
+  box-shadow: 0 0 0 1px var(--cold), 0 8px 26px -10px var(--cold);
 }
 
 .en-btn-ghost,
@@ -1315,7 +1315,7 @@ html:root .en-prose h2::before {
   top: 0.3em;
   bottom: 0.3em;
   width: 2px;
-  background: var(--hot);
+  background: var(--cold);
 }
 
 html:root .en-prose h3 {
@@ -1397,7 +1397,7 @@ html:root .en-prose pre code {
 html:root .en-prose blockquote {
   margin: var(--space-2) 0;
   padding: var(--space-1) var(--space-2);
-  border-left: 2px solid var(--hot);
+  border-left: 2px solid var(--cold);
   color: var(--text-1);
   font-style: italic;
 }
@@ -1419,7 +1419,7 @@ html:root .en-prose ol {
 }
 
 html:root .en-prose li::marker {
-  color: var(--hot);
+  color: var(--cold);
 }
 
 html:root .en-prose hr {

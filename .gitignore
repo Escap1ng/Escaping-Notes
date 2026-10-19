@@ -28,6 +28,10 @@ docs/assets/mock/
 # ASCII 化的底图源图（从 1/ 复制改名而来）：.ps1 按 ANSI 解码，中文文件名不能进脚本
 plates-src/
 
+# 博客照片暂存区：还没决定用在哪一篇的原图放这里，不进仓库、不上线。
+# 要用时移进某一卷目录（cover-src.* 或正文插图），由那一卷的构建清单接管。
+photos-src/
+
 # 一卷底片里的原图（content/posts/<slug>/*-src.jpg 那一类）：它是 npm run cover:build 的
 # 输入，既不提交也不上线——同目录烘出来的 cover.jpg 才是站点用的那一张。
 # 判据写在 src/lib/schema.js 的 SOURCE_ORIGINAL，脚本与构建拷哪些文件都跟着它。
@@ -41,7 +45,7 @@ fonts-src/
 music/
 
 # ---------- 反向记一条：这三处生成物不在忽略之列，且必须进仓库 ----------
-#   public/plates/            ← npm run bg:build（首屏地景亮/暗两张 + 抽屉五张轮播 + 深色压暗底）
+#   public/plates/            ← npm run bg:build（首屏地景亮/暗两张 + 抽屉三张轮播 + 深色压暗底）
 #   content/posts/*/cover.jpg ← npm run cover:build（卡片、阅读页顶部那张满栏图、映像柜共用的一张）
 #   public/audio/             ← 播放器自托管 mp3，src/data/music.js 的曲单直接指向它
 # 它们都是"跑一条命令就能重烘出来"的派生物，但**不能**按生成物处理：那两条 bake 脚本跑在

@@ -12,10 +12,11 @@ export const N = {
   nav: [
     { to: '/', label: '首页', code: '00', t: 'Escaping Notes · 逃逸笔记' },
     { to: '/blog', label: '文章', code: '01', t: '文章 · Escaping Notes' },
-    { to: '/updates', label: '动态', code: '02', t: '动态 · Escaping Notes' },
-    { to: '/gallery', label: '映像', code: '03', t: '映像 · Escaping Notes' },
-    { to: '/projects', label: '项目', code: '04', t: '项目 · Escaping Notes' },
-    { to: '/about', label: '关于', code: '05', t: '关于 · Escaping Notes' },
+    { to: '/collections', label: '合集', code: '02', t: '合集 · Escaping Notes' },
+    { to: '/updates', label: '动态', code: '03', t: '动态 · Escaping Notes' },
+    { to: '/gallery', label: '映像', code: '04', t: '映像 · Escaping Notes' },
+    { to: '/projects', label: '项目', code: '05', t: '项目 · Escaping Notes' },
+    { to: '/about', label: '关于', code: '06', t: '关于 · Escaping Notes' },
   ],
 
   // 首屏：站名（打字机进入）+ 对偶联宣言（十六字）
@@ -34,6 +35,7 @@ export const N = {
   },
 
   hints: {
+    collections: '按主题成组；点开一个合集，按顺序往下读。',
     updates: '短的、不成篇的记录。',
     gallery: '这一面墙收的是全站用过的图片。',
     projects: '做过的东西，点开卡片看介绍。',
@@ -49,6 +51,20 @@ export const N = {
   gallery: {
     count: '共 {n} 张图片',
     open: '点按放大',
+  },
+
+  // 合集（/collections）：树由 src/data/collections.js 定，这里只放界面读得懂的说法。
+  // `{n}` 由页面替换；正文页的篇序用 `{i}` 与 `{n}`。
+  collection: {
+    crumb: '合集',
+    children: '子合集',
+    articles: '文章',
+    kids: '{n} 个子合集',
+    posts: '{n} 篇文章',
+    position: '第 {i} 篇 · 共 {n} 篇',
+    back: '返回合集',
+    lost: '这里没有这个合集',
+    loading: '正在取文章…',
   },
 
   // 项目页（/projects）：卡片点进去是 /projects/:slug 那一页（与 /blog → /blog/:slug 同一套路），
@@ -106,6 +122,8 @@ export const N = {
   empty: {
     posts: '// 还没有文章',
     search: '// 没有符合条件的结果', // 「筛选后为空」≠「本来就没有内容」
+    collections: '// 还没有合集',
+    collectionPosts: '// 这个合集还没有文章',
     updates: '// 还没有动态',
     gallery: '// 还没有图片',
     projects: '// 还没有项目',

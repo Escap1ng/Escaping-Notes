@@ -32,11 +32,11 @@ BLOG/
 └── src/
     ├── assets/fonts/   ← 自托管子集 woff2（正文衬线按 unicode-range 分片 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
-    ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 5 份数据（动态/项目/音乐/映像/友链）
-    ├── lib/            ← posts feed schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
-    ├── router/         ← 9 条路由，全部懒加载
+    ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 6 份数据（合集/动态/项目/音乐/映像/友链）
+    ├── lib/            ← posts collections feed schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
+    ├── router/         ← 11 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
-    └── views/          ← 9 个页面各一个文件，平铺
+    └── views/          ← 11 个页面各一个文件，平铺
 ```
 
 三条会反复用到的事实：
@@ -111,10 +111,14 @@ BLOG/
    summary: 一句话摘要，显示在列表里。
    alt: 封面上能看到什么——一句真的描述
    imagePos: 60% 40%
+   collection: site-guide
+   order: 3
    ---
 
    正文从这里开始，标准 Markdown 语法。
    ```
+
+   `collection` **必填**：它写这篇挂进哪个合集，取值必须是 `src/data/collections.js` 里某个合集的 `slug`（合集可以靠 `parent` 再分级，文章只挂在最末那一层）。合集页会自动把文章排成目录，上级合集页还会汇总所有后代的文章。`order` 选填，是从 1 起的整数，决定这篇在合集里排第几；不写就按发布日期升序排在有编号的文章之后。缺 `collection`、写了一个不存在的名字或 `order` 不是正整数，构建都会当场红。
 
    **封面不写在这里**：这一卷的目录里有 `cover.jpg`，它就是封面——列表页那格、正文顶部那张满栏图、映像柜墙上那枚，三处共用同一个文件，一处也不用提第二遍。没有 `cover.jpg` 是合法状态，列表那一格留一张等高的斜纹空版。`imagePos` 可选，是封面在 3:2 卡格里的裁切焦点（CSS `background-position` 那套写法），缺省居中。`alt` 在有封面时必须写：读屏软件与图挂了的时候只有它。
 
@@ -159,14 +163,15 @@ BLOG/
 
 两条来源按日期倒序合并；同一天的文章排在手写条目前（文章是内容，手写条目是注脚）。首页抽屉取前 5 条，`/updates` 列全部。**不要**再手写「某篇上线」——那会和自动条目同一篇出现两条。
 
-### 2.4 项目 / 映像 / 友链 / 碎片
+### 2.4 合集 / 项目 / 映像 / 友链 / 碎片
 
-- **项目 `/projects`（04 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/data/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
+- **合集 `/collections`（02 导航位）**：合集清单在 `src/data/collections.js`，每项 `{ slug, title, summary, order?, parent? }`。`parent` 指向另一个合集的 `slug` 就多一层；`order` 决定同级里的先后。文章用 frontmatter 的 `collection` 挂在最末那一层，`order` 决定它在合集里的阅读顺序。`/collections` 是顶层总览，每个合集另有 `/collections/<slug>`；上级合集页会按子集合分组、汇总所有后代的文章。合集 slug 重复、父链不存在或成环、文章挂到不存在的合集，都会在 `npm run check:content` 与构建时被拦下。改合集不必动视图。
+- **项目 `/projects`（05 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/data/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
 - **关于页的头像**：取 `site.avatar`（外链；换图只改 `src/data/site.js` 那一行）。
-- **映像 `/gallery`（03 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/data/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉三张轮播、深色压暗底、分享卡）记在 `src/data/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
 - **图片**：文章封面躺在自己那一卷的目录里——原图以 `-src.jpg` 收尾丢进 `content/posts/<slug>/`，`npm run cover:build` 就地烘出同目录的 `cover.jpg`（提交进仓库）；正文插图也放同一目录，正文里只写文件名。`public/images/` 这个目录**不存在**，也不需要什么目录：插图跟着卷走。
 - **友情链接**：在 `src/data/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
-- **碎片（已下线并删除）**：站内**没有** `/fragments` 这条路由、也没有对应视图（现役 9 条路由里不含它）；服务端原有的 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点在 2026-10-16 摘掉（连同 `fragments.json` 的读写），前端零消费方是它们被删的原因。同批删掉的还有 `/api/health`。
+- **碎片（已下线并删除）**：站内**没有** `/fragments` 这条路由、也没有对应视图（现役 11 条路由里不含它）；服务端原有的 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点在 2026-10-16 摘掉（连同 `fragments.json` 的读写），前端零消费方是它们被删的原因。同批删掉的还有 `/api/health`。
 
 ### 2.5 播放器
 
@@ -181,7 +186,7 @@ BLOG/
 
 打开根目录 `index.html`：
 
-- `<title>`、`<meta name="description">`：浏览器标签与搜索结果里的标题摘要——**这两行只是站点级的兜底**。构建期会为每一卷文章、每一个项目与每条导航各写一份这份 HTML 的副本，把 `title` / `description` / `canonical` / `og:*` / `twitter:*` 换成那一页自己的值：文章的标题取自 frontmatter 的 `title`，摘要取自 `summary`，**分享卡的图就是这一卷目录里那张 `cover.jpg`**（没有封面才回落到 `og.png`）。所以"分享出去显示什么"这件事在 `content/posts/<slug>/` 里改，不在这里改。
+- `<title>`、`<meta name="description">`：浏览器标签与搜索结果里的标题摘要——**这两行只是站点级的兜底**。构建期会为每一卷文章、每一个合集、每一个项目与每条导航各写一份这份 HTML 的副本，把 `title` / `description` / `canonical` / `og:*` / `twitter:*` 换成那一页自己的值：文章的标题取自 frontmatter 的 `title`，摘要取自 `summary`，**分享卡的图就是这一卷目录里那张 `cover.jpg`**（没有封面才回落到 `og.png`）；合集页的标题与摘要取合集自己的 `title` / `summary`。所以"分享出去显示什么"这件事在 `content/posts/<slug>/` 或 `src/data/collections.js` 里改，不在这里改。
 - `<link rel="canonical">`、`og:url`、`og:image`、`twitter:*`：搜索引擎与社交平台分享用的信息。**换域名时两处一起改**：`index.html` 里的四处地址与 `src/data/site.js` 的 `url`——这两处的对拍写在 `tests/content-rolls.test.mjs`，漏改一处就红，不再靠人记。
 - 分享卡片图 `public/og.png`（1200×630，站点级那张）由 `npm run og:build` 生成（纯 Node 绘制，不需要额外软件）；想换配色改 `scripts/build_seo.mjs` 里的 `TRAIL` 色板。
 - `public/robots.txt` 与 `dist/sitemap.xml`：抓取范围与页面清单，一般不用改。sitemap 里列的路由就是构建期写了壳的那些（导航取自 `src/data/narrative.js` 的 `N.nav`，文章取自 `content/posts/`）。
@@ -204,11 +209,11 @@ BLOG/
   - `--lh-tight/snug/normal/relaxed` 行高（1.35 / 1.6 / 1.75 / 1.9）
   - `--fw-normal/medium/bold` 字重（400 / 600 / 700）
   - **指针反馈四枚**：`--dur-fast`（0.22s，颜色 / 描边）、`--dur`（0.3s，位移 / 缩放）、`--nudge`（4px，行内右移）、`--lift`（-2px，控件抬起）——见 design.md §4.6。入场动画与开合转场不归这四枚管。
-- **两套主题块**：真正生效的配色——`--cold`（交互 / 蓝移）、`--hot`（深度 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-pill` 三档圆角（没有 `--r-lg`，用到"大圆角"的地方取 `--r-pill`）、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
+- **两套主题块**：真正生效的配色——`--cold`（交互与强调 / 蓝移）、`--hot`（当前播放与错误 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-pill` 三档圆角（没有 `--r-lg`，用到"大圆角"的地方取 `--r-pill`）、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
 
 改完保存即生效。四条约定：
 
-1. **冷暖严格分工**：`--cold` 只用于 hover / 链接 / 焦点 / 选中项，`--hot` 只用于进度 / 主动作 / 当前项 / 破坏性动作；不要给不同按钮各配一种颜色。
+1. **一个强调色，红色只报状态**：`--cold` 用于 hover / 链接 / 焦点 / 选中态 / 主按钮 / 进度，`--hot` 只用于当前播放 / 错误 / 破坏性动作；日期等元数据用 `--text-1`。不要给不同按钮各配一种颜色。
 2. **改刻度，不要逐处替换**。觉得全站字太小，改 `--fs-sm` 一处；觉得太挤，改 `--space-*`。卡片质感改 `--card-*` 一组，文章卡 / 图片格同时跟随。
 3. **不要写裸 `px`**。新样式里的字号、间距、行高、字重都从刻度取；只有控件高度、封面边长、图标盒这类"结构性尺寸"才写字面量。
 4. **新增颜色令牌必须两套主题各定义一份**——漏一份会让使用处那条 `var(...)` 声明整条静默失效（不报错、不红，只是没颜色）。历史上 `--scrim` 漏定义过一次，浅色首页的文字底衬当场消失。
@@ -337,7 +342,7 @@ npm run preview     # 本地模拟线上环境，浏览器打开检查一遍
 
 ### 4.2 方式 B：GitHub Pages（主线，绑 escaping.top）
 
-项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**。站内只有一种路由模式（history，`base` 固定 `/`），而 Pages 不会把未知路径回退到 `index.html`——所以构建期为每条真实路由写一份 HTML：6 条导航、每一卷文章、每一个项目各一份 `index.html`，加一份 `404.html`（见 §4.0 与 `scripts/lib/shell.mjs`）。直接访问 `/blog/<slug>` 因此是 **200 + 这一篇自己的分享卡**；拼错的地址走 `404.html`，状态码就该是 404。
+项目已内置 Pages 自动部署：推送 `main` 后由 GitHub Actions 自动构建发布（`.github/workflows/deploy.yml`），**无需改任何配置**。站内只有一种路由模式（history，`base` 固定 `/`），而 Pages 不会把未知路径回退到 `index.html`——所以构建期为每条真实路由写一份 HTML：7 条导航、每一个合集、每一卷文章、每一个项目各一份 `index.html`，加一份 `404.html`（见 §4.0 与 `scripts/lib/shell.mjs`）。直接访问 `/blog/<slug>` 因此是 **200 + 这一篇自己的分享卡**；拼错的地址走 `404.html`，状态码就该是 404。
 
 以前 Pages 走 hash（`/#/blog/<slug>`）。那种链接现在仍然能用：`src/main.js` 在应用挂载前把它改道成路径形状，不会静默落在首页。
 

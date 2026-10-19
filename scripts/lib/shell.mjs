@@ -14,6 +14,7 @@ const esc = (s) =>
 
 // 标题的形状与「这里没有页面」那句话都取自文案层：壳、路由、页面渲染读的是同一批字
 import { N, pageTitle } from '../../src/data/narrative.js'
+import { collectionHref } from '../../src/lib/collections.js'
 
 // 值写在哪个属性上：<title> 写在标签中间，<link> 写在 href，<meta> 写在 content
 const VALUE_ATTR = { title: '', link: 'href', meta: 'content' }
@@ -125,11 +126,20 @@ export function shellHead({ base, path, title, description, image, imageAlt, typ
 // build_seo 只管把结果写到磁盘上。壳写错位置等于深链仍然是 404，而构建全绿。
 // file 用 posix 片段（调用方 join 到 outDir），url 与 sitemap/RSS 里的写法逐字一致：
 // 都不带尾斜杠，canonical 才不会和推广出去的地址是两个句子。
-export function planShells({ base, nav, posts, projects, slugOf }) {
+export function planShells({ base, nav, posts, projects, collections = [], slugOf }) {
   const plans = []
   for (const n of nav) {
     if (n.to === '/') continue // 根路径那一份就是 index.html 本身
     plans.push({ file: `${n.to.slice(1)}/index.html`, url: n.to, patch: shellHead({ base, path: n.to, title: n.t }) })
+  }
+  // 合集详情与列表页同一套路：一个合集一份真实文件，标题与摘要取合集自己的
+  for (const c of collections) {
+    const url = collectionHref(c.slug)
+    plans.push({
+      file: `collections/${c.slug}/index.html`,
+      url,
+      patch: shellHead({ base, path: url, title: pageTitle(c.title), description: c.summary || undefined }),
+    })
   }
   for (const p of posts) {
     plans.push({

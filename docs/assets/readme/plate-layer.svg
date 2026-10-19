@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate sinking into the page colour, five carousel slots staggered over a 50 second cycle, and the measured contrast of naked text versus text on a card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate sinking into the page colour, three carousel slots staggered over a 30 second cycle, and the measured contrast of naked text versus text on a card">
   <defs>
     <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".5"/>
@@ -47,31 +47,25 @@
   <text class="s" x="216" y="223">footer territory: nothing of the photo survives here</text>
 
   <!-- B. 轮播时序 -->
-  <text class="s" x="430" y="252">2% / 20% / 22% of 50s = 1s in · 9s hold · 1s out</text>
-  <text class="h" x="60" y="266">--plate-cycle: 50s = five plates × 10s</text>
-  <text class="s" x="430" y="266">one @keyframes (plate-slot); the four &lt;i&gt; layers differ only by delay</text>
+  <text class="s" x="430" y="252">3.333% / 33.333% / 36.667% of 30s = 1s in · 9s hold · 1s out</text>
+  <text class="h" x="60" y="266">--plate-cycle: 30s = three plates × 10s</text>
+  <text class="s" x="430" y="266">one @keyframes (plate-slot); the two &lt;i&gt; layers differ only by delay</text>
 
   <rect x="60" y="278" width="820" height="14" fill="url(#fade)"/>
-  <text class="s" x="66" y="289">parent .sub-plate — slot 1, exposed while all four sit at 0</text>
-  <rect x="208" y="298" width="180" height="14" fill="url(#fade)"/>
-  <rect x="372" y="298" width="180" height="14" fill="url(#fade)"/>
-  <rect x="536" y="298" width="180" height="14" fill="url(#fade)"/>
-  <rect x="699" y="298" width="181" height="14" fill="url(#fade)"/>
-  <text class="s" x="212" y="333">9s</text>
-  <text class="s" x="376" y="333">19s</text>
-  <text class="s" x="540" y="333">29s</text>
-  <text class="s" x="703" y="333">39s</text>
+  <text class="s" x="66" y="289">parent .sub-plate — slot 1, exposed while both sit at 0</text>
+  <rect x="306" y="298" width="301" height="14" fill="url(#fade)"/>
+  <rect x="579" y="298" width="301" height="14" fill="url(#fade)"/>
+  <text class="s" x="310" y="333">9s</text>
+  <text class="s" x="583" y="333">19s</text>
   <path d="M60 320 H880" stroke="#f4f1ea" stroke-opacity=".25"/>
   <g stroke="#f4f1ea" stroke-opacity=".12">
-    <path d="M60 316 V324 M224 316 V324 M388 316 V324 M552 316 V324 M716 316 V324 M880 316 V324"/>
+    <path d="M60 316 V324 M333 316 V324 M607 316 V324 M880 316 V324"/>
   </g>
   <text class="s" x="56" y="347">0s</text>
-  <text class="s" x="216" y="347">10s</text>
-  <text class="s" x="380" y="347">20s</text>
-  <text class="s" y="347" x="544">30s</text>
-  <text class="s" x="708" y="347">40s</text>
-  <text class="s" x="866" y="347">50s</text>
-  <text class="s" x="60" y="363">deep theme: --plate-img … --plate-img-5 are one file, so the carousel runs and nothing visibly changes</text>
+  <text class="s" x="324" y="347">10s</text>
+  <text class="s" x="598" y="347">20s</text>
+  <text class="s" x="866" y="347">30s</text>
+  <text class="s" x="60" y="363">deep theme: --plate-img … --plate-img-3 are one file, so the carousel runs and nothing visibly changes</text>
 
   <!-- C. 对比度实测 -->
   <text class="h" x="40" y="382">foreground contrast, measured</text>

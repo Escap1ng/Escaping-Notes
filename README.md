@@ -62,7 +62,7 @@
 - 双主题不换山：深色首屏是同一取景的压暗版，两套共用一条山脊折线；底片按主题各沉积一张，防串色
 - 默认浅色，首帧刻意不读系统 `prefers-color-scheme`——首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上
 - 星轨由离屏累积缓冲逐帧绘制（Canvas 2D），沿山脊以 `destination-in` 遮挡，脊线附近保留到六成亮度、26px 羽化
-- 折线以下压在一张全站共用的照片底片上：五档轮播每张 10s、一圈 50s，深色主题五档指向同一张，夜里不跳景
+- 折线以下压在一张全站共用的照片底片上：三档轮播每张 10s、一圈 30s，深色主题三档指向同一张，夜里不跳景
 - 全部界面由同一套令牌与基元搭成：间距 6 档、字号 11 档、行高 4 档、字重 3 档，另有圆角 3 档与指针反馈 4 枚；卡片令牌一组，按钮「2 尺寸 × 4 语义」。组件内不写裸字号与裸时长，改刻度即全站同步
 - 字体是两套自托管子集：正文衬线取 Noto Serif SC、按 `unicode-range` 分片、按需下载；刊头 Didone 取 Playfair Display、单文件只含大写与空格。没有字体 CDN
 
@@ -85,7 +85,7 @@
 
 ### 底片层挂在 `App.vue` 上——一处 `fixed` 的包含块陷阱
 
-<img src="docs/assets/readme/plate-layer.svg" alt="全站风景底片的剖面图：照片只在上沿全亮、18% 到 78% 沉回页面底色，五档轮播各自的时序，以及裸字与卡面上前景对比度的实测值" width="920">
+<img src="docs/assets/readme/plate-layer.svg" alt="全站风景底片的剖面图：照片只在上沿全亮、18% 到 78% 沉回页面底色，三档轮播各自的时序，以及裸字与卡面上前景对比度的实测值" width="920">
 
 折线以下那张风景是 `App.vue` 里一层 `position: fixed` 的 `.sub-plate`，首页抽屉与全部次级页共用它。它必须挂在 `App` 上：`fall` 转场给页根加了 `filter`，而 `filter` 会成为 `position: fixed` 后代的包含块——同一层挂在 `HomeView` 里时实测被解析成 `.home` 的盒子（587×1629、跟着滚动），跟着文档走，不是不动的底图。另一半是每一档轮播自带一份压暗渐变：渐变若只在父层写一次，浮上来的那张会盖掉压暗，文字对比就掉下去了。三条决定的实测过程记在 `src/App.vue` 与 `src/lib/plate.js` 的注释里。
 
@@ -139,21 +139,24 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 站内没有后台，改的都是仓库里的文件，push 即上线：
 
 - **写一篇文章 = 建一个目录**。`content/posts/<slug>/index.md`，目录名就是网址（`/blog/<slug>`）。封面不用登记路径：同目录里有 `cover.jpg`，它就是封面——列表那格、正文顶部那张满栏图、映像柜、分享卡四处共用同一张；没有封面也是合法状态，列表留一张等高的斜纹空版。原图以 `-src.jpg` 收尾丢进同一目录，`npm run cover:build` 就地烘；正文插图也放这一卷里，只写文件名，写错或漏放会在构建时被拦。
-- **frontmatter**：六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
+- **frontmatter**：六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`）；`collection` 必填，写这篇挂进哪个合集，`order` 选填，是它在合集里排第几；另外两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
+- **合集**：合集清单在 `src/data/collections.js`，`parent` 指向另一个合集就再分一级；文章只挂在最末那一层，上级合集页自动汇总所有后代的文章。`/collections` 是总览，每篇正文页眉也标着所属合集与篇序，上下篇在合集内翻。
 - **发文即进动态**：每一卷已发布文章按 `date` 自动进 `/updates` 与首页最近动态，链向正文；`src/data/updates.js` 只记文章之外的事，别再手写「某篇上线」。合并口径在 `src/lib/feed.js`，同一天文章排在手写条目前。
-- **站点自有内容**：动态 / 项目 / 音乐 / 映像 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
+- **站点自有内容**：合集 / 动态 / 项目 / 音乐 / 映像 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
 - **改站点信息与文案**：站点名、作者、社交、坐标、装备在 `src/data/site.js`；界面文案在 `src/data/narrative.js`；外观令牌在 `src/styles/site.css`。
 - **构建就是发文自检**。`npm run build` 先逐卷校验再出产物：日期写歪、键名拼错、正文引用了本卷没有的图、两个旧名撞车，任一条红就不发布。跑绿之后顺手产出 `rss.xml`、`sitemap.xml` 与每条路由一份静态壳。
 
 ## 页面地图
 
-9 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航放 6 条，两条 `:slug` 详情页与最后那条 catch-all 不在栏上——任何未匹配的路由都落到「这里没有页面」。
+11 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航放 7 条，三条 `:slug` 详情页与最后那条 catch-all 不在栏上——任何未匹配的路由都落到「这里没有页面」。
 
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
 | `/` | 首页 · 长曝光星轨 | 照片地景 + 星轨 + 打字机站名 + 抽屉 |
 | `/blog` | 文章 | 归档，搜索词与标签筛选写进 URL |
 | `/blog/:slug` | 正文 | 单篇正文 + 自动置顶的封面；文中图片可点进灯箱 |
+| `/collections` | 合集 | 顶层合集与它们的子合集，按主题成组 |
+| `/collections/:slug` | 合集目录 | 合集的子集与文章；上级合集汇总所有后代文章 |
 | `/updates` | 动态 | 手写动态与发文自动条目，文章条可点进正文 |
 | `/gallery` | 映像 | 全站用图墙 |
 | `/projects` | 项目 | 项目卡片栅格 |
@@ -179,7 +182,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
     ├── data/              # 站点自有内容全在这一目录，index.js 是唯一的取数门
     ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · feed 动态合并 · markdown · theme / storage / …
     ├── styles/site.css    # 唯一的样式表：结构刻度 + 两套主题配色 + 全站基元
-    └── views/             # 9 个视图平铺，一页一个文件
+    └── views/             # 11 个视图平铺，一页一个文件
 ```
 
 原图（`plates-src/` · `music/` · `fonts-src/` · 各卷的 `*-src.*`）在 `.gitignore` 里，别当泄漏报。逐文件的注解版见 **[docs/manual.md §0](docs/manual.md)**。

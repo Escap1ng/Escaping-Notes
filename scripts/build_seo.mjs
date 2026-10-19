@@ -13,6 +13,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderMarkdown } from '../src/lib/markdown.js'
 import { isLive, sortByDate } from '../src/lib/schema.js'
+import { collectionHref } from '../src/lib/collections.js'
 import { projectSlug } from '../src/lib/projects.js'
 import { content } from '../src/data/index.js'
 import { N } from '../src/data/narrative.js'
@@ -22,9 +23,9 @@ import { encodePng } from './lib/png.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'dist')
-// 站点信息与项目都从那道门取：src/data/index.js 不带 vue，Node 这一岸也 import 得动——
+// 站点信息、项目与合集都从那道门取：src/data/index.js 不带 vue，Node 这一岸也 import 得动——
 // 浏览器那一岸与这一岸读的是同一个对象，不是两份各自的 import 清单
-const { site, projects } = content
+const { site, projects, collections } = content
 
 /* ---------------- 站点信息 / 文章 ---------------- */
 const esc = (s) =>
@@ -43,10 +44,13 @@ function rfc822(date) {
 /* ---------------- sitemap ---------------- */
 // 静态路由不在这里另写一份：顶栏那排导航就是站点结构本身（见 design.md §6.3）
 const STATIC_ROUTES = N.nav.map((n) => n.to)
+// 合集详情不在导航上，但每一页都是真实网址：sitemap 要推广、每页也要一份壳
+const COLLECTION_ROUTES = collections.map((c) => collectionHref(c.slug))
 
 function sitemapXml(base, posts) {
   const urls = [
     ...STATIC_ROUTES.map((p) => ({ loc: `${base}${p}`, lastmod: '' })),
+    ...COLLECTION_ROUTES.map((p) => ({ loc: `${base}${p}`, lastmod: '' })),
     ...posts.map((p) => ({ loc: `${base}${p.url}`, lastmod: p.date })),
   ]
   const body = urls
@@ -105,6 +109,8 @@ const VIEW_OF = (url) => {
   if (url === '/') return 'src/views/HomeView.vue'
   if (url === '/blog') return 'src/views/BlogView.vue'
   if (url.startsWith('/blog/')) return 'src/views/PostView.vue'
+  if (url === '/collections') return 'src/views/CollectionsView.vue'
+  if (url.startsWith('/collections/')) return 'src/views/CollectionView.vue'
   if (url === '/updates') return 'src/views/UpdatesView.vue'
   if (url === '/gallery') return 'src/views/GalleryView.vue'
   if (url === '/projects') return 'src/views/ProjectsView.vue'
@@ -142,9 +148,13 @@ function emitShells(base, posts) {
         `${audit.doubled.length ? ` 重复 ${audit.doubled.join(' / ')}` : ''}`
     )
   }
-  const plans = planShells({ base, nav: N.nav, posts, projects, slugOf: projectSlug })
+  const plans = planShells({ base, nav: N.nav, posts, projects, collections, slugOf: projectSlug })
   // 先验覆盖再落盘：sitemap 与 RSS 会把每一条网址推广出去，少一份壳就是发出去一条 404
-  const gaps = uncoveredRoutes(plans, STATIC_ROUTES, posts.map((p) => p.url))
+  const gaps = uncoveredRoutes(
+    plans,
+    [...STATIC_ROUTES, ...COLLECTION_ROUTES],
+    posts.map((p) => p.url)
+  )
   if (gaps.length) throw new Error(`静态壳：${gaps.join(' / ')} 在 dist/ 里没有对应的文件，却会被写进 sitemap`)
   for (const s of plans) {
     const file = join(OUT, ...s.file.split('/'))
@@ -314,13 +324,13 @@ mkdirSync(OUT, { recursive: true })
 writeFileSync(join(OUT, 'sitemap.xml'), sitemapXml(base, posts), 'utf8')
 writeFileSync(join(OUT, 'rss.xml'), rssXml(base, posts), 'utf8')
 console.log(
-  `seo: dist/sitemap.xml (${STATIC_ROUTES.length + posts.length} urls) · dist/rss.xml (${Math.min(posts.length, 20)} items，全文)` +
+  `seo: dist/sitemap.xml (${STATIC_ROUTES.length + COLLECTION_ROUTES.length + posts.length} urls) · dist/rss.xml (${Math.min(posts.length, 20)} items，全文)` +
     (drafts ? ` · ${drafts} 篇草稿不进产物` : '')
 )
 
 const shells = emitShells(base, posts)
 console.log(
-  `seo: 静态壳 ${shells.length} 份 · 导航 ${STATIC_ROUTES.length - 1} · 文章 ${posts.length} · 项目 ${projects.length} · 404 一份`
+  `seo: 静态壳 ${shells.length} 份 · 导航 ${STATIC_ROUTES.length - 1} · 合集 ${collections.length} · 文章 ${posts.length} · 项目 ${projects.length} · 404 一份`
 )
 
 if (process.argv.includes('--og')) {

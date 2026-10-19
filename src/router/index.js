@@ -25,6 +25,18 @@ const router = createRouter({
       meta: { t: pageTitle('阅读') },
     },
     {
+      path: '/collections',
+      component: () => import('../views/CollectionsView.vue'),
+      meta: { t: navTitle('/collections') },
+    },
+    {
+      // 与 /blog/:slug 同一套路：合集列表点进去是一页目录，不是浮层
+      path: '/collections/:slug',
+      component: () => import('../views/CollectionView.vue'),
+      // 兜底标题：加载后由 CollectionView 换成合集名
+      meta: { t: navTitle('/collections') },
+    },
+    {
       path: '/updates',
       component: () => import('../views/UpdatesView.vue'),
       meta: { t: navTitle('/updates') },

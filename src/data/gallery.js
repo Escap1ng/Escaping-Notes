@@ -6,13 +6,12 @@
 export const sitePlates = [
   { src: '/plates/plate-hero.jpg', title: '首屏的地平线' },
   { src: '/plates/plate-hero-deep.jpg', title: '首屏的地平线 · 夜色' },
-  // 「其一…其五」是墙上的顺序，不是文件名里的号：paper2 那一档空着——那张图搬去当
-  // 第三篇《怎么写、怎么发》的封面了（见 scripts/build_post_covers.ps1）。
+  // 「其一…其三」是墙上的顺序，不是文件名里的号：paper2 / paper5 / paper6 三档空着——paper2
+  // 搬去当第三篇《怎么写、怎么发》的封面（见 scripts/build_post_covers.ps1），paper5 已删除，
+  // paper6 暂存到 photos-src/ 待用。
   { src: '/plates/plate-bg-paper1.jpg', title: '浅色底片 · 其一' },
   { src: '/plates/plate-bg-paper3.jpg', title: '浅色底片 · 其二' },
   { src: '/plates/plate-bg-paper4.jpg', title: '浅色底片 · 其三' },
-  { src: '/plates/plate-bg-paper5.jpg', title: '浅色底片 · 其四' },
-  { src: '/plates/plate-bg-paper6.jpg', title: '浅色底片 · 其五' },
   { src: '/plates/plate-bg-deep.jpg', title: '深色那张压暗底' },
   { src: '/og.png', title: '分享卡 · 1200×630' },
 ]

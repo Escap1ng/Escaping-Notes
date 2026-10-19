@@ -98,8 +98,8 @@ onUnmounted(() => {
        后代的包含块——放在 HomeView 里的那层 fixed 实测被解析成 .home 的盒子
        （rect 587x1629、跟着滚动），根本不是"不动的底图"。挂在这里才在视口上。
        首页与次级页共用这一层；首页上方由 .hero-plate（不透明、在 hero 内）盖住。
-       四个 <i> 是轮播的第 2–5 张，父元素自己那张是第 1 张，见下面的 plate-slot。 -->
-  <div class="sub-plate" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+       两个 <i> 是轮播的第 2–3 张，父元素自己那张是第 1 张，见下面的 plate-slot。 -->
+  <div class="sub-plate" aria-hidden="true"><i></i><i></i></div>
   <div class="en-vignette" aria-hidden="true"></div>
   <SiteHeader />
   <main id="main" tabindex="-1" :class="{ 'en-sub': isSub }">
@@ -147,16 +147,16 @@ html[data-plate-blur] .sub-plate {
   filter: blur(var(--plate-blur));
 }
 
-/* 抽屉底图轮播五张（源图 plate1/3/4/5/6）。第一张是 .sub-plate 自己的背景，其余四张各占一层
+/* 抽屉底图轮播三张（源图 plate1/3/4）。第一张是 .sub-plate 自己的背景，其余两张各占一层
    <i>，每层自带一份"沉回 ink-0"的渐变——渐变必须跟着每一层走，否则浮上来的那张会盖掉父层的
    压暗，文字对比就没了。
-   四层共用一条关键帧，只靠 animation-delay 错开：每张独占 9s、两端各 1s 与邻张交叉，
-   第 49–50s 四层全灭，露出来的就是父层那张。延迟写成 10s 的倍数减 1s，是为了让淡出与下一张的
+   两层共用一条关键帧，只靠 animation-delay 错开：每张独占 9s、两端各 1s 与邻张交叉，
+   第 29–30s 两层全灭，露出来的就是父层那张。延迟写成 10s 的倍数减 1s，是为了让淡出与下一张的
    淡入落在同一秒上。
-   深色主题下五个令牌指向同一张，动画照跑但看不出变化。
-   周期 50s = 每张 10s（原来是 48s / 每张 16s，作者改口要 10s 一张），常数在 site.css。
-   加一张要动三处：模板多一个 <i>、这里多一档延迟、--plate-cycle +10s（关键帧的 2%/20%/22%
-   是按 50s 一圈算的，改成 60s 就得跟着重算）。 */
+   深色主题下三个令牌指向同一张，动画照跑但看不出变化。
+   周期 30s = 每张 10s（原来是 48s / 每张 16s，作者改口要 10s 一张），常数在 site.css。
+   加一张要动三处：模板多一个 <i>、这里多一档延迟、--plate-cycle +10s（关键帧的
+   3.333%/33.333%/36.667% 是按 30s 一圈算的，改了周期就得跟着重算）。 */
 .sub-plate > i {
   position: absolute;
   inset: 0;
@@ -179,25 +179,15 @@ html[data-plate-blur] .sub-plate {
   --pd: 19s;
 }
 
-.sub-plate > i:nth-child(3) {
-  --pi: var(--plate-img-4);
-  --pd: 29s;
-}
-
-.sub-plate > i:nth-child(4) {
-  --pi: var(--plate-img-5);
-  --pd: 39s;
-}
-
-/* 2% = 1s、20% = 10s：淡入 1s、满 9s、淡出 1s，其余 40s 待着。 */
+/* 3.333% = 1s、33.333% = 10s：淡入 1s、满 9s、淡出 1s，其余 20s 待着。 */
 @keyframes plate-slot {
   0%,
-  22%,
+  36.667%,
   100% {
     opacity: 0;
   }
-  2%,
-  20% {
+  3.333%,
+  33.333% {
     opacity: 1;
   }
 }

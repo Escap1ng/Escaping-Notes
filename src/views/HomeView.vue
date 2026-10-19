@@ -31,16 +31,19 @@ const WEEK = ['日', '一', '二', '三', '四', '五', '六']
    再叠一层慢涨落给出整体起伏；相位加抖动，去掉整齐行波的机械感。
    全部由下标确定，同一屏永远同一排，不随刷新跳变。
    粗细是设计值，不是视口宽除出来的商：一节 = 竖条 BAR_W + 间隙 BAR_GAP，根数按视口宽补，
-   于是每根在任何屏上都是同样的 4px。旧口径是 ≤1679px 恒 240 根、宽度靠 flex 拉伸，实测
+   于是每根在任何屏上都是同样的 5px。旧口径是 ≤1679px 恒 240 根、宽度靠 flex 拉伸，实测
    （DPR 1）1123px 上只有 3.672/3.688 两种宽交替、整排都压在半列栅格上，390px 上顶到
    min-width 地板成 1px 且整排 479px 被 html 的 overflow-x 裁掉 45 根。节距恒定还顺带把
-   涨落与相位的物理尺度钉住：swell 那层慢波一轮 = 2π/0.083 ≈ 75.7 根 = 378px，各视口一致
-   （旧口径在同一屏上是 352~355px，随容器宽漂）。BAR_W/BAR_GAP 由模板写成 CSS 变量交给样式，一处真值。 */
+   涨落与相位的物理尺度钉住：swell 那层慢波一轮 = 2π/0.083 ≈ 75.7 根 = 530px，各视口一致
+   （旧口径在同一屏上是 352~355px，随容器宽漂）。BAR_W/BAR_GAP/UP 由模板写成 CSS 变量交给样式，一处真值。
+   平滑核从 3 抽扩到 5 抽（1-2-3-2-1）：相邻竖条的高度差再收一档，整排读作缓坡而不是锯齿。 */
 const frac = (x) => x - Math.floor(x)
 const noise = (i) => frac(Math.sin(i * 127.1 + 311.7) * 43758.5453)
-const smooth = (i) => (noise(i - 1) + 2 * noise(i) + noise(i + 1)) / 4
-const BAR_W = 4
-const BAR_GAP = 1
+const smooth = (i) => (noise(i - 2) + 2 * noise(i - 1) + 3 * noise(i) + 2 * noise(i + 1) + noise(i + 2)) / 9
+const BAR_W = 5
+const BAR_GAP = 2
+/* 折线以上那截相对下半段的长度比：只加长上半段，下半段仍是 h/2。 */
+const WAVE_UP = 1.4
 const barCount = () => Math.ceil((innerWidth + 1) / (BAR_W + BAR_GAP)) // n 根占 (BAR_W+BAR_GAP)·n−1 px，+1 才刚好不留余量
 const waveCount = ref(barCount())
 const onWaveResize = debounce(() => {
@@ -104,7 +107,11 @@ onUnmounted(() => {
 
     <section ref="drawerEl" class="drawer" :class="{ open }">
       <!-- 折线声波：骑在首屏/抽屉接缝上上下对称、排密到相接，读成一条穿过地平线的不断波形；装饰层 -->
-      <div class="wave" aria-hidden="true" :style="{ '--wave-w': BAR_W + 'px', '--wave-gap': BAR_GAP + 'px' }">
+      <div
+        class="wave"
+        aria-hidden="true"
+        :style="{ '--wave-w': BAR_W + 'px', '--wave-gap': BAR_GAP + 'px', '--wave-up': WAVE_UP }"
+      >
         <i v-for="(w, i) in wave" :key="i" :style="{ '--h': w.h, '--d': w.d }"></i>
       </div>
 
@@ -217,9 +224,10 @@ onUnmounted(() => {
   }
 }
 
-/* 折线声波：整排以接缝为中线上下对称（transform-origin center），上半压进首屏山脊、
-   下半落进抽屉留白，读成一道穿过地平线的波。每根恒为 var(--wave-w)、间隙 var(--wave-gap)，
-   两个值由 script 经模板写成 CSS 变量（真值只有一处）；铺满整屏宽靠的是**根数**跟着视口走，
+/* 折线声波：整排骑在接缝上，下半段以中线为起点往下、上半段从同一起点往上，读成一道
+   穿过地平线的波。上半段比下半段长 --wave-up 倍（模板按 WAVE_UP 写入），只向首屏山脊里
+   多探一截，折线以下的长度不变。每根恒为 var(--wave-w)、间隙 var(--wave-gap)，
+   三个值由 script 经模板写成 CSS 变量（真值只有一处）；铺满整屏宽靠的是**根数**跟着视口走，
    不再靠拉伸竖条。所以粗细与节距在任何屏上一致，最后一根会随容器边缘裁掉几 px。 */
 .wave {
   position: absolute;
@@ -236,21 +244,35 @@ onUnmounted(() => {
 }
 
 .wave i {
+  position: relative;
   flex: 0 0 var(--wave-w);
   height: calc(var(--h) * 1px);
-  border-radius: 2px;
+  /* 上半截由 ::before 接着往上长，接口处不圆角，整根读作一条 */
+  border-radius: 0 0 2px 2px;
   background: var(--wave-ink);
   box-shadow: 0 0 4px var(--wave-glow);
   transform-origin: center;
-  animation: wave-breathe 2.6s ease-in-out infinite;
+  animation: wave-breathe 3.4s ease-in-out infinite;
   animation-delay: var(--d);
+}
+
+.wave i::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: calc(var(--h) * 1px * (var(--wave-up) - 1) / 2);
+  border-radius: 2px 2px 0 0;
+  background: var(--wave-ink);
+  box-shadow: 0 0 4px var(--wave-glow);
 }
 
 @keyframes wave-breathe {
   0%,
   100% {
-    transform: scaleY(0.4);
-    opacity: 0.7;
+    transform: scaleY(0.55);
+    opacity: 0.78;
   }
   50% {
     transform: scaleY(1);
@@ -353,7 +375,7 @@ onUnmounted(() => {
 .pick-date {
   font-size: var(--fs-3xs);
   letter-spacing: 0.1em;
-  color: var(--hot); /* §4.1：日期属"当前/深度"，只准热色 */
+  color: var(--text-1); /* 日期是元数据；热色只留给当前播放与错误 */
 }
 
 .pick-ttl {
@@ -396,7 +418,7 @@ onUnmounted(() => {
 .feed-date {
   font-size: var(--fs-3xs);
   letter-spacing: 0.1em;
-  color: var(--hot);
+  color: var(--text-1);
   font-variant-numeric: tabular-nums;
 }
 
