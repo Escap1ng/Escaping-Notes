@@ -92,7 +92,7 @@ npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 | `npm run art:build` | 重绘 README 顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
 | `npm run bg:build` | 重烘站点底图 `public/plates/*.jpg`（原图在 `plates-src/`，需本机 PowerShell，产物需提交） |
 | `npm run cover:build` | 重烘文章封面：逐卷把 `content/posts/<slug>/` 里那张 `*-src.jpg` 就地烘成 `cover.jpg`（脚本里没有映射表，同上） |
-| `npm run font:build` | 重切正文衬线子集（需本机装有 Noto Serif SC；产物已提交，日常不用跑） |
+| `npm run font:build` | 重切正文衬线子集并按 `unicode-range` 分片（需本机装有 Noto Serif SC；产物已提交，日常不用跑；文章标题用了片外字时跑一次） |
 | `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部） |
 | `npm run check:content` | 发文门禁与回执：日期写歪 / 键名拼错 / 正文引用了本卷没有的图都会在这里红（`npm run build` 与 CI 都含它） |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对下面的路由表与 `src/router` 一致 |
@@ -169,7 +169,7 @@ npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 | --- | --- |
 | **博客内容** —— 文章正文、站内原创图片与文案 | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)：可复制、可改编、可转载，须署名作者、不得用于商业用途、衍生作品须以同一协议发布 |
 | **源代码与设计** —— `src/`、`scripts/`、`docs/`、视觉与交互设计、星轨交互装置 | 非商用声明，即下列五条 |
-| **字体** | 两枚展示层子集分别取自 Noto Serif SC 与 Playfair Display（均 SIL OFL 1.1），条款全文见 [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
+| **字体** | 展示层子集（正文衬线按 unicode-range 分片）与刊头 Didone 分别取自 Noto Serif SC 与 Playfair Display（均 SIL OFL 1.1），条款全文见 [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
 | **第三方素材** | 嵌入的歌单、友链与站外内容各自依其原许可，不在本节授权范围内 |
 
 以下五条只约束上表第二行的「源代码与设计」：

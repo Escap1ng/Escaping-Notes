@@ -248,15 +248,9 @@ textarea.field:focus-visible {
 
 /* ---------- 0. 展示层子集字体 ---------- */
 /* 仅 --font-display（标题 / 卡名 / 抽屉项）使用，正文继续走系统宋体栈。
-   源 Noto Serif SC（SIL OFL 1.1），经 scripts/build_font.mjs 裁切 + wght=700 实例化；
+   源 Noto Serif SC（SIL OFL 1.1），经 scripts/build_font.mjs 裁切 + wght=700 实例化，
+   并按 unicode-range 分片（@font-face 在文件顶部的 font-display.css 里，生成物勿手改）；
    产物与许可见 src/assets/fonts/，重跑：npm run font:build。 */
-@font-face {
-  font-family: 'EN Display Serif';
-  src: url('../assets/fonts/en-display-serif-700.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* 英文刊头专用 Didone 子集（仅大写+空格），由 scripts/build_font_didone.mjs 裁切。
    woff2 落地前这条会 404 并回落到 --font-display，属预期中间态；跑完构建即消失。 */

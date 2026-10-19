@@ -8,7 +8,7 @@
 // 这个文件不许自己解析 frontmatter：字段口径、封面派生、日期判据都在 src/lib/schema.js，
 // 由浏览器那一岸共用。过去这里抄了一份，结果 tags 从来没进过 RSS、缺标题时页面与 RSS
 // 一边给空串一边给 slug。现在直接 import 那一岸用的模块（它们都不带 vue / import.meta）。
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { renderMarkdown } from '../src/lib/markdown.js'
@@ -99,8 +99,43 @@ function rssXml(base, posts) {
 // 渲染这一页，所以观感与站内一致——这一步只换 head，不重排任何版式。
 // 写哪几份、落在哪里、head 成什么样都由 planShells 算（scripts/lib/shell.mjs，可凭空测），
 // 这里只负责读模板与落盘。
+// 首帧要跑的视图块。路由是按路径动态 import 的，浏览器拿到入口 chunk 之后才知道去取哪一块；
+// 把这一块写进 <link rel=modulepreload>，它就与入口并行起跑，少一跳（4G 上约一次 RTT）。
+const VIEW_OF = (url) => {
+  if (url === '/') return 'src/views/HomeView.vue'
+  if (url === '/blog') return 'src/views/BlogView.vue'
+  if (url.startsWith('/blog/')) return 'src/views/PostView.vue'
+  if (url === '/updates') return 'src/views/UpdatesView.vue'
+  if (url === '/records') return 'src/views/RecordsView.vue'
+  if (url === '/gallery') return 'src/views/GalleryView.vue'
+  if (url === '/projects') return 'src/views/ProjectsView.vue'
+  if (url.startsWith('/projects/')) return 'src/views/ProjectView.vue'
+  if (url === '/about') return 'src/views/AboutView.vue'
+  if (url === '/404.html') return 'src/views/NotFoundView.vue'
+  return null
+}
+
+function routeAssets(html, manifest, view) {
+  if (!view) return html
+  const m = manifest[view]
+  if (!m) throw new Error(`视图预载：构建清单里没有 ${view}（vite.config.js 的 build.manifest 开着吗？）`)
+  // data-route-asset 是给"单独重跑 seo:build"认的记号：下一次进来先把旧标记整段摘掉，
+  // 否则根路径模板里的 HomeView 预载会串进每一份壳
+  const tags = [`<link rel="modulepreload" crossorigin data-route-asset href="/${m.file}">`]
+  // 视图自己的 scoped CSS 也一起排进去：不写的话它要等视图 chunk 执行后才由 JS 插入
+  for (const css of m.css || []) tags.push(`<link rel="stylesheet" crossorigin data-route-asset href="/${css}">`)
+  if (!html.includes('</head>')) throw new Error('视图预载：HTML 里没有 </head>')
+  const fresh = tags.filter((tag) => !html.includes(`href="${tag.match(/href="([^"]+)"/)[1]}"`))
+  if (!fresh.length) return html
+  return html.replace('</head>', `  ${fresh.join('\n    ')}\n  </head>`)
+}
+
 function emitShells(base, posts) {
-  const tpl = readFileSync(join(OUT, 'index.html'), 'utf8')
+  // 重跑 seo:build 时 dist/index.html 已带着上一次的视图预载：先摘干净再当模板
+  const tpl = readFileSync(join(OUT, 'index.html'), 'utf8').replace(/[ \t]*<link[^>]*data-route-asset[^>]*>\n?/g, '')
+  const manifestFile = join(OUT, '.vite/manifest.json')
+  if (!existsSync(manifestFile)) throw new Error('静态壳：dist/.vite/manifest.json 不存在，先跑 vite build')
+  const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
   const audit = shellTagAudit(tpl)
   if (audit.missing.length || audit.doubled.length) {
     throw new Error(
@@ -115,8 +150,10 @@ function emitShells(base, posts) {
   for (const s of plans) {
     const file = join(OUT, ...s.file.split('/'))
     mkdirSync(dirname(file), { recursive: true })
-    writeFileSync(file, buildShell(tpl, s.patch), 'utf8')
+    writeFileSync(file, routeAssets(buildShell(tpl, s.patch), manifest, VIEW_OF(s.url)), 'utf8')
   }
+  // 根路径那一份最后写：它也是所有壳的模板，先把壳都产完，根路径的预载才不会串到别的页
+  writeFileSync(join(OUT, 'index.html'), routeAssets(tpl, manifest, VIEW_OF('/')), 'utf8')
   return plans
 }
 

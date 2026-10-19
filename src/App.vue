@@ -1,14 +1,32 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import { debounce } from './lib/debounce.js'
 import { shift } from './lib/shift.js'
 
 const route = useRoute()
+const router = useRouter()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
 const isSub = computed(() => route.path !== '/')
+
+// 站内换页的视图块是按路由动态 import 的：指到链接上就先取，点下去时通常已经就位。
+// 只预热同源、无 target/download 的链接；组件 loader 由路由表自己给出，别在这里再抄一份路径。
+const warmed = new Set()
+function warm(e) {
+  const a = e.target?.closest?.('a[href]')
+  if (!a || a.target || a.hasAttribute('download')) return
+  const url = new URL(a.href, location.href)
+  if (url.origin !== location.origin) return
+  const to = url.pathname + url.search
+  if (warmed.has(to)) return
+  warmed.add(to)
+  for (const m of router.resolve(to).matched) {
+    const load = m.components?.default
+    if (typeof load === 'function') Promise.resolve(load()).catch(() => {})
+  }
+}
 
 // 路由切换后向读屏播报新页面（SPA 不会自行触发）
 const announced = ref('')
@@ -57,6 +75,8 @@ onMounted(() => {
   ro.observe(document.body)
   addEventListener('scroll', onScroll, { passive: true })
   addEventListener('resize', onResize)
+  addEventListener('pointerover', warm, { passive: true })
+  addEventListener('focusin', warm)
   applyShift()
 })
 
@@ -65,6 +85,8 @@ onUnmounted(() => {
   ro?.disconnect()
   removeEventListener('scroll', onScroll)
   removeEventListener('resize', onResize)
+  removeEventListener('pointerover', warm)
+  removeEventListener('focusin', warm)
   onResize.cancel()
   document.documentElement.style.removeProperty('--shift')
 })

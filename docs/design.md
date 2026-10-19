@@ -177,7 +177,7 @@
 
 **为什么只有展示层自托管**：中文衬线三平台没有共同系统字体（macOS 命中 Songti SC，**Windows 会落到 SimSun**），而 `--font-display` 最大到 132px，品牌观感全压在这一层；正文用系统宋体栈既合格又不付下载代价。刊头那枚 `--font-display-en` 是同一层里的第二个特例——站名升为唯一主角之后，中文衬线栈的拉丁部分对比度不够，读不出刊头，只能自裁一枚高对比 Didone。
 
-**子集怎么来**：`@font-face` 声明在 `site.css`，字体与许可在 `src/assets/fonts/`，由 `npm run font:build`（`scripts/build_font.mjs`）从本机 Noto Serif SC 可变字体生成——GB2312 一级字表 3755 字 ∪ 仓库现有内容用字（当前 3922 字 ≈ 703 KB），并 `wght=700` 实例化（展示层元素全部为 700，单实例体积最小）。字表改为「仅内容用字」可压到约 174 KB，代价是新文章的标题字可能单字回退。第二枚（刊头）由 `npm run font:build:didone`（`scripts/build_font_didone.mjs`）从 Playfair Display 可变字体裁出，**只留大写与空格**、`wght=700` 单实例，产物 3.6 KB；源 TTF 在 `fonts-src/`、不进仓库，取回步骤写在脚本头部。
+**子集怎么来**：`@font-face` 由 `npm run font:build`（`scripts/build_font.mjs`）生成到 `src/styles/font-display.css`（`main.js` 在 `site.css` 之前 import），字体与许可在 `src/assets/fonts/`。字表 = GB2312 一级字表 3755 字 ∪ 仓库现有内容用字（当前 3934 字），`wght=700` 实例化后按 `unicode-range` 切成 12 片（合计约 787 KB，单片 16–148 KB）。浏览器只取当前页面实际用到的字所在的那几片：首屏通常只命中片 00（148 KB），而不是整份 720 KB。字表覆盖与单文件版完全相同——新文章用到片外字时自动多下对应的一片，不会整站回退。第二枚（刊头）由 `npm run font:build:didone`（`scripts/build_font_didone.mjs`）从 Playfair Display 可变字体裁出，**只留大写与空格**、`wght=700` 单实例，产物 3.6 KB；源 TTF 在 `fonts-src/`、不进仓库，取回步骤写在脚本头部。
 
 **两条约束**：① 产物必须提交，构建与 CI **不调用**该脚本（因此不依赖源字体）；② 该族只有 700 一个字面，新增 `--font-display` 消费方若不显式写 `font-weight: 700`，会直接以这个 700 字面渲染。
 

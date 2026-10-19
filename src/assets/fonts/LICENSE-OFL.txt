@@ -1,4 +1,4 @@
-本项目展示层字体子集（src/assets/fonts/en-display-serif-700.woff2）由 Noto Serif SC
+本项目展示层字体子集（src/assets/fonts/en-display-serif-700-*.woff2，unicode-range 分片）由 Noto Serif SC
 可变字体裁切并实例化（wght=700，仅保留展示层用字）生成，脚本见 scripts/build_font.mjs。
 该字体依 SIL Open Font License 1.1 授权，条款全文如下。
 

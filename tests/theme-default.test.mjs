@@ -57,6 +57,8 @@ function runBoot(code, stored, prefersDark) {
     },
     // 桩语义：旧实现问的是 'light'，新实现压根不该问
     matchMedia: (q) => ({ matches: /light/.test(q) ? !prefersDark : prefersDark }),
+    // 首帧脚本里 hero preload 只在首页挂（见 tests/hero-preload.test.mjs）
+    location: { pathname: '/' },
   }
   new Function(...Object.keys(ctx), code)(...Object.values(ctx))
   return { theme: doc.documentElement.dataset.theme, writes, links }

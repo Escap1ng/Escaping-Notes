@@ -31,7 +31,7 @@ BLOG/
 │   └── assets/readme/  ← README 配图
 ├── tests/              ← 零依赖防护网：node --test 的 .mjs 用例，跑 npm test
 └── src/
-    ├── assets/fonts/   ← 两枚自托管子集 woff2（正文衬线 + 刊头 Didone，均 700 字重）+ OFL 许可
+    ├── assets/fonts/   ← 自托管子集 woff2（正文衬线按 unicode-range 分片 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
     ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 6 份数据（动态/项目/音乐/歌单/映像/友链，records.js 由脚本生成勿手改）
     ├── lib/            ← posts schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
