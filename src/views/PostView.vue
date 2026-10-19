@@ -4,9 +4,11 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { loadPost, loadPosts } from '../lib/posts.js'
+import { chainOf, collectionHref, directPostsOf, findCollection } from '../lib/collections.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { trapFocus } from '../lib/focus.js'
 import { useDetailExit } from '../lib/exit.js'
+import { content } from '../data/index.js'
 import { N, pageTitle } from '../data/narrative.js'
 
 const route = useRoute()
@@ -22,7 +24,30 @@ let trap = null
 // Esc / 点空白退回 /blog；灯箱开着时先让位给灯箱（它自己吃这两下）
 useDetailExit('/blog', () => !lightbox.value)
 
+// 所属合集：当前合集内按 order/日期排出的兄弟篇。合集内的「上一篇 / 下一篇」
+// 与页眉那条路径读的是同一份顺序，不会出现目录和翻页各说一套。
+const series = computed(() => {
+  const p = post.value
+  if (!p || !p.collection) return null
+  const collection = findCollection(content.collections, p.collection)
+  if (!collection) return null
+  const siblings = directPostsOf(all.value, collection.slug)
+  const i = siblings.findIndex((x) => x.slug === p.slug)
+  if (i < 0) return null
+  return {
+    collection,
+    chain: chainOf(content.collections, collection.slug),
+    index: i,
+    total: siblings.length,
+    prev: siblings[i - 1] || null, // 目录按顺序排，所以上一篇是更小的下标
+    next: siblings[i + 1] || null,
+    position: N.collection.position.replace('{i}', i + 1).replace('{n}', siblings.length),
+  }
+})
+
+// 没有合集（或合集数据缺失）时退回全站时间倒序的前后篇
 const neighbors = computed(() => {
+  if (series.value) return { prev: series.value.prev, next: series.value.next }
   const i = all.value.findIndex((p) => p.slug === route.params.slug)
   if (i < 0) return { prev: null, next: null }
   return { prev: all.value[i + 1] || null, next: all.value[i - 1] || null }
@@ -100,6 +125,17 @@ onUnmounted(() => {
     <template v-else-if="post">
       <article class="en-glass">
         <header class="head">
+          <nav v-if="series" class="series-line en-mono" aria-label="所属合集">
+            <RouterLink to="/collections">{{ N.collection.crumb }}</RouterLink>
+            <template v-for="c in series.chain" :key="c.slug">
+              <span class="sep" aria-hidden="true">/</span>
+              <RouterLink v-if="c.slug !== series.collection.slug" :to="collectionHref(c.slug)">
+                {{ c.title }}
+              </RouterLink>
+              <span v-else>{{ c.title }}</span>
+            </template>
+            <span class="pos">{{ series.position }}</span>
+          </nav>
           <p class="en-eyebrow">{{ post.date }}</p>
           <h1 class="title">{{ post.title }}</h1>
           <p class="meta en-mono">
@@ -131,6 +167,9 @@ onUnmounted(() => {
 
         <div class="exit">
           <RouterLink class="en-btn en-btn-primary" to="/blog">{{ N.postEnd.back }}</RouterLink>
+          <RouterLink v-if="series" class="en-btn en-btn-ghost" :to="collectionHref(series.collection.slug)">
+            {{ N.collection.back }}
+          </RouterLink>
         </div>
       </article>
     </template>
@@ -172,7 +211,7 @@ onUnmounted(() => {
   z-index: 65;
   transform-origin: left;
   transform: scaleX(var(--shift, 0));
-  background: linear-gradient(90deg, var(--cold), var(--hot));
+  background: var(--cold);
 }
 
 .lost {
@@ -185,6 +224,37 @@ onUnmounted(() => {
 .head {
   max-width: var(--measure);
   margin: 0 auto;
+}
+
+/* 合集路径：和正文同宽，排在日期之上。当前合集不设链接，祖先可点；
+   篇序靠右，窄屏折行时跟着路径走 */
+.series-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-0);
+  margin-bottom: var(--space-1);
+}
+
+.series-line a {
+  color: var(--text-1);
+  text-decoration: none;
+  transition: color var(--dur-fast);
+}
+
+.series-line a:hover {
+  color: var(--cold);
+}
+
+.series-line .sep {
+  color: var(--text-1);
+}
+
+.series-line .pos {
+  margin-left: auto;
+  font-size: var(--fs-3xs);
+  color: var(--text-1);
+  white-space: nowrap;
 }
 
 .title {
@@ -253,7 +323,7 @@ onUnmounted(() => {
 }
 
 .end .en-mono {
-  color: var(--hot);
+  color: var(--cold);
   font-size: var(--fs-3xs);
 }
 
@@ -270,7 +340,9 @@ onUnmounted(() => {
 
 .exit {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: var(--space-1);
   margin: var(--space-4) 0 var(--space-2);
 }
 
@@ -292,6 +364,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 720px) {
+  .series-line .pos {
+    margin-left: 0;
+    width: 100%;
+  }
   .ends {
     grid-template-columns: 1fr;
     gap: var(--space-2);

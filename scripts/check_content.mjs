@@ -10,6 +10,8 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { aliasClashes } from '../src/lib/schema.js'
+import { collectionProblems } from '../src/lib/collections.js'
+import { content } from '../src/data/index.js'
 import { readRolls } from './lib/rolls.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -23,7 +25,10 @@ export function inspectPosts(root = process.cwd()) {
     for (const n of r.notes) notes.push(`${r.slug} — ${n}`)
   }
   // 跨卷的判据必须拿全集才查得出来（旧名撞上一卷现名、两卷认领同一个旧名）
-  for (const c of aliasClashes(rolls.map((r) => r.record).filter(Boolean))) problems.push(`别名 — ${c}`)
+  const records = rolls.map((r) => r.record).filter(Boolean)
+  for (const c of aliasClashes(records)) problems.push(`别名 — ${c}`)
+  // 合集：slug 重复/坏父链/文章挂在不存在的合集上——同样只有全集才判得出
+  for (const c of collectionProblems(content.collections, records)) problems.push(`合集 — ${c}`)
   return { rolls, problems, notes }
 }
 
@@ -37,7 +42,7 @@ export function formatReceipt({ rolls, problems, notes }) {
     const p = r.record
     lines.push(
       `  ${p.slug.padEnd(28)} ${p.date}  ${String(p.words).padStart(5)} 字 · ${String(p.minutes).padStart(2)} 分钟` +
-        `  封面${p.cover ? ' ✓' : ' —'}  标签 ${p.tags.join(' / ') || '—'}` +
+        `  合集 ${p.collection || '—'}  封面${p.cover ? ' ✓' : ' —'}  标签 ${p.tags.join(' / ') || '—'}` +
         (p.draft ? '  【草稿：只在 dev 可见，不进产物】' : '') +
         (p.movedFrom.length ? `  旧名 → ${p.movedFrom.join(', ')}` : '')
     )

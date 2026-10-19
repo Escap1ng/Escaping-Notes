@@ -34,7 +34,7 @@ import { N, navLabel } from '../data/narrative.js'
 
 /* 卡面（边/角/底/hover/内边距）全在 .en-card 里，这里只留卡内排版 */
 .year {
-  color: var(--hot);
+  color: var(--text-1);
   font-size: var(--fs-3xs);
 }
 

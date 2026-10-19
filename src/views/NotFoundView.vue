@@ -48,7 +48,7 @@ import { N } from '../data/narrative.js'
     transparent 0.42turn,
     transparent 0.46turn,
     var(--cold) 0.6turn,
-    var(--hot) 0.7turn,
+    var(--cold) 0.7turn,
     transparent 0.84turn
   );
   -webkit-mask: radial-gradient(

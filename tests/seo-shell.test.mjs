@@ -84,6 +84,10 @@ test('四种坏情况都抛错，而不是静默少写一份 og', () => {
 const FAKE = {
   base: BASE,
   nav: N.nav,
+  collections: [
+    { slug: 'root', title: '根合集', summary: '一个顶层合集' },
+    { slug: 'leaf', title: '叶子合集', summary: '根合集里的子集', parent: 'root' },
+  ],
   posts: [
     { slug: 'jia', url: '/blog/jia', title: '甲', summary: '甲的摘要', alt: '甲的画面', cover: '/blog/jia/cover.jpg' },
     { slug: 'yi', url: '/blog/yi', title: '乙', summary: '', alt: '', cover: '' },
@@ -92,11 +96,25 @@ const FAKE = {
   slugOf: (n) => n.trim().replace(/\s+/g, '-'),
 }
 
-test('计划里有导航、每一卷、每一个项目与一份 404，根路径不重复写', () => {
+test('计划里有导航、每一个合集、每一卷、每一个项目与一份 404，根路径不重复写', () => {
   const plans = planShells(FAKE)
   const files = plans.map((p) => p.file)
-  assert.deepEqual(files.slice(0, 5), ['blog/index.html', 'updates/index.html', 'gallery/index.html', 'projects/index.html', 'about/index.html'])
-  assert.deepEqual(files.slice(5), ['blog/jia/index.html', 'blog/yi/index.html', 'projects/Demo-One/index.html', '404.html'])
+  assert.deepEqual(files.slice(0, 6), [
+    'blog/index.html',
+    'collections/index.html',
+    'updates/index.html',
+    'gallery/index.html',
+    'projects/index.html',
+    'about/index.html',
+  ])
+  assert.deepEqual(files.slice(6), [
+    'collections/root/index.html',
+    'collections/leaf/index.html',
+    'blog/jia/index.html',
+    'blog/yi/index.html',
+    'projects/Demo-One/index.html',
+    '404.html',
+  ])
   assert.ok(!files.includes('index.html'), '站点根那份就是 index.html，不该再写一遍')
   assert.equal(files[files.length - 1], '404.html')
   for (const p of plans) assert.ok(p.url.startsWith('/') && !p.url.endsWith('/'), `${p.url} 的写法要和 sitemap 逐字一致`)
@@ -120,13 +138,22 @@ test('每份壳的 canonical、og:url 与它自己的网址是同一个串，标
 
 test('sitemap 推广的每条网址都有一份壳顶着；漏一条就报出来', () => {
   const plans = planShells(FAKE)
-  const routes = N.nav.map((n) => n.to)
+  const routes = [...N.nav.map((n) => n.to), '/collections/root', '/collections/leaf']
   assert.deepEqual(uncoveredRoutes(plans, routes, ['/blog/jia', '/blog/yi']), [])
   // 反向：新加一条导航却忘了让它进 N.nav，或者多了一卷而壳没算到它，都必须被抓到
   assert.deepEqual(uncoveredRoutes(plans, [...routes, '/reading'], []), ['/reading'])
   assert.deepEqual(uncoveredRoutes(plans, routes, ['/blog/jia', '/blog/漏的那卷']), ['/blog/漏的那卷'])
+  // 合集详情漏写一份壳同样是死链
+  assert.deepEqual(uncoveredRoutes(plans, [...routes, '/collections/漏的合集'], []), ['/collections/漏的合集'])
   // 站点根那份就是 index.html，不该被报成缺
   assert.deepEqual(uncoveredRoutes([], ['/'], []), [])
+})
+
+test('合集详情壳的标题与摘要取合集自己那一份，类型仍是 website', () => {
+  const leaf = planShells(FAKE).find((p) => p.url === '/collections/leaf')
+  assert.equal(leaf.patch.title, pageTitle('叶子合集'))
+  assert.equal(leaf.patch.description, '根合集里的子集')
+  assert.equal(leaf.patch.ogType, 'website')
 })
 
 test('仓库里现役的每一份壳都算得出合法路径（项目名带 / 就会被当场抓到）', () => {

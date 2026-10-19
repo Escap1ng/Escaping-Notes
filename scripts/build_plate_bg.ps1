@@ -17,7 +17,7 @@
 #
 # Usage:  npm run bg:build
 # Out:    public/plates/plate-bg-deep.jpg     (night reading surface: desaturated cool + veiled down)
-#         public/plates/plate-bg-paper{1,3,4,5,6}.jpg
+#         public/plates/plate-bg-paper{1,3,4}.jpg
 #                                             (paper reading surface: sharp, graded, NO veil)
 #         public/plates/plate-hero.jpg        (FIRST SCREEN base: cropped to sky+ridge, sky veiled into the page colour)
 #         public/plates/plate-hero-deep.jpg   (FIRST SCREEN base, dark: the SAME hero frame graded down; see $HERO_DEEP)
@@ -102,7 +102,7 @@ function New-Matrix([double[]]$v) {
 
 # Scale the 3x3 colour block of a matrix (indices 0-14 minus the offset column) and leave the
 # offsets and alpha alone. Used to trim ONE over-bright source without touching $PAPER, which
-# the other four plates share.
+# the other three plates share.
 function Scale-Color([double[]]$m, [double]$k) {
   $r = [double[]]$m.Clone()
   for ($i = 0; $i -lt 15; $i++) {
@@ -274,16 +274,6 @@ $PAPER = @(
   0.00, 0.00, 0.00, 0, 1
 )
 
-# Per-source brightness trim on top of $PAPER, for originals $PAPER's 1.15-1.25 gain cannot
-# serve. plate1 is mid-key (meanL 91.8 before grading -> 116.1 after) and wants that gain;
-# plate5 is a HIGH-KEY beach already at meanL 184.4, so the same matrix lands it at 227.4 with
-# 49.4% of sampled pixels at 250 or over -- a white hole both in the drawer and in its gallery
-# card. 0.70 measures meanL 161.5, std 22.3, 0.0% clipped: still the brightest of the five
-# (paper6 is 130.2), but the sun reads as a light source again instead of as the page colour.
-# Below that the photo loses its glow faster than its detail -- 0.62 is meanL 143.1 / std 19.7
-# and reads as dusk. Numbers come from sampling the baked jpgs; re-measure after editing one.
-$PAPER_TRIM = @{ 'plate5.jpg' = 0.70 }
-
 # The author asked for full resolution with no extra compression, so the hero is NOT downscaled
 # to $W -- it keeps the source's own width and only gets the grade above. blur=1 means the
 # shrink/scale pair is 1:1, i.e. no blur at all.
@@ -295,11 +285,11 @@ $QUALITY_HERO = 90
 # (see HorizonHero .hero background) and the two photos meet only AT the fold, never through it.
 #
 # Source names are ASCII now (plates-src/ holds copies of 1/'s photos renamed to hero.jpg /
-# plate1.jpg / plate3-6.jpg / article1-2.jpg; plate2.jpg moved to the article pipeline, see
-# build_post_covers.ps1), so the defaults below are safe to keep in this file --
+# plate1.jpg / plate3-4.jpg; article cover originals live with their rolls as
+# content/posts/<slug>/cover-src.jpg), so the defaults below are safe to keep in this file --
 # PowerShell 5.1 decodes .ps1 with the ANSI codepage, and a Chinese literal here once silently
 # swallowed the following statement: the script "succeeded" while producing one file short.
-# Override without editing:  SRC_HERO=plate4.jpg SRC_PLATE=plate6.jpg npm run bg:build
+# Override without editing:  SRC_HERO=plate4.jpg SRC_PLATE=plate3.jpg npm run bg:build
 $SourceName = if ($env:SRC_HERO) { $env:SRC_HERO } else { 'hero.jpg' }
 $SourcePlate = if ($env:SRC_PLATE) { $env:SRC_PLATE } else { 'plate1.jpg' }
 if (-not (Test-Path (Join-Path $SrcDir $SourcePlate))) { throw "drawer source '$SourcePlate' not in 1/" }
@@ -320,16 +310,16 @@ try {
   # -- that split IS the "top and bottom don't belong together" complaint, not a taste issue.
   # It now runs $PAPER: same hue curve as the hero's $HERO, brighter diagonal, no black offset.
   # See the $PAPER block for why the two are not simply the same matrix.
-  # The drawer rotates through five backdrops (plate1/3/4/5/6 -- plate2.jpg left for article 3,
-  # and build_post_covers.ps1 is the only script that reads it now).
+  # The drawer rotates through three backdrops (plate1/3/4 -- the old plate2.jpg went to
+  # article 3 and is now content/posts/writing-and-uploading/cover-src.jpg, read only by
+  # build_post_covers.ps1; plate5.jpg was deleted on request; plate6.jpg moved to
+  # photos-src/ for later use).
   # One bake pass per source; the dark theme keeps the single $SourcePlate variant above.
-  foreach ($n in @('plate1.jpg', 'plate3.jpg', 'plate4.jpg', 'plate5.jpg', 'plate6.jpg')) {
+  foreach ($n in @('plate1.jpg', 'plate3.jpg', 'plate4.jpg')) {
     $idx = $n.Substring(5, 1)
-    $trim = 1.0
-    if ($PAPER_TRIM.ContainsKey($n)) { $trim = $PAPER_TRIM[$n] }
     $imgN = [System.Drawing.Image]::FromFile((Join-Path $SrcDir $n))
-    Write-Output ("paper{0} <- {1} trim {2:N2}" -f $idx, $n, $trim)
-    Bake $imgN (Join-Path $OutDir ("plate-bg-paper{0}.jpg" -f $idx)) (Scale-Color $PAPER $trim) `
+    Write-Output ("paper{0} <- {1}" -f $idx, $n)
+    Bake $imgN (Join-Path $OutDir ("plate-bg-paper{0}.jpg" -f $idx)) $PAPER `
       ([System.Drawing.Color]::FromArgb(242, 245, 249)) 0.0
     $imgN.Dispose()
   }

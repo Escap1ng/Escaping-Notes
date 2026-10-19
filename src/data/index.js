@@ -12,6 +12,7 @@
 // 也没人往这里写（全站只读），所以既不套 reactive 也不做深拷贝：一处赋值漏进来就该被
 // Object.freeze 当场拦下，而不是静默改到下一个访客打开页面才看见。纯 ESM 不带 vue，
 // 因此 Node 那一岸（scripts/）也 import 得动——同一扇门，两个岸。
+import { collections } from './collections.js'
 import { friends } from './friends.js'
 import { sitePlates } from './gallery.js'
 import { playlist } from './music.js'
@@ -21,6 +22,7 @@ import { updates } from './updates.js'
 
 export const content = Object.freeze({
   site,
+  collections,
   updates,
   projects,
   playlist,

@@ -15,7 +15,20 @@ export const COVER_NAMES = ['cover.jpg', 'cover.jpeg', 'cover.png']
 
 // frontmatter 只认这几个键。写错的键（titlee、data…）会被报出来而不是静默失效——
 // 静默是站内最难查的一类：页面照样渲染，只是那块永远是空的。
-export const POST_KEYS = ['title', 'date', 'tags', 'summary', 'imagePos', 'alt', 'draft', 'movedFrom']
+// `collection` 是必填：一篇文章必须挂进一个合集（合集清单在 src/data/collections.js）；
+// `order` 可选，是它在合集内的阅读顺序。
+export const POST_KEYS = [
+  'title',
+  'date',
+  'tags',
+  'summary',
+  'imagePos',
+  'alt',
+  'draft',
+  'movedFrom',
+  'collection',
+  'order',
+]
 
 // 写成数组的两个键（`tags: [甲, 乙]` 与 `movedFrom: [旧slug]`）：方括号可省，逗号分隔。
 const LIST_KEYS = ['tags', 'movedFrom']
@@ -179,12 +192,26 @@ export function normalizeRoll({ slug, raw, files, dirs = [] }) {
   const date = meta.date || ''
   const summary = meta.summary || ''
   const alt = meta.alt || ''
+  const collection = meta.collection || ''
   if (!title) problems.push('缺 `title`：列表与阅读页的标题会是空的')
   if (!date) problems.push('缺 `date`：全站按它倒序排，这篇会沉在最末')
   else if (!DATE_OK.test(date)) problems.push(`\`date\` 要写成 2026-10-16 那样，现在的是 \`${date}\`——排序按字符串比，写歪了它就排到别处`)
   else if (!isRealDate(date)) problems.push(`\`date\` \`${date}\` 是这个月没有的一天`)
   if (!meta.tags.length) problems.push('缺 `tags`：列表页那排胶囊筛不到它')
   if (!summary) problems.push('缺 `summary`：列表卡那一行是空的')
+  if (!collection) problems.push('缺 `collection`：每篇文章都要挂进一个合集（slug 写在 src/data/collections.js）')
+  else if (!SLUG_OK.test(collection)) problems.push(`\`collection\` 的值 \`${collection}\` 不是合法的合集 slug`)
+
+  // `order` 是合集内的阅读顺序，从 1 起。不写就按发布日期升序排在有编号的文章之后。
+  const orderRaw = 'order' in meta ? String(meta.order) : ''
+  let order = null
+  if (orderRaw) {
+    if (!/^\d+$/.test(orderRaw) || Number(orderRaw) < 1) {
+      problems.push(`\`order: ${orderRaw}\` 不认识：要写从 1 起的整数，它决定这一篇在合集里排第几`)
+    } else {
+      order = Number(orderRaw)
+    }
+  }
 
   for (const k of Object.keys(meta)) {
     if (!POST_KEYS.includes(k)) problems.push(`frontmatter 里有不认识的键 \`${k}:\`（拼错了就是静默的空值）`)
@@ -244,6 +271,8 @@ export function normalizeRoll({ slug, raw, files, dirs = [] }) {
     summary,
     alt,
     imagePos: focus,
+    collection,
+    order,
     draft,
     movedFrom,
     cover: coverName ? assetUrl(slug, coverName) : '',

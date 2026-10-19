@@ -299,7 +299,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   z-index: 20;
   padding: var(--space-0) var(--space-2);
   border-radius: var(--r-pill);
-  background: var(--hot);
+  background: var(--cold);
   color: var(--ink-0);
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
@@ -317,15 +317,16 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  /* 光子环：全冷蓝单色调，避免红蓝混出紫色。用 brand-cold 与少量白色的高光段
-     制造环面亮度变化；mix 里白色只占 25%，结果仍是蓝色，不会在浅色顶栏背景上
-     被读成"缺一段"。 */
+  /* 光子环：全冷蓝单色调，避免红蓝混出紫色。环面取 --brand-ring——品牌蓝按主题兑出的
+     那一枚（浅色约 #5085ea，深色仍是 #8ec9ff）；mix 里白色只占 25% 做高光段，结果仍是蓝的。
+     环壁回到 24px 上约 5.6px（mask 50%→53%）：63%→66% 那一版只有 4px，环太细，
+     压不住旁边的站名。 */
   background: conic-gradient(
     from 210deg,
-    var(--brand-cold),
-    color-mix(in srgb, var(--brand-cold) 75%, #fff) 22%,
-    var(--brand-cold) 44%,
-    var(--brand-cold)
+    var(--brand-ring),
+    color-mix(in srgb, var(--brand-ring) 75%, #fff) 22%,
+    var(--brand-ring) 44%,
+    var(--brand-ring)
   );
   -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 53%);
   mask: radial-gradient(closest-side, transparent 50%, #000 53%);
@@ -334,8 +335,10 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 .brand-name {
-  font-size: var(--fs-2xs);
-  letter-spacing: 0.14em;
+  /* 13px / 0.1em：与导航 15px 只差一档，环不再是唯一有重量的东西；
+     0.14em 那种宽字距在小号等宽体上会把四个音节拆散。 */
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
   color: var(--text-0);
   transition: color var(--dur-fast);
 }
@@ -623,9 +626,9 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 /* 右上角四枚自 2026-10-09 起就是纯图标 32px 方（不再有文字档），
    所以原先"≤1400px 收起文字"那一档已无消费者，删掉 */
 
-/* 导航整条实测 424.8px（6 枚 × 67.6px + 5 × 4px 间距，本机 Chrome 量的）。
-   折叠断点 1280 沿用加「映像」时抬高的值，现为保守值；加一枚导航实打实多 72px，
-   这个数别凭感觉估，估小了就是整条溢出被裁 */
+/* 导航整条实测 424.8px（6 枚 × 67.6px + 5 × 4px 间距，本机 Chrome 量的）；
+   加「合集」后为 7 枚、约 497px。折叠断点 1280 沿用加「映像」时抬高的值，
+   现为保守值；加一枚导航实打实多 72px，这个数别凭感觉估，估小了就是整条溢出被裁 */
 @media (max-width: 1280px) {
   .en-header {
     padding: var(--space-1) var(--space-2);

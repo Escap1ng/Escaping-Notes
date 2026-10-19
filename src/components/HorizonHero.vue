@@ -167,17 +167,25 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: var(--space-3); /* 站名与联句之间留一口气：--space-2 时两行贴成一个块，锁不住也分不开 */
-  /* 整块上提：底部垫量由峰顶位置反解出来，不是钉一个 vh。
+  /* 底部垫量：由峰顶位置反解出来，不是钉一个 vh。
      居中模型里块底 = (--svh - 垫)/2 + 块高/2，令它等于 --peak-y - --crest-gap 即得下面的式子。
      横带高度随视口比例变（见 --band-h），固定 vh 在宽屏上会让联句压上山尖、在方屏上又把字
      抬得过高（13vh→16vh→19vh 那几版就是在手动追这件事）。垫量下限留 --space-4：
      横带很矮的视口（竖屏手机）峰顶本来就低，不必再把块心顶到顶栏。上限 0.42 个视口高是
-     保险：窗口矮到装不下这条链时，宁可少留一口气，也不要让 padding 吃掉整个内容盒。 */
-  padding: 0 var(--space-3)
-    min(
-      max(var(--space-4), calc(var(--svh) + var(--lockup-h) - 2 * (var(--peak-y) - var(--crest-gap)))),
-      calc(var(--svh) * 0.42)
-    );
+     保险：窗口矮到装不下这条链时，宁可少留一口气，也不要让 padding 吃掉整个内容盒。
+     顶部再补一道「最低让位」：窗口够高时块心本来就在顶栏以下（--hero-top-free 更大），
+     padding-top 算出来是 0，版式一字不动；窗口矮到刊头顶进固定顶栏时，把块整体下推，
+     让刊头顶边恰好落在 --hero-header-clear。96px = 未吸顶的顶栏 65px + 滚动 40px 时
+     刊头相对上移的 30px（首屏视差 translateY(y*0.25)），再往上吸顶底就接上了。
+     下推量与居中模型严格对应：加 T 顶部垫后块顶 = 原块顶 + T/2，所以 T = 2×(目标 − 原块顶)。 */
+  --hero-pad-b: min(
+    max(var(--space-4), calc(var(--svh) + var(--lockup-h) - 2 * (var(--peak-y) - var(--crest-gap)))),
+    calc(var(--svh) * 0.42)
+  );
+  --hero-top-free: calc((var(--svh) - var(--hero-pad-b) - var(--lockup-h)) / 2);
+  --hero-header-clear: 96px;
+  padding: max(0px, calc(2 * (var(--hero-header-clear) - var(--hero-top-free)))) var(--space-3)
+    var(--hero-pad-b);
   text-align: center;
   pointer-events: none;
   will-change: transform, opacity;
@@ -316,6 +324,14 @@ onUnmounted(() => {
   .hero-text {
     padding-left: var(--space-2);
     padding-right: var(--space-2);
+  }
+}
+
+/* 窗口矮到刊头必须整体让位时，块底会碰上底部那枚下滑提示。
+   它只是"下面还有"的提示，没地方时不硬挤——让给刊头。 */
+@media (max-height: 430px) {
+  .scroll-cue {
+    display: none;
   }
 }
 

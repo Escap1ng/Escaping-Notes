@@ -206,7 +206,7 @@ const filtered = computed(() =>
 .date {
   position: relative;
   z-index: 1;
-  color: var(--hot);
+  color: var(--text-1);
   font-size: var(--fs-3xs);
 }
 

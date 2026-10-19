@@ -62,7 +62,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 - Switching theme no longer swaps the mountain: the dark landing screen is a darkened bake of the same framing, both themes share one ridge polyline, and each theme deposits its own plate to keep colours from bleeding
 - The default is light and the first frame deliberately ignores `prefers-color-scheme`: the landing screen is a bright photograph, and following the system into dark would float a bright image on black
 - Trails are drawn frame by frame with an offscreen accumulation buffer (Canvas 2D) and masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px
-- Below the fold everything rides on one photographic plate shared site-wide: five slots on a carousel, 10s each on a 50s cycle, and on the dark theme all five tokens point to the same file so nothing changes at night
+- Below the fold everything rides on one photographic plate shared site-wide: three slots on a carousel, 10s each on a 30s cycle, and on the dark theme all three tokens point to the same file so nothing changes at night
 - Every screen is assembled from one set of tokens and primitives: 6 spacing steps, 11 type sizes, 4 line heights, 3 weights, plus 3 radii and 4 pointer-feedback tokens; one card token group; buttons in 2 sizes × 4 semantics. No raw font sizes or durations inside components, so changing a scale updates the whole site
 - Two self-hosted font families: the body serif (Noto Serif SC) is sharded by `unicode-range` so only the used shards load, and the masthead Didone (Playfair Display) is a single uppercase-and-space file. No font CDN
 
@@ -85,7 +85,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 
 ### The plate layer hangs on `App.vue` — one `fixed` containing-block trap
 
-<img src="docs/assets/readme/plate-layer.svg" alt="Cross-section of the site-wide backdrop layer: the photo at full strength along the top sinking into the page colour between 18% and 78%, the five carousel slots on a 50 second cycle, and measured contrast for naked text versus text on a card" width="920">
+<img src="docs/assets/readme/plate-layer.svg" alt="Cross-section of the site-wide backdrop layer: the photo at full strength along the top sinking into the page colour between 18% and 78%, the three carousel slots on a 30 second cycle, and measured contrast for naked text versus text on a card" width="920">
 
 Below the fold the landscape is one `position: fixed` `.sub-plate` layer living in `App.vue`, shared by the home drawer and every secondary page. It has to be there: `fall` puts a `filter` on the page root, and a filter becomes the containing block for `position: fixed` descendants. The same layer mounted inside `HomeView` measured as a `.home` box (587×1629) scrolling with the document, so it was not a stationary backdrop at all. The other half is that each carousel slot carries its own sinking gradient: write it once on the parent and the slot that fades up covers the dimming, taking the text contrast with it. The measurements behind all three decisions are recorded in the comments of `src/App.vue` and `src/lib/plate.js`.
 
@@ -139,21 +139,24 @@ What `npm test` guards is grouped by the filenames in `tests/`: the content laye
 There is no admin UI — everything is a file in this repo, and pushing publishes it:
 
 - **A post is a directory.** `content/posts/<slug>/index.md`, and the directory name is the URL (`/blog/<slug>`). No path to register for the cover: if the folder contains `cover.jpg`, that is the cover — the archive card, the full-width image on top of the article, the gallery wall and the share card all use the same file; no cover is also valid, and the archive leaves a striped placeholder of the same height. Drop the untouched photo next to it named `*-src.jpg` and run `npm run cover:build` to bake it in place. Inline illustrations live in the same folder and are referenced by bare filename; a typo or a missing file fails the build instead of shipping a broken image.
-- **Frontmatter:** six keys are about display (`title` / `date` / `tags` / `summary` / `alt` / `imagePos`), two are about publishing: `draft: true` keeps a roll visible only in `npm run dev`, and `movedFrom: [old-slug]` keeps links alive after a rename.
+- **Frontmatter:** six keys are about display (`title` / `date` / `tags` / `summary` / `alt` / `imagePos`); `collection` is required and names the collection the post belongs to, while `order` is optional and sets its reading position there. Two more keys are about publishing: `draft: true` keeps a roll visible only in `npm run dev`, and `movedFrom: [old-slug]` keeps links alive after a rename.
+- **Collections:** the list lives in `src/data/collections.js`; a `parent` field nests one collection under another. Posts belong to a leaf, and a parent page aggregates every descendant post. `/collections` is the overview, each article header shows its collection and position, and previous/next stay inside the collection.
 - **Publishing a post adds it to the activity feed.** Every live post becomes a dated entry linking to the article, merged with the hand-written notes in `src/data/updates.js` (`src/lib/feed.js`); on the same date posts come before notes. Notes are for everything that is not a post — do not hand-write an "article is live" line.
-- **Site-owned content:** activity, projects, playlist, plates and friend links each have a data file; gear lives in the `gear` field of `src/data/site.js`; everything reaches the UI only through `src/data/index.js` — that single door. Adding a kind means adding a file and one line on the door; no view gets a second path to the same array.
+- **Site-owned content:** collections, activity, projects, playlist, plates and friend links each have a data file; gear lives in the `gear` field of `src/data/site.js`; everything reaches the UI only through `src/data/index.js` — that single door. Adding a kind means adding a file and one line on the door; no view gets a second path to the same array.
 - **Site info and copy:** the site name, author, socials, coordinates and gear live in `src/data/site.js`; interface copy lives in `src/data/narrative.js`; appearance tokens live in `src/styles/site.css`.
 - **The build is the pre-flight check.** `npm run build` first validates every roll (a malformed date, a misspelled key, an image referenced from prose that is not in that roll, two rolls claiming one old slug — any of these stops the artefact from being produced), then writes `rss.xml`, `sitemap.xml` and one static shell per route.
 
 ## Route Map
 
-All 9 routes are lazy-loaded and each carries `meta.t` for the document title and the screen-reader announcement; the header nav shows 6 of them, and the two `:slug` detail pages plus the trailing catch-all are not on the bar — anything unmatched renders 这里没有页面 ("there is no page here"); site copy is Chinese-only.
+All 11 routes are lazy-loaded and each carries `meta.t` for the document title and the screen-reader announcement; the header nav shows 7 of them, and the three `:slug` detail pages plus the trailing catch-all are not on the bar — anything unmatched renders 这里没有页面 ("there is no page here"); site copy is Chinese-only.
 
 | Route | Page | What it is |
 | --- | --- | --- |
 | `/` | Home · long-exposure star trails | Photo landscape band + trails + typed title + drawer |
 | `/blog` | Articles | Archive, tag/keyword filters live in the URL |
 | `/blog/:slug` | Article | A single post with its cover placed on top; inline images open the lightbox |
+| `/collections` | Collections | Top-level collections and their sub-collections, grouped by subject |
+| `/collections/:slug` | Collection | A collection's sub-collections and articles; a parent aggregates every descendant post |
 | `/updates` | Activity | Hand-written notes plus automatic post entries; post entries link to the article |
 | `/gallery` | Gallery | Wall of every image the site has used |
 | `/projects` | Projects | Grid of project cards |
@@ -179,7 +182,7 @@ All 9 routes are lazy-loaded and each carries `meta.t` for the document title an
     ├── data/              # everything site-owned lives here, index.js being the single door
     ├── lib/               # sky the plate and the clock · ridge the mask · plate the layer · schema the posting rules · posts the loader · feed the activity merge · markdown · theme / storage / …
     ├── styles/site.css    # the only stylesheet: structural scales + the two theme palettes + site-wide primitives
-    └── views/             # 9 views, one file each, flat
+    └── views/             # 11 views, one file each, flat
 ```
 
 Originals (`plates-src/` · `music/` · `fonts-src/` · each roll's `*-src.*`) are gitignored — do not report that as a leak. The file-by-file annotated version is in **[docs/manual.md §0](docs/manual.md)** (Chinese).

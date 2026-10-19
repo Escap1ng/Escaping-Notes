@@ -21,7 +21,7 @@ import {
 // 造一卷：不碰磁盘。判据要能凭空验，否则这条测试只是在复述仓库当下有几个文件
 const SLUG = 'test-roll'
 const GOOD_MD =
-  '---\ntitle: 甲\ndate: 2026-09-01\ntags: [随笔]\nsummary: 一句话。\nalt: 一张图\n---\n正文\n'
+  '---\ntitle: 甲\ndate: 2026-09-01\ntags: [随笔]\nsummary: 一句话。\nalt: 一张图\ncollection: test-collection\norder: 1\n---\n正文\n'
 const make = (md = GOOD_MD, files = [INDEX_NAME, 'cover.jpg'], dirs = []) =>
   normalizeRoll({ slug: SLUG, raw: md, files, dirs })
 const roll = (md, files, dirs) => make(md, files, dirs).record
@@ -83,6 +83,8 @@ test('完整的一卷：零问题，封面与网址都从目录名派生', () =>
   assert.equal(p.url, `/blog/${SLUG}`)
   assert.equal(p.cover, assetUrl(SLUG, 'cover.jpg'))
   assert.equal(p.imagePos, 'center')
+  assert.equal(p.collection, 'test-collection')
+  assert.equal(p.order, 1)
   assert.equal(p.words, 2) // 「正文」两个字：构造出来的那行封面不许计进字数
 })
 
@@ -135,6 +137,10 @@ const MUTATIONS = [
   ['date 是不存在的一天', (m) => m.replace('2026-09-01', '2026-02-30'), undefined, undefined, '没有的一天'],
   ['缺 tags', (m) => m.replace('tags: [随笔]\n', ''), undefined, undefined, 'tags'],
   ['缺 summary', (m) => m.replace('summary: 一句话。\n', ''), undefined, undefined, 'summary'],
+  ['缺 collection', (m) => m.replace('collection: test-collection\n', ''), undefined, undefined, 'collection'],
+  ['collection 不是 slug', (m) => m.replace('collection: test-collection', 'collection: 测试 合集'), undefined, undefined, '合集 slug'],
+  ['order 不是正整数', (m) => m.replace('order: 1', 'order: 第几'), undefined, undefined, 'order'],
+  ['order 从 0 起', (m) => m.replace('order: 1', 'order: 0'), undefined, undefined, 'order'],
   ['键拼错', (m) => m.replace('title: 甲', 'titlee: 甲'), undefined, undefined, 'titlee'],
   ['有封面没 alt', (m) => m.replace('alt: 一张图\n', ''), undefined, undefined, '没写 `alt`'],
   ['alt 里有右方括号', (m) => m.replace('alt: 一张图', 'alt: 一张]图'), undefined, undefined, '中断'],

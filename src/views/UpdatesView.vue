@@ -1,5 +1,5 @@
 <script setup>
-// 新版脉冲：一条一枚满宽卡，脉冲点冷/热交替
+// 新版脉冲：一条一枚满宽卡，只有最新一条用热色
 import { computed, onMounted, ref } from 'vue'
 import { content } from '../data/index.js'
 import { loadPosts } from '../lib/posts.js'
@@ -27,7 +27,7 @@ onMounted(async () => {
         class="en-card pulse en-lens"
         @pointermove="onLens"
       >
-        <span class="dot" :class="i % 2 ? 'hot' : 'cold'" aria-hidden="true"></span>
+        <span class="dot" :class="i === 0 ? 'hot' : 'cold'" aria-hidden="true"></span>
         <span class="when en-mono">{{ u.date }}</span>
         <RouterLink v-if="u.to" :to="u.to" class="what">
           {{ u.text }}<span class="go" aria-hidden="true">→</span>
