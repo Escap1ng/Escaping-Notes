@@ -24,6 +24,23 @@
 
 左 深色 / 右 浅色。两张都不是截图，是按站点同一套常数离线复算的底片（`npm run art:build`），只画星轨层，复算的是 `prefers-reduced-motion` 用户看到的那张稳态底片。出图提了 ×2.8 / ×1.6 一档冲印增益，站点实际观感比这两张暗。
 
+一个把博客做成相机长曝光的个人站点：首页是一台一直开着的相机，文章、动态、音乐、映像、项目落在同一张底片上。纯静态，构建期定稿，push 即发布。
+
+**技术栈**：Vue 3 · Vue Router 4 · Vite 5 · Canvas 2D。运行时没有后端、第三方 UI 库或字体 CDN。
+
+**目录**
+
+- [这台相机在数时间](#这台相机在数时间)
+- [界面](#界面)
+- [两处承重设计](#两处承重设计)
+- [跑起来](#跑起来)
+- [往里加东西](#往里加东西)
+- [页面地图](#页面地图)
+- [目录结构](#目录结构)
+- [部署](#部署)
+- [文档](#文档)
+- [许可与使用声明](#许可与使用声明)
+
 ---
 
 ## 这台相机在数时间
@@ -34,25 +51,34 @@
 - **指针即时间膨胀**：光标 180px 半径内的星轨局部加速卷曲，越靠中心越快（最高 2.8 倍）
 - **流星即叙事**：每 6–9 秒随机落一颗，单颗活 900ms，同屏最多九颗；播放器放歌时间隔压到四成，停下即自然回弹
 
-星轨只在首页那一格里画，沉积却是全站累积的：底片像素与全站时钟都是 `src/lib/sky.js` 里的单例，换页不重铺，回到首页还是那圈越积越密的弧。折线以下交给照片。
+星轨只在首页那一格里画；底片像素与全站时钟是 `src/lib/sky.js` 里的单例，换页不重铺，回到首页时弧接着上一次的曝光继续长。折线以下交给照片。
 
 流速曲线、遮罩剖面与流星参数记在 [docs/design.md](docs/design.md) §3。
 
 ## 界面
 
+**视觉**
+
 - 双主题不换山：深色首屏是同一取景的压暗版，两套共用一条山脊折线；底片按主题各沉积一张，防串色
 - 默认浅色，首帧刻意不读系统 `prefers-color-scheme`——首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上
 - 星轨由离屏累积缓冲逐帧绘制（Canvas 2D），沿山脊以 `destination-in` 遮挡，脊线附近保留到六成亮度、26px 羽化
+- 折线以下压在一张全站共用的照片底片上：五档轮播每张 10s、一圈 50s，深色主题五档指向同一张，夜里不跳景
+- 全部界面由同一套令牌与基元搭成：间距 6 档、字号 11 档、行高 4 档、字重 3 档，另有圆角 3 档与指针反馈 4 枚；卡片令牌一组，按钮「2 尺寸 × 4 语义」。组件内不写裸字号与裸时长，改刻度即全站同步
+- 字体是两套自托管子集：正文衬线取 Noto Serif SC、按 `unicode-range` 分片、按需下载；刊头 Didone 取 Playfair Display、单文件只含大写与空格。没有字体 CDN
+
+**交互**
+
 - 底片模糊与卡面颜色是运行时参数：设置卡里一条 0–12px 滑杆（默认拉满）与两档单选（不透底 / 半透明），偏好记在 `localStorage`
-- 全部界面由同一套令牌与基元搭成：刻度四组（间距 6 档 / 字号 11 档 / 圆角 3 档 / 指针反馈 4 枚）、卡片令牌一组，按钮「2 尺寸 × 4 语义」。组件内不写裸字号与裸时长，改刻度即全站同步
-- 折线以下压在一张全站共用的照片底片上：五档轮播每张 10s，深色主题五档指向同一张，夜里不跳景
 - 焦点陷阱在顶栏抽屉、搜索卡、播放器卡、设置卡与两处灯箱，关闭后焦点回到触发元素；`Esc` 或点正文底板以外的空白即退回列表；路由切换由 `App.vue` 的 `aria-live` 区域播报当前页
-- `prefers-reduced-motion` 下有完整的静态降级（星轨停在稳态底片、轮播不转、转场不糊）；触控目标最小 44px，复用基元即自动满足
 - 列表有骨架屏，「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query，可分享、刷新不丢
-- `/gallery` 把全站用过的图摊成一墙拍立得，倾斜由 src 哈希决定、进场逐张错开；灯箱 `Teleport` 到 `body`，键盘翻页与触屏横滑都通
-- 运行时依赖只有 Vue 与 Vue Router，没有第三方 UI 库、图表库或字体 CDN；展示层字形是两枚自托管 woff2 子集（正文衬线 + 刊头 Didone）
-- 底片挂在 `App.vue` 上而不是每个页面里，不随路由重画；首屏那张地景是首页的 LCP 元素，由 `index.html` 首帧脚本按当前主题 `preload`，与样式表并行起跑；常驻顶栏不用 `backdrop-filter`，玻璃只给阅读底板、首页抽屉、导航抽屉与两处灯箱
+- `/gallery` 把全站用过的图摊成一墙拍立得，倾斜由 `src` 哈希决定、进场逐张错开；灯箱 `Teleport` 到 `body`，键盘翻页与触屏横滑都通
+
+**降级与可读性**
+
+- `prefers-reduced-motion` 下有完整的静态降级：星轨停在稳态底片、轮播不转、转场不糊、晕影关停；触控设备上按钮与胶囊撑到 44px，最小字号 11.5px
 - 一张无纱的风景照片上放裸字到不了 WCAG AA，实测最坏点 1.0~1.8:1，与渐变形状无关。所以底片只当风景，正文一律落在卡面与阅读底板上。`npm run check:contrast` 每次提交前重算主题令牌对纯色底，核不到照片合成底
+- 底片层挂在 `App.vue` 上而不是每个页面里，不随路由重画；首屏那张地景是首页的 LCP 元素，由 `index.html` 首帧脚本按当前主题 `preload`，与样式表并行起跑
+- 常驻顶栏不用 `backdrop-filter`；玻璃只给阅读底板（半透明档）、首页抽屉、导航抽屉与映像墙灯箱（含那条胶带）。文章灯箱是实底，不建这层模糊
 
 ## 两处承重设计
 
@@ -66,7 +92,7 @@
 
 <img src="docs/assets/readme/fall-timing.svg" alt="fall 转场的时序图：进入方 0.44 秒与离开方 0.26 秒并行，进出场重叠 260 毫秒" width="920">
 
-底片跨路由常驻之后，换页只剩 `fall` 一处转场：进入方与离开方并行跑，不用 `out-in`，重叠的 260ms 里两页同时在场、都带模糊，叠影就是这层影。这 260ms 里底片必须是同一张还在感光的像素，所以 `src/lib/sky.js` 的 `claimPlate()` 只锁沉积、不锁重绘，交出底片那台照样每帧 draw——否则它会在淡出途中冻在半帧上，切换顿挫就是这么来的。
+底片跨路由常驻之后，换页只剩 `fall` 一处转场：进入方与离开方并行跑，不用 `out-in`，重叠的 260ms 里两页同时在场、都带模糊，叠影就是这层影。这 260ms 里底片必须是同一张还在感光的像素——如今星轨只有首页一台相机，离开首页时它还在场、还在每帧画，所以底片不会冻在半帧上。`sky.js` 里的 `claimPlate()` 交接互斥（只锁沉积、不锁重绘）仍留着当护栏；只剩一台相机时它不会触发。
 
 ## 跑起来
 
@@ -82,32 +108,39 @@ npm run check            # 四道门禁连跑（content / docs / naming / contra
 npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 ```
 
+CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm run check` → `npm run build` 的顺序跑，全绿才发布 Pages。
+
 ### 常用脚本
 
 | 命令 | 说明 |
 | --- | --- |
+| `npm run dev` | Vite 开发服务器，改文件即时热更 |
+| `npm run build` | 先跑发文门禁与回执，再出 `dist/`（含 `rss.xml`、`sitemap.xml`、每条路由一份静态壳） |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
+| `npm test` | `tests/` 下的 `.mjs` 用例全收，零测试框架 |
+| `npm run check` | 四道门禁连跑：内容 / 文档 / 命名 / 对比度 |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、带全文与标签，`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
 | `npm run art:build` | 重绘 README 顶部那两张底片图（常数从源码里正则读，读不到直接抛错；改星轨参数后要重跑） |
 | `npm run bg:build` | 重烘站点底图 `public/plates/*.jpg`（原图在 `plates-src/`，需本机 PowerShell，产物需提交） |
 | `npm run cover:build` | 重烘文章封面：逐卷把 `content/posts/<slug>/` 里那张 `*-src.jpg` 就地烘成 `cover.jpg`（脚本里没有映射表，同上） |
-| `npm run font:build` | 重切正文衬线子集并按 `unicode-range` 分片（需本机装有 Noto Serif SC；产物已提交，日常不用跑；文章标题用了片外字时跑一次） |
+| `npm run font:build` | 重切正文衬线子集并按 `unicode-range` 分片（需本机装有 Noto Serif SC；产物已提交，日常不用跑；新标题用到片外字时跑一次） |
 | `npm run font:build:didone` | 重切刊头 Didone 子集（Playfair Display，只留大写与空格；源可变字体在 `fonts-src/`、不进仓库，取回步骤写在脚本头部） |
 | `npm run check:content` | 发文门禁与回执：日期写歪 / 键名拼错 / 正文引用了本卷没有的图都会在这里红（`npm run build` 与 CI 都含它） |
 | `npm run check:docs` | 扫文档里的文件引用与 § 节号是否还指得到东西，并核对下面的路由表与 `src/router` 一致 |
 | `npm run check:naming` | 命名规约扫描，违规即退出码非 0 |
 | `npm run check:contrast` | 从 `site.css` 两组主题令牌重算 WCAG 对比度，文本令牌不达标即退出码非 0 |
 
-`npm test` 的口径按 `tests/` 的文件名分组：内容层（发文判据逐条拿假样本验一遍，且证明两个岸共用一份解析、取数只许走那道门、草稿与别名的规则）、发布层（按页静态壳的 head 与落点、sitemap 里每条网址都有文件顶着、旧 `#/` 链接的放行与拦截、站内只有一种路由模式）、渲染与 URL 注入面、参数不漂移（底片模糊三处默认值、卡面档位、首帧主题、hero 预加载与 `site.css` 同值）、文案契约、指针反馈与令牌的单一来源、映像柜与素材名单一致、项目介绍三件写满、两处详情页共用同一处返回机制。
+`npm test` 的口径按 `tests/` 的文件名分组：内容层（发文判据逐条拿假样本验一遍，且证明两个岸共用一份解析、取数只许走 `src/data/index.js` 那道门、草稿与别名的规则）、发布层（按页静态壳的 head 与落点、sitemap 里每条网址都有文件顶着、旧 `#/` 链接的放行与拦截、站内只有一种路由模式）、渲染与 URL 注入面、参数不漂移（底片模糊三处默认值、卡面档位、首帧主题、hero 预加载与 `site.css` 同值）、文案契约、指针反馈与令牌的单一来源、映像柜与素材名单一致、项目介绍三件写满、两处详情页共用同一处返回机制。
 
 ## 往里加东西
 
 站内没有后台，改的都是仓库里的文件，push 即上线：
 
-- **写一篇文章 = 建一个目录**。`content/posts/<slug>/index.md`，目录名就是网址（`/blog/<slug>`）。封面不用登记路径：同目录里有 `cover.jpg`，它就是封面——列表那格、正文顶部那张满栏图、映像柜、分享卡四处共用同一张。原图以 `-src.jpg` 收尾丢进同一目录，`npm run cover:build` 就地烘；正文插图也放这一卷里，只写文件名，写错或漏放会在构建时被拦。
-- frontmatter 六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
-- **站点自有内容**（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）在 `src/data/`，一类一份文件，进界面只经 `src/data/index.js` 那一道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
+- **写一篇文章 = 建一个目录**。`content/posts/<slug>/index.md`，目录名就是网址（`/blog/<slug>`）。封面不用登记路径：同目录里有 `cover.jpg`，它就是封面——列表那格、正文顶部那张满栏图、映像柜、分享卡四处共用同一张；没有封面也是合法状态，列表留一张等高的斜纹空版。原图以 `-src.jpg` 收尾丢进同一目录，`npm run cover:build` 就地烘；正文插图也放这一卷里，只写文件名，写错或漏放会在构建时被拦。
+- **frontmatter**：六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
+- **站点自有内容**：动态 / 项目 / 歌单 / 映像 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
+- **改站点信息与文案**：站点名、作者、社交、坐标、装备在 `src/data/site.js`；界面文案在 `src/data/narrative.js`；外观令牌在 `src/styles/site.css`。
 - **构建就是发文自检**。`npm run build` 先逐卷校验再出产物：日期写歪、键名拼错、正文引用了本卷没有的图、两个旧名撞车，任一条红就不发布。跑绿之后顺手产出 `rss.xml`、`sitemap.xml` 与每条路由一份静态壳。
 
 ## 页面地图
@@ -117,19 +150,22 @@ npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
 | `/` | 首页 · 长曝光星轨 | 照片地景 + 星轨 + 打字机站名 + 抽屉 |
-| `/blog` | 文章 | 归档，标签/关键词筛选进 URL |
-| `/blog/:slug` | 正文 | 单篇正文，玻璃底板 + 封面图可点进灯箱 |
+| `/blog` | 文章 | 归档，搜索词与标签筛选写进 URL |
+| `/blog/:slug` | 正文 | 单篇正文 + 自动置顶的封面；文中图片可点进灯箱 |
 | `/updates` | 动态 | 短记录流水 |
-| `/records` | 音乐 | 自托管曲目表 + 播放器卡 |
+| `/records` | 音乐 | 在线听歌（自托管 mp3）+ QQ 歌单快照；进度与音量在顶栏播放器卡 |
 | `/gallery` | 映像 | 全站用图墙 |
 | `/projects` | 项目 | 项目卡片栅格 |
-| `/projects/:slug` | 项目介绍 | 与文章页同一块玻璃底板；`Esc` 或点空白退回列表 |
-| `/about` | 关于 | 自述 · 实时读数 · 装备 · 友链 |
+| `/projects/:slug` | 项目介绍 | 与文章页共用阅读底板；`Esc` 或点空白退回列表 |
+| `/about` | 关于 | 自述 · 三枚读数 · 档案 / SOCIAL · 友链 · 技术栈 |
 | `/:pathMatch(.*)*` | 404 | 未匹配路由的兜底页，标题与页内大字同一句「这里没有页面」 |
 
 ## 目录结构
 
 ```text
+├── .github/workflows/     # CI：npm ci → test → check → build → GitHub Pages
+├── package.json           # scripts + 两条运行时依赖（vue / vue-router）
+├── vite.config.js         # Vite；构建期把每卷的素材清单交给前端（virtual:rolls）
 ├── index.html             # 壳层：首帧内联脚本（主题 / 底片模糊 / 卡面档位 / 按主题预加载首屏地景，都不闪一下）+ SEO/OG 元信息
 ├── content/posts/         # 文章：一篇一个目录（`<slug>/index.md` + 它的封面与插图），目录名就是网址
 ├── public/                # favicon、robots.txt、og.png + 两个必须入库的派生素材目录（plates/ · audio/）
@@ -137,6 +173,7 @@ npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 ├── tests/                 # 零依赖防护网：node --test
 ├── docs/                  # design.md 设计依据 · manual.md 使用手册 · assets/readme/ README 配图
 └── src/
+    ├── assets/fonts/      # 自托管 woff2 子集 + OFL 许可
     ├── components/        # 平铺七件：星轨相机 / 首屏排版 / 顶栏+抽屉 / 页脚 / 播放器卡 / 设置卡 / 搜索卡
     ├── data/              # 站点自有内容全在这一目录，index.js 是唯一的取数门
     ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · markdown · theme / storage / …
@@ -152,7 +189,8 @@ npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 
 - GitHub Pages 已绑裸域名 `escaping.top`，DNS 记录、验证命令与证书步骤见 `docs/manual.md` §4.2
 - 因为域名绑的是根路径，`base` 固定 `/`，产物不带仓库名前缀；站内只有一种路由模式（history）
-- Pages 不会把未知路径回退到 `index.html`，所以构建期为每条路由写一份真实文件（`dist/blog/<slug>/index.html` 等）并留一份 `dist/404.html`——深链因此是 200 而不是 404，分享卡也是那一篇文章自己的封面
+- Pages 不会把未知路径回退到 `index.html`，所以构建期为每条真实路由写一份静态壳（`dist/blog/<slug>/index.html` 等）并留一份 `dist/404.html`——真实路由的深链因此是 200 而不是 404，分享卡也是那一篇文章自己的封面；拼错或已删的地址仍走 404
+- Vercel 是同一份产物的只读镜像，`vercel.json` 把未知路径 rewrite 到 `index.html`，刷新任何子页面都不会 404
 - 旧的 `/#/blog/<slug>` 链接由 `src/main.js` 在挂载前改道成路径形状，别处贴过的链接不会静默落到首页
 
 ## 文档
@@ -160,6 +198,7 @@ npm test                 # tests/ 下的 .mjs 用例全收，零测试框架
 - [docs/design.md](docs/design.md) —— 界面设计唯一依据（概念、色彩与令牌、组件契约、开发指南）
 - [docs/manual.md](docs/manual.md) —— 使用手册（编辑 / 适配 / 部署 / 常见问题）
 - [docs/assets/readme/README.md](docs/assets/readme/README.md) —— README 四张配图的来源、重跑方式与「想换真截图该怎么做」
+- [README.en.md](README.en.md) —— English version
 
 ## 许可与使用声明
 
