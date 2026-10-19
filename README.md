@@ -70,6 +70,7 @@
 
 - 底片模糊与卡面颜色是运行时参数：设置卡里一条 0–12px 滑杆（默认拉满）与两档单选（不透底 / 半透明），偏好记在 `localStorage`
 - 焦点陷阱在顶栏抽屉、搜索卡、播放器卡、设置卡与两处灯箱，关闭后焦点回到触发元素；`Esc` 或点正文底板以外的空白即退回列表；路由切换由 `App.vue` 的 `aria-live` 区域播报当前页
+- 播放器会记住上次的曲目与位置（刷新后第一次播放续上），并接系统媒体键；音频文件取不到时卡片直接写明「无法播放」，不会停在载入中
 - 列表有骨架屏，「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query，可分享、刷新不丢
 - `/gallery` 把全站用过的图摊成一墙拍立得，倾斜由 `src` 哈希决定、进场逐张错开；灯箱 `Teleport` 到 `body`，键盘翻页与触屏横滑都通
 
@@ -139,13 +140,13 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 
 - **写一篇文章 = 建一个目录**。`content/posts/<slug>/index.md`，目录名就是网址（`/blog/<slug>`）。封面不用登记路径：同目录里有 `cover.jpg`，它就是封面——列表那格、正文顶部那张满栏图、映像柜、分享卡四处共用同一张；没有封面也是合法状态，列表留一张等高的斜纹空版。原图以 `-src.jpg` 收尾丢进同一目录，`npm run cover:build` 就地烘；正文插图也放这一卷里，只写文件名，写错或漏放会在构建时被拦。
 - **frontmatter**：六个键管显示（`title` / `date` / `tags` / `summary` / `alt` / `imagePos`），两个键管发布：`draft: true` 只在 `npm run dev` 里露面，`movedFrom: [旧slug]` 让改过的目录名留着旧链接。
-- **站点自有内容**：动态 / 项目 / 歌单 / 映像 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
+- **站点自有内容**：动态 / 项目 / 音乐 / 映像 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
 - **改站点信息与文案**：站点名、作者、社交、坐标、装备在 `src/data/site.js`；界面文案在 `src/data/narrative.js`；外观令牌在 `src/styles/site.css`。
 - **构建就是发文自检**。`npm run build` 先逐卷校验再出产物：日期写歪、键名拼错、正文引用了本卷没有的图、两个旧名撞车，任一条红就不发布。跑绿之后顺手产出 `rss.xml`、`sitemap.xml` 与每条路由一份静态壳。
 
 ## 页面地图
 
-10 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航放 7 条，两条 `:slug` 详情页与最后那条 catch-all 不在栏上——任何未匹配的路由都落到「这里没有页面」。
+9 条路由全部懒加载，每条带 `meta.t` 供标题与读屏播报使用；顶栏导航放 6 条，两条 `:slug` 详情页与最后那条 catch-all 不在栏上——任何未匹配的路由都落到「这里没有页面」。
 
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
@@ -153,7 +154,6 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 | `/blog` | 文章 | 归档，搜索词与标签筛选写进 URL |
 | `/blog/:slug` | 正文 | 单篇正文 + 自动置顶的封面；文中图片可点进灯箱 |
 | `/updates` | 动态 | 短记录流水 |
-| `/records` | 音乐 | 在线听歌（自托管 mp3）+ QQ 歌单快照；进度与音量在顶栏播放器卡 |
 | `/gallery` | 映像 | 全站用图墙 |
 | `/projects` | 项目 | 项目卡片栅格 |
 | `/projects/:slug` | 项目介绍 | 与文章页共用阅读底板；`Esc` 或点空白退回列表 |
@@ -169,7 +169,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 ├── index.html             # 壳层：首帧内联脚本（主题 / 底片模糊 / 卡面档位 / 按主题预加载首屏地景，都不闪一下）+ SEO/OG 元信息
 ├── content/posts/         # 文章：一篇一个目录（`<slug>/index.md` + 它的封面与插图），目录名就是网址
 ├── public/                # favicon、robots.txt、og.png + 两个必须入库的派生素材目录（plates/ · audio/）
-├── scripts/               # 构建期与内容刷新脚本，命名按动词分族（build_* / check_* / sync_*）
+├── scripts/               # 构建期与内容刷新脚本，命名按动词分族（build_* / check_*）
 ├── tests/                 # 零依赖防护网：node --test
 ├── docs/                  # design.md 设计依据 · manual.md 使用手册 · assets/readme/ README 配图
 └── src/
@@ -178,7 +178,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
     ├── data/              # 站点自有内容全在这一目录，index.js 是唯一的取数门
     ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · markdown · theme / storage / …
     ├── styles/site.css    # 唯一的样式表：结构刻度 + 两套主题配色 + 全站基元
-    └── views/             # 10 个视图平铺，一页一个文件
+    └── views/             # 9 个视图平铺，一页一个文件
 ```
 
 原图（`plates-src/` · `music/` · `fonts-src/` · 各卷的 `*-src.*`）在 `.gitignore` 里，别当泄漏报。逐文件的注解版见 **[docs/manual.md §0](docs/manual.md)**。
@@ -209,7 +209,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 | **博客内容** —— 文章正文、站内原创图片与文案 | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)：可复制、可改编、可转载，须署名作者、不得用于商业用途、衍生作品须以同一协议发布 |
 | **源代码与设计** —— `src/`、`scripts/`、`docs/`、视觉与交互设计、星轨交互装置 | 非商用声明，即下列五条 |
 | **字体** | 展示层子集（正文衬线按 unicode-range 分片）与刊头 Didone 分别取自 Noto Serif SC 与 Playfair Display（均 SIL OFL 1.1），条款全文见 [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
-| **第三方素材** | 嵌入的歌单、友链与站外内容各自依其原许可，不在本节授权范围内 |
+| **第三方素材** | 嵌入的友链与站外内容各自依其原许可，不在本节授权范围内 |
 
 以下五条只约束上表第二行的「源代码与设计」：
 

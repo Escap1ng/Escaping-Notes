@@ -13,10 +13,9 @@ export const N = {
     { to: '/', label: '首页', code: '00', t: 'Escaping Notes · 逃逸笔记' },
     { to: '/blog', label: '文章', code: '01', t: '文章 · Escaping Notes' },
     { to: '/updates', label: '动态', code: '02', t: '动态 · Escaping Notes' },
-    { to: '/records', label: '音乐', code: '03', t: '音乐 · Escaping Notes' },
-    { to: '/gallery', label: '映像', code: '04', t: '映像 · Escaping Notes' },
-    { to: '/projects', label: '项目', code: '05', t: '项目 · Escaping Notes' },
-    { to: '/about', label: '关于', code: '06', t: '关于 · Escaping Notes' },
+    { to: '/gallery', label: '映像', code: '03', t: '映像 · Escaping Notes' },
+    { to: '/projects', label: '项目', code: '04', t: '项目 · Escaping Notes' },
+    { to: '/about', label: '关于', code: '05', t: '关于 · Escaping Notes' },
   ],
 
   // 首屏：站名（打字机进入）+ 对偶联宣言（十六字）
@@ -36,7 +35,6 @@ export const N = {
 
   hints: {
     updates: '短的、不成篇的记录。',
-    records: '曲目表，点一行就能听。',
     gallery: '这一面墙收的是全站用过的图片。',
     projects: '做过的东西，点开卡片看介绍。',
   },
@@ -110,7 +108,7 @@ export const N = {
 }
 
 // 各页的 <h2> 就是导航里那枚标签，不再各抄一份字面量：两处各写一遍的话，改名只会改到一处，
-// 另一处静默留着旧词（顶栏说「音乐」、页面大标题说「歌单」就是这么来的）。
+// 另一处静默留着旧词（顶栏说「映像」、页面大标题说「相册」就是这么来的）。
 export const navLabel = (to) => N.nav.find((n) => n.to === to)?.label ?? ''
 
 // 标签页那整句话（路由 meta 与构建期的静态壳共用，见 N.nav 上那条注释）

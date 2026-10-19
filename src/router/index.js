@@ -30,11 +30,6 @@ const router = createRouter({
       meta: { t: navTitle('/updates') },
     },
     {
-      path: '/records',
-      component: () => import('../views/RecordsView.vue'),
-      meta: { t: navTitle('/records') },
-    },
-    {
       path: '/gallery',
       component: () => import('../views/GalleryView.vue'),
       meta: { t: navTitle('/gallery') },

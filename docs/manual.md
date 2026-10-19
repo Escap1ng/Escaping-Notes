@@ -17,7 +17,7 @@ BLOG/
 ├── public/
 │   ├── plates/ audio/  ← 两个**必须入库**的派生素材目录（重烘命令见 README 的「常用脚本」；文章封面不在这儿，它躺在自己那一卷目录里）
 │   └── favicon.svg  robots.txt  og.png
-├── scripts/            ← 构建期脚本，按动词分族：build_* / check_* / sync_*
+├── scripts/            ← 构建期脚本，按动词分族：build_* / check_*
 │   ├── build_font.mjs        ←   展示层子集字体裁切（依赖 devDep subset-font）
 │   ├── build_font_didone.mjs ←   刊头 Didone 子集裁切（只留大写与空格；源 TTF 在 fonts-src/，不进仓库）
 │   ├── build_seo.mjs         ←   dist/rss.xml、dist/sitemap.xml、public/og.png
@@ -25,7 +25,6 @@ BLOG/
 │   ├── build_plate_bg.ps1 / build_post_covers.ps1  ←  底图与封面烘培（Windows PowerShell）
 │   ├── check_content.mjs     ←   发文门禁与回执（构建会先跑它，红则不出产物）
 │   ├── check_doc_refs.py / check_naming.py / check_contrast.mjs  ← 另三道门禁
-│   ├── sync_records.py       ←   抓 QQ 公开歌单 → 生成 src/data/records.js
 │   ├── data/  lib/           ←   脚本输入数据（GB2312 一级字表）／共用模块（PNG 编码器、读卷清单、静态壳的 head 改写）
 ├── docs/               ← design.md 设计依据 · manual.md 本文
 │   └── assets/readme/  ← README 配图
@@ -33,17 +32,17 @@ BLOG/
 └── src/
     ├── assets/fonts/   ← 自托管子集 woff2（正文衬线按 unicode-range 分片 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
-    ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 6 份数据（动态/项目/音乐/歌单/映像/友链，records.js 由脚本生成勿手改）
+    ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 5 份数据（动态/项目/音乐/映像/友链）
     ├── lib/            ← posts schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
-    ├── router/         ← 10 条路由，全部懒加载
+    ├── router/         ← 9 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
-    └── views/          ← 10 个页面各一个文件，平铺
+    └── views/          ← 9 个页面各一个文件，平铺
 ```
 
 三条会反复用到的事实：
 
 - **`src/styles/site.css` 是唯一的样式表**，改外观不碰别的文件。
-- **`src/data/*.js` 是站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）的唯一来源**，改内容改这里；它们进界面只经过 `src/data/index.js` 那一道门，所以**加一类内容 = 放一份文件 + 在门上挂一行**，视图那边不用新开一条路。
+- **`src/data/*.js` 是站点内容（动态 / 项目 / 装备 / 音乐 / 映像 / 友链）的唯一来源**，改内容改这里；它们进界面只经过 `src/data/index.js` 那一道门，所以**加一类内容 = 放一份文件 + 在门上挂一行**，视图那边不用新开一条路。
 - **派生素材要提交**（`public/plates/`、`content/posts/*/cover.jpg`、`public/audio/`），构建机不会重跑烘培脚本。
 
 ---
@@ -77,7 +76,7 @@ BLOG/
 
 ## 2. 编辑方法
 
-> **站内没有后台，编辑都在仓库里改文件**：文章改 `content/posts/<slug>/index.md`（一卷是一个目录），站点内容（动态 / 项目 / 装备 / 歌单 / 映像 / 友链）改 `src/data/*.js`；改完 `git push`，等 CI 重新构建即上线。
+> **站内没有后台，编辑都在仓库里改文件**：文章改 `content/posts/<slug>/index.md`（一卷是一个目录），站点内容（动态 / 项目 / 装备 / 音乐 / 映像 / 友链）改 `src/data/*.js`；改完 `git push`，等 CI 重新构建即上线。
 > 本章按内容类型分节：站点信息、文章、动态、内容种子、播放器、SEO、账号（已下线）。
 > 低语（井外随机浮现）与 `/fragments` 碎片已随旧版下线，服务端那三个端点也已于 2026-10-16 删除（§2.4）。
 
@@ -153,25 +152,23 @@ BLOG/
 { date: '2026-09-01', text: '今天做了什么……' },
 ```
 
-### 2.4 音乐 / 项目 / 映像 / 友链 / 碎片
+### 2.4 项目 / 映像 / 友链 / 碎片
 
-- **项目 `/projects`（05 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/data/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
-- **音乐 `/records`（03 导航位）**：展示你的 QQ 音乐公开歌单（曲名 / 艺术家 / 逐行跳转；表内两列，默认折到前 8 首，点表头「展开其余 N 首」看全）。曲目来自 `src/data/records.js` 静态快照——本地跑 `python scripts/sync_records.py` 重新生成该文件，再 `git push`。**这个文件是脚本产物，别手改**。前提是歌单设为公开。
-- **关于页的头像**：取 `records.cover`（QQ 歌单封面的外链，与音乐页同源），即快照里的那张。要换头像就换 QQ 那张歌单封面，再跑 `python scripts/sync_records.py` 重生成快照。
-- **映像 `/gallery`（04 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/data/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
+- **项目 `/projects`（04 导航位）**：卡面（`name|desc|year|url`）与详情页的介绍（`detail` 段落 / `points` 要点 / `stack` 技术栈）都写在 `src/data/projects.js` 一处。详情页 URL 由 `name` 现算（`src/lib/projects.js` 的 `projectSlug()`，空格换成连字符、大小写原样），**不另设 slug 字段**——改名等于换 URL，旧链接会落到「这里没有这个项目的介绍」那一态。
+- **关于页的头像**：取 `site.avatar`（外链；换图只改 `src/data/site.js` 那一行）。
+- **映像 `/gallery`（03 导航位）**：这一墙摊的是**全站用过的图**，不用另外登记——文章封面（各卷目录里的 `cover.jpg`）自动上墙，最新那篇在左上第一格；站点自己的底片（首屏亮 / 暗两张、抽屉五张轮播、深色压暗底、分享卡）记在 `src/data/gallery.js`。**换底片时这份清单必须跟着改**，`npm test` 会拿它和 `site.css` 里真正引用的 `/plates/` 对拍，漏了就把旧图留在墙上示众。同一张图被两篇用过只出现一次。
 - **图片**：文章封面躺在自己那一卷的目录里——原图以 `-src.jpg` 收尾丢进 `content/posts/<slug>/`，`npm run cover:build` 就地烘出同目录的 `cover.jpg`（提交进仓库）；正文插图也放同一目录，正文里只写文件名。`public/images/` 这个目录**不存在**，也不需要什么目录：插图跟着卷走。
 - **友情链接**：在 `src/data/friends.js` 的数组里追加 `{ label, url }`（关于页的友链卡，宽屏与 SOCIAL 卡同排、窄屏单列时在其下方）。
-- **碎片（已下线并删除）**：站内**没有** `/fragments` 这条路由、也没有对应视图（现役 10 条路由里不含它）；服务端原有的 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点在 2026-10-16 摘掉（连同 `fragments.json` 的读写），前端零消费方是它们被删的原因。同批删掉的还有 `/api/health`。
+- **碎片（已下线并删除）**：站内**没有** `/fragments` 这条路由、也没有对应视图（现役 9 条路由里不含它）；服务端原有的 `GET/POST /api/fragments` 与 `DELETE /api/fragments/{ts}` 三个端点在 2026-10-16 摘掉（连同 `fragments.json` 的读写），前端零消费方是它们被删的原因。同批删掉的还有 `/api/health`。
 
 ### 2.5 播放器
 
-全站只有一台播放器：`<audio>` 与全部状态收在 `src/lib/music.js`，界面上是它的两张脸。
+全站只有一台播放器：`<audio>` 与全部状态收在 `src/lib/music.js`，界面上只有顶栏「音乐」按钮点开的那张卡。
 
-- **顶栏「音乐」按钮 → 播放器卡片**（`src/components/MusicCard.vue`，锚在顶栏下沿、右对齐）：上一首 / 播放暂停 / 下一首 / 进度 / 音量 / 曲目队列。**点卡外或按 Esc 收起，焦点回按钮**；没有曲目时按钮置灰。左上那枚绕极旋转的弧是星轨符号占位（本地曲目无封面数据），播放时才转。
-- **`/records` 的「在线听歌」卡**：满宽一张、卡内两列，只放曲目表、不放进度条——点一行即播，再点当前曲即暂停；当前曲红移，与顶栏按钮播放中同一个记号。没按下之前没有任何一行是「当前曲」（`music.started` 把关），否则第一行会一直红着、看着像已经在播。也别把听歌卡与别的卡并排：曲目会一首首加上去，第 5 首起就会把整行拉高。
-- **QQ 曲目表默认折叠**：只列前 8 首，表头右侧「展开其余 N 首 ↓」点开、「收起 ↑」收回（`aria-expanded`）。几十首时它是档案，不该把整页拖长压住真正能播的那一张。
+- **顶栏「音乐」按钮 → 播放器卡片**（`src/components/MusicCard.vue`，锚在顶栏下沿、右对齐）：卡头 + 关闭键；上一首 / 播放暂停 / 下一首 / 进度 / 音量 / 曲目队列。**关闭键、点卡外或按 Esc 都能收起，焦点回按钮**；没有曲目时按钮置灰。走带三枚按钮的热区是 44×44（中间播放键 48×48），图标与顶栏同一套描边 SVG；播放键走冷蓝，红色只留作"当前曲"的小记号（唱片符号的芯、当前曲名与三根小柱）。左上那枚绕极旋转的弧是星轨符号占位（本地曲目无封面数据），播放时才转。
+- **续播与系统媒体键**：当前曲与位置存在 `localStorage`（`en-track` / `en-track-progress`），刷新后第一次按播放从上次那一首、那个位置续上；主动换曲一律从头。支持的浏览器里，系统媒体面板的播放 / 暂停 / 上一首 / 下一首 / 进度都接回同一台引擎（Media Session）。音频取不到时卡片显示「无法播放 · 检查音频文件」，不会一直停在「载入中」。
 
-曲目清单在 `src/data/music.js`：每项 `{ title, artist, file }`，音频是仓库内的 `public/audio/*.mp3`（构建后落在 `dist/audio/`）。
+曲目清单在 `src/data/music.js`：每项 `{ title, artist, file }`，音频是仓库内的 `public/audio/*.mp3`（构建后落在 `dist/audio/`）。曲目只进顶栏播放器的队列，站内没有独立的音乐页。
 
 ### 2.6 改网页标题 / 搜索描述 / 分享卡片
 
@@ -227,7 +224,7 @@ BLOG/
 | --- | --- |
 | `1240px` | 顶栏收起昵称（昵称宽度不可控，最先收） |
 | `1280px` | 顶栏收起整条导航，改由汉堡抽屉承载。**加一枚导航就要往上抬约 72px**：单枚实测 67.6px + 4px 间距，同时改 `SiteHeader.vue` 的 CSS 与 `onResize` 两处 |
-| `900px` | 音乐页两张曲目表（在线听歌 / QQ 曲目）2 列 → 1 列；关于页三枚读数 3 列 → 1 列；首页精选 3 列 → 1 列；文章列表 `.cards` 3 列 → 2 列；映像墙 3 列 → 2 列 |
+| `900px` | 关于页三枚读数 3 列 → 1 列；首页精选 3 列 → 1 列；文章列表 `.cards` 3 列 → 2 列；映像墙 3 列 → 2 列 |
 | `880px` | 共用卡片栅格 `.en-cards` 2 列 → 1 列（项目 / 关于） |
 | `720px` | 手机版：页边距收窄、输入框字号 ≥16px（防 iOS 聚焦放大）、文章列表 `.cards` 与映像墙收到单列、动态行内日期另起一行（正文仍缩进到日期之下）（灯箱翻页箭头隐去，改横滑） |
 | `480px` | 顶栏隐藏品牌文字，只留那枚圆环图标 |
@@ -280,10 +277,10 @@ BLOG/
 | 文章页 / 映像墙灯箱 | `Esc` | 只关框，不退页 |
 | 映像墙灯箱 | `←` / `→`、触屏横滑 >50px | 上一张 / 下一张 |
 | 任意模态（顶栏抽屉 / 两处灯箱 / 播放器卡 / 设置卡 / 搜索卡） | `Tab` | 锁在框内，关闭后焦点回到触发它的那一枚 |
-| 播放器卡 / 设置卡 / 搜索卡 | 点卡外或 `Esc` | 收起，焦点回顶栏按钮 |
+| 播放器卡 / 设置卡 / 搜索卡 | 卡头关闭键、点卡外或 `Esc` | 收起，焦点回顶栏按钮 |
+| 播放器卡 | 系统媒体键（支持的浏览器） | 播放 / 暂停、上一首 / 下一首、进度；与卡内按钮共用 `lib/music.js` |
 | 搜索卡 | 输入词 | 即时筛（标题 / 摘要 / 标签，与 `/blog` 那一格同一条判据）；`Enter` 带着词进 `/blog?q=`，点结果行进文章，换页即收卡 |
 | 设置卡「卡片颜色」 | 方向键 | 在同组两档之间移动即选中（原生 `radio` 组，不用先 `Tab` 到另一枚再按空格） |
-| `/records` 曲目表 | 点一行 | 播放 / 暂停该曲 |
 | 任意页面 | 第一次 `Tab` | 先落「跳到内容」，再进 `#main` |
 
 ---
@@ -398,7 +395,6 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/data/*.js`�
 ### 4.4 以后更新内容的流程
 
 改文章（`content/posts/*.md`）或站点内容（`src/data/*.js`）→ 本地 `npm run dev` 检查 → `git add . ; git commit -m "说明" ; git push` → 线上自动重建并更新（GitHub Pages / Vercel）。
-歌单变动时先在本地跑 `python scripts/sync_records.py` 重生成 `src/data/records.js`，再一起提交。
 
 ---
 
@@ -424,7 +420,7 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/data/*.js`�
 
 ## 6. 版本与里程碑
 
-本站已发布 **v1.0.0**（2026-09），其后 **v1.1.0**（阅读体验）、**v1.2.0**（运行时性能 / 无障碍 / SEO）、**v1.3.0**（统一设计系统）、**v1.3.1**（连续曝光落地、取数与存储收口）。**这一节是写 GitHub Release 正文的取材处**，按版本记"当时交付了什么"；此后已下线的能力单列在末尾，不要当现状读。
+本站当前版本 **v1.3.1**（连续曝光落地、取数与存储收口）。**这一节是写 GitHub Release 正文的取材处**，按版本记"当时交付了什么"；旧版本记录已清理，此后已下线的能力单列在末尾，不要当现状读。
 
 - **v1.3.1 · 连续曝光落地、取数与存储收口**
   - 连续曝光——底片跨路由常驻，`src/lib/sky.js` 以单例接管画布（`ensurePlate` / `claimPlate` / `ownsPlate` / `releasePlate`），切页不再重置星轨；滚动深度经 `src/lib/shift.js` 的 `shift.v` 交给样式消费。
@@ -435,15 +431,4 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/data/*.js`�
   - 门禁——新增 `check_doc_refs.py`（死引用 / 节号 / 路由表）与 `check_naming.py`（命名规约），以及接口契约与端点双向对拍两道（随后端一并撤除）。
   - 部署——GitHub Pages 绑裸域名 `escaping.top`，`vite.config.js` 的 `base` 固定为 `/`（`build` 与 `build:pages` 只差路由模式）。
   - 内容渲染——`src/lib/markdown.js` 支持 GFM 管道表，标题层级收到 h2–h6（h1 让给文章标题）。
-- **v1.3.0 · 统一设计系统（界面一致性）**
-  - 建立刻度——间距 `--space-0…5`、字号 `--fs-3xs…4xl`（11 档）、行高 `--lh-*`（4 档）、字重 `--fw-*`（3 档）、卡片 `--card-*` 一组、次级页顶栏避让 `--page-top`；组件内不再写裸字号 / 裸间距。
-  - 收敛组件——按钮从 6 套并为「2 尺寸 × 4 语义」；输入框从 2 套并为「单行下划线 / 多行发丝框」；卡片 3 套规格并为 `--card-*`；状态提示 5 种各自实现并为 `.en-note-ok/err/info` 三态；图标统一为 `.en-ico` 单字符符号。
-  - 功能页并入——`/login` `/admin` 的私有类（`.submit` / `.act` / `.tab` / `.err` / `.notice` / `.warn`）全部删除，改用同一套 `en-*` 基元；后台页签选中态由热色改冷色。
-- **v1.2.0 · 运行时性能 / 无障碍 / SEO**
-  - 性能——次级页活背景限帧 30fps（长曝光按真实时长累积，流速不变）；四处 `resize` 统一去抖 150ms；`--shift` 缓存 `scrollHeight`，不再每帧强制布局；吸顶栏与播放器改用高不透明实底、去掉常驻 `backdrop-filter`；指针透镜光斑改 `transform` 位移。
-  - 无障碍——焦点陷阱 + 关闭时归还焦点；路由切换向读屏播报；`#main` 可聚焦供「跳到内容」；触控目标 ≥44px；最小字号下限 11.5px。
-  - 反馈——文章列表骨架屏；"本来没有内容"与"筛选无结果"分文案；搜索 / 标签筛选写进 URL（可分享、刷新不丢）。
-  - SEO——`og:*` / `canonical` / `twitter:*` 补全；构建期生成 `rss.xml` 与 `sitemap.xml`；新增 `robots.txt`。
-- **v1.1.0 · 阅读体验优化**：文章页磨砂玻璃阅读底板（半透明页面色 + 背景模糊，对比达 WCAG AA）；星轨尾部渐隐防饱和、拉长尾迹、随机起点使圆环连续、弧端错落；阅读栏加宽并提高底板透明度、加大底板宽度。
-- **v1.0.0 · 概念与交互冻结**：长曝光星轨（流星 / 指针时间膨胀 / 滚动即时间）、顶栏编号导航、`fall` 转场、双主题、文章闭环、关于页、后端 v2（登录 / 角色 / 文章 CRUD / meta 注入 / RSS / 上传 / 计数 / 歌单同步）。
 - **此后已下线**（上面的条目里仍按"当时交付了什么"记着，那是历史，不是现状）：低语与 `/fragments` 碎片（端点在 2026-10-16 删除，§2.4）；自绘沉浸光标（现用系统默认光标）；每页一枚巨型空心汉字的签名装置；首屏变星（文章节点）入口；**自助注册与留言墙**（`/register`、`/wall`、`/api/register`、`/api/messages` 的读写删端点、`data/messages.json` 全部删除，角色由三档收敛为站长 + 管理员两档；2026-10-16 用户管理与角色机制整体撤除，收敛为单账号，见 §2.7）；**后端整体下线**（2026-10-16）——承载它的服务器与 `www.escaping.top` 的解析记录已删除，原 `server/api.py`、原 `docs/api.md` 与登录 / 后台 / 阅读计数 / 服务端 OG 注入随之撤除，站点改为纯静态：文章由 `content/posts/` 打包、站点内容由 `src/data/*.js` 提供。

@@ -9,6 +9,8 @@ export const KEYS = {
   theme: `${PREFIX}theme`, // 主题：'well' 深色 / 'out' 浅色。index.html 的首帧内联脚本按同样的
   // 字面量读它，并在没存过时直接写 'out'——首开浅色的默认值只在那一处决定；改键名必须同步改那边。
   volume: `${PREFIX}vol`, // 播放器音量 0–1
+  track: `${PREFIX}track`, // 播放器上次所在曲目下标（刷新后第一次播放从这里续上）
+  progress: `${PREFIX}track-progress`, // 播放器上次播放位置（秒，整数）
   blur: `${PREFIX}plate-blur`, // 底片模糊 0–12px（0 = 清晰）。index.html 的首帧内联脚本按同样
   // 的字面量读它，改这里必须同步改那边，否则进页会先清晰一闪。
   cardSurface: `${PREFIX}card-surface`, // 卡面档位：'solid' 不透底（**默认**）/ 'glass' 半透。同样被

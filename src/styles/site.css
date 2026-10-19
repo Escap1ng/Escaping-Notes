@@ -962,7 +962,7 @@ textarea.en-field {
 /* 左缘引力标记：垂直生长。
    子代选择器用 `>` 不用空格——卡自己就是 .en-lens，写成后代的话，
    卡内再嵌一枚 .en-lens 时父卡 hover 会把所有后代的标记一起点亮（读作一排竖线）。
-   行级标记不归这里，归各页 scoped（/records 两张曲目表共用一份 ::before）。 */
+   行级标记不归这里，归各页 scoped。 */
 .en-lens > .bar {
   position: absolute;
   left: 0;
@@ -1138,7 +1138,7 @@ html:root[data-card-surface='glass'] .en-glass {
 }
 
 /* ---------- 6d. 卡片基元（全站唯一的卡片表面） ----------
-   从 BlogView 的 .card 提上来：动态 / 歌单 / 项目 / 关于 / 首页精选 / 文章列表共用这一组，
+   从 BlogView 的 .card 提上来：动态 / 项目 / 关于 / 首页精选 / 文章列表共用这一组，
    页面里只留各自的内部排版，不再各写一套边、角、底、hover。
    配方是 `class="en-card en-lens"` + 一个 `<span class="bar">` 子元素（光带属 .en-lens，见 §6b）。
    带封面的那张再加 `en-flush`（收掉卡面内边距，让图贴边，内边距交给卡内的信息体）。
@@ -1146,7 +1146,7 @@ html:root[data-card-surface='glass'] .en-glass {
    **本节刻意不带 `html:root` 前缀**（与 .en-shell / .en-lens / .en-cards 同一档）。
    加上它就是 (0,2,1)，而各页 scoped 的 `.head[data-v-x]` 只有 (0,2,0)——页面想扳回基元的
    flex-direction / padding / gap / min-height 会**静默失效**：不报错、不红，只是那一行白写。
-   实测曾同时压着五处这样的死规则（首页精选的封面格、歌单头卡与曲目卡、动态卡、文章卡）。
+   实测曾同时压着这样的死规则（首页精选的封面格、动态卡、文章卡）。
    这批基元只服务站内页面，加锚点反而抢掉页面的形态权——所以 §6d 的类不带 `html:root` 前缀。 */
 .en-card {
   position: relative;
