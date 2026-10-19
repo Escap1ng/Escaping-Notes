@@ -656,6 +656,15 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     width: 44px;
     min-width: 44px;
   }
+  /* 窄屏只留 24px 吸积环：热区用不可见的 ::after 撑到 44×44，观感与顶栏高度都不变 */
+  .brand {
+    position: relative;
+  }
+  .brand::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
