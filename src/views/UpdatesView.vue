@@ -1,8 +1,18 @@
 <script setup>
 // 新版脉冲：一条一枚满宽卡，脉冲点冷/热交替
+import { computed, onMounted, ref } from 'vue'
 import { content } from '../data/index.js'
+import { loadPosts } from '../lib/posts.js'
+import { mergeFeed } from '../lib/feed.js'
 import { onLens } from '../lib/lens.js'
 import { N, navLabel } from '../data/narrative.js'
+
+// 文章自动进动态：手写条目只记文章之外的事，合并与排序在 lib/feed.js 一处
+const posts = ref([])
+const feed = computed(() => mergeFeed(content.updates, posts.value))
+onMounted(async () => {
+  posts.value = await loadPosts()
+})
 </script>
 
 <template>
@@ -12,16 +22,19 @@ import { N, navLabel } from '../data/narrative.js'
 
     <ol class="feed">
       <li
-        v-for="(u, i) in content.updates"
-        :key="u.date + u.text"
+        v-for="(u, i) in feed"
+        :key="u.key"
         class="en-card pulse en-lens"
         @pointermove="onLens"
       >
         <span class="dot" :class="i % 2 ? 'hot' : 'cold'" aria-hidden="true"></span>
         <span class="when en-mono">{{ u.date }}</span>
-        <p class="what">{{ u.text }}</p>
+        <RouterLink v-if="u.to" :to="u.to" class="what">
+          {{ u.text }}<span class="go" aria-hidden="true">→</span>
+        </RouterLink>
+        <p v-else class="what">{{ u.text }}</p>
       </li>
-      <li v-if="!content.updates.length" class="empty en-mono">{{ N.empty.updates }}</li>
+      <li v-if="!feed.length" class="empty en-mono">{{ N.empty.updates }}</li>
     </ol>
   </section>
 </template>
@@ -91,6 +104,29 @@ import { N, navLabel } from '../data/narrative.js'
   transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* 文章条目是链接：正文同色，hover 冷移；箭头只做"能点进去"的提示 */
+a.what {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.what:hover {
+  color: var(--cold);
+}
+
+.go {
+  display: inline-block;
+  margin-left: var(--space-1);
+  color: var(--cold);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+a.what:hover .go {
+  transform: translateX(var(--nudge));
+}
+
 .pulse:hover .what {
   transform: translateX(var(--nudge));
 }
@@ -116,7 +152,8 @@ import { N, navLabel } from '../data/narrative.js'
 
 @media (prefers-reduced-motion: reduce) {
   .pulse:hover .dot,
-  .pulse:hover .what {
+  .pulse:hover .what,
+  a.what:hover .go {
     transform: none;
   }
 }

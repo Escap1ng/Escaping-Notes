@@ -33,7 +33,7 @@ BLOG/
     ├── assets/fonts/   ← 自托管子集 woff2（正文衬线按 unicode-range 分片 + 刊头 Didone，均 700 字重）+ OFL 许可
     ├── components/     ← SiteHeader 顶栏+抽屉 · SiteFooter · HorizonHero 首屏 · StarTrails 星轨 · MusicCard · SettingsCard · SearchCard
     ├── data/           ← 站点自有内容全在这一目录：index.js 是唯一那道门 · narrative.js 文案层 · site.js 站点信息 · 5 份数据（动态/项目/音乐/映像/友链）
-    ├── lib/            ← posts schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
+    ├── lib/            ← posts feed schema markdown theme storage music gallery plate surface ridge lens shift sky debounce focus exit legacy projects（取数不经这里，走 data/index.js）
     ├── router/         ← 9 条路由，全部懒加载
     ├── styles/site.css ← **唯一的样式表**：基线令牌 + 两套主题 + 全站基元（内部按 §0–§11 分节）
     └── views/          ← 9 个页面各一个文件，平铺
@@ -118,7 +118,7 @@ BLOG/
 
    **封面不写在这里**：这一卷的目录里有 `cover.jpg`，它就是封面——列表页那格、正文顶部那张满栏图、映像柜墙上那枚，三处共用同一个文件，一处也不用提第二遍。没有 `cover.jpg` 是合法状态，列表那一格留一张等高的斜纹空版。`imagePos` 可选，是封面在 3:2 卡格里的裁切焦点（CSS `background-position` 那套写法），缺省居中。`alt` 在有封面时必须写：读屏软件与图挂了的时候只有它。
 
-   **没写完的稿子：`draft: true`**。草稿只在 `npm run dev` 里露面，构建产物里不留任何痕迹——列表、首页那三格精选、映像柜、关于页那三枚读数、RSS、sitemap、静态壳，连它自己那张 `cover.jpg` 都不拷进 `dist/`。判据只有一处（`src/lib/schema.js` 的 `isLive`），所以不会出现"页面上没有、RSS 里却有"这种半发布。写了一半直接 push 也不会被读者先看见；回执那一行会标着【草稿：只在 dev 可见，不进产物】，不会让你以为它发出去了。
+   **没写完的稿子：`draft: true`**。草稿只在 `npm run dev` 里露面，构建产物里不留任何痕迹——列表、首页那三格精选、动态时间线、映像柜、关于页那三枚读数、RSS、sitemap、静态壳，连它自己那张 `cover.jpg` 都不拷进 `dist/`。判据只有一处（`src/lib/schema.js` 的 `isLive`），所以不会出现"页面上没有、RSS 里却有"这种半发布。写了一半直接 push 也不会被读者先看见；回执那一行会标着【草稿：只在 dev 可见，不进产物】，不会让你以为它发出去了。
 
    **改过目录名：`movedFrom: [旧slug]`**。一卷的目录名就是它的网址，改名等于换网址；把用过的旧名登记在这里，读者从旧链接进来会由文章页改道到现名，不会看见「这里没有这一篇」。两条限制：Pages 上那条旧网址本身没有对应文件（构建只给现名写壳），所以它是"经 `404.html` 装载应用、再跳到正确一篇"——看得到内容，首个请求的状态码仍是 404；旧名若撞上另一卷的现名、或被两卷同时认领，门禁当场拦下，不会让那条链接随机跳到某一篇。
 
@@ -144,13 +144,20 @@ BLOG/
 
 4. 提交推送即可上线：`git add . ; git commit -m "说明" ; git push`。`content/posts/` 是文章的唯一来源，构建期整体打包进站点；`scripts/build_seo.mjs` 依同一份解析生成 `dist/sitemap.xml` 与 `dist/rss.xml`（RSS 带全文与标签）。发之前先跑 `npm run build` 或 `npm run check:content`：它会打一份**发文回执**并逐卷校验——日期写歪、键名拼错、正文引用的图不在这卷目录里，都会在这里红掉而不会等到线上才看见（§4.0）。
 
+   发文**不用再手补动态**：已发布文章会按 frontmatter 的 `date` 自动进动态时间线（见 §2.3）。
+
 ### 2.3 发一条动态
 
-打开 `src/data/updates.js`，在数组**最前面**加一行（新的在上）：
+动态时间线由两部分合成，顺序、去重与条目形状只有一处口径（`src/lib/feed.js` 的 `mergeFeed`）：
 
-```js
-{ date: '2026-09-01', text: '今天做了什么……' },
-```
+- **发文自动进动态**：`content/posts/` 里每一卷已发布文章按 frontmatter 的 `date` 生成一条「新文上线：《标题》」，链向正文。日期就是发文日期，不用另补；草稿不进（与全站同一条 `isLive` 判据）。
+- **手写动态**：只记文章之外的事（改版、下线、节日）。打开 `src/data/updates.js`，在数组**最前面**加一行（新的在上）：
+
+  ```js
+  { date: '2026-09-01', text: '今天做了什么……' },
+  ```
+
+两条来源按日期倒序合并；同一天的文章排在手写条目前（文章是内容，手写条目是注脚）。首页抽屉取前 5 条，`/updates` 列全部。**不要**再手写「某篇上线」——那会和自动条目同一篇出现两条。
 
 ### 2.4 项目 / 映像 / 友链 / 碎片
 
