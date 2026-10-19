@@ -33,7 +33,8 @@ let trap = null // 焦点陷阱的释放函数
 const player = ref(false)
 /* 设置卡片：顶栏「设置」按钮点开的那一张（目前只有底片模糊滑杆与卡片颜色两档） */
 const settings = ref(false)
-/* 搜索卡片：顶栏「搜索」按钮点开的那一张（结果行点进文章，全量交给 /blog?q=） */
+/* 搜索卡片：顶栏「搜索」按钮点开的那一张（结果行点进文章，全量交给 /blog?q=）。
+   这枚钮还接全局快捷键：`/` 或 Ctrl/⌘+K 在任意页面开卡，见 onHotkey */
 const search = ref(false)
 // 三张卡都挂在顶栏下沿同一条线上，与全屏抽屉一起，任何时刻只开一张
 function togglePlayer() {
@@ -71,6 +72,28 @@ function onDrawerBackdrop(e) {
 function onKey(e) {
   if (e.key === 'Escape') closeDrawer()
 }
+
+/* 搜索快捷键：`/` 或 Ctrl/⌘+K  anywhere。两条判据：
+   ⑴ 输入框 / textarea / contenteditable 里的 `/` 是内容，不能吞——按 tagName 与
+      isContentEditable 判，不按 e.target.value 猜；
+   ⑵ 带修饰键的 `/`（Ctrl+/ 之类）留给浏览器与输入法，只认裸按。
+   Ctrl/⌘+K 不受 ⑴ 限制：它即使在输入框里也不是打字，且"在别处敲过 K 把搜索打开"
+   比"输不进 k"坏得多。 */
+function onHotkey(e) {
+  const t = e.target
+  const typing =
+    !!t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName || ''))
+  const k = e.key.toLowerCase()
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && k === 'k') {
+    e.preventDefault()
+    toggleSearch()
+    return
+  }
+  if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault()
+    if (!search.value) toggleSearch()
+  }
+}
 watch(drawer, async (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
   if (open) {
@@ -92,6 +115,7 @@ onMounted(() => {
   addEventListener('scroll', onScroll, { passive: true })
   addEventListener('resize', onResize)
   addEventListener('keydown', onKey)
+  addEventListener('keydown', onHotkey)
   onScroll()
 })
 
@@ -99,6 +123,7 @@ onUnmounted(() => {
   removeEventListener('scroll', onScroll)
   removeEventListener('resize', onResize)
   removeEventListener('keydown', onKey)
+  removeEventListener('keydown', onHotkey)
   onResize.cancel()
   trap?.()
   document.body.style.overflow = ''
@@ -135,8 +160,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
         type="button"
         :aria-expanded="search"
         aria-controls="en-search"
-        :aria-label="search ? '搜索：收起' : '搜索：展开'"
-        :title="search ? '收起搜索' : '搜索文章'"
+        :aria-label="search ? '搜索：收起' : '搜索文章（按 / 或 Ctrl+K）'"
+        :title="search ? '收起搜索（Esc）' : '搜索文章 · / 或 Ctrl/⌘+K'"
         @click="toggleSearch"
       >
         <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">

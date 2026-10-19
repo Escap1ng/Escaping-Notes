@@ -11,7 +11,6 @@ const { friends } = content
 
 const facts = [
   { k: 'OBSERVER', v: () => content.site.author },
-  { k: 'STATUS', v: () => content.site.bio },
   { k: 'LOC', v: () => content.site.location },
   { k: 'COORDS', v: () => content.site.coords },
 ]
@@ -80,10 +79,6 @@ const stats = computed(() => {
             <dt class="en-mono">{{ f.k }}</dt>
             <dd>{{ f.v() }}</dd>
           </div>
-          <div class="fact">
-            <dt class="en-mono">MAIL</dt>
-            <dd>{{ content.site.email }}</dd>
-          </div>
         </dl>
       </div>
 
@@ -93,6 +88,11 @@ const stats = computed(() => {
           <li v-for="s in content.site.socials" :key="s.label">
             <a class="link" :href="s.url" target="_blank" rel="noopener noreferrer">
               {{ s.label }}<span class="arrow" aria-hidden="true">↗</span>
+            </a>
+          </li>
+          <li>
+            <a class="link" :href="`mailto:${content.site.email}`">
+              Mail · {{ content.site.email }}<span class="arrow" aria-hidden="true">↗</span>
             </a>
           </li>
         </ul>

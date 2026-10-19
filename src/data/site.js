@@ -1,8 +1,7 @@
-// 站点信息：改名字 / 简介 / 社交链接 / 内容许可 → 只改这个文件，见 docs/manual.md §2.1
+// 站点信息：改名字 / 社交链接 / 内容许可 → 只改这个文件，见 docs/manual.md §2.1
 export const site = {
   name: 'Escaping Notes',
   author: 'Escap1ng',
-  bio: 'China Jiliang University · Undergraduate',
   location: 'Hangzhou, Zhejiang',
   coords: '30.25°N 120.17°E',
   email: 'chunqi-yu@outlook.com',

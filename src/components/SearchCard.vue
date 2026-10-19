@@ -39,8 +39,9 @@ const shown = computed(() => hits.value.slice(0, MAX))
 
 const status = computed(() => {
   if (loading.value) return '// 取数中'
-  if (!q.value.trim()) return '// 输入词即筛'
-  return hits.value.length ? `// ${hits.value.length} 篇相符` : N.empty.search
+  // 空输入那一格把三条出口都写出来：这张卡没有别的提示位，Esc 与 Enter 不写就没人知道
+  if (!q.value.trim()) return '// 输入词即筛 · Enter 去列表 · Esc 关闭'
+  return hits.value.length ? `// ${hits.value.length} 篇相符 · Enter 去列表` : N.empty.search
 })
 
 function onKey(e) {

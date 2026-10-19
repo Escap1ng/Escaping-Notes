@@ -1,5 +1,5 @@
 <script setup>
-// 映像柜：全站用过的图摊成一墙拍立得，点开进看片灯箱
+// 映像柜：文章封面与抽屉轮播的三张底片摊成一墙拍立得，点开进看片灯箱
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { loadGallery } from '../lib/gallery.js'
 import { trapFocus } from '../lib/focus.js'

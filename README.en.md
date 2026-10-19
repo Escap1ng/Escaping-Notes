@@ -69,9 +69,9 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 **Interaction**
 
 - Plate blur and card surface are runtime parameters: a 0–12px slider (defaulted to full) and two radios (opaque / translucent) in the settings card, remembered in `localStorage`
-- Focus traps live in the header drawer, the search card, the player card, the settings card and both lightboxes, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; route changes are announced through the live region in `App.vue`
+- Focus traps live in the header drawer, the search card, the player card, the settings card and both lightboxes, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; a bare `/` or `Ctrl/Cmd+K` anywhere opens the search card; route changes are announced through the live region in `App.vue`
 - The player remembers the last track and position across reloads, answers OS media keys, and states "cannot play" when the audio file is missing instead of loading forever
-- Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload
+- Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload; the archive opens on a row of site-wide counters and every tag chip carries its own count
 - `/gallery` pins every image the site has used to one wall of Polaroids, tilt hashed from the `src` and entry staggered per card; the lightbox `Teleport`s to `body` and answers both keyboard paging and swipes
 
 **Fallback and readability**
@@ -153,7 +153,7 @@ All 11 routes are lazy-loaded and each carries `meta.t` for the document title a
 | Route | Page | What it is |
 | --- | --- | --- |
 | `/` | Home · long-exposure star trails | Photo landscape band + trails + typed title + drawer |
-| `/blog` | Articles | Archive, tag/keyword filters live in the URL |
+| `/blog` | Articles | Archive: four site-wide counters, tag filters that carry their own count; the query lives in the URL, there is no second input on the page |
 | `/blog/:slug` | Article | A single post with its cover placed on top; inline images open the lightbox |
 | `/collections` | Collections | Top-level collections and their sub-collections, grouped by subject |
 | `/collections/:slug` | Collection | A collection's sub-collections and articles; a parent aggregates every descendant post |
