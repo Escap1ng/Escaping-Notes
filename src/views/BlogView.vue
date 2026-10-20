@@ -175,7 +175,7 @@ function clearFilters() {
 
 /* 读数一排四枚：卡面走 .en-card，这里只改形态（关于页那三枚同一套路）。
    断点只加一档 900px 折两列，往下不再折一列——实测 320px 上两列各 114px、
-   卡内可用 80px，最宽那枚读数（日期）见下面 .sv.wide 的字号。 */
+   卡内可用 98px，最宽那枚读数（日期）见下面 .sv.wide 的字号。 */
 .stats {
   list-style: none;
   margin: 0 0 var(--space-2);
@@ -197,6 +197,9 @@ function clearFilters() {
   gap: var(--space-0);
   padding: var(--space-2);
   text-align: center;
+  /* 读数按**卡自己的宽**收字号（见 .sv.wide）：四列只在壳里分宽，视口再宽也不加宽卡，
+     cqi 比 vw 更接近"这一枚放不放得下"。 */
+  container-type: inline-size;
 }
 
 .sv {
@@ -206,15 +209,15 @@ function clearFilters() {
   line-height: 1.1;
   color: var(--text-0);
   font-variant-numeric: tabular-nums;
+  /* 标签的竖位由这一行撑住：日期缩了字号，少了它那枚的标签会独自往上提 */
+  min-height: calc(clamp(30px, 4vw, 44px) * 1.1);
 }
 
-/* 日期那一枚是 10 个字符，不是 1–4 个：整排字号是"个数"的手感，只有它得让一档，
-   并换等宽体（否则数字不等宽，读数一换就抖）。下限 14px 是量出来的：15px 时它在
-   320px 的两列卡里正好贴满卡内（80 / 80），14px 时占 75px、余 5px。 */
+/* 「2026-10-10」是 10 个字符，不是 1–4 个。字体、字重与另三枚相同（都是展示衬线），
+   只按卡宽封顶：一行排下它约需 5.2em，17.5cqi 留出约 8% 余量。卡够宽时它与邻座
+   同字号（≤900px 折两列后就是），窄到放不下才降。卡宽固定，读数换了也不推挤标签。 */
 .sv.wide {
-  font-family: var(--font-mono);
-  font-size: clamp(14px, 2.4vw, 28px);
-  letter-spacing: 0.02em;
+  font-size: min(17.5cqi, clamp(30px, 4vw, 44px));
 }
 
 .sk {

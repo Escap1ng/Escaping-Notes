@@ -1,23 +1,67 @@
 <script setup>
-// 首页：星轨首屏 + 风景底片 + 下滑拉出的抽屉（读数 / 精选 / 最近动态）
+// 首页：星轨首屏 + 折线以下的章节区（此刻 / 精选 / 最近动态 / 最近合集 / 最近项目）
+// 折线以下没有总底板，也不逐条包卡：一个章节共用一张半透明底卡，条目在卡内排成行或瓦片。
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import HorizonHero from '../components/HorizonHero.vue'
 import { loadPosts } from '../lib/posts.js'
 import { mergeFeed } from '../lib/feed.js'
+import { ancestorsOf, collectionHref, postsOf } from '../lib/collections.js'
+import { projectSlug } from '../lib/projects.js'
 import { content } from '../data/index.js'
-import { onLens } from '../lib/lens.js'
 import { debounce } from '../lib/debounce.js'
-import { N } from '../data/narrative.js'
+import { N, navLabel } from '../data/narrative.js'
 
 const posts = ref([])
+const loading = ref(true)
 const drawerEl = ref(null)
 const open = ref(false)
 
 const featured = computed(() => posts.value.slice(0, 3))
-// 最近动态卡 = 手写动态 + 已发布文章（lib/feed.js 统一合并、按日期倒序），取前 5 条；
-// 整卡链向 /updates。首页不再有页内目录，页面导航只留顶栏。
+// 最近动态 = 手写动态 + 已发布文章（lib/feed.js 统一合并、按日期倒序），取前 5 条；
+// 与 /updates 共用同一份数据。条目在本章底卡里排成独立行，不各占一张卡。
 // 文章取数与上面三格精选同源（posts），所以新文一发就会自己出现在这里，不用再手补动态。
 const recent = computed(() => mergeFeed(content.updates, posts.value).slice(0, 5))
+
+/* 最近合集：按"这个合集里最新一篇文章"的日期倒序，取前三。
+   计数与 /collections 同一口径（lib/collections.js 的 postsOf 会算上后代合集），
+   上级合集因此汇总的是整棵子树的文章。 */
+const recentCollections = computed(() => {
+  const list = content.collections
+  const rows = list.map((c) => {
+    const items = postsOf(list, c.slug, posts.value)
+    const latest = items.reduce((m, p) => (p.date > m ? p.date : m), '')
+    return {
+      slug: c.slug,
+      title: c.title,
+      summary: c.summary,
+      href: collectionHref(c.slug),
+      latest,
+      up: ancestorsOf(list, c.slug)
+        .map((a) => a.title)
+        .join(' / '),
+      n: items.length,
+      order: Number.isInteger(c.order) ? c.order : Number.MAX_SAFE_INTEGER,
+    }
+  })
+  return rows
+    .sort(
+      (a, b) =>
+        b.latest.localeCompare(a.latest) ||
+        a.order - b.order ||
+        a.title.localeCompare(b.title, 'zh-Hans-CN')
+    )
+    .slice(0, 3)
+})
+
+// 合集那一行的读数：上级合集 · 最近一篇的日期 · 篇数。取数未完成时写 — 而不是 0。
+function collectionMeta(c) {
+  if (loading.value) return '—'
+  return [c.up, c.latest, N.collection.posts.replace('{n}', c.n)].filter(Boolean).join(' · ')
+}
+
+// 最近项目：数据本身就是手挑的顺序（src/data/projects.js），取前三。
+// 项目没有发布日期，这里不编一个"最近"的排序口径。
+const recentProjects = computed(() => content.projects.slice(0, 3))
 
 /* 一枚读数：本地时刻与日期星期。
    （「本次停留 / 这一夜已曝」计时读数 2026-10-09 删除——它数的是打开页面后的秒数，
@@ -83,6 +127,7 @@ onMounted(async () => {
   // 挂在早退分支之前：下面那条「隐藏页」路径会 return，声波补根不该只服务于可见页
   addEventListener('resize', onWaveResize)
   posts.value = await loadPosts()
+  loading.value = false
   // 抽屉第一次进入视口时拉出一次，之后断开——它不是滚动监听，docs/design.md §3.2 那条「不要各自写滚动监听」的禁令不适用。
   // 两道兜底都要：⑴ 没有 IntersectionObserver；⑵ 有，但页面是隐藏页，回调永远不来
   // （后台标签页打开、以及内置/无头 surfaces 都是这一类）。缺了第二道，内容会停在 opacity:0。
@@ -114,10 +159,9 @@ onUnmounted(() => {
     <HorizonHero />
 
     <!-- 折线以下的风景底片层已上移到 App.vue（fixed 层不能放在带 filter 的页根子树里），
-         这里只留抽屉。 -->
-
+         这里只留章节区。 -->
     <section ref="drawerEl" class="drawer" :class="{ open }">
-      <!-- 折线声波：整排立在首屏/抽屉接缝之上，只向上长，折线以下不留任何一段；装饰层 -->
+      <!-- 折线声波：整排立在首屏/章节区接缝之上，只向上长，折线以下不留任何一段；装饰层 -->
       <div
         class="wave"
         aria-hidden="true"
@@ -126,51 +170,118 @@ onUnmounted(() => {
         <i v-for="(w, i) in wave" :key="i" :style="{ '--h': w.h, '--d': w.d }"></i>
       </div>
 
-      <div class="sheet">
-        <span class="lip" aria-hidden="true"></span>
+      <div class="content">
+        <!-- 此刻：一行日期读数，不单独占一张卡 -->
+        <div class="dateline">
+          <span class="dl-k">{{ N.drawer.clock }}</span>
+          <span class="dl-v en-mono">{{ clock }}</span>
+          <span class="dl-d">{{ day }}</span>
+        </div>
 
-        <div class="dials">
-          <div class="dial">
-            <span class="dial-k en-mono">{{ N.drawer.clock }}</span>
-            <span class="dial-v en-mono">{{ clock }}</span>
-            <span class="dial-s">{{ day }}</span>
+        <!-- 一个章节一张半透明底卡：章节头与条目共用这块面 -->
+        <section class="pane pane-picks" aria-labelledby="home-featured">
+          <header class="pane-h">
+            <h2 id="home-featured" class="pane-t">{{ N.drawer.featured }}</h2>
+            <RouterLink class="pane-link en-mono" to="/blog"
+              >{{ N.drawer.all }}{{ navLabel('/blog') }} →</RouterLink
+            >
+          </header>
+          <div class="picks">
+            <RouterLink v-for="p in featured" :key="p.slug" :to="`/blog/${p.slug}`" class="pick">
+              <span class="en-shot" :class="{ blank: !p.cover }">
+                <img
+                  v-if="p.cover"
+                  :src="p.cover"
+                  :alt="p.title"
+                  :style="{ objectPosition: p.imagePos }"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+              <span class="pick-body">
+                <span class="pick-date en-mono">{{ p.date }}</span>
+                <span class="pick-ttl">{{ p.title }}</span>
+                <span class="pick-sum">{{ p.summary }}</span>
+              </span>
+            </RouterLink>
           </div>
-        </div>
+        </section>
 
-        <h2 class="en-eyebrow sec">{{ N.drawer.featured }}</h2>
-        <div class="picks">
-          <RouterLink
-            v-for="p in featured"
-            :key="p.slug"
-            :to="`/blog/${p.slug}`"
-            class="en-card en-flush pick en-lens"
-            @pointermove="onLens"
+        <section class="pane pane-feed" aria-labelledby="home-recent">
+          <header class="pane-h">
+            <h2 id="home-recent" class="pane-t">{{ N.drawer.recent }}</h2>
+            <RouterLink class="pane-link en-mono" to="/updates"
+              >{{ N.drawer.all }}{{ navLabel('/updates') }} →</RouterLink
+            >
+          </header>
+          <ol class="feed">
+            <li v-for="(u, i) in recent" :key="u.key" class="pulse">
+              <span class="dot" :class="i === 0 ? 'hot' : 'cold'" aria-hidden="true"></span>
+              <span class="when en-mono">{{ u.date }}</span>
+              <RouterLink v-if="u.to" :to="u.to" class="what">
+                {{ u.text }}<span class="go" aria-hidden="true">→</span>
+              </RouterLink>
+              <p v-else class="what">{{ u.text }}</p>
+            </li>
+            <li v-if="!recent.length" class="empty en-mono">{{ N.empty.updates }}</li>
+          </ol>
+        </section>
+
+        <div
+          v-if="recentCollections.length || recentProjects.length"
+          class="duo"
+        >
+          <section
+            v-if="recentCollections.length"
+            class="pane pane-colls"
+            aria-labelledby="home-collections"
           >
-            <span class="en-shot" :class="{ blank: !p.cover }">
-              <img
-                v-if="p.cover"
-                :src="p.cover"
-                :alt="p.title"
-                :style="{ objectPosition: p.imagePos }"
-                loading="lazy"
-                decoding="async"
-              />
-            </span>
-            <span class="pick-body">
-              <span class="pick-date en-mono">{{ p.date }}</span>
-              <span class="pick-ttl">{{ p.title }}</span>
-              <span class="pick-sum">{{ p.summary }}</span>
-            </span>
-          </RouterLink>
-        </div>
+            <header class="pane-h">
+              <h2 id="home-collections" class="pane-t">{{ N.drawer.collections }}</h2>
+              <RouterLink class="pane-link en-mono" to="/collections"
+                >{{ N.drawer.all }}{{ navLabel('/collections') }} →</RouterLink
+              >
+            </header>
+            <ul class="rows">
+              <li v-for="c in recentCollections" :key="c.slug">
+                <RouterLink class="row coll" :to="c.href">
+                  <span class="row-top">
+                    <span class="coll-ttl">{{ c.title }}</span>
+                    <span class="row-go" aria-hidden="true">→</span>
+                  </span>
+                  <span class="coll-k en-mono">{{ collectionMeta(c) }}</span>
+                  <span class="coll-sum">{{ c.summary }}</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </section>
 
-        <h2 class="en-eyebrow sec">{{ N.drawer.recent }}</h2>
-        <RouterLink to="/updates" class="en-card feed en-lens" aria-label="最近动态 · 查看全部" @pointermove="onLens">
-          <span v-for="u in recent" :key="u.key" class="feed-row">
-            <span class="feed-date en-mono">{{ u.date }}</span>
-            <span class="feed-text">{{ u.text }}</span>
-          </span>
-        </RouterLink>
+          <section
+            v-if="recentProjects.length"
+            class="pane pane-projs"
+            aria-labelledby="home-projects"
+          >
+            <header class="pane-h">
+              <h2 id="home-projects" class="pane-t">{{ N.drawer.projects }}</h2>
+              <RouterLink class="pane-link en-mono" to="/projects"
+                >{{ N.drawer.all }}{{ navLabel('/projects') }} →</RouterLink
+              >
+            </header>
+            <ul class="rows">
+              <li v-for="p in recentProjects" :key="p.name">
+                <RouterLink class="row proj" :to="`/projects/${projectSlug(p.name)}`">
+                  <span class="row-top">
+                    <span class="year en-mono">{{ p.year }}</span>
+                    <h3 class="name">{{ p.name }}</h3>
+                    <span class="row-go" aria-hidden="true">→</span>
+                  </span>
+                  <p class="desc">{{ p.desc }}</p>
+                  <span v-if="p.stack" class="stack en-mono">{{ p.stack }}</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </section>
+        </div>
       </div>
     </section>
   </div>
@@ -185,9 +296,7 @@ onUnmounted(() => {
   isolation: isolate;
 }
 
-/* 抽屉：整块在首次进入视口时从下方拉出一次。
-   表面是玻璃态（见下面的 .sheet），但不复用 .en-glass——那是模态抽屉专属的定宽浮层，
-   自带 max-width / padding / 定位，套在常驻面板上会打架。
+/* 章节区：整块在首次进入视口时从下方拉出一次。
    呈现走 animation 而不是 transition：常态必须是可见的。隐藏文档里 transition 不推进，
    "默认 opacity:0 + 加类翻 1"会让整块内容永久停在起点；动画只在 .open 那一刻跑，
    最坏情况是少一次动画，不会是"没有内容"。 */
@@ -205,33 +314,6 @@ onUnmounted(() => {
   from {
     opacity: 0;
     transform: translateY(28px);
-  }
-}
-
-/* 卡片错峰"显影"：整块抽屉拉出后，卡逐张从糊到清、从暗到亮升起，
-   读作底片在显影而不是列表在滑入。backwards 让延迟期内保持起点态。 */
-.drawer.open .pick,
-.drawer.open .feed {
-  animation: card-develop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
-}
-.drawer.open .pick:nth-child(1) {
-  animation-delay: 0.12s;
-}
-.drawer.open .pick:nth-child(2) {
-  animation-delay: 0.22s;
-}
-.drawer.open .pick:nth-child(3) {
-  animation-delay: 0.32s;
-}
-.drawer.open .feed {
-  animation-delay: 0.42s;
-}
-
-@keyframes card-develop {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-    filter: blur(6px);
   }
 }
 
@@ -283,89 +365,153 @@ onUnmounted(() => {
   }
 }
 
-/* 抽屉面板：玻璃态。底下那层 .sub-plate 是 fixed 的风景底片，backdrop-filter 糊的正是它——
-   这才是"抽屉压在一张不动的底图上"的观感。
-   原先这里用 --panel-frost-bg 的旧值（米黄 rgba(245,242,234,.78)），就是那个米黄框。
-   那枚令牌现在也改成跟随 --ink-0 了，兜底也不再回落到米黄：不支持 backdrop-filter 时
-   用高不透明的冷色 ink-0。
-   注意这块面**不吃**设置卡「卡片颜色」那档开关：文章页 .en-glass 的填充 2026-10-13 起并给了
-   --card-bg，首页抽屉还留着它自己这一档（ink-0 42%）——站内最后一处分叉的表面，改哪一处都要先看另一处。 */
-.sheet {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: var(--space-2) var(--card-pad-lg) var(--card-pad-lg);
-  border: 1px solid color-mix(in srgb, var(--text-0) 12%, transparent);
-  border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--ink-0) 42%, transparent);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
-  backdrop-filter: blur(22px) saturate(1.35);
+/* 底卡错峰显影：整块拉出后，一块面接一块面从下方浮起。只动 opacity / transform——
+   大面积的 filter 会每帧重新栅格化整棵子树（manual.md §3.5），玻璃面尤其不该进动画。 */
+.drawer.open .dateline,
+.drawer.open .pane {
+  animation: pane-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .sheet {
-    background: color-mix(in srgb, var(--ink-0) 88%, transparent);
+.drawer.open .dateline {
+  animation-delay: 0.04s;
+}
+
+.drawer.open .pane-picks {
+  animation-delay: 0.12s;
+}
+
+.drawer.open .pane-feed {
+  animation-delay: 0.2s;
+}
+
+.drawer.open .pane-colls {
+  animation-delay: 0.28s;
+}
+
+.drawer.open .pane-projs {
+  animation-delay: 0.34s;
+}
+
+@keyframes pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
   }
 }
 
-/* 抽屉把手：一条圆角细杠，读作"这一块是可以拉出来的" */
-.lip {
-  display: block;
-  width: 44px;
-  height: 4px;
-  margin: 0 auto var(--space-3);
-  border-radius: 2px;
-  background: var(--line);
-}
-
-.dials {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--line);
-}
-
-.dial {
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  gap: var(--space-2);
 }
 
-.dial-k {
-  font-size: var(--fs-3xs);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-1);
+/* 章节底卡：一个章节一块面，条目不再各包一层。
+   填充与边线直接取卡面令牌（--card-bg / --card-brd）：默认档浅色就是纯白、深色是实底，
+   设置卡「卡片颜色」翻到半透明时这一层也跟着翻，与全站卡片同一套开关、同一种表面语言。
+   刻意不建 backdrop-filter：这片区域常驻（manual.md §3.4），底片自己已经带着
+   --plate-blur（默认拉满 12px）的模糊。旧 .sheet 的 42% + blur(22px) 是一整块面的手笔。 */
+.dateline,
+.pane {
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-md);
+  background: var(--card-bg);
 }
 
-.dial-v {
+/* ---------- 此刻：一行日期读数 ---------- */
+.dateline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--card-pad-lg);
+}
+
+.dl-v {
   font-size: var(--fs-xl);
+  letter-spacing: 0.04em;
   color: var(--text-0);
   font-variant-numeric: tabular-nums;
 }
 
-.dial-s {
+.dl-d {
+  margin-left: auto;
   font-size: var(--fs-xs);
   color: var(--text-1);
 }
 
-.sec {
-  margin: var(--space-3) 0 var(--space-2);
+/* ---------- 章节头 ---------- */
+.pane {
+  padding: var(--card-pad-lg);
 }
 
+.pane-h {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+/* 「此刻」不是仪器小标签，是这一章的章名：章名体（.pane-t）与它共用一条规则。 */
+.pane-t,
+.dl-k {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
+}
+
+.pane-link {
+  margin-left: auto;
+  color: var(--cold);
+  font-size: var(--fs-3xs);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color var(--dur-fast);
+}
+
+.pane-link:hover {
+  color: var(--text-0);
+}
+
+/* ---------- 精选：三块封面瓦片，底卡只铺一次 ---------- */
 .picks {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  /* 与 /blog 的 .cards 同一条：单列时每张卡各占一行，否则长短卡会在窄屏错落 */
-  grid-auto-rows: 1fr;
   gap: var(--space-2);
 }
 
-/* 卡面、封面格、以及"封面贴边"（class 上的 en-flush）都在 site.css §6d；
-   这里只补一条：栅格里的 min-width，让长标题截断而不是把列撑破 */
 .pick {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-md);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--dur-fast);
+}
+
+.pick:hover,
+.pick:focus-visible {
+  border-color: var(--card-brd-hover);
+}
+
+/* 外框里的封面顶到边框：图的圆角由 .pick 的 overflow 裁出来 */
+.pick .en-shot {
+  border-radius: 0;
+}
+
+.pick .en-shot img {
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pick:hover .en-shot img {
+  transform: scale(1.035);
 }
 
 .pick-body {
@@ -387,6 +533,14 @@ onUnmounted(() => {
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   color: var(--text-0);
+  transition:
+    color var(--dur-fast),
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pick:hover .pick-ttl {
+  color: var(--cold);
+  transform: translateX(var(--nudge));
 }
 
 .pick-sum {
@@ -400,39 +554,228 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* 最近动态卡：手写动态与发文自动条目合并后的前 5 条，整卡链向 /updates。日期走热色（§4.1：日期属"当前/深度"） */
+/* ---------- 最近动态：底卡里的独立行，与 /updates 同一种行语法 ---------- */
 .feed {
-  display: block;
-  padding: var(--card-pad) var(--card-pad-lg);
+  list-style: none;
+  margin: 0 calc(var(--space-1) * -1);
+  padding: 0;
 }
 
-.feed-row {
+.pulse {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-2);
+  grid-template-columns: auto max-content minmax(0, 1fr);
   align-items: baseline;
-  padding: var(--space-1) 0;
+  gap: var(--space-2);
+  padding: calc(var(--space-1) * 1.5) var(--space-1);
+  border-radius: var(--r-sm);
+  transition: background var(--dur-fast);
 }
 
-.feed-row + .feed-row {
-  border-top: 1px solid var(--line);
+.pulse:hover {
+  background: color-mix(in srgb, var(--text-0) 5%, transparent);
 }
 
-.feed-date {
-  font-size: var(--fs-3xs);
-  letter-spacing: 0.1em;
+/* 日期列取 max-content 而不是 10ch：ch 在栅格列上按容器字体度量算（这里是 body 的 sans），
+   换一台机器 mono 就不是那个宽度。所有日期都是十个字符，所以各行正文对齐在同一条竖线上 */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pulse:hover .dot {
+  transform: scale(1.8);
+}
+
+.dot.cold {
+  background: var(--cold);
+}
+
+.dot.hot {
+  background: var(--hot);
+}
+
+.when {
   color: var(--text-1);
-  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  transition: color var(--dur-fast);
 }
 
-.feed-text {
+.pulse:hover .when {
+  color: var(--cold);
+}
+
+.what {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-md);
+  line-height: var(--lh-relaxed);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 文章条目是链接：正文同色，hover 冷移；箭头只做"能点进去"的提示 */
+a.what {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.what:hover {
+  color: var(--cold);
+  transform: translateX(var(--nudge));
+}
+
+.go {
+  display: inline-block;
+  margin-left: var(--space-1);
+  color: var(--cold);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+a.what:hover .go {
+  transform: translateX(var(--nudge));
+}
+
+.empty {
+  padding: var(--space-1);
+  color: var(--text-1);
+}
+
+/* ---------- 最近合集 / 最近项目：下半区并排两章 ---------- */
+.duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+/* 数据里只剩一边时，独章铺满整行而不是留下半张空面 */
+.duo > .pane:only-child {
+  grid-column: 1 / -1;
+}
+
+.rows {
+  list-style: none;
+  margin: 0 calc(var(--space-1) * -1);
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) / 2);
+  padding: calc(var(--space-1) * 1.5) var(--space-1);
+  border-radius: var(--r-sm);
+  color: inherit;
+  text-decoration: none;
+  transition: background var(--dur-fast);
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--text-0) 5%, transparent);
+}
+
+.row-top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.row-go {
+  margin-left: auto;
+  color: var(--cold);
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.row:hover .row-go {
+  transform: translateX(var(--nudge));
+}
+
+.coll-ttl {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  transition:
+    color var(--dur-fast),
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.row:hover .coll-ttl {
+  color: var(--cold);
+  transform: translateX(var(--nudge));
+}
+
+.coll-k {
+  font-size: var(--fs-3xs);
+  color: var(--text-1);
+}
+
+.coll-sum {
+  font-family: var(--font-serif);
   font-size: var(--fs-sm);
   line-height: var(--lh-normal);
   color: var(--text-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.year {
+  color: var(--text-1);
+  font-size: var(--fs-3xs);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
+  transition:
+    color var(--dur-fast),
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.row:hover .name {
+  color: var(--cold);
+  transform: translateX(var(--nudge));
+}
+
+.desc {
+  margin: 0;
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 卡脚那一行留给技术栈：它是"值不值得点进去"的线索，进去之后还有整段。
+   .en-mono 会把拉丁字母转大写（仪器读数的口径），而这里装的是产品名，
+   VUE ROUTER 4 / CANVAS 2D 读起来是打坏的字面量，所以照 §6 里 .en-btn 那条先例显式复位。 */
+.stack {
+  color: var(--cold);
+  font-size: var(--fs-3xs);
+  text-transform: none;
 }
 
 @media (max-width: 900px) {
   .picks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .duo {
     grid-template-columns: 1fr;
   }
 }
@@ -441,18 +784,54 @@ onUnmounted(() => {
   .drawer {
     padding: var(--space-3) var(--space-2) var(--space-4);
   }
+
+  .dateline {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .dl-d {
+    margin-left: 0;
+  }
+
+  .pane {
+    padding: var(--space-2);
+  }
+
+  .picks {
+    grid-template-columns: 1fr;
+  }
+
+  /* 手机上日期与正文并排只剩一行七八个字：日期另起一行，正文仍缩进到日期之下 */
+  .pulse {
+    grid-template-columns: auto 1fr;
+    row-gap: calc(var(--space-1) / 2);
+  }
+
+  .what {
+    grid-column: 2;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer.open {
+  .drawer.open,
+  .drawer.open .dateline,
+  .drawer.open .pane {
     animation: none;
   }
-  .drawer.open .pick,
-  .drawer.open .feed {
-    animation: none;
-  }
+
   .wave i {
     animation: none;
+  }
+
+  .pulse:hover .dot,
+  .pick:hover .en-shot img,
+  .pick:hover .pick-ttl,
+  .row:hover .coll-ttl,
+  .row:hover .name,
+  .row:hover .row-go,
+  a.what:hover,
+  a.what:hover .go {
+    transform: none;
   }
 }
 </style>

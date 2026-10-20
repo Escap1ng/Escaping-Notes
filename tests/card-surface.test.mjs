@@ -227,7 +227,7 @@ test('阅读底板 .en-glass：填充取 --card-bg，糊面只在半透明档建
   assert.match(
     propOf(gated, 'backdrop-filter'),
     /blur\(22px\)\s+saturate\(1\.35\)/,
-    '半透明档没把首页 .sheet 那条模糊/saturate 接回来（22px + 1.35）'
+    '半透明档没把阅读底板的模糊/saturate 建回来（22px + 1.35）'
   )
 
   for (const [name, sel] of [

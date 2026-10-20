@@ -79,7 +79,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 - `prefers-reduced-motion` gets a full static fallback: trails settle on the steady-state plate, the carousel stops, transitions do not blur, and the vignette shuts off; touch targets reach 44px and the minimum type size is 11.5px
 - A scrim-free landscape photo cannot reach WCAG AA for naked text; the worst measured point is 1.0–1.8:1 regardless of gradient shape. So the plate stays scenery and body copy always lands on cards and reading panels. `npm run check:contrast` recomputes the theme tokens against a solid ground before every commit, which does not cover the composited photo
 - The plate layer lives on `App.vue`, not in each page, so routing never repaints it. The landing photo is the home page's LCP element, so the inline first-paint script in `index.html` preloads it for the active theme and it starts alongside the stylesheet
-- The persistent header avoids `backdrop-filter`; glass is left to the reading panel (translucent mode), the landing drawer, the nav drawer and the gallery lightbox (including its tape). The article lightbox is a flat backdrop and builds no blur
+- The persistent header avoids `backdrop-filter`; glass is left to the reading panel (translucent mode), the nav drawer and the gallery lightbox (including its tape). The article lightbox is a flat backdrop and builds no blur; the home section cards are persistent surfaces and build no blur either—the plate's own `--plate-blur` supplies the softness
 
 ## Two load-bearing designs
 
@@ -87,7 +87,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 
 <img src="docs/assets/readme/plate-layer.svg" alt="Cross-section of the site-wide backdrop layer: the photo at full strength along the top sinking into the page colour between 18% and 78%, the three carousel slots on a 30 second cycle, and measured contrast for naked text versus text on a card" width="920">
 
-Below the fold the landscape is one `position: fixed` `.sub-plate` layer living in `App.vue`, shared by the home drawer and every secondary page. It has to be there: `fall` puts a `filter` on the page root, and a filter becomes the containing block for `position: fixed` descendants. The same layer mounted inside `HomeView` measured as a `.home` box (587×1629) scrolling with the document, so it was not a stationary backdrop at all. The other half is that each carousel slot carries its own sinking gradient: write it once on the parent and the slot that fades up covers the dimming, taking the text contrast with it. The measurements behind all three decisions are recorded in the comments of `src/App.vue` and `src/lib/plate.js`.
+Below the fold the landscape is one `position: fixed` `.sub-plate` layer living in `App.vue`, shared by the home section area and every secondary page. It has to be there: `fall` puts a `filter` on the page root, and a filter becomes the containing block for `position: fixed` descendants. The same layer mounted inside `HomeView` measured as a `.home` box (587×1629) scrolling with the document, so it was not a stationary backdrop at all. The other half is that each carousel slot carries its own sinking gradient: write it once on the parent and the slot that fades up covers the dimming, taking the text contrast with it. The measurements behind all three decisions are recorded in the comments of `src/App.vue` and `src/lib/plate.js`.
 
 ### The `fall` afterimage — two pages on screen for 260ms
 

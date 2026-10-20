@@ -186,7 +186,7 @@ const stats = computed(() => {
   overflow-wrap: anywhere;
 }
 
-/* 读数一排三枚：与首页精选同一条断点（900px 折单列），不新造一档。
+/* 读数一排三枚：与首页精选同一条 900px 断点，不新造一档。
    上下各留一档 16：自述卡是满宽的独立卡，不在栅格里，拿不到 .en-cards 的 gap */
 .stats {
   list-style: none;
