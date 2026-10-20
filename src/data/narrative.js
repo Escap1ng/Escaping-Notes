@@ -23,11 +23,15 @@ export const N = {
   heroTitle: 'ESCAPING NOTES',
   manifesto: ['掷墨入渊，星惊不复；', '藏光于页，潮退犹闻。'],
 
-  // 首屏之下的抽屉：一枚读数 + 精选/最近动态的眉标
+  // 首屏之下的卡片区：此刻一枚读数 + 四组内容。`all` 与导航标签拼成每组的出口
+  //（全部文章 / 全部动态 / 全部合集 / 全部项目），所以这里只放"全部"两个字。
   drawer: {
     clock: '此刻',
     featured: '精选',
     recent: '最近动态',
+    collections: '最近合集',
+    projects: '最近项目',
+    all: '全部',
   },
 
   notes: {
