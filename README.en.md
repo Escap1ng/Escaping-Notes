@@ -24,7 +24,7 @@
 
 Left dark / right light. Neither is a screenshot: both are plates recomputed from the site's own constants (`npm run art:build`), drawing the trail layer only, and recomputing the steady-state plate that `prefers-reduced-motion` users are shown. They were lifted by a ×2.8 / ×1.6 developing gain, so the site itself is darker than they look.
 
-A personal blog that treats writing as a long exposure of the night sky: the landing screen is a camera left open, and posts, updates, music, images and projects all land on the same plate. Fully static, fixed at build time, publish on push.
+A personal blog that treats writing as a long exposure of the night sky: the landing screen is a camera left open, with posts ordered by date and collections grouped by theme. Fully static, fixed at build time, publish on push.
 
 **Stack**: Vue 3 · Vue Router 4 · Vite 5 · Canvas 2D. No backend, no third-party UI kit, no font CDN.
 
@@ -45,7 +45,7 @@ A personal blog that treats writing as a long exposure of the night sky: the lan
 
 ## The camera keeps the exposure
 
-This is a personal blog and journal that treats writing as a long exposure of the night sky. One camera set up on the landing screen keeps the time, and posts, updates, music, images and projects all land on the same plate. Three devices:
+This is a personal blog and journal that treats writing as a long exposure of the night sky. One camera set up on the landing screen keeps the time; posts run by date and collections group by theme. Three devices:
 
 - **Scroll as time:** within the landing screen, the further down you go the longer the exposure window and the faster the sky turns (1 → 3.2×); it saturates after 1.1 viewport heights
 - **Pointer as time dilation:** trails within a 180px cursor radius locally accelerate and curl, fastest at the centre (up to 2.8×)
