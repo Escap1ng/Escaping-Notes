@@ -1,6 +1,7 @@
-// 接缝声波的两条回归钉子（2026-10-20）：
+// 接缝声波的三条回归钉子（2026-10-20，10-27 补横向溢出）：
 //   ⑴ 只许长在折线以上：容器底边钉在抽屉顶边、竖条走 flex-end，折线以下不留一段；
-//   ⑵ 手机端的涨落波长收口：390px 要读得出「波」，不再只有左高右平的一段。
+//   ⑵ 手机端的涨落波长收口：390px 要读得出「波」，不再只有左高右平的一段；
+//   ⑶ 整排不越界：根数按 clientWidth 取 floor，末根整根落在容器里，不撑出横向滚动。
 // 跑法：npm test
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -36,7 +37,9 @@ const waveLen = (width) => {
   const max = num('WAVE_LEN_MAX')
   return Math.max(min, Math.min(max, width * num('WAVE_LEN_VW')))
 }
-const cycles = (width) => (Math.ceil((width + 1) / pitch()) * pitch()) / waveLen(width)
+/* 整排占宽：n 根共 pitch·n − gap px，根数取整根放得下的最大值（旧口径 ceil 会多补一根）。 */
+const span = (width) => Math.floor((width + num('BAR_GAP')) / pitch()) * pitch() - num('BAR_GAP')
+const cycles = (width) => span(width) / waveLen(width)
 
 test('接缝声波只立在折线上方，折线以下不留弧段', () => {
   assert.equal(onlyAbove(home), true, '声波仍在接缝上下对称，折线以下还有一段')
@@ -63,4 +66,27 @@ test('手机端波长收口：390px 至少 1.4 个涨落，桌面仍是旧的 53
   // 相位必须真的从这套常数算出来，而不是留着一个没人用的旋钮
   assert.match(home, /const wavePhase = \(\) =>[\s\S]*?WAVE_LEN_MIN[\s\S]*?WAVE_LEN_VW/)
   assert.match(home, /Math\.sin\(i \* phase \+ 0\.9\)/)
+})
+
+test('竖条整根落在容器内：末根不越界，页面不再多出横向滚动', () => {
+  /* 旧口径拿 innerWidth 补根：1590px 视口里 clientWidth 只有 1582px（8px 竖向滚动条），
+     ceil((1590+1)/pitch) = 228 根，整排 1594px，比容器多出 12px——clip-path 只裁画面，
+     不改滚动溢出，页面因此一直挂着横向滚动条。 */
+  const oldSpan = (container, viewport = container) =>
+    Math.ceil((viewport + 1) / pitch()) * pitch() - num('BAR_GAP')
+  assert.equal(oldSpan(1582, 1590) - 1582, 12, '对照失效：旧口径在 1582px 容器上竟然没越界')
+
+  for (const width of [320, 390, 768, 1120, 1440, 1582, 1920]) {
+    assert.ok(span(width) <= width, `${width}px 上整排 ${span(width)}px 越出容器`)
+  }
+
+  // 宽度必须量容器可视宽（clientWidth，已扣滚动条），且取 floor；innerWidth 含滚动条
+  const fn = home.match(/const barCount = \(width\) =>[\s\S]*?WAVE_PITCH\)/)
+  assert.ok(fn, 'HomeView 里找不到 barCount(width)')
+  assert.match(fn[0], /document\.documentElement\.clientWidth/)
+  assert.match(fn[0], /Math\.floor/)
+  assert.doesNotMatch(fn[0], /innerWidth/)
+  // 滚动条出现/消失不发 resize，根数得由容器上的 ResizeObserver 跟着改
+  assert.match(home, /drawerEl\.value\?\.clientWidth/)
+  assert.match(home, /new ResizeObserver\(syncWave\)/)
 })
