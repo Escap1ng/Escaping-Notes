@@ -74,7 +74,7 @@ const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 /* 折线声波的高度与相位：哈希噪声经邻域平滑（不规则但相邻相近，仍舒缓），
    再叠一层慢涨落给出整体起伏；相位加抖动，去掉整齐行波的机械感。
    全部由下标确定，同一屏永远同一排，不随刷新跳变。
-   粗细是设计值，不是视口宽除出来的商：一节 = 竖条 BAR_W + 间隙 BAR_GAP，根数按视口宽补，
+   粗细是设计值，不是视口宽除出来的商：一节 = 竖条 BAR_W + 间隙 BAR_GAP，根数按容器可视宽取整，
    于是每根在任何屏上都是同样的 5px。旧口径是 ≤1679px 恒 240 根、宽度靠 flex 拉伸，实测
    （DPR 1）1123px 上只有 3.672/3.688 两种宽交替、整排都压在半列栅格上，390px 上顶到
    min-width 地板成 1px 且整排 479px 被 html 的 overflow-x 裁掉 45 根。
@@ -98,11 +98,21 @@ const WAVE_LEN_MAX = 530
 const WAVE_LEN_VW = 0.37
 const wavePhase = () =>
   (2 * Math.PI * WAVE_PITCH) / Math.max(WAVE_LEN_MIN, Math.min(WAVE_LEN_MAX, innerWidth * WAVE_LEN_VW))
-const barCount = () => Math.ceil((innerWidth + 1) / WAVE_PITCH) // n 根占 (BAR_W+BAR_GAP)·n−1 px，+1 才刚好不留余量
+/* 根数取"整根放得下"的最大值：n 根共 pitch·n − gap px，floor 后末根不再越出容器。
+   宽度量抽屉自己的 clientWidth（绝对定位的 left/right:0 落在它的 padding box 上），
+   不用 innerWidth——后者含竖向滚动条。根数还要跟着容器宽变：滚动条出现/消失只改
+   clientWidth、不触发 window resize，所以另挂 ResizeObserver（见 onMounted）。
+   旧口径按 innerWidth 用 ceil 补根：1590px 视口、1582px 容器里整排 1594px，页面一直
+   多出 12px 横向滚动；clip-path 只裁画面、不改滚动溢出，收不住这一截。 */
+const barCount = (width) =>
+  Math.floor(((width || document.documentElement.clientWidth) + BAR_GAP) / WAVE_PITCH)
 const waveTune = ref({ count: barCount(), phase: wavePhase() })
-const onWaveResize = debounce(() => {
-  waveTune.value = { count: barCount(), phase: wavePhase() }
-})
+const syncWave = () => {
+  const width = drawerEl.value?.clientWidth || document.documentElement.clientWidth
+  const next = { count: barCount(width), phase: wavePhase() }
+  if (next.count !== waveTune.value.count || next.phase !== waveTune.value.phase) waveTune.value = next
+}
+const onWaveResize = debounce(syncWave)
 const wave = computed(() => {
   const { count, phase } = waveTune.value
   return Array.from({ length: count }, (_, i) => {
@@ -121,11 +131,20 @@ function tick() {
 }
 
 let io = null
+let waveRo = null
 onMounted(async () => {
   tick()
   clk = setInterval(tick, 1000)
   // 挂在早退分支之前：下面那条「隐藏页」路径会 return，声波补根不该只服务于可见页
   addEventListener('resize', onWaveResize)
+  // setup 时 DOM 还没渲染，根数只能拿 clientWidth 的初值；挂载后读一次抽屉的实宽，
+  // 把竖向滚动条出现前后那几像素收回来（读 clientWidth 会强制一次布局）
+  syncWave()
+  // 滚动条出现/消失只改容器宽、不发 resize：根数跟容器走，末根才不会留在界外
+  if (drawerEl.value && 'ResizeObserver' in window) {
+    waveRo = new ResizeObserver(syncWave)
+    waveRo.observe(drawerEl.value)
+  }
   posts.value = await loadPosts()
   loading.value = false
   // 抽屉第一次进入视口时拉出一次，之后断开——它不是滚动监听，docs/design.md §3.2 那条「不要各自写滚动监听」的禁令不适用。
@@ -150,6 +169,7 @@ onUnmounted(() => {
   clearInterval(clk)
   removeEventListener('resize', onWaveResize)
   onWaveResize.cancel()
+  if (waveRo) waveRo.disconnect()
   if (io) io.disconnect()
 })
 </script>
@@ -271,8 +291,8 @@ onUnmounted(() => {
               <li v-for="p in recentProjects" :key="p.name">
                 <RouterLink class="row proj" :to="`/projects/${projectSlug(p.name)}`">
                   <span class="row-top">
-                    <span class="year en-mono">{{ p.year }}</span>
                     <h3 class="name">{{ p.name }}</h3>
+                    <span class="year en-mono">{{ p.year }}</span>
                     <span class="row-go" aria-hidden="true">→</span>
                   </span>
                   <p class="desc">{{ p.desc }}</p>
@@ -324,8 +344,8 @@ onUnmounted(() => {
    clip-path 只裁底边：辉光外扩 4px，不裁会有一圈淡光漏进抽屉，与"只有折线上的"相抵；
    顶端/两侧各放 8px，让辉光其余方向照旧。
    每根恒为 var(--wave-w)、间隙 var(--wave-gap)，两个值由 script 经模板写成 CSS 变量（真值只有一处）；
-   铺满整屏宽靠的是**根数**跟着视口走，不再靠拉伸竖条。所以粗细与节距在任何屏上一致，
-   最后一根会随容器边缘裁掉几 px。 */
+   铺满整屏宽靠的是**根数**跟着容器可视宽走，不再靠拉伸竖条。所以粗细与节距在任何屏上一致，
+   最后一根整根落在容器里，不会越出右沿把页面撑出横向滚动。 */
 .wave {
   position: absolute;
   left: 0;
@@ -730,6 +750,18 @@ a.what:hover .go {
 .year {
   color: var(--text-1);
   font-size: var(--fs-3xs);
+}
+
+/* 年份挪到行首右端：两章的条目名都从章节面左沿起排。原先年份排在名字左边，
+   那一列 30.6px + 一节间隙把项目名顶到 870.6，而左章的合集名在 832——同一行的
+   标题错开近 40px，两列并排时读起来像两条对不齐的账。箭头仍贴右沿，
+   年份是四位等宽，行与行之间自己对齐。 */
+.proj .year {
+  margin-left: auto;
+}
+
+.proj .row-go {
+  margin-left: 0;
 }
 
 .name {
