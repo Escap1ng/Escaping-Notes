@@ -1,9 +1,16 @@
 <script setup>
 // HorizonHero · 首页首屏排版层：站名打字机 + 十六字宣言
-// 长曝光星轨装置由 StarTrails(interactive) 提供，本组件只负责叙事排版
-import { onMounted, onUnmounted, ref } from 'vue'
-import StarTrails from './StarTrails.vue'
+// 长曝光星轨装置由 StarTrails(interactive) 提供（等首屏照片 load 完再按需挂载），本组件只负责叙事排版
+import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 import { N } from '../data/narrative.js'
+import { whenHeroReady } from '../lib/hero.js'
+
+/* 星轨是首屏最重的运行期工作：挂载即跑一次预曝光 buildPlate，之后每帧合成。
+   它底下那张地景才是 LCP——先让照片 load 完，再挂星轨；异步组件顺带把 StarTrails
+   拆出 HomeView 的 chunk，按需下载。隐藏页里 rAF 不推进，星轨就停在"未挂载"，
+   页面可见时再补上，不会抢在照片前面画出一屏无底片的星。 */
+const StarTrails = defineAsyncComponent(() => import('./StarTrails.vue'))
+const stars = ref(false)
 
 const textEl = ref(null)
 
@@ -58,6 +65,12 @@ function scrollDown() {
 onMounted(() => {
   addEventListener('scroll', onScroll, { passive: true })
   typeTitle()
+  // 图先到、星轨后画：等首屏照片 load（whenHeroReady 自带 error / 超时兜底），下一帧再挂。
+  // 隐藏文档里 rAF 不推进（内置 / 无头 surface 就是这一类），这时直接挂，别把星轨永远扣在门外。
+  whenHeroReady().then(() => {
+    if (document.visibilityState === 'hidden') stars.value = true
+    else requestAnimationFrame(() => (stars.value = true))
+  })
 })
 onUnmounted(() => {
   if (raf) cancelAnimationFrame(raf)
@@ -72,8 +85,8 @@ onUnmounted(() => {
     <div class="hero-plate" aria-hidden="true"></div>
 
     <!-- StarTrails 不再对外发事件：变星（文章节点）装置 2026-10-09 整体撤除，
-         首屏不再有点击入口，文章归折线以下的精选卡 -->
-    <StarTrails interactive />
+         首屏不再有点击入口，文章归折线以下的精选卡；挂载本身等首屏照片就位（见 script） -->
+    <StarTrails v-if="stars" interactive />
 
     <div ref="textEl" class="hero-text" :class="{ ready }">
       <h1 class="title" :aria-label="N.heroTitle"
@@ -155,6 +168,24 @@ onUnmounted(() => {
   height: var(--band-h);
   z-index: 0;
   background: var(--hero-img) no-repeat 50% 0 / cover;
+}
+
+/* 星轨等照片 load 完才挂载（见 script）：给它一段淡入，别在已经看得见的照片上硬贴一屏星。
+   只动 opacity；减弱动效下直接出现。 */
+.hero :deep(.st-abs) {
+  animation: stars-in 0.9s ease both;
+}
+
+@keyframes stars-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero :deep(.st-abs) {
+    animation: none;
+  }
 }
 
 .hero-text {

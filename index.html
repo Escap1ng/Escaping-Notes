@@ -47,16 +47,25 @@
       // 两档必须与 site.css 的 --hero-img 逐字同值：预加载错那一张不是"没效果"，是白下 1.5MB、
       // 首屏更慢，而且静默无日志。这条对拍由 tests/hero-preload.test.mjs 从 site.css 解析出来钉住。
       // 刻意不给另一张加 preload：深色访客会把亮色那张也下下来。
+      // 窄屏换 4000px 重采样版（同取景；site.css §3a 的 @media 用同一个断点与图名）：
+      // 手机上是 1.45MB → 0.38MB，桌面原图不动。
       // 只有首页有这块地景（--hero-img 的唯一消费方是 HorizonHero）：次级页与 404 的壳
       // 与首页共用这段脚本，不判路径就会让每篇正文白下 0.65–1.5MB。
       if (location.pathname === '/') {
         const HERO_IMG = { out: '/plates/plate-hero.jpg', well: '/plates/plate-hero-deep.jpg' }
+        const HERO_IMG_SM = { out: '/plates/plate-hero-sm.jpg', well: '/plates/plate-hero-deep-sm.jpg' }
+        const narrow = matchMedia('(max-width: 720px)').matches
+        const table = narrow ? HERO_IMG_SM : HERO_IMG
+        const heroTheme = document.documentElement.dataset.theme
         const heroPre = document.createElement('link')
         heroPre.rel = 'preload'
         heroPre.as = 'image'
-        heroPre.href = HERO_IMG[document.documentElement.dataset.theme] || HERO_IMG.out
+        heroPre.href = table[heroTheme] || table.out
         heroPre.setAttribute('fetchpriority', 'high')
         document.head.appendChild(heroPre)
+        // 手机首页：照片没到之前，正文的展示衬线（CJK 分片 147KB）先别取——把下行让给 LCP。
+        // 见 site.css §3a 的 html.hero-pending；App.vue 在 whenHeroReady() 之后摘掉这个类。
+        if (narrow) document.documentElement.classList?.add('hero-pending')
       }
 
       // 底片模糊（0–12px）必须在首帧前落好，否则进页会先是一种糊度、store 挂上后再跳成另一种。

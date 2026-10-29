@@ -31,6 +31,16 @@ function codeOnly(code) {
   return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
 }
 
+// 首帧允许的 matchMedia 只有一条：选手机档地景的屏宽查询（见 tests/hero-preload.test.mjs）。
+// 配色 / 对比度 / 强制色这些系统偏好一律算"读了系统主题"，旧实现就是栽在这上面。
+function readsSystemTheme(code) {
+  const c = codeOnly(code)
+  if (/prefers-color-scheme|prefers-contrast|forced-colors/.test(c)) return true
+  return [...c.matchAll(/matchMedia\(\s*['"]([^'"]+)['"]\s*\)/g)].some(
+    (m) => !/^\(max-width: \d+px\)$/.test(m[1])
+  )
+}
+
 function runBoot(code, stored, prefersDark) {
   const store = new Map()
   if (stored !== null) store.set(KEYS.theme, stored)
@@ -103,7 +113,7 @@ async function themeWith(attr) {
 
 test('首帧：没存过就是浅色，且完全不读系统偏好', () => {
   const code = bootScript(src('index.html'))
-  assert.ok(!/matchMedia|prefers-color-scheme/.test(codeOnly(code)), '首帧脚本的代码里出现了系统偏好查询')
+  assert.ok(!readsSystemTheme(code), '首帧脚本的代码里出现了系统偏好查询（只允许屏宽 matchMedia）')
   for (const prefersDark of [true, false]) {
     const r = runBoot(code, null, prefersDark)
     assert.equal(r.theme, LIGHT, `系统${prefersDark ? '暗' : '亮'}都该给浅色`)
@@ -201,5 +211,5 @@ test('负向对照：本文件的判据抓得住假首开', () => {
   assert.ok(!fake.includes(`: '${LIGHT}'`))
   assert.match(old, /matchMedia/)
   // 那条"禁查询"的判据拿去跑旧版必须抓得住（否则它只是被注释喂胖的摆设）
-  assert.match(codeOnly(old), /matchMedia|prefers-color-scheme/)
+  assert.ok(readsSystemTheme(old), '"读了系统偏好"的判据抓不住旧版')
 })

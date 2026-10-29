@@ -9,6 +9,7 @@ import { ancestorsOf, collectionHref, postsOf } from '../lib/collections.js'
 import { projectSlug } from '../lib/projects.js'
 import { content } from '../data/index.js'
 import { debounce } from '../lib/debounce.js'
+import { whenHeroReady } from '../lib/hero.js'
 import { N, navLabel } from '../data/narrative.js'
 
 const posts = ref([])
@@ -79,10 +80,21 @@ const WEEK = ['日', '一', '二', '三', '四', '五', '六']
    （DPR 1）1123px 上只有 3.672/3.688 两种宽交替、整排都压在半列栅格上，390px 上顶到
    min-width 地板成 1px 且整排 479px 被 html 的 overflow-x 裁掉 45 根。
    BAR_W/BAR_GAP 由模板写成 CSS 变量交给样式，一处真值。
-   平滑核从 3 抽扩到 5 抽（1-2-3-2-1）：相邻竖条的高度差再收一档，整排读作缓坡而不是锯齿。 */
+   2026-10-29 作者评"波浪设计过于生硬"：平滑核从 5 抽扩到 7 抽（1-2-3-4-3-2-1），
+   峰值 96 → 76、底座 24 → 26、指数 0.8 → 0.9、慢涨落幅度 0.5 → 0.35，值域收到约 18–71px
+   （旧 17–84px）；呼吸从 3.4s / 0.55↔1 收到 5.6s / 0.72↔1，随机相位从 0.9s 收到 0.45s。
+   观感从"一排各自跳动的柱子"变成一条慢慢起伏的带子。 */
 const frac = (x) => x - Math.floor(x)
 const noise = (i) => frac(Math.sin(i * 127.1 + 311.7) * 43758.5453)
-const smooth = (i) => (noise(i - 2) + 2 * noise(i - 1) + 3 * noise(i) + 2 * noise(i + 1) + noise(i + 2)) / 9
+const smooth = (i) =>
+  (noise(i - 3) +
+    2 * noise(i - 2) +
+    3 * noise(i - 1) +
+    4 * noise(i) +
+    3 * noise(i + 1) +
+    2 * noise(i + 2) +
+    noise(i + 3)) /
+  16
 const BAR_W = 5
 const BAR_GAP = 2
 const WAVE_PITCH = BAR_W + BAR_GAP
@@ -118,8 +130,8 @@ const wave = computed(() => {
   return Array.from({ length: count }, (_, i) => {
     const swell = 0.5 + 0.5 * Math.sin(i * phase + 0.9)
     return {
-      h: Math.round((24 + 96 * Math.pow(smooth(i), 0.8) * (0.5 + 0.5 * swell)) * WAVE_H_SCALE),
-      d: `${-(i * 0.06 + noise(i + 41) * 0.9).toFixed(2)}s`,
+      h: Math.round((26 + 76 * Math.pow(smooth(i), 0.9) * (0.65 + 0.35 * swell)) * WAVE_H_SCALE),
+      d: `${-(i * 0.05 + noise(i + 41) * 0.45).toFixed(2)}s`,
     }
   })
 })
@@ -145,6 +157,9 @@ onMounted(async () => {
     waveRo = new ResizeObserver(syncWave)
     waveRo.observe(drawerEl.value)
   }
+  // 章节数据等首屏照片 load 完再取：精选封面与动态行会和 LCP 抢带宽与主线程，
+  // 而它们在折线以下，晚一步没人看得见空窗；合集/项目是同步数据，照常先渲染。
+  await whenHeroReady()
   posts.value = await loadPosts()
   loading.value = false
   // 抽屉第一次进入视口时拉出一次，之后断开——它不是滚动监听，docs/design.md §3.2 那条「不要各自写滚动监听」的禁令不适用。
@@ -369,15 +384,15 @@ onUnmounted(() => {
   background: linear-gradient(to bottom, var(--wave-ink-top), var(--wave-ink));
   box-shadow: 0 0 4px var(--wave-glow);
   transform-origin: center bottom;
-  animation: wave-breathe 3.4s ease-in-out infinite;
+  animation: wave-breathe 5.6s ease-in-out infinite;
   animation-delay: var(--d);
 }
 
 @keyframes wave-breathe {
   0%,
   100% {
-    transform: scaleY(0.55);
-    opacity: 0.78;
+    transform: scaleY(0.72);
+    opacity: 0.9;
   }
   50% {
     transform: scaleY(1);

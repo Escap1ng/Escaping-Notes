@@ -4,12 +4,19 @@ import { useRoute, useRouter } from 'vue-router'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import { debounce } from './lib/debounce.js'
+import { whenHeroReady } from './lib/hero.js'
 import { shift } from './lib/shift.js'
 
 const route = useRoute()
 const router = useRouter()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
 const isSub = computed(() => route.path !== '/')
+
+/* 手机首页的轮播底片等首屏照片 load 完再挂（见模板 .sub-plate 的 live 类与下面的 CSS）。
+   三张 2560px 底片合计约 1.5MB，Slow 4G 上与 LCP 那张照片抢同一条下行——实测首屏
+   从 ~7s 拖到 ~21s。桌面与次级页维持原样：次级页的底片就是正文背景，等不得。 */
+const deferPlate = !isSub.value && matchMedia('(max-width: 720px)').matches
+const plateLive = ref(!deferPlate)
 
 // 站内换页的视图块是按路由动态 import 的：指到链接上就先取，点下去时通常已经就位。
 // 只预热同源、无 target/download 的链接；组件 loader 由路由表自己给出，别在这里再抄一份路径。
@@ -67,6 +74,13 @@ let ro = null
 
 onMounted(() => {
   measure()
+  if (deferPlate) {
+    whenHeroReady().then(() => {
+      plateLive.value = true
+      // 照片已就位，展示衬线可以取回来了（首帧脚本挂的临时降级，见 site.css §3a）
+      document.documentElement.classList.remove('hero-pending')
+    })
+  }
   // body 尺寸变化 = 页面变高了（内容/图片加载、路由切换、字体换入）：重测缓存
   ro = new ResizeObserver(() => {
     measure()
@@ -99,7 +113,7 @@ onUnmounted(() => {
        （rect 587x1629、跟着滚动），根本不是"不动的底图"。挂在这里才在视口上。
        首页与次级页共用这一层；首页上方由 .hero-plate（不透明、在 hero 内）盖住。
        两个 <i> 是轮播的第 2–3 张，父元素自己那张是第 1 张，见下面的 plate-slot。 -->
-  <div class="sub-plate" aria-hidden="true"><i></i><i></i></div>
+  <div class="sub-plate" :class="{ live: plateLive }" aria-hidden="true"><i></i><i></i></div>
   <div class="en-vignette" aria-hidden="true"></div>
   <SiteHeader />
   <main id="main" tabindex="-1" :class="{ 'en-sub': isSub }">
@@ -123,22 +137,37 @@ onUnmounted(() => {
    平纱（原来烘在素材里的 42%）已按要求撤掉，压暗只剩这一条**竖向**渐变：它管的是折线以下
    与页尾的可读性，不再管整幅的"灰"。试过把它改成上下两条纱（中间留清晰窗口）和"顶部淡入 +
    原斜坡"两种形状，实测裸字最坏点仍卡在 1.0~1.8:1 上不去——一张无纱的风景照片上放裸字就是
-   到不了 AA，形状无关；能到 AA 的只有落在卡片上的字（5.5:1 起）。所以这条渐变保持原样，
+   到不了 AA，形状无关；能到 AA 的只有落在卡片上的字（5.5:1 起）。所以这条渐变不负责裸字，
    裸字那几处另案处理（见报告）。
+   2026-10-29：作者嫌上下两片白太大。顶端羽化 180px → 110px，且走"前快后缓"的档位（前 36px
+   已经放到 55%，这一段本来就被顶栏盖着；露出来的 64–110px 只剩一点点淡尾）。底部起点
+   18% → 52%、且只到 100% 才铺满 —— 视口下半截不再是一块死白，最底一条仍能托住页脚。
    模糊不再烘在素材里，是 --plate-blur 这个运行时参数（0–12px 滑杆，见 lib/plate.js）。
    初值 12 = 拉满（默认口味），所以**默认就会建这层渲染面**；只有用户把滑杆拖回 0，
    html[data-plate-blur] 才不匹配、filter 整条消失、回到素材本来的清晰。
    补边（inset 负值）是必需的：blur 会把图层边缘淡进透明，不撑开就在视口四周一圈白边。
-   注意撑开的是 .sub-plate 自己的框，所以顶端那条 180px 羽化和 cover 会跟着挪 3*模糊 的距离。 */
+   注意撑开的是 .sub-plate 自己的框，所以顶端那条羽化和 cover 会跟着挪 3*模糊 的距离。 */
 .sub-plate {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent 18%, var(--ink-0) 78%) no-repeat,
+  background: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%) no-repeat,
     var(--plate-img) no-repeat 50% 34% / cover;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 180px, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 180px, #000 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.55) 36px,
+    rgba(0, 0, 0, 0.88) 72px,
+    #000 110px
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.55) 36px,
+    rgba(0, 0, 0, 0.88) 72px,
+    #000 110px
+  );
 }
 
 html[data-plate-blur] .sub-plate {
@@ -164,7 +193,7 @@ html[data-plate-blur] .sub-plate {
   background-repeat: no-repeat;
   background-size: auto, cover;
   background-position: 50% 0, 50% 34%;
-  background-image: linear-gradient(to bottom, transparent 18%, var(--ink-0) 78%), var(--pi);
+  background-image: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%), var(--pi);
   animation: plate-slot var(--plate-cycle) ease-in-out infinite;
   animation-delay: var(--pd);
 }
@@ -177,6 +206,17 @@ html[data-plate-blur] .sub-plate {
 .sub-plate > i:nth-child(2) {
   --pi: var(--plate-img-3);
   --pd: 19s;
+}
+
+/* 手机首页：首屏照片没到位之前，三张轮播底片先不挂。只留下压暗渐变，页脚 / 抽屉露出来
+   也不会看到半张图；live 类由 script 在 whenHeroReady() 之后加。桌面与次级页从首帧起就是
+   live，所以这两条只影响窄屏首页。 */
+.sub-plate:not(.live) {
+  background-image: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%);
+}
+
+.sub-plate:not(.live) > i {
+  background-image: none;
 }
 
 /* 3.333% = 1s、33.333% = 10s：淡入 1s、满 9s、淡出 1s，其余 20s 待着。 */
