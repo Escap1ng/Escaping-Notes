@@ -28,23 +28,22 @@
   <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in site.css §1 / §2 / §3</text>
 
   <!-- A. 视口剖面 -->
-  <rect x="60" y="70" width="140" height="29" fill="url(#photo)"/>
-  <rect x="60" y="99" width="140" height="96" fill="url(#sink)"/>
-  <rect x="60" y="195" width="140" height="35" fill="#020204"/>
+  <rect x="60" y="70" width="140" height="83" fill="url(#photo)"/>
+  <rect x="60" y="153" width="140" height="77" fill="url(#sink)"/>
   <rect x="60" y="70" width="140" height="160" class="line"/>
-  <path d="M60 88 H200" stroke="#f4f1ea" stroke-opacity=".3" stroke-dasharray="3 3" fill="none"/>
+  <path d="M60 85 H200" stroke="#f4f1ea" stroke-opacity=".3" stroke-dasharray="3 3" fill="none"/>
   <text class="s" x="18" y="74">0svh</text>
   <text class="s" x="12" y="234">100svh</text>
 
-  <path d="M200 84 H208 M200 147 H208 M200 212 H208" class="lead"/>
-  <text class="t" x="216" y="81">photo at full strength · 0 → 18%</text>
-  <text class="s" x="216" y="95">and masked in over the top 180px (the dashed line above)</text>
-  <text class="t" x="216" y="144">sinks into the page colour · 18% → 78%</text>
-  <text class="s" x="216" y="158">linear-gradient(to bottom, transparent 18%, var(--ink-0) 78%)</text>
-  <text class="s" x="216" y="172">every carousel slot carries its own copy — one on the parent</text>
-  <text class="s" x="216" y="186">and the next one fading up would cover the dimming</text>
-  <text class="t" x="216" y="209">solid --ink-0 · 78 → 100%</text>
-  <text class="s" x="216" y="223">footer territory: nothing of the photo survives here</text>
+  <path d="M200 85 H208 M200 160 H208 M200 224 H208" class="lead"/>
+  <text class="t" x="216" y="82">photo at full strength · 0 → 52%</text>
+  <text class="s" x="216" y="96">and masked in over the top 110px (the dashed line above)</text>
+  <text class="t" x="216" y="150">sinks into the page colour · 52% → 100%</text>
+  <text class="s" x="216" y="164">linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%)</text>
+  <text class="s" x="216" y="178">every carousel slot carries its own copy — one on the parent</text>
+  <text class="s" x="216" y="192">and the next one fading up would cover the dimming</text>
+  <text class="t" x="216" y="211">solid --ink-0 · only at the bottom edge (100%)</text>
+  <text class="s" x="216" y="225">footer sits on ~80–90% ink-0 — the photo stays faintly visible</text>
 
   <!-- B. 轮播时序 -->
   <text class="s" x="430" y="252">3.333% / 33.333% / 36.667% of 30s = 1s in · 9s hold · 1s out</text>

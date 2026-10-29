@@ -390,7 +390,11 @@ html:root:not([data-theme='out']) {
   --plate-img: url('/plates/plate-bg-deep.jpg'); /* 深色不轮播：三档指向同一张压暗底，避免夜里换景跳变 */
   --plate-img-2: url('/plates/plate-bg-deep.jpg');
   --plate-img-3: url('/plates/plate-bg-deep.jpg');
+  --plate-img-sm: url('/plates/plate-bg-deep-sm.jpg'); /* 手机档：同图 1280px 重采样（运行时还有 12px 模糊），0.10MB → 0.03MB */
+  --plate-img-2-sm: url('/plates/plate-bg-deep-sm.jpg');
+  --plate-img-3-sm: url('/plates/plate-bg-deep-sm.jpg');
   --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
+  --hero-img-sm: url('/plates/plate-hero-deep-sm.jpg'); /* 手机档：同取景 4000px 重采样，0.62MB → 0.17MB */
 
   /* 阅读底板（.en-glass，文章页与项目详情页共用）的填充已并给卡面那枚 --card-bg，
      由设置卡「卡片颜色」两档一起驱动。这里只留无 backdrop-filter 时的兜底：半透明那一档
@@ -459,7 +463,11 @@ html:root[data-theme='out'] {
   --plate-img: url('/plates/plate-bg-paper1.jpg');
   --plate-img-2: url('/plates/plate-bg-paper3.jpg');
   --plate-img-3: url('/plates/plate-bg-paper4.jpg');
+  --plate-img-sm: url('/plates/plate-bg-paper1-sm.jpg'); /* 手机档：1280px 重采样，三张 1.5MB → 0.49MB；底片运行时糊 12px，降采样看不出来 */
+  --plate-img-2-sm: url('/plates/plate-bg-paper3-sm.jpg');
+  --plate-img-3-sm: url('/plates/plate-bg-paper4-sm.jpg');
   --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面。暗色是同一张取景的压暗版（plate-hero-deep），两套共用一条山脊折线 */
+  --hero-img-sm: url('/plates/plate-hero-sm.jpg'); /* 手机档：同取景 4000px 重采样，1.45MB → 0.38MB */
 
   /* 阅读底板的兜底色：同深色块那一条——底板填充走 --card-bg，这里只在浏览器不支持
      backdrop-filter 时接管（写成 color-mix 而非抄字面量：这块面的语义就是"底色的 78%"，
@@ -474,6 +482,29 @@ html:root[data-theme='out'] {
      压的是接近纯黑的 text-0 与中性的 text-1；同一套算法解到 text-1 ≥ 4.5 要 k ≤ 0.06
      （实测 4.65:1），k=0.1 只有 4.40 —— 不达标。两套主题差 2.5 倍，所以这个值必须分主题定。 */
   --sky-k: 0.06;
+}
+
+/* ---------- 3a. 手机档地景 ----------
+   窄屏把首屏照片换成同取景的 4000px 重采样版（亮 1.45MB → 0.38MB，深 0.62MB → 0.17MB），
+   轮播底片换 1280px 版（三张 1.5MB → 0.49MB；运行时还糊 12px，看不出来）。
+   断点必须与 index.html 首帧 preload 里那条 matchMedia 是同一个数：预加载错版本等于白下
+   一张，首屏反而更慢；tests/hero-preload.test.mjs 从两边解析出来对拍。
+   主题块的选择器是 (0,2,1)，所以这里也写成主题选择器、放在两套主题块之后，靠层叠扳 --hero-img。
+   html.hero-pending 由首帧脚本在手机首页挂上：展示衬线的 CJK 分片先不取，正文标题落到系统宋体，
+   把下行让给 LCP；照片 load 完 App.vue 摘类，字体再换回来（桌面的 Didone 刊头不受影响，
+   它走 --font-display-en）。 */
+html.hero-pending {
+  --font-display: var(--font-serif);
+}
+
+@media (max-width: 720px) {
+  html:root[data-theme='out'],
+  html:root[data-theme='well'] {
+    --hero-img: var(--hero-img-sm);
+    --plate-img: var(--plate-img-sm);
+    --plate-img-2: var(--plate-img-2-sm);
+    --plate-img-3: var(--plate-img-3-sm);
+  }
 }
 
 /* ---------- 3b. 卡面档位：半透明 ----------
@@ -1246,9 +1277,17 @@ html:root[data-card-surface='glass'] .en-glass {
 /* 说明：关键帧里的 filter: blur()/sepia() 是对整页子树生效的，每一帧都要重新栅格化，
    且离开方与进入方并行叠在一起时更甚——这是本站最贵的一处绘制。曾尝试换成
    "只动 opacity/transform + 独立红移覆盖层"，但叠影模糊正是"坍缩"的手感来源，
-   故按设计取舍保留原样。若日后要回收这部分开销，改法与代价见 docs/design.md §9 第 12 条。 */
+   故按设计取舍保留原样。若日后要回收这部分开销，改法与代价见 docs/design.md §9 第 12 条。
+   2026-10-29 作者评"首页切出时过于生硬"，三处调整：
+   ① `transform-origin` 从默认的中心改成顶边。首页整页桌面约 2340px、手机约 3750px，
+      `scale(0.88)` 会把可见内容整体下坠 6% 页高（桌面约 140px、手机约 225px），再叠 260ms
+      的离开时长，就是那一下"猛抽"；锚在顶边只缩不放。
+   ② 几何跳幅收小：进入 0.88 → 0.94、离开 0.9 → 0.965，模糊 15/12 → 10/8px。
+   ③ 色偏压到近乎看不见：sepia 0.6 → 0.22、saturate 2.4 → 1.35、hue -18° → -8°；
+      时长 0.44/0.26 → 0.56/0.38s，两页重叠从 260ms 拉到 380ms，交接更像交叉淡化。 */
 .fall-enter-active {
-  animation: fall-in 0.44s cubic-bezier(0.52, 0.04, 0.24, 1);
+  transform-origin: 50% 0;
+  animation: fall-in 0.56s cubic-bezier(0.22, 0.61, 0.24, 1);
 }
 
 .fall-leave-active {
@@ -1257,14 +1296,15 @@ html:root[data-card-surface='glass'] .en-glass {
   left: 0;
   right: 0;
   pointer-events: none;
-  animation: fall-out 0.26s cubic-bezier(0.36, 0.1, 0.6, 0.42);
+  transform-origin: 50% 0;
+  animation: fall-out 0.38s cubic-bezier(0.4, 0.05, 0.7, 0.25);
 }
 
 @keyframes fall-in {
   from {
     opacity: 0;
-    transform: scale(0.88);
-    filter: blur(15px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
+    transform: scale(0.94);
+    filter: blur(10px) sepia(0.22) saturate(1.35) hue-rotate(-8deg);
   }
   to {
     opacity: 1;
@@ -1281,8 +1321,8 @@ html:root[data-card-surface='glass'] .en-glass {
   }
   to {
     opacity: 0;
-    transform: scale(0.9);
-    filter: blur(12px) sepia(0.6) saturate(2.4) hue-rotate(-18deg);
+    transform: scale(0.965);
+    filter: blur(8px) sepia(0.22) saturate(1.35) hue-rotate(-8deg);
   }
 }
 
