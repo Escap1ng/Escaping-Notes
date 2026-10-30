@@ -1,8 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate sinking into the page colour, three carousel slots staggered over a 30 second cycle, and the measured contrast of naked text versus text on a card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate under a solid 72px top band, sinking into the page colour, three carousel slots staggered over a 30 second cycle, and the measured contrast of naked text versus text on a card">
   <defs>
     <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".5"/>
       <stop offset="1" stop-color="#8ec9ff" stop-opacity=".3"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#020204" stop-opacity="1"/>
+      <stop offset="1" stop-color="#8ec9ff" stop-opacity=".5"/>
     </linearGradient>
     <linearGradient id="sink" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".3"/>
@@ -27,23 +31,26 @@
   <text class="h" x="40" y="30">site backdrop, vertical cross-section</text>
   <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in site.css §1 / §2 / §3</text>
 
-  <!-- A. 视口剖面 -->
-  <rect x="60" y="70" width="140" height="83" fill="url(#photo)"/>
+  <!-- A. 视口剖面：顶部 72px 白带 → 72–182px 羽化 → 照片满强度到 52% → 沉回页面色 -->
+  <rect x="60" y="70" width="140" height="13" fill="#020204"/>
+  <rect x="60" y="83" width="140" height="20" fill="url(#band)"/>
+  <rect x="60" y="103" width="140" height="50" fill="url(#photo)"/>
   <rect x="60" y="153" width="140" height="77" fill="url(#sink)"/>
   <rect x="60" y="70" width="140" height="160" class="line"/>
-  <path d="M60 85 H200" stroke="#f4f1ea" stroke-opacity=".3" stroke-dasharray="3 3" fill="none"/>
+  <path d="M60 83 H200" stroke="#f4f1ea" stroke-opacity=".3" fill="none"/>
   <text class="s" x="18" y="74">0svh</text>
   <text class="s" x="12" y="234">100svh</text>
 
-  <path d="M200 85 H208 M200 160 H208 M200 224 H208" class="lead"/>
-  <text class="t" x="216" y="82">photo at full strength · 0 → 52%</text>
-  <text class="s" x="216" y="96">and masked in over the top 110px (the dashed line above)</text>
-  <text class="t" x="216" y="150">sinks into the page colour · 52% → 100%</text>
-  <text class="s" x="216" y="164">linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%)</text>
-  <text class="s" x="216" y="178">every carousel slot carries its own copy — one on the parent</text>
-  <text class="s" x="216" y="192">and the next one fading up would cover the dimming</text>
-  <text class="t" x="216" y="211">solid --ink-0 · only at the bottom edge (100%)</text>
-  <text class="s" x="216" y="225">footer sits on ~80–90% ink-0 — the photo stays faintly visible</text>
+  <path d="M200 76 H208 M200 120 H208 M200 160 H208 M200 212 H208" class="lead"/>
+  <text class="t" x="216" y="79">solid --ink-0 · 0 → 72px</text>
+  <text class="s" x="216" y="93">the un-stuck transparent top bar sits here (nav 5.8:1 light / 6.3:1 dark)</text>
+  <text class="t" x="216" y="123">masked in · 72 → 182px</text>
+  <text class="s" x="216" y="137">transparent at 72px → #000 at 182px, stops offset by --plate-pad</text>
+  <text class="t" x="216" y="163">photo at full strength · 182px → 52%</text>
+  <text class="s" x="216" y="177">every carousel slot carries its own sink copy — one on the parent</text>
+  <text class="s" x="216" y="191">and the next one fading up would cover the dimming</text>
+  <text class="t" x="216" y="215">sinks into the page colour · 52% → 100%</text>
+  <text class="s" x="216" y="229">footer sits on ~80–90% ink-0 — the photo stays faintly visible</text>
 
   <!-- B. 轮播时序 -->
   <text class="s" x="430" y="252">3.333% / 33.333% / 36.667% of 30s = 1s in · 9s hold · 1s out</text>
@@ -68,13 +75,13 @@
 
   <!-- C. 对比度实测 -->
   <text class="h" x="40" y="382">foreground contrast, measured</text>
-  <rect x="40" y="390" width="170" height="26" fill="#020204"/>
-  <rect x="40" y="390" width="170" height="26" fill="#ff5c39" fill-opacity=".55"/>
-  <text class="t" x="50" y="407">naked · 1.0-1.8:1</text>
-  <rect x="220" y="390" width="170" height="26" fill="#020204"/>
-  <rect x="220" y="390" width="170" height="26" fill="#8ec9ff" fill-opacity=".2"/>
-  <text class="t" x="230" y="407">on a card · 5.5:1 +</text>
-  <text class="s" x="410" y="401">A scrim-free photo cannot reach AA for naked text, whatever</text>
-  <text class="s" x="410" y="415">shape the gradient has — so the plate is scenery, and body</text>
-  <text class="s" x="410" y="429">copy belongs on .pane / .en-glass / .en-card.</text>
+  <rect x="40" y="390" width="190" height="26" fill="#020204"/>
+  <rect x="40" y="390" width="190" height="26" fill="#ff5c39" fill-opacity=".55"/>
+  <text class="t" x="50" y="407">on photo · 1.3-2.4:1</text>
+  <rect x="240" y="390" width="160" height="26" fill="#020204"/>
+  <rect x="240" y="390" width="160" height="26" fill="#8ec9ff" fill-opacity=".2"/>
+  <text class="t" x="250" y="407">on a card · 5.5:1 +</text>
+  <text class="s" x="420" y="401">A scrim-free photo cannot reach AA for naked text, whatever shape</text>
+  <text class="s" x="420" y="415">the gradient has — except the solid 72px band at the top, which</text>
+  <text class="s" x="420" y="429">carries the top bar. Body copy belongs on .pane / .en-glass / .en-card.</text>
 </svg>
