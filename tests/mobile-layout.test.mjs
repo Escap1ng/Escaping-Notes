@@ -1,5 +1,5 @@
 // 手机端的回归钉子（2026-10-19 实测 390/360/320，2026-10-30 补触控兜底）：
-//   ⑴ 刊头整行约 9.22em，字号按 9.2vw 铺满约 85% 视口（全档位同一条式子）；
+//   ⑴ 刊头整行约 9.22em，字号按 8.8vw 铺满约 81% 视口（全档位同一条式子）；
 //   ⑵ 三列表格在 320px 上必须能自己横向滚动；
 //   ⑶ 触屏拖动也会发 pointermove，透镜不该跟着滚动改光斑坐标；
 //   ⑷ 点按不闪灰底、iOS 不放大正文、32px 图标钮热区外撑 4px 到 40px；
@@ -18,7 +18,7 @@ const src = (p) => readFileSync(join(ROOT, p), 'utf8')
 // 判据做成纯函数：负向对照喂改坏的样本文本，而不是对着字面量自说自话
 const fitted = (css) => {
   const m = css.match(/--fs-hero-title:\s*([^;]+);/)
-  return !!m && /^\s*9\.2vw\s*$/.test(m[1])
+  return !!m && /^\s*8\.8vw\s*$/.test(m[1])
 }
 
 function tableScrolls(css) {
@@ -28,9 +28,9 @@ function tableScrolls(css) {
   return { displayBlock: /display:\s*block/.test(block[1]), scrollX: /overflow-x:\s*auto/.test(block[1]) }
 }
 
-test('刊头按 9.2vw 铺满约 85% 视口，旧 clamp 与 10.5vw 都不许复活', () => {
+test('刊头按 8.8vw 铺满约 81% 视口，旧 clamp 与 10.5vw 都不许复活', () => {
   const hero = src('src/components/HorizonHero.vue')
-  assert.equal(fitted(hero), true, '刊头字号不再是 9.2vw：整行会偏离 85% 视口')
+  assert.equal(fitted(hero), true, '刊头字号不再是 8.8vw：整行会偏离 81% 视口')
   // 负向对照：换成 2026-10-13 那版裸 clamp 或旧 10.5vw，同一条判据必须变红
   assert.equal(fitted(hero.replace(/--fs-hero-title:\s*[^;]+;/, '--fs-hero-title: clamp(40px, 7vw, 96px);')), false)
   assert.equal(fitted(hero.replace(/--fs-hero-title:\s*[^;]+;/, '--fs-hero-title: 10.5vw;')), false)
