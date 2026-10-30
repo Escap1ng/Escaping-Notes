@@ -93,8 +93,10 @@ function clearFilters() {
 
 <template>
   <section class="en-shell">
-    <h2 class="en-h2">{{ navLabel('/blog') }}</h2>
-    <p class="en-lede">{{ N.notes.archive }}</p>
+    <header class="en-head">
+      <h2 class="en-h2">{{ navLabel('/blog') }}</h2>
+      <p class="en-lede">{{ N.notes.archive }}</p>
+    </header>
 
     <!-- 四枚读数：与关于页那三枚同一张卡面、同一套字号（.stat / .sv / .sk 的写法照它） -->
     <ul class="stats" :aria-busy="loading">

@@ -228,6 +228,7 @@ onUnmounted(() => {
   background: none;
   color: var(--text-1);
   cursor: pointer;
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
 }
 
 .close:hover {
@@ -313,6 +314,7 @@ onUnmounted(() => {
   padding: 0;
   border: 1px solid transparent;
   color: var(--text-1);
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
 }
 
 .t-btn:hover {

@@ -163,6 +163,10 @@ watch(() => route.fullPath, () => emit('close'))
   border-color: var(--card-brd-hover);
 }
 
+.close {
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
 .lbl {
   margin: 0;
   color: var(--text-1);

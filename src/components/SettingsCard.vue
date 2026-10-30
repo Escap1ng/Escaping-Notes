@@ -161,6 +161,10 @@ onUnmounted(() => {
   border-color: var(--card-brd-hover);
 }
 
+.close {
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
 .row {
   display: flex;
   align-items: baseline;

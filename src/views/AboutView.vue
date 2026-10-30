@@ -42,7 +42,9 @@ const stats = computed(() => {
 
 <template>
   <section class="en-shell">
-    <h2 class="en-h2">{{ navLabel('/about') }}</h2>
+    <header class="en-head">
+      <h2 class="en-h2">{{ navLabel('/about') }}</h2>
+    </header>
 
     <!-- 自述：头像 + 长段第一人称，满宽一张 -->
     <div class="en-card wide en-lens" @pointermove="onLens">

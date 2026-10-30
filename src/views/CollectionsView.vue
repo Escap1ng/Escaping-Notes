@@ -37,8 +37,10 @@ function tally(c) {
 
 <template>
   <section class="en-shell">
-    <h2 class="en-h2">{{ navLabel('/collections') }}</h2>
-    <p class="en-lede">{{ N.hints.collections }}</p>
+    <header class="en-head">
+      <h2 class="en-h2">{{ navLabel('/collections') }}</h2>
+      <p class="en-lede">{{ N.hints.collections }}</p>
+    </header>
 
     <div class="volumes">
       <article v-for="(c, i) in roots" :key="c.slug" class="volume">

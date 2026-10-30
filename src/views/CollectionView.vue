@@ -46,27 +46,33 @@ onMounted(async () => {
 
 <template>
   <section class="en-shell">
-    <nav class="crumbs en-mono" aria-label="合集路径">
-      <RouterLink to="/collections">{{ N.collection.crumb }}</RouterLink>
-      <template v-for="c in chain" :key="c.slug">
-        <span class="sep" aria-hidden="true">/</span>
-        <RouterLink v-if="c.slug !== slug" :to="collectionHref(c.slug)">{{ c.title }}</RouterLink>
-        <span v-else aria-current="page">{{ c.title }}</span>
-      </template>
-    </nav>
+    <header class="en-head">
+      <nav class="crumbs en-mono" aria-label="合集路径">
+        <RouterLink to="/collections">{{ N.collection.crumb }}</RouterLink>
+        <template v-for="c in chain" :key="c.slug">
+          <span class="sep" aria-hidden="true">/</span>
+          <RouterLink v-if="c.slug !== slug" :to="collectionHref(c.slug)">{{ c.title }}</RouterLink>
+          <span v-else aria-current="page">{{ c.title }}</span>
+        </template>
+      </nav>
+    </header>
 
     <div v-if="!collection" class="lost">
-      <h2 class="en-h2">{{ N.collection.lost }}</h2>
+      <header class="en-head">
+        <h2 class="en-h2">{{ N.collection.lost }}</h2>
+      </header>
       <RouterLink class="en-btn en-btn-ghost" to="/collections">{{ N.collection.crumb }}</RouterLink>
     </div>
 
     <template v-else>
-      <h2 class="en-h2">{{ collection.title }}</h2>
-      <p class="en-lede">{{ collection.summary }}</p>
-      <p class="tally en-mono">
-        {{ totalLabel }}
-        <span v-if="kids.length"> · {{ N.collection.kids.replace('{n}', kids.length) }}</span>
-      </p>
+      <header class="en-head">
+        <h2 class="en-h2">{{ collection.title }}</h2>
+        <p class="en-lede">{{ collection.summary }}</p>
+        <p class="tally en-mono">
+          {{ totalLabel }}
+          <span v-if="kids.length"> · {{ N.collection.kids.replace('{n}', kids.length) }}</span>
+        </p>
+      </header>
 
       <section v-if="kids.length" class="block">
         <h3 class="block-head en-mono">{{ N.collection.children }}</h3>
@@ -131,7 +137,8 @@ onMounted(async () => {
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-0);
-  margin-bottom: var(--space-2);
+  /* 进了 .en-head 底卡：间距交给卡的 flex gap，不再自持下边距 */
+  margin-bottom: 0;
 }
 
 .crumbs a {
@@ -159,7 +166,8 @@ onMounted(async () => {
 }
 
 .tally {
-  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  /* 进了 .en-head 底卡：上边距由卡的 flex gap 接管，下边距归 .en-head 自己的 margin */
+  margin: var(--space-1) 0 0;
   font-size: var(--fs-3xs);
 }
 
@@ -360,7 +368,7 @@ onMounted(async () => {
   }
 
   .tally {
-    margin-top: calc(var(--space-1) * -1);
+    margin-top: 0;
   }
 }
 

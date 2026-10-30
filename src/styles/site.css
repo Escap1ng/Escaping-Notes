@@ -114,7 +114,7 @@ body {
 }
 
 ::selection {
-  background: var(--signal);
+  background: var(--cold);
   color: var(--ink-0);
 }
 
@@ -124,7 +124,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--cold);
   outline-offset: 3px;
 }
 
@@ -656,6 +656,33 @@ html:root main.en-sub {
   font-size: var(--fs-base);
   line-height: var(--lh-relaxed);
   margin: 0 0 var(--space-3);
+}
+
+/* 页头一张底卡：次级页 H1/导语从「坐底片」改成「坐卡面」。白带只保顶栏那 72px，
+   页头落在 72→182px 的渐变段上，裸字实测只有 1.0~2.4:1（§3.3 那笔明账）；
+   卡面不透底档造好后字 ≥5.5:1。配方与首页章节底卡同一档：底 --card-bg、边 --card-brd、
+   圆角 --r-md，「卡片颜色」两档跟着一起翻；不建 backdrop-filter（常驻面禁令，同 §6d）。
+   本类不带 html:root 前缀，与 §6d 同一理由：页面要留形态权（如 404 的居中变体）。 */
+.en-head {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-4);
+  padding: var(--card-pad-lg) var(--card-pad-lg) var(--card-pad);
+  border: 1px solid var(--card-brd);
+  border-radius: var(--r-md);
+  background: var(--card-bg);
+}
+
+.en-head .en-h2 {
+  margin: 0;
+}
+
+.en-head .en-lede {
+  margin: 0;
+  max-width: var(--measure);
 }
 
 .en-mono {

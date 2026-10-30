@@ -9,8 +9,10 @@ import { N, navLabel } from '../data/narrative.js'
 
 <template>
   <section class="en-shell">
-    <h2 class="en-h2">{{ navLabel('/projects') }}</h2>
-    <p class="en-lede">{{ N.hints.projects }}</p>
+    <header class="en-head">
+      <h2 class="en-h2">{{ navLabel('/projects') }}</h2>
+      <p class="en-lede">{{ N.hints.projects }}</p>
+    </header>
 
     <ul class="en-cards">
       <li v-for="p in content.projects" :key="p.name">

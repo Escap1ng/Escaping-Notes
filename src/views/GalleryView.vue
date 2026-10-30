@@ -74,8 +74,10 @@ onUnmounted(() => {
 
 <template>
   <section class="en-shell gallery">
-    <h2 class="en-h2">{{ navLabel('/gallery') }}</h2>
-    <p class="en-lede">{{ N.hints.gallery }}</p>
+    <header class="en-head">
+      <h2 class="en-h2">{{ navLabel('/gallery') }}</h2>
+      <p class="en-lede">{{ N.hints.gallery }}</p>
+    </header>
     <p class="tally en-mono">{{ tally }} · {{ N.gallery.open }}</p>
 
     <ul v-if="shots.length" class="wall">
