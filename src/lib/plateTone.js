@@ -10,7 +10,16 @@
 
 const TOP = 76 // 顶栏高度（触控档 76px，宽屏 65px；取大的那一档）
 const SLOT_MS = 10000 // 与 site.css 的 --plate-cycle 30s / 3 张同拍
-const REDUCED = matchMedia('(prefers-reduced-motion: reduce)')
+const CYCLE_MS = SLOT_MS * 3
+const CROSS_MS = 500 // 相邻两张交叉 1s，取中点换色
+
+// 动画时钟 → 该用第几张的字色（0/1/2）。抽出来是为了能单独跑判据，
+// 边界值被 tests/plate-tone.test.mjs 钉住。
+export function plateSlot(t) {
+  return Math.floor(((((t + CROSS_MS) % CYCLE_MS) + CYCLE_MS) % CYCLE_MS) / SLOT_MS)
+}
+// 惰性问一次：模块顶层不碰 DOM，判据（tests/plate-tone.test.mjs）才能 import 它
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const lin = (v) => {
   const c = v / 255
@@ -75,7 +84,6 @@ async function sampleStrip(url) {
 export function createPlateTone() {
   let tones = [] // [{ lo, hi, fg, cold }] 三张的顺序：--plate-img / -2 / -3
   let timer = 0
-  let start = 0
   let current = -1
   let running = false
   let token = 0 // 主题切换后旧采样作废
@@ -98,16 +106,19 @@ export function createPlateTone() {
 
   // 当前该用哪一张的字色 = 底片动画自己走到哪一档，而不是"采样器启动了几秒"。
   // 两者不是同一个钟：先逛首页再 SPA 跳到次级页时，.sub-plate 的轮播早就在跑，
-  // 按自己的秒数算会永久错开 10~20s（字色对不上当前那张）。第一层 <i> 的 CSS 动画
-  // 延迟 9s，所以 全局相位 = currentTime + 9000，再按 30s 一圈切成三档。
+  // 按自己的秒数算会永久错开 10~20s（字色对不上当前那张）。
+  // 关键：CSS 动画的 currentTime **从动画创建算起，已经把 animation-delay 吃在内**。
+  // 2026-10-30 用 CDP 把 currentTime 钉到 10000 实测：第一层 <i>（delay 9s）的透明度
+  // 正好是 1，即它此刻已在 delay 之后 1s。所以全局相位就是 currentTime 本身，不加 9s
+  // ——早先那版 `+9000` 等于把字色永久提前一整档，读起来就是"卡不上点"。
+  // 换色时刻取交叉的中点：每张淡入、淡出各 1s（9→10、19→20、29→30s），
+  // 中点 9.5 / 19.5 / 29.5s 时新旧两张各半、字色再快也不会在整块旧底上先变。
   function phase() {
     const a = document.querySelector('.sub-plate > i')?.getAnimations?.()[0]
     const t = a?.currentTime
-    if (typeof t === 'number' && Number.isFinite(t)) {
-      return Math.floor((((t + 9000) % 30000) + 30000) % 30000 / SLOT_MS)
-    }
-    // 拿不到动画（无动画层、或减弱动效停成了第一张）：按启动秒数兜底
-    return Math.floor((performance.now() - start) / SLOT_MS) % 3
+    if (typeof t === 'number' && Number.isFinite(t)) return plateSlot(t)
+    // 拿不到动画（DOM 还没挂、无动画层、减弱动效停成第一张）：那就是第一张
+    return 0
   }
 
   async function sample() {
@@ -136,7 +147,7 @@ export function createPlateTone() {
       return { ...s, fg, cold: worst(cold, s) >= 4.5 }
     })
     // 减弱动效：轮播停在第一张，字色只认第一张
-    if (REDUCED.matches) {
+    if (reducedMotion()) {
       apply(0)
       return
     }
@@ -151,7 +162,7 @@ export function createPlateTone() {
 
   function tick() {
     // 减弱动效：轮播停在第一张，字色不跟着时间翻了
-    if (REDUCED.matches) {
+    if (reducedMotion()) {
       if (current !== 0) apply(0)
       return
     }
@@ -163,11 +174,11 @@ export function createPlateTone() {
     start() {
       if (running) return
       running = true
-      start = performance.now()
       // 立刻采：三张底片此时已经是 .sub-plate 的背景、正从缓存里出来，onload 很快；
       // 早一步落定字色，省掉「默认灰字压在照片上」那几帧
       sample()
-      timer = setInterval(tick, 400)
+      // 250ms 而不是 1s：换色点落在交叉中点，对表越粗、字色就越可能晚半拍
+      timer = setInterval(tick, 250)
       document.addEventListener('visibilitychange', onVis)
     },
     stop() {
