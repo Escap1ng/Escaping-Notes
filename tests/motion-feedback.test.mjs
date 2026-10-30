@@ -46,7 +46,10 @@ const NON_FEEDBACK = {
     /transition: opacity 0\.34s ease, transform 0\.34s/, // 抽屉条目进出场
     /transition: opacity 0\.2s ease, transform 0\.22s/, // 播放器浮层开合
   ],
-  'src/components/HorizonHero.vue': [/transition: opacity 0\.6s ease/], // 打字机光标退场
+  'src/components/HorizonHero.vue': [
+    /transition: opacity 0\.6s ease/, // 打字机光标退场
+    /transition: opacity 0\.24s ease/, // 地景图入场：替身→实景的交叉淡入，不是指针反馈
+  ],
 }
 
 test('四枚指针反馈令牌定义了，而且真的被消费', () => {
@@ -114,9 +117,9 @@ test('指针反馈不许写裸时长：每条 transition 要么用令牌，要�
       whitelisted++
     }
   }
-  // 5 条是眼下所有"非指针反馈"的裸时长（吸顶 / 抽屉开合 / 抽屉条目 / 播放器浮层 / 光标退场）
-  // 加上 site.css 的两条例外（减弱动效开关、衍射芒缓绽）。新例外要写进 NON_FEEDBACK 才算数。
-  assert.ok(whitelisted >= 5 && whitelisted <= 7, `例外数量异常（${whitelisted}）：名单或判据出了问题`)
+  // 7 条是眼下所有"非指针反馈"的裸时长（吸顶 / 抽屉开合 / 抽屉条目 / 播放器浮层 / 光标退场 /
+  // 地景淡入）加上 site.css 的两条例外（减弱动效开关、衍射芒缓绽）。新例外要写进 NON_FEEDBACK 才算数。
+  assert.ok(whitelisted >= 7 && whitelisted <= 8, `例外数量异常（${whitelisted}）：名单或判据出了问题`)
 })
 
 // 同一个"点开看大图"必须共用一种指针：文章页插图与映像墙照片都是 zoom-in

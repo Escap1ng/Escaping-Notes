@@ -11,6 +11,9 @@ import { whenHeroReady } from '../lib/hero.js'
    页面可见时再补上，不会抢在照片前面画出一屏无底片的星。 */
 const StarTrails = defineAsyncComponent(() => import('./StarTrails.vue'))
 const stars = ref(false)
+// 地景图默认透明，等 whenHeroReady() 后再淡入；替身（.hero-lqip）垫在下面，
+// 于是照片是从一层模糊山影里"对焦"出来的。闸门带 error/20s 超时兜底，不会永远藏着。
+const plateReady = ref(false)
 
 const textEl = ref(null)
 
@@ -68,6 +71,7 @@ onMounted(() => {
   // 图先到、星轨后画：等首屏照片 load（whenHeroReady 自带 error / 超时兜底），下一帧再挂。
   // 隐藏文档里 rAF 不推进（内置 / 无头 surface 就是这一类），这时直接挂，别把星轨永远扣在门外。
   whenHeroReady().then(() => {
+    plateReady.value = true
     if (document.visibilityState === 'hidden') stars.value = true
     else requestAnimationFrame(() => (stars.value = true))
   })
@@ -81,8 +85,13 @@ onUnmounted(() => {
 
 <template>
   <section class="hero">
+    <!-- 首屏第一帧的替身：36px 宽的模糊底（data URI，见 site.css 主题块）。
+         单独一层压在地景图下面，真图不透明、到了自然盖住；不并进 .hero-plate 的背景层，
+         否则 LCP 会记到真图之后的字体换入上（实测晚 1.3s）。 -->
+    <div class="hero-lqip" aria-hidden="true"></div>
+
     <!-- 首屏地景：DOM 排在 canvas 之前，所以星轨画在它上面。装饰层，读屏跳过 -->
-    <div class="hero-plate" aria-hidden="true"></div>
+    <div class="hero-plate" :class="{ ready: plateReady }" aria-hidden="true"></div>
 
     <!-- StarTrails 不再对外发事件：变星（文章节点）装置 2026-10-09 整体撤除，
          首屏不再有点击入口，文章归折线以下的精选卡；挂载本身等首屏照片就位（见 script） -->
@@ -130,10 +139,11 @@ onUnmounted(() => {
   --peak-y: calc(var(--svh) - var(--band-h) + 0.208 * max(var(--band-h), 31vw));
   /* lockup 自己的高：站名一行 + --space-3 那口气 + 宣言两行。字号/行高都引下面那两条规则
      用的同一组令牌，改字号不会让这里的推算悄悄失准 */
-  /* 40px 的刊头整行约 9.38em 宽：375px 视口刚好贴边，360 上左右各被裁 7.6px、
-     320 上各裁 27.6px（2026-10-19 实测）。10.5vw 只在窄屏收口：360→37.8px、
-     320→33.6px，375–381 之间 39.4px，381px 以上仍回原 clamp 的 40px，宽屏一字不改。 */
-  --fs-hero-title: min(clamp(40px, 7vw, 96px), 10.5vw);
+  /* 刊头一行约 9.38em 宽。2026-10-30 之前窄屏只拿 10.5vw 收口，整行占到 98.5% 视口：
+     390 上左右只剩 7.4px、360 剩 2.8px、320 剩 2.5px，几乎贴边，与正文 16px 的页边对不齐。
+     改成 9.5vw 后标题约占 89% 视口，三档实测左右留白 21.3 / 19.6 / 17.5px（320 仍比 16px
+     页边宽一点，不会顶出容器）。宽屏不受影响：421px 以上回到 clamp 的 40px 下限。 */
+  --fs-hero-title: min(clamp(40px, 7vw, 96px), 9.5vw);
   --lh-hero-title: 1.1;
   --fs-manifesto: clamp(14px, 2vw, 22px);
   --lh-manifesto: 1.8;
@@ -160,6 +170,18 @@ onUnmounted(() => {
    横带高度在这里，画面取哪一段是 bake 里的 700/1120/2560。
    暗色是同一取景的压暗版（plate-hero-deep.jpg，build_plate_bg.ps1 用同一个 $full 烘出），
    同一条天空纱改成压向 #020204，所以顶端也是 #020204、同样没有缝；两套共用一条山脊折线。 */
+.hero-lqip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--band-h);
+  z-index: 0;
+  /* 替身本身就烘过模糊（36px 原图），这里不再加 filter：滤镜会给整块横带开一层合成面，
+     实测会把地景的 LCP 拖到真图之后（一到两秒不等）。纯背景层没有这个问题。 */
+  background: var(--hero-lqip) no-repeat 50% 0 / cover;
+}
+
 .hero-plate {
   position: absolute;
   bottom: 0;
@@ -168,6 +190,14 @@ onUnmounted(() => {
   height: var(--band-h);
   z-index: 0;
   background: var(--hero-img) no-repeat 50% 0 / cover;
+  /* 真图到达后从替身里淡出（见 script 的 plateReady）。先透明：图没就位时
+     不会有一帧硬切，下面的 .hero-lqip 一直可见 */
+  opacity: 0;
+}
+
+.hero-plate.ready {
+  opacity: 1;
+  transition: opacity 0.24s ease;
 }
 
 /* 星轨等照片 load 完才挂载（见 script）：给它一段淡入，别在已经看得见的照片上硬贴一屏星。

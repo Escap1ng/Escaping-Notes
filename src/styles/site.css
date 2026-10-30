@@ -394,7 +394,9 @@ html:root:not([data-theme='out']) {
   --plate-img-2-sm: url('/plates/plate-bg-deep-sm.jpg');
   --plate-img-3-sm: url('/plates/plate-bg-deep-sm.jpg');
   --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
-  --hero-img-sm: url('/plates/plate-hero-deep-sm.jpg'); /* 手机档：同取景 4000px 重采样，0.62MB → 0.17MB */
+  --hero-img-sm: url('/plates/plate-hero-deep-sm.jpg'); /* 手机档：同取景 1800px 重采样，0.62MB → 0.05MB */
+  /* 首屏第一帧的替身：36px 宽的模糊底（0.46KB data URI）随样式表一起到，真图不透明、load 完自然盖住 */
+  --hero-lqip: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAALACQDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAIEAQb/xAAeEAACAgIDAQEAAAAAAAAAAAAAAQIDERIhUVIxQv/EABYBAQEBAAAAAAAAAAAAAAAAAAEAAv/EABURAQEAAAAAAAAAAAAAAAAAAAAR/9oADAMBAAIRAxEAPwDklTR5Qk40RXEU2SbPH1i5fHJuCqIOrL2gh9aH+UTZMy+xgqlxp8oCZSfYBFX/2Q==');
 
   /* 阅读底板（.en-glass，文章页与项目详情页共用）的填充已并给卡面那枚 --card-bg，
      由设置卡「卡片颜色」两档一起驱动。这里只留无 backdrop-filter 时的兜底：半透明那一档
@@ -467,7 +469,9 @@ html:root[data-theme='out'] {
   --plate-img-2-sm: url('/plates/plate-bg-paper3-sm.jpg');
   --plate-img-3-sm: url('/plates/plate-bg-paper4-sm.jpg');
   --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面。暗色是同一张取景的压暗版（plate-hero-deep），两套共用一条山脊折线 */
-  --hero-img-sm: url('/plates/plate-hero-sm.jpg'); /* 手机档：同取景 4000px 重采样，1.45MB → 0.38MB */
+  --hero-img-sm: url('/plates/plate-hero-sm.jpg'); /* 手机档：同取景 1800px 重采样，1.45MB → 0.09MB */
+  /* 首屏第一帧的替身：36px 宽的模糊底（0.52KB data URI）随样式表一起到，真图不透明、load 完自然盖住 */
+  --hero-lqip: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAALACQDASIAAhEBAxEB/8QAGAABAAMBAAAAAAAAAAAAAAAABgACBAP/xAAlEAACAgEDAQkAAAAAAAAAAAABAgADEQQSIQUGExUiMjNBkaH/xAAXAQEAAwAAAAAAAAAAAAAAAAACAQME/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMTUf/aAAwDAQACEQMRAD8ARrruObv2ZdX1xaVIrs3vBQutC4Dt9zj3jnaSxmhY+lbkhbp+0lm5heTj4ImrxxWGRYwg7cwxzKM7DPmMbgg2F7db591pIPFj49Rkh1k3P//Z');
 
   /* 阅读底板的兜底色：同深色块那一条——底板填充走 --card-bg，这里只在浏览器不支持
      backdrop-filter 时接管（写成 color-mix 而非抄字面量：这块面的语义就是"底色的 78%"，
@@ -485,7 +489,7 @@ html:root[data-theme='out'] {
 }
 
 /* ---------- 3a. 手机档地景 ----------
-   窄屏把首屏照片换成同取景的 4000px 重采样版（亮 1.45MB → 0.38MB，深 0.62MB → 0.17MB），
+   窄屏把首屏照片换成同取景的 1800px 重采样版（亮 1.45MB → 0.09MB，深 0.62MB → 0.05MB），
    轮播底片换 1280px 版（三张 1.5MB → 0.49MB；运行时还糊 12px，看不出来）。
    断点必须与 index.html 首帧 preload 里那条 matchMedia 是同一个数：预加载错版本等于白下
    一张，首屏反而更慢；tests/hero-preload.test.mjs 从两边解析出来对拍。

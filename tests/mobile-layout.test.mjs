@@ -16,7 +16,7 @@ const src = (p) => readFileSync(join(ROOT, p), 'utf8')
 // 判据做成纯函数：负向对照喂改坏的样本文本，而不是对着字面量自说自话
 const capped = (css) => {
   const m = css.match(/--fs-hero-title:\s*([^;]+);/)
-  return !!m && /min\(/.test(m[1]) && /10\.5vw/.test(m[1])
+  return !!m && /min\(/.test(m[1]) && /9\.5vw/.test(m[1])
 }
 
 function tableScrolls(css) {
@@ -31,6 +31,8 @@ test('刊头在 375px 以下跟视口收口，宽屏仍是原 clamp', () => {
   assert.equal(capped(hero), true, '刊头没有视口上限：窄屏整行会出画')
   // 负向对照：把 token 换回 2026-10-13 那版裸 clamp，同一条判据必须变红
   assert.equal(capped(hero.replace(/--fs-hero-title:\s*[^;]+;/, '--fs-hero-title: clamp(40px, 7vw, 96px);')), false)
+  // 2026-10-30：上限从 10.5vw 收到 9.5vw——390 上左右留白从 7.4px 提到 21.3px，旧值不许复活
+  assert.doesNotMatch(hero.match(/--fs-hero-title:\s*([^;]+);/)[1], /10\.5vw/)
 })
 
 test('窄屏表格自己横向滚动，不再把最后一列顶出视口', () => {
