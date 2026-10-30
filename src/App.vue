@@ -6,11 +6,23 @@ import SiteFooter from './components/SiteFooter.vue'
 import { debounce } from './lib/debounce.js'
 import { whenHeroReady } from './lib/hero.js'
 import { shift } from './lib/shift.js'
+import { createPlateTone } from './lib/plateTone.js'
+import { theme } from './lib/theme.js'
 
 const route = useRoute()
 const router = useRouter()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
 const isSub = computed(() => route.path !== '/')
+
+/* 页顶字色跟随底片（lib/plateTone.js）：次级页顶栏不垫白带，字色按当前那张底片
+   顶带的实测亮度在墨字/纸字之间换，与 10s 一档的轮播同拍。首页不接——
+   首页顶栏压的是 .hero-plate（自带天空纱），字色维持主题默认。 */
+const plateTone = createPlateTone()
+watch(isSub, (sub) => (sub ? plateTone.start() : plateTone.stop()), { immediate: true })
+watch(
+  () => theme.mode,
+  () => plateTone.refresh()
+)
 
 /* 手机首页的轮播底片等首屏照片 load 完再挂（见模板 .sub-plate 的 live 类与下面的 CSS）。
    三张 2560px 底片合计约 1.5MB，Slow 4G 上与 LCP 那张照片抢同一条下行——实测首屏
@@ -68,6 +80,8 @@ function onScroll() {
 const onResize = debounce(() => {
   measure()
   onScroll()
+  // 视口的宽高比变了，底片按 cover 映射露出的顶带就不是同一段像素——重采
+  plateTone.refresh()
 }, 150)
 
 let ro = null
@@ -96,6 +110,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (shiftRaf) cancelAnimationFrame(shiftRaf)
+  plateTone.stop()
   ro?.disconnect()
   removeEventListener('scroll', onScroll)
   removeEventListener('resize', onResize)
@@ -131,23 +146,20 @@ onUnmounted(() => {
 </template>
 
 <style>
-/* 次级页的风景底：清晰素材 + 沉回 --ink-0 的渐变 + 页顶白带与羽化。
+/* 次级页的风景底：清晰素材 + 沉回 --ink-0 的渐变。
    区别只是它 fixed 铺满视口——次级页没有首屏要避让。
    z-index: -1 让它待在页面底色之上、所有内容之下；main 自己是 position: relative。
    平纱（原来烘在素材里的 42%）已按要求撤掉，压暗只剩这一条**竖向**渐变：它管的是折线以下
    与页尾的可读性，不再管整幅的"灰"。试过把它改成上下两条纱（中间留清晰窗口）和"顶部淡入 +
    原斜坡"两种形状，实测裸字最坏点仍卡在 1.0~1.8:1 上不去——一张无纱的风景照片上放裸字就是
-   到不了 AA，形状无关；能到 AA 的只有落在卡片上的字（5.5:1 起）或在页顶白带上的字。
+   到不了 AA，形状无关；能到 AA 的只有落在卡片上的字（5.5:1 起）。
    2026-10-29：作者嫌上下两片白太大。底部起点 18% → 52%、且只到 100% 才铺满 —— 视口下半截
    不再是一块死白，最底一条仍能托住页脚。
    2026-10-30：页顶裸字压在底片上读不清（浅色 /blog 实测导航 --text-1 2.4:1、当前项 --cold
-   1.3:1）。四条出路里作者选了「短白带」：视口顶部 72px 遮罩完全不透（= 纯 --ink-0，未吸顶的
-   透明顶栏正好落在这条带上），72 → 182px 再渐入底片。72 = 宽屏顶栏 64px（--space-2 × 2 +
-   32px 图标钮）+ 8px 余量；触控档顶栏到 76px，多出的 4px 落在 α<0.04 的起手处，看不出来。
-   遮罩刻度必须跟着补边一起挪：html[data-plate-blur] 给 .sub-plate 加了 inset: -3×模糊 撑开
-   模糊边，遮罩坐标系也跟着整块上移——旧的 0/36/72/110px 因此被推到视口以外，页顶第一行实际
-   只剩 55–88% 的遮罩，羽化等于没做（同一套规则在无头 Edge 里对照组复现过：不补边时 y=0 是
-   全透明，补边后掉到 0.6）。--plate-pad 就是这条偏移，零模糊时为 0。
+   1.3:1）。先选了「短白带」（顶部 72px 纯 --ink-0，72 → 182px 渐入底片），同日又嫌
+   「顶部白条实在太丑」——白带整体撤掉，改成**字色跟随底片**：顶栏不垫任何色面，由
+   lib/plateTone.js 采样当前那张底片顶带的亮度，在墨字/纸字之间换（--hdr-fg），与轮播同拍。
+   底片自 y=0 起原样露出，这里不再有遮罩，也没有坐标系要补。
    模糊不再烘在素材里，是 --plate-blur 这个运行时参数（0–12px 滑杆，见 lib/plate.js）。
    初值 12 = 拉满（默认口味），所以**默认就会建这层渲染面**；只有用户把滑杆拖回 0，
    html[data-plate-blur] 才不匹配、filter 整条消失、回到素材本来的清晰。
@@ -157,24 +169,11 @@ onUnmounted(() => {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* 遮罩刻度的坐标系原点相对视口上移了多少（= 补边距离）；见上面那段 */
-  --plate-pad: 0px;
   background: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%) no-repeat,
     var(--plate-img) no-repeat 50% 34% / cover;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent calc(72px + var(--plate-pad)),
-    #000 calc(182px + var(--plate-pad))
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent calc(72px + var(--plate-pad)),
-    #000 calc(182px + var(--plate-pad))
-  );
 }
 
 html[data-plate-blur] .sub-plate {
-  --plate-pad: calc(var(--plate-blur) * 3);
   inset: calc(var(--plate-blur) * -3);
   -webkit-filter: blur(var(--plate-blur));
   filter: blur(var(--plate-blur));
