@@ -44,6 +44,8 @@ const N_DEEP_K = num(ST, 'N_DEEP_K')
 const R_MIN = num(ST, 'R_MIN')
 const SLOT_JIT = num(ST, 'SLOT_JIT')
 const MID_BIAS = num(ST, 'MID_BIAS')
+const TH_GOLD = num(ST, 'TH_GOLD')
+const TH_JIT = num(ST, 'TH_JIT')
 const SHEAR_MIN = num(ST, 'SHEAR_MIN')
 const SHEAR_SPAN = num(ST, 'SHEAR_SPAN')
 const SHEAR_POW = num(ST, 'SHEAR_POW')
@@ -111,7 +113,8 @@ function pickRn(i, n) {
 }
 function mkStar(i, n) {
   // 与 StarTrails.vue 的 mkStar 同款三档星等（72/22/6）：色温跟星等走，亮星加粗加弧长
-  const cr = rnd()
+  // 档位同样走 1/φ² 低差异序列（源码里也是这个式子），亮星才会绕天极等距分布
+  const cr = (i * 0.3819660112501051) % 1
   const cls = cr < 0.72 ? 0 : cr < 0.94 ? 1 : 2
   const z =
     cls === 0
@@ -122,7 +125,7 @@ function mkStar(i, n) {
   const rr = rnd()
   return {
     rn: pickRn(i, n),
-    th: rnd() * TAU,
+    th: ((((i * TH_GOLD + (rnd() - 0.5) * TH_JIT) % 1) + 1) % 1) * TAU,
     z,
     tier: cls === 0 ? 0 : cls === 1 ? 1 : rr < 0.3 ? 2 : 1,
     lw: (LW_BASE + z * LW_SPAN) * (cls === 2 ? 1.35 : 1),
@@ -288,5 +291,5 @@ for (const [name, theme] of [
   console.log(`art: docs/assets/readme/${name} (${W}×${H}, ${n} 根星, ${(png.length / 1024).toFixed(1)} KB)`)
 }
 console.log(
-  `art: 复算常数 OMEGA=${OMEGA} DEP=${DEP} HEAD_GAIN=${HEAD_GAIN} 底片=${PLATE_OM}/${PLATE_FADE}/${PLATE_STEPS}/弧×${PLATE_LEN}（衰减尾 ${tailDeg}°）弧长=${SHEAR_MIN}+r^${SHEAR_POW}·${SHEAR_SPAN} 星=深色${nOf('deep')}/浅色${nOf('paper')} 半径取样=槽抖动${SLOT_JIT}/中段偏密${MID_BIAS}/内空${R_MIN} 天极=(${POLE_FX},${POLE_FY}) | 显示端 超采样=${DPR}x 冲印增益=深色${DEV_DEEP}/浅色${DEV_PAPER}`
+  `art: 复算常数 OMEGA=${OMEGA} DEP=${DEP} HEAD_GAIN=${HEAD_GAIN} 底片=${PLATE_OM}/${PLATE_FADE}/${PLATE_STEPS}/弧×${PLATE_LEN}（衰减尾 ${tailDeg}°）弧长=${SHEAR_MIN}+r^${SHEAR_POW}·${SHEAR_SPAN} 星=深色${nOf('deep')}/浅色${nOf('paper')} 半径取样=槽抖动${SLOT_JIT}/中段偏密${MID_BIAS}/内空${R_MIN} 角度=黄金角${TH_GOLD}±${TH_JIT} 天极=(${POLE_FX},${POLE_FY}) | 显示端 超采样=${DPR}x 冲印增益=深色${DEV_DEEP}/浅色${DEV_PAPER}`
 )
