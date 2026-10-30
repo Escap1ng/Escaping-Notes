@@ -62,12 +62,14 @@ function onLightboxKey(e) {
   if (e.key === 'Escape') lightbox.value = ''
 }
 
-// 灯箱是模态：打开时把 Tab 锁在框内，关闭后焦点回到原处
+// 灯箱是模态：打开时把 Tab 锁在框内、锁掉 body 滚动，关闭后焦点回到原处
 watch(lightbox, async (open) => {
   if (open) {
     await nextTick()
+    document.body.style.overflow = 'hidden'
     trap = trapFocus(lightboxEl.value)
   } else {
+    document.body.style.overflow = ''
     trap?.()
     trap = null
   }

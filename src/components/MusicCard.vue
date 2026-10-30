@@ -47,11 +47,13 @@ let trap = null
 onMounted(async () => {
   addEventListener('keydown', onKey)
   addEventListener('pointerdown', onDoc, true)
+  document.body.style.overflow = 'hidden'
   trap = trapFocus(cardEl.value)
 })
 onUnmounted(() => {
   removeEventListener('keydown', onKey)
   removeEventListener('pointerdown', onDoc, true)
+  document.body.style.overflow = ''
   trap?.()
 })
 </script>

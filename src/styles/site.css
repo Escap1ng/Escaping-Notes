@@ -96,6 +96,10 @@ html {
   /* 裁剪越界的装饰层（满屏底片、光晕一类）：避免横向滚动导致页面左右抖动/缩放 */
   overflow-x: hidden;
   overflow-x: clip;
+  /* 手机触控：点按不再闪一圈灰底（指针反馈已经负担着这个语义），iOS 不自作主张放大正文 */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {

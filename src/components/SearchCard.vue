@@ -63,6 +63,7 @@ let trap = null
 onMounted(async () => {
   addEventListener('keydown', onKey)
   addEventListener('pointerdown', onDoc, true)
+  document.body.style.overflow = 'hidden'
   await nextTick() // 等真实节点挂上再设陷阱，与抽屉同一条
   trap = trapFocus(cardEl.value)
   cache = cache || loadPosts()
@@ -72,6 +73,7 @@ onMounted(async () => {
 onUnmounted(() => {
   removeEventListener('keydown', onKey)
   removeEventListener('pointerdown', onDoc, true)
+  document.body.style.overflow = ''
   trap?.()
 })
 // 顶栏不随路由换，卡是自己那一层：换了页它就该不在（点结果行、点底部链接、键盘走掉都算）
