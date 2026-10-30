@@ -17,8 +17,10 @@ onMounted(async () => {
 
 <template>
   <section class="en-shell">
-    <h2 class="en-h2">{{ navLabel('/updates') }}</h2>
-    <p class="en-lede">{{ N.hints.updates }}</p>
+    <header class="en-head">
+      <h2 class="en-h2">{{ navLabel('/updates') }}</h2>
+      <p class="en-lede">{{ N.hints.updates }}</p>
+    </header>
 
     <ol class="feed">
       <li

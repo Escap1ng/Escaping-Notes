@@ -6,8 +6,10 @@
       <span class="beam diag"></span>
     </div>
 
-    <h2 class="en-h2 title">{{ N.nf.title }}</h2>
-    <p class="lede">{{ N.nf.text }}</p>
+    <header class="en-head">
+      <h2 class="en-h2 title">{{ N.nf.title }}</h2>
+      <p class="lede">{{ N.nf.text }}</p>
+    </header>
 
     <div class="cta">
       <RouterLink class="en-btn en-btn-primary" to="/">{{ N.nf.home }}</RouterLink>
@@ -135,8 +137,15 @@ import { N } from '../data/narrative.js'
   margin-bottom: var(--space-0);
 }
 
+/* 页头底卡在居中页里收成一块告示卡：不满栏，随内容宽 */
+.nf .en-head {
+  width: min(100%, 560px);
+  margin-bottom: 0;
+  text-align: center;
+}
+
 .lede {
-  margin: 0 0 var(--space-3);
+  margin: 0;
   max-width: 34ch;
   color: var(--text-1);
   font-size: var(--fs-md);

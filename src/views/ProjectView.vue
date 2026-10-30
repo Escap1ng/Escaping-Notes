@@ -29,7 +29,9 @@ watch(
 <template>
   <section class="en-shell project">
     <div v-if="missing" class="lost">
-      <h2 class="en-h2">{{ N.projects.lost }}</h2>
+      <header class="en-head">
+        <h2 class="en-h2">{{ N.projects.lost }}</h2>
+      </header>
       <RouterLink class="en-btn en-btn-ghost" to="/projects">{{ N.projects.back }}</RouterLink>
     </div>
 

@@ -120,8 +120,22 @@ onUnmounted(() => {
     <div class="progress" aria-hidden="true"></div>
 
     <div v-if="missing" class="lost">
-      <h2 class="en-h2">{{ N.nf.title }}</h2>
+      <header class="en-head">
+        <h2 class="en-h2">{{ N.nf.title }}</h2>
+      </header>
       <RouterLink class="en-btn en-btn-ghost" to="/blog">{{ N.nf.blog }}</RouterLink>
+    </div>
+
+    <!-- 骨架：正文从列表数据现渲，数据没到之前别交白卷——空盒会读成「这篇不存在」；
+         与 /blog 列表骨架同一配方（1.5s 光扫、130% → -30%），格子照真文章摆：
+         日期行 · 大标题 · 字数行 · 正文块，全部坐在 .en-glass 底板上 -->
+    <div v-else-if="!post" class="skel" aria-busy="true">
+      <article class="en-glass" aria-hidden="true">
+        <p class="s meta"></p>
+        <h1 class="s title"></h1>
+        <p class="s mono"></p>
+        <div class="s prose"></div>
+      </article>
     </div>
 
     <template v-else-if="post">
@@ -221,6 +235,66 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
+}
+
+/* 骨架盒自己不做宽度——.en-glass 全局规则已带 max-width: min(1280px, 94vw) 与 auto 边距，
+   别再叠一层把板间距算重 */
+.skel article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 56vh;
+}
+
+/* 光扫底与 /blog 骨架同一公式；标题块走真标题的展示字号档（--fs-2xl 同量级） */
+.s {
+  display: block;
+  border-radius: var(--r-sm);
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--ink-1) 34%, transparent) 32%,
+    color-mix(in srgb, var(--ink-1) 68%, transparent) 50%,
+    color-mix(in srgb, var(--ink-1) 34%, transparent) 68%
+  );
+  background-size: 220% 100%;
+  animation: skel 1.5s ease-in-out infinite;
+}
+
+.s.meta {
+  width: 128px;
+  height: 14px;
+  margin: var(--space-1) 0 0;
+}
+
+.s.title {
+  width: min(70%, 640px);
+  height: clamp(28px, 4vw, 44px);
+}
+
+.s.mono {
+  width: 180px;
+  height: 14px;
+}
+
+.s.prose {
+  width: calc(var(--measure) - var(--space-2));
+  height: 240px;
+}
+
+@keyframes skel {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
+}
+
+/* 减弱动效：骨架停成一版灰底，不闪 */
+@media (prefers-reduced-motion: reduce) {
+  .s {
+    animation: none;
+  }
 }
 
 .head {
