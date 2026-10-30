@@ -1,5 +1,5 @@
 ---
-title: 怎么写、怎么发：本博客的写作与上传
+title: 本博客的写作与上传
 date: 2026-10-10
 tags: [手册]
 collection: site-guide
@@ -93,7 +93,7 @@ CI 的发布路径也会跑 `npm test` 与 `npm run check`，任一条红就不�
 
 ```
 发文回执 · 3 卷
-  core-idea                    2026-09-01   2637 字 ·  7 分钟  合集 site-guide  封面 ✓  标签 手册
+  core-idea                    2026-09-01   2905 字 ·  7 分钟  合集 site-guide  封面 ✓  标签 手册
   ...
 ```
 
