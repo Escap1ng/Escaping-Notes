@@ -433,15 +433,15 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/data/*.js`�
 
 ## 6. 版本与里程碑
 
-本站当前版本 **v1.3.1**（连续曝光落地、取数与存储收口）。**这一节是写 GitHub Release 正文的取材处**，按版本记"当时交付了什么"；旧版本记录已清理，此后已下线的能力单列在末尾，不要当现状读。
+本站当前版本 **v1.4.0**（全站收口）。**这一节是写 GitHub Release 正文的取材处**，按版本记"当时交付了什么"；旧版本记录已清理，此后已下线的能力单列在末尾，不要当现状读。
 
-- **v1.3.1 · 连续曝光落地、取数与存储收口**
-  - 连续曝光——底片跨路由常驻，`src/lib/sky.js` 以单例接管画布（`ensurePlate` / `claimPlate` / `ownsPlate` / `releasePlate`），切页不再重置星轨；滚动深度经 `src/lib/shift.js` 的 `shift.v` 交给样式消费。
-  - 可读性暗带契约——文字底下的天空由 `StarTrails.vue` 一处 `--_sky-mask` 统一压低，不再外包给卡片背景；几何收为 `--sky-band` / `--sky-feather`，压低系数按主题给 `--sky-k`；卡片同步重定标（`--card-bg` 44%→52%、hover 72%→62%）。
-  - 存储层 fail-closed——原 `server/api.py` 新增 `CorruptJSON` 与 `MISSING` 哨兵，「读不出」不再被当成「未初始化」；数据损坏时建号返回 503 且**不写文件**。`save()` 改唯一临时名 + `fsync` + `replace`，整段进锁。部署路径改读 `SITE_DATA` / `SITE_DIST`。
-  - 取数层收口——原 `src/lib/api.js` 的 `tryApi()` 返回 `{ok,status,data,code,reason}`，失败原因不再塌成 `null`（网络不通为 `offline` 且 `status:0`；`reason` 查 `narrative.js` 的 `errors` 表）；上传走同一契约（`uploadFile()`，60s 超时）。
-  - 防护网——`tests/` 零依赖（`node --test` + `unittest`），装上时即抓到两个真实缺陷：frontmatter 正则不认 CRLF（Windows 检出的稿子解析不出元数据）、markdown 放行 `javascript:` 链接（现由 `safeHref()` 只放行白名单协议）。
-  - 门禁——新增 `check_doc_refs.py`（死引用 / 节号 / 路由表）与 `check_naming.py`（命名规约），以及接口契约与端点双向对拍两道（随后端一并撤除）。
-  - 部署——GitHub Pages 绑裸域名 `escaping.top`，`vite.config.js` 的 `base` 固定为 `/`（`build` 与 `build:pages` 只差路由模式）。
-  - 内容渲染——`src/lib/markdown.js` 支持 GFM 管道表，标题层级收到 h2–h6（h1 让给文章标题）。
-- **此后已下线**（上面的条目里仍按"当时交付了什么"记着，那是历史，不是现状）：低语与 `/fragments` 碎片（端点在 2026-10-16 删除，§2.4）；自绘沉浸光标（现用系统默认光标）；每页一枚巨型空心汉字的签名装置；首屏变星（文章节点）入口；**自助注册与留言墙**（`/register`、`/wall`、`/api/register`、`/api/messages` 的读写删端点、`data/messages.json` 全部删除，角色由三档收敛为站长 + 管理员两档；2026-10-16 用户管理与角色机制整体撤除，收敛为单账号，见 §2.7）；**后端整体下线**（2026-10-16）——承载它的服务器与 `www.escaping.top` 的解析记录已删除，原 `server/api.py`、原 `docs/api.md` 与登录 / 后台 / 阅读计数 / 服务端 OG 注入随之撤除，站点改为纯静态：文章由 `content/posts/` 打包、站点内容由 `src/data/*.js` 提供。
+- **v1.4.0 · 全站收口**
+  - 纯静态化——后端整体下线：原 `server/api.py`、登录 / 后台 / 自助注册与留言墙 / 阅读计数 / 服务端 OG 注入全部撤除（相关文件已删除），`www.escaping.top` 的解析与自建服务器一并停止维护；站点只剩 GitHub Pages（主线）与 Vercel（只读镜像）两处静态交付，`git push` 即发布。
+  - 内容层——`content/posts/` 一篇一卷一个目录（`index.md` + 自己的图），slug 即目录名；`draft` 让草稿不进产物，`movedFrom` 给旧网址改道；文章必填 `collection`，`src/data/collections.js` 定义两级合集，合集页聚合后代文章，文章页补面包屑、组内上下篇与「返回合集」。
+  - 路由与分享——路由收成 history 单模式；构建期为 6 条次级导航、3 个合集、3 篇文章、4 个项目与 404 写 17 份额外静态壳，深链返回 200 与该页自己的 head；旧 `#/` 链接在挂载前改道；sitemap 13 条 URL、RSS 全文、OG 图在构建期生成。
+  - 首页与视觉——首屏照片先到、星轨后画：手机换 1800px 重采样（亮 1.45MB → 0.09MB、深 0.62MB → 0.05MB），垫 36px LQIP 替身再交叉淡入；星轨分片预热、底片按 DPR 1.25 与 6MP 预算取像素、摆放改黄金角；首屏只剩一行英文刊头（8.8vw，整行约 81% 视口），十六字联句与打字机撤除；折线以下按章分卡，接缝是一条连续波脊。
+  - 设计系统——`site.css` 收成单表、`src/components/neo/` 拍平、类名统一 `en-` 前缀、`html:root` 作特异锚点；主题收冷、强调色只用蓝；页头两行搬上底卡，顶栏字色按当前底片顶带亮度逐张切 `--hdr-fg`，10s 与轮播同拍。
+  - 性能与可访问性——展示衬线按 `unicode-range` 切 12 片、首页只取用到的片，刊头 Didone 3.6KB 单文件；路由视图块与入口并行 `modulepreload`；触控兜底四条，五层浮层统一锁 body 滚动，所有动效保留 `prefers-reduced-motion` 静态出口。
+  - 防护网——零依赖 `node --test` 共 147 项；`check:content`（发文门禁）、`check:docs`（死引用 / 节号 / 路由表）、`check:naming`、`check:contrast` 全进门禁与 CI。
+  - 03 音乐页、`/records`、QQ 快照与同步脚本下线，播放收敛为右上角播放器卡；曲目数据仍在 `src/data/music.js`。
+- **此后已下线**：低语与 `/fragments` 碎片；自绘沉浸光标；每页一枚巨型空心汉字的签名装置；首屏变星（文章节点）入口；自助注册与留言墙；后端整体下线（服务器与 `www` 解析、原 `server/api.py`、原 `docs/api.md`、登录 / 后台 / 阅读计数 / 服务端 OG 均已删除）；03 音乐页、QQ 快照与同步脚本。
