@@ -58,38 +58,43 @@ const FADE_0 = 0.172 // 页顶衰减/帧
 const FADE_1 = 0.104 // 最深衰减/帧（与 FADE_0 的比值沿用旧版 0.604：下潜越深窗口越长）
 const FLOW_MAX = 2.2 // 下潜最深处的时间流速加成
 const HEAD_GAIN = 2.6 // 头部亮段的 alpha 倍率：让拖痕前沿比尾巴亮
-const FEAT_MIN = 5200 // 独立尾部消失的最小间隔 ms（2026-09-17 加密：换着消失才显得随机）
-const FEAT_MAX = 11000
+const FEAT_MIN = 8000 // 独立尾部消失的最小间隔 ms（2026-09-17 是 5.2s；10-30 弱化随机放回 8s）
+const FEAT_MAX = 14000
 const FEAT_DUR = 4.2 // 独立尾部消失时长 s（量级与整体旋转周期协调，避免突兀）
 const LENS_R = 180 // 指针时间膨胀半径 px
 // 星数。220→180 是 ⑫ 那轮按"太密"收的，但那时底片上还叠着一层永久残留（⑭）——
-// 地板没了才看得见真实浓度，所以往回补。窄屏单独一档，见 §3.1 的手机读数。
-const N_BIG = 280
-const N_SMALL = 140
+// 地板没了才看得见真实浓度，所以往回补到 280。2026-10-30 作者要"减少拖尾的细丝、降低加载压力"：
+// 收到 220 / 110（深色再乘 N_DEEP_K，= 143 / 72），每帧笔数 −21%，同时把最淡的那批"细丝"
+// 交给线宽与弧长去收（见 LW_BASE / SHEAR_*）。窄屏单独一档，见 §3.1 的手机读数。
+const N_BIG = 220
+const N_SMALL = 110
 // 星数必须**分主题**：同一套 α 在两个主题上的可见面积差着一个数量级。浅色是墨压浅底
 // （底亮度 245），α<0.05 的抗锯齿羽化按 Weber 律根本看不见；深色是冷白加在近黑底上
-// （实测底亮度 2.2 级），一条 α=0.037 的羽化边就是 7 级 = 320% 对比 → 280 根的羽化叠起来
+// （实测底亮度 2.2 级），一条 α=0.037 的羽化边就是 7 级 = 320% 对比 → 220 根的羽化叠起来
 // 读成"一片脏灰的轨迹"。量法见 docs/design.md §9 第 8 条。
 const N_DEEP_K = 0.65 // 深色主题的星数倍率（浅色=1）
 // 线宽。旧值 `0.6 + z·1.2` 的中位数只有 0.94 CSS px，而他那块屏是 1× 缩放——**上屏的采样网格
 // 就是 1 CSS px = 1 设备像素**，一根不到一格的线必然沿程明暗跳：按面积积分量过，脊的谷/峰只有
 // 0.33（同一条线自己亮 30 级、暗 10 级交替）。底片内部超采样治不了它（p=1.645 时 0.34、p=2 时
 // 0.24，等于没修，见 docs/design.md §9 第 9、10 条），只有把线本身加粗才行。中位 0.94→1.45 px 后谷/峰回到 0.52。
-const LW_BASE = 1.05
-const LW_SPAN = 1.15 // 中位 1.45 / p90 1.81 / 最粗 2.20 CSS px
+// 2026-10-30 再抬 0.1：星数收了两成，单价（线宽）补一点，"细丝"读成笔画而不是丝线。
+const LW_BASE = 1.15
+const LW_SPAN = 1.15 // 中位 1.55 / p90 1.91 / 最粗 2.30 CSS px
 // 每根弧的角长 = (SHEAR_MIN + r^SHEAR_POW·SHEAR_SPAN) × 星等倍率（亮 1.5 / 中 1.15 / 暗 1，见 mkStar）。
 // 衰减窗口被 ⑭ 压到 4 帧之后，尾迹长度就**等于**这个弧长，所以这三个数是"长不长"的
 // 主旋钮（星等倍率是第二个），README 配图也从源码读它们。
-// 分布这一轮加宽：旧 0.09+r^1.25·0.85 中位 25.6° / 最长 53.8°，长短太接近，读起来是
+// 分布这一轮加宽：旧 0.07+r^1.55·1.0 中位 25.6° / 最长 53.8°，长短太接近，读起来是
 // "一把差不多长的弧"；现在中位 ≈23.6°、最长 ≈61°、亮星到 92°——最短与最长差 8 倍以上，
 // 随机感首先靠"每根都不一样长"承载。
-const SHEAR_MIN = 0.07 // 最短弧 rad（4.0°）：再短就在内圈读不出"是一根线"
-const SHEAR_SPAN = 1.0 // 分布右端的追加量
-const SHEAR_POW = 1.55 // 越大越压向短端：多数短、极少数长，才不像一把等长的刷子
-// 全局角速度呼吸：两个不可通约的慢波相乘，±22% 非周期起伏。刚体 ω 保证几何正确，
+// 2026-10-30：作者要"减少拖尾的细丝"——把长尾压掉，最短弧抬一档，
+// 中位 23.6°→18.7°、最长 61°→54°、亮星 92°→81°（星等倍率不变）。
+const SHEAR_MIN = 0.09 // 最短弧 rad（5.2°）：再短就在内圈读不出"是一根线"
+const SHEAR_SPAN = 0.85 // 分布右端的追加量
+const SHEAR_POW = 1.9 // 越大越压向短端：多数短、极少数长，才不像一把等长的刷子
+// 全局角速度呼吸：两个不可通约的慢波相乘，±14% 非周期起伏。刚体 ω 保证几何正确，
 // 但恒定 ω 读起来像节拍器；加呼吸之后天空是"被风推着"的，时紧时松，而全场一致 ω 的
 // 周日视运动叙事不变（所有星共享同一个 gust，不做差速旋转）。
-const GUST_A = 0.22
+const GUST_A = 0.14 // 2026-10-30 收：0.22 的转速起伏在长弧上读成"抽动"，弱化随机后留 0.14
 const GUST_W = TAU / 47 // 主周期 ≈47s
 // 下潜越深，弧拖得越长：len = (flow·FADE_0/fade)^LEN_POW。括号里就是"曝光窗口 × 转速"，
 // 物理上尾迹 ∝ 它，但直接线性会在最深档给出 5.3 倍（25.6°→136°），一眼看出是同一根被拽长，
@@ -117,13 +122,19 @@ const SUB_FLOW = 1.1 // 最深处的流速加成（首页 FLOW_MAX 的一半，�
 /* 半径取样：等距槽 + 槽内抖动 + 单调弯折。
  * 为什么不再用独立随机：n 条环自由落体必然结块——实测（n=180，12 次取均值）"最挤 10 条的跨度 ÷
  * 最松 10 条的跨度"是 5.81，且最小间距 0.0px（两条环几乎重合，读起来就是一根粗线旁边一大片空）。
- * 分层抖动保住槽内的随机（相邻间距仍有 ±76% 的摆动），把结块比压到 1.65、50 个半径桶里的空桶
- * 从 3.3 个降到 1 个（那一个是天极附近，本来就该空）。
+ * 分层抖动保住槽内的随机，把结块比压到 1.65、50 个半径桶里的空桶从 3.3 个降到 1 个。
  * 上一版的"3 段重叠环带 + 三成完全随机"是为了消灭更早那版"4 段互不重叠、中间留 3 道空隙 = 太规整"，
  * 结果矫枉过正成了不均匀。中段略密的倾向由 MID_BIAS 继承（旧环带中段约比两端密 1.4 倍）。 */
 const R_MIN = 0.03 // 最内圈占 maxR 的比例
-const SLOT_JIT = 0.76 // 抖动占槽宽的比例：留 0.24 的缝，保证相邻环不重合
+const SLOT_JIT = 0.62 // 抖动占槽宽的比例：留 0.38 的缝。0.76 时相邻环最近只差 1px，会糊成一道
 const MID_BIAS = 0.2 // 中段偏密强度；g(u)=u+a·sin(2πu)/2π，|a|<1 才单调
+/* 角度：黄金角序列 + 抖动。2026-10-30 作者评"不够分散，一堆线条堆叠在一起"。
+ * 根因是纯随机的 θ（`Math.random()*TAU`）：上百个点撒在圆周上必然有几处挤成一串，而半径相邻的
+ * 两根若角度也相近，1~2px 的间距就会糊成一道粗线。改成一条低差异序列——相邻下标的起始角差
+ * 137.5°，半径挨着的两根永远不在同一段弧上；0.16 圈的抖动（±28.8°）把序列的机械感打散。
+ * 半径分布不动（R_MIN/等距槽/MID_BIAS 照旧）：用户说的是"分散"，不是"内外密度"。 */
+const TH_GOLD = 0.6180339887498949
+const TH_JIT = 0.16
 
 let ctx = null
 let W = 0 // 本相机的盒子尺寸（CSS px）；底片尺寸在 sky.w/h
@@ -153,6 +164,15 @@ let pxT = 0
 let pyT = 0
 let hasPointer = false
 let ridgeMask = null // 首页相机的山脊遮罩（alpha 画布），见 src/lib/ridge.js
+// 遮罩按"视口 + 主题 + 地景盒子"缓存：底片跨路由共享，遮罩没有理由每次挂载重画。
+// 切回首页时那张半分辨率画布 + 逐列两条渐变正撞在转场上，是"回首页一卡"的一小块。
+let ridgeCache = { key: '', mask: null }
+// 再次进首页时把逐帧累积推到转场之后：fall 那 380ms 里整页都在逐帧重栅格化，
+// 画布没必要在这段里同时开工。
+let warmUntil = 0
+let kickTimer = 0
+let warming = false // 分片预曝光进行中：此时 kick() 一律不接，等 done 回调自己开循环
+let disposed = false // 分片预曝光是跨帧跑的，卸载后必须自己停下
 
 // 颜色
 const C = {
@@ -234,7 +254,12 @@ function rebuildRidge() {
   }
   const a = el.getBoundingClientRect()
   const b = cvs.value.getBoundingClientRect()
-  ridgeMask = buildRidgeMask(key, W, H, { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height })
+  const box = { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height }
+  const k = `${key}|${W}x${H}|${box.x},${box.y},${box.w},${box.h}`
+  if (ridgeCache.key !== k) {
+    ridgeCache = { key: k, mask: buildRidgeMask(key, W, H, box) }
+  }
+  ridgeMask = ridgeCache.mask
 }
 
 /* ---------------- 尺寸 ---------------- */
@@ -277,7 +302,10 @@ function mkStar(i, n) {
   // 真实长曝光照片读得出结构的正是那几根亮拖痕。旧版用单一幂分布抽 z 再 7% 概率 ×2.1，
   // "亮星"与大众的边界是糊的，整屏读成"同一种细线"；现在三档的 z / 线宽 / 弧长 / 沉积
   // 各走各的区间，档间差大于档内抖动，层次一眼可分。
-  const cr = Math.random()
+  // 档位也走低差异序列（1/φ²），不再 Math.random()：刚曝光几秒时**只有亮星看得见**，
+  // 纯随机会让这几根扎堆在同一侧——角度摊得再匀，眼睛看到的仍是"一堆线挤在一起"。
+  // 均匀取档之后亮星在 i 上等距，配合黄金角就是绕天极一周等距分布。
+  const cr = (i * 0.3819660112501051) % 1
   const cls = cr < 0.72 ? 0 : cr < 0.94 ? 1 : 2
   const z =
     cls === 0
@@ -289,7 +317,7 @@ function mkStar(i, n) {
   return {
     rn: pickRn(i, n),
     r: 0,
-    th: Math.random() * TAU,
+    th: ((((i * TH_GOLD + (Math.random() - 0.5) * TH_JIT) % 1) + 1) % 1) * TAU,
     z,
     // 色温跟星等走：暗=冷档、中=中性档，亮星里三成抽暖档点睛（配色见 readColors）
     tier: cls === 0 ? 0 : cls === 1 ? 1 : rr < 0.3 ? 2 : 1,
@@ -297,12 +325,12 @@ function mkStar(i, n) {
     head: cls === 2 || (cls === 1 && z > 0.55), // 头部亮段：亮星全给，中档只给偏亮的那半
     bleed: cls === 2, // 亮星外圈再叠一笔宽而淡的弧：墨晕/辉光，冲击力的主要来源
     dk: cls === 2 ? 1.5 : cls === 1 ? 1 : 0.8, // 沉积按星等分档：暗档再收两成，把墨让给亮星
-    ta: 0.08 + 0.13 * Math.min(1, z), // 闪烁幅度随星等增大（亮星才看得见眨眼）
+    ta: 0.04 + 0.08 * Math.min(1, z), // 闪烁幅度随星等增大；2026-10-30 减半——整屏眨眼读成噪点
     tw: 0.3 + Math.random() * 1.3,
     ph: Math.random() * TAU,
-    // 云幕慢包络：周期 40~110s、幅度 10~22% 的缓变暗化。与快闪烁（tw）、独立尾部消失
+    // 云幕慢包络：周期 40~126s、幅度 5~12% 的缓变暗化。与快闪烁（tw）、独立尾部消失
     // （feat）叠成三个时间尺度，天空才不像齐步走；单看任何一个周期都太长，读不出循环。
-    ca: 0.1 + Math.random() * 0.12,
+    ca: 0.05 + Math.random() * 0.07, // 云幕幅度：0.10–0.22 → 0.05–0.12（弱化随机，别整片忽明忽暗）
     cw: 0.05 + Math.random() * 0.11,
     cp: Math.random() * TAU,
     // 尾迹起点偏移（rad）×星等倍率：每颗星从不同角度开始沉积、弧长又各档不同，
@@ -327,12 +355,12 @@ function seedStars() {
   sky.featNext = 0
 }
 
-/* ---------------- 独立尾部消失（随机 1-3 根星轨，周期性换角） ---------------- */
+/* ---------------- 独立尾部消失（随机 1-2 根星轨，周期性换角） ---------------- */
 function pickFeat(tSec) {
   sky.feat = []
   const r = Math.random()
-  // 1/2/3 根按 45%/37%/18% 抽。固定"1 或 2 根"抽久了会听出节拍，偶发三根一起换角才像云过。
-  const count = r < 0.45 ? 1 : r < 0.82 ? 2 : 3
+  // 2026-10-30 由 1/2/3 根收到 1–2 根（30% / 70%）：三根同时换角在整屏密度降下来之后太抢眼。
+  const count = r < 0.3 ? 1 : 2
   const set = new Set()
   let guard = 0
   while (set.size < count && guard++ < 60 && set.size < sky.stars.length) {
@@ -399,7 +427,7 @@ function accPass(om, fd, dtS, tAbs, dep, sc = 1, len = 1) {
         }
       }
       const dth = om * boost * dtS
-      // 独立尾部渐隐：随机 1-3 根在 4.2s 里暗下去再回来，像云过。
+      // 独立尾部渐隐：随机 1-2 根在 4.2s 里暗下去再回来，像云过。
       // 2026-10-07 去掉了另一条"转满前 20% 整体收尾"（SETTLE_*）：它按笔尖所在角统一削沉积，
       // 等于在天球上留出一道 72° 的系统性暗楔——所有半径在同一角度同时缺角，读起来就是"密度
       // 很奇怪 + 弧被切断"。衰减窗口缩短之后闭合环本来就不可能形成，那道楔子只剩副作用。
@@ -407,7 +435,7 @@ function accPass(om, fd, dtS, tAbs, dep, sc = 1, len = 1) {
       for (let f = 0; f < feat.length; f++) {
         if (feat[f].i !== i) continue
         const p = clamp01((tAbs - feat[f].t0) / FEAT_DUR)
-        vk = Math.max(vk, (0.5 - 0.5 * Math.cos(TAU * p)) * 0.6) // 0→0.6→0 的柔和独立渐隐（不整星熄灭，避免环口）
+        vk = Math.max(vk, (0.5 - 0.5 * Math.cos(TAU * p)) * 0.45) // 0→0.45→0 的柔和独立渐隐（不整星熄灭，避免环口）
       }
       s.th += dth
       const dthLen = (s.shear * len + dth) * boost // 本帧沉积的弧长
@@ -452,6 +480,30 @@ function buildPlate() {
   resetPlate()
   const dtS = 1 / 60
   for (let i = 0; i < PLATE_STEPS; i++) accPass(PLATE_OM, PLATE_FADE, dtS, i * dtS, DEP * (C.boost ? 1.5 : 1), 1, PLATE_LEN)
+}
+
+// 首次进首页的预曝光：同一条快进路径，但按 5ms 一片摊到若干帧里——
+// 380 步全屏合成连做一次是几百毫秒的长任务，正好压在首屏照片淡入与路由转场上。
+// 片与片之间让出主线程；跑完再开循环，于是"已经拍了一阵"的底片是分几帧长出来的。
+function warmPlate(done) {
+  if (!sky.accCtx) return done()
+  resetPlate()
+  const dtS = 1 / 60
+  let i = 0
+  const slice = () => {
+    if (disposed) return
+    const t0 = performance.now()
+    while (i < PLATE_STEPS && performance.now() - t0 < 5) {
+      accPass(PLATE_OM, PLATE_FADE, dtS, i * dtS, DEP * (C.boost ? 1.5 : 1), 1, PLATE_LEN)
+      i++
+    }
+    // 每片都贴一帧：底片是"分几帧长出来"的，而不是先空着再整张跳出。
+    // 一片 5ms + 一帧贴图仍在 16.7ms 内；转场 blur 期间它的读者只有这块首屏画布。
+    draw(performance.now())
+    if (i < PLATE_STEPS) requestAnimationFrame(slice)
+    else done()
+  }
+  slice()
 }
 
 /* ---------------- 流星 ---------------- */
@@ -668,7 +720,18 @@ function tick(now) {
 }
 
 function kick() {
-  if (!raf && !reduced && visible && onScreen) {
+  if (reduced || !visible || !onScreen || warming) return
+  const wait = warmUntil - performance.now()
+  if (wait > 0) {
+    if (!kickTimer) {
+      kickTimer = setTimeout(() => {
+        kickTimer = 0
+        kick()
+      }, wait)
+    }
+    return
+  }
+  if (!raf) {
     last = performance.now()
     raf = requestAnimationFrame(tick)
   }
@@ -761,21 +824,33 @@ onMounted(() => {
   if (reduced) {
     ensureStaticPlate()
     draw(performance.now())
-  } else {
+  } else if (props.interactive && !warmed) {
     // 预曝光：首帧就交出一张"已经拍了一阵"的底片，而不是从空盘开始慢慢长。
-    // 复用减弱动效那条快进路径（buildPlate 跑 PLATE_STEPS 步 accPass，星角与弧长都由它推进），
-    // 它本来就是"冲好的长曝光"。放在 kick() 之前、readColors()/resize() 之后：
-    // 色板与底片像素都已就位，才可能用同一套合成数学沉积。
-    if (props.interactive && !warmed) {
-      buildPlate()
+    // 复用减弱动效那条快进路径（warmPlate 跑 PLATE_STEPS 步 accPass，星角与弧长都由它推进），
+    // 它本来就是"冲好的长曝光"；区别是分片跑，不让它变成一个几百毫秒的长任务。
+    warming = true
+    warmPlate(() => {
+      warming = false
       warmed = true
-    }
+      draw(performance.now())
+      kick()
+    })
+    draw(performance.now())
+  } else {
+    // 再次进首页：底片、星群、遮罩都还在。先贴一帧已有曝光（一次 drawImage），
+    // 把逐帧累积押到转场之后——fall 期间整页逐帧重栅格化，画布先让开这 380ms。
+    draw(performance.now())
+    warmUntil = performance.now() + 520
     kick()
   }
 })
 
 onUnmounted(() => {
+  disposed = true
+  warming = false
   if (raf) cancelAnimationFrame(raf)
+  if (kickTimer) clearTimeout(kickTimer)
+  kickTimer = 0
   observer?.disconnect()
   io?.disconnect()
   document.removeEventListener('visibilitychange', onVisibility)
