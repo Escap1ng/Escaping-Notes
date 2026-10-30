@@ -33,7 +33,7 @@ const VUE_FILES = [
   'src/views/ProjectView.vue',
 ]
 
-/* 不是指针反馈、因此允许写裸秒数的地方：入场 / 开合 / 打字机 / sheen / 减弱动效开关。
+/* 不是指针反馈、因此允许写裸秒数的地方：入场 / 开合 / sheen / 减弱动效开关。
  * 新增一条就等于承认"这是一处新的例外"——评审时看得见，不会悄悄漂。 */
 const NON_FEEDBACK = {
   'src/styles/site.css': [
@@ -47,7 +47,6 @@ const NON_FEEDBACK = {
     /transition: opacity 0\.2s ease, transform 0\.22s/, // 播放器浮层开合
   ],
   'src/components/HorizonHero.vue': [
-    /transition: opacity 0\.6s ease/, // 打字机光标退场
     /transition: opacity 0\.24s ease/, // 地景图入场：替身→实景的交叉淡入，不是指针反馈
   ],
 }
@@ -117,9 +116,9 @@ test('指针反馈不许写裸时长：每条 transition 要么用令牌，要�
       whitelisted++
     }
   }
-  // 7 条是眼下所有"非指针反馈"的裸时长（吸顶 / 抽屉开合 / 抽屉条目 / 播放器浮层 / 光标退场 /
-  // 地景淡入）加上 site.css 的两条例外（减弱动效开关、衍射芒缓绽）。新例外要写进 NON_FEEDBACK 才算数。
-  assert.ok(whitelisted >= 7 && whitelisted <= 8, `例外数量异常（${whitelisted}）：名单或判据出了问题`)
+  // 5 条是眼下所有"非指针反馈"的裸时长（吸顶 / 抽屉开合 / 抽屉条目 / 播放器浮层 / 地景淡入）
+  // 加上 site.css 的两条例外（减弱动效开关、衍射芒缓绽）。新例外要写进 NON_FEEDBACK 才算数。
+  assert.equal(whitelisted, 7, `例外数量异常（${whitelisted}）：名单或判据出了问题`)
 })
 
 // 同一个"点开看大图"必须共用一种指针：文章页插图与映像墙照片都是 zoom-in
