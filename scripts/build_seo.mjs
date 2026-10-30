@@ -88,7 +88,7 @@ function rssXml(base, posts) {
     ' xmlns:atom="http://www.w3.org/2005/Atom"><channel>' +
     `<title>${esc(site.name)}</title>` +
     `<link>${esc(base)}</link>` +
-    `<description>${esc(N.manifesto.join(''))}</description>` +
+    `<description>${esc(N.description)}</description>` +
     `<language>zh-CN</language>` +
     `<managingEditor>${esc(site.email)} (${esc(site.author)})</managingEditor>` +
     `<atom:link href="${esc(base)}/rss.xml" rel="self" type="application/rss+xml"/>` +

@@ -56,7 +56,7 @@ watch(
   }
 )
 
-// 滚动深度：写入 --shift（0..1）与 lib/shift.js，驱动首页标题字距、全站晕影，
+// 滚动深度：写入 --shift（0..1）与 lib/shift.js，驱动全站晕影、首屏下滑提示淡出，
 // 以及文章页顶部那条进度线。shift.js 那份镜像是给 JS 侧每帧读用的，
 // 目前它唯一的读者在 StarTrails 那条已经不触发的非交互分支里（design.md §3.2）。
 // maxScroll 只缓存、不每帧读取：scrollHeight 会强制同步布局，60fps 下等于每帧一次重排。

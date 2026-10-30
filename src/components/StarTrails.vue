@@ -890,7 +890,7 @@ onUnmounted(() => {
      而画布在 main **之外**，所以它不随页根 transform 变包含块（那是进度线的老毛病）。
      mask 走 alpha 模式，故 rgba() 的 alpha 就是"天空保留多少"。
      首页那台 .st-abs 不进这里：它是主视觉，压暗带会把盘子本身压掉一半；
-     它的文字对比改由 .title/.manifesto 自己的 --ink-0 text-shadow 柔光承担（见 HorizonHero）。
+     它的文字对比改由 .title 自己的 --ink-0 text-shadow 柔光承担（见 HorizonHero）。
      不支持 mask 的浏览器等于回到改动前的样子（可读性不达标但不会画错），可优雅降级。 */
   --_band-in: calc(50% - var(--sky-band) / 2);
   --_band-out: calc(50% + var(--sky-band) / 2);

@@ -4,8 +4,6 @@
 
 **STAR TRAILS · 一次对夜空的长曝光**
 
-> 掷墨入渊，星惊不复；藏光于页，潮退犹闻。
-
 [**在线体验 → escaping.top**](https://escaping.top)
 
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
@@ -152,7 +150,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
-| `/` | 首页 · 长曝光星轨 | 照片地景 + 星轨 + 打字机站名 + 抽屉 |
+| `/` | 首页 · 长曝光星轨 | 照片地景 + 星轨 + 英文刊头 + 抽屉 |
 | `/blog` | 文章 | 归档：四枚全站读数、带计数的标签筛选；搜索词写进 URL，页内不放输入框 |
 | `/blog/:slug` | 正文 | 单篇正文 + 自动置顶的封面；文中图片可点进灯箱 |
 | `/collections` | 合集 | 顶层合集与它们的子合集，按主题成组 |

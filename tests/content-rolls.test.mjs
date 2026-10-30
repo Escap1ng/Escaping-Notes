@@ -142,9 +142,15 @@ test('index.html 里的域名与 src/data/site.js 的 url 同一条（换域名�
   }
 })
 
-test('RSS 与 index.html 的副标题都取自 narrative.js 的那句宣言，不再各抄一份', () => {
-  const line = N.manifesto.join('')
-  const html = src('index.html')
-  assert.ok(html.includes(`content="${line}"`), 'index.html 的 og:description 与那句宣言对不上了')
-  assert.ok(src('scripts/build_seo.mjs').includes('N.manifesto.join'), 'build_seo 不再从 narrative.js 取描述')
+const DESCRIPTION_ATTRS = ['name="description"', 'property="og:description"', 'name="twitter:description"']
+const speaksWith = (html, line) => DESCRIPTION_ATTRS.every((attr) => html.includes(`${attr} content="${line}"`))
+
+test('RSS 与 index.html 的三条摘要都取自 narrative.js 的 description，不再各抄一份', () => {
+  const line = N.description
+  assert.equal(typeof line, 'string')
+  assert.ok(line.trim().length > 0, 'description 是空的')
+  assert.equal(speaksWith(src('index.html'), line), true, 'index.html 的三条摘要与 description 对不上')
+  // 反向对照：换一个不相干的句子，同一条判据必须变红（否则它只是在看空字符串）
+  assert.equal(speaksWith(src('index.html'), line + '（旧句）'), false)
+  assert.ok(src('scripts/build_seo.mjs').includes('N.description'), 'build_seo 不再从 narrative.js 取描述')
 })

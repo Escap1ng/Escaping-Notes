@@ -4,8 +4,6 @@
 
 **STAR TRAILS · A Long Exposure of the Night Sky**
 
-> Ink cast into the abyss, the stars startle and never return; light hoarded in these pages, the tide recedes yet the echo remains.
-
 [**Live demo → escaping.top**](https://escaping.top)
 
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
