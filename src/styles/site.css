@@ -464,7 +464,7 @@ html:root[data-theme='out'] {
   --scrim: rgba(242, 245, 249, 0.78); /* 文字底衬色：当前零消费方，理由见深色那一条——要退役就两处一起删 */
   /* 折线以下轮播的三张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
      里的那张 jpg），不是第几张：paper2 / paper5 / paper6 三档空着——paper2 搬去当第三篇
-     《怎么写、怎么发》的封面，paper5 已删除，paper6 暂存到 photos-src/ 待用。别为了序号连贯
+     《本博客的写作与上传》的封面，paper5 已删除，paper6 暂存到 photos-src/ 待用。别为了序号连贯
      重烘改名，映像柜与 build_plate_bg.ps1 都按源图号认它。 */
   --plate-img: url('/plates/plate-bg-paper1.jpg');
   --plate-img-2: url('/plates/plate-bg-paper3.jpg');
