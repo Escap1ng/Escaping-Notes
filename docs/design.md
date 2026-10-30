@@ -207,7 +207,7 @@
 | `--nudge` | `4px` | 行内元素被指到时右移：卡内标题、曲名、动态正文、抽屉箭头、↗ 箭头的水平分量 |
 | `--lift` | `-2px` | 整枚控件抬起：按钮、顶栏图标钮、↗ 箭头的垂直分量 |
 
-**只有"指针反馈"归这四枚管。** 入场动画、抽屉与浮层开合、打字机光标退场、`fall` 转场、按钮的 sheen 扫光、衍射芒的缓绽（0.26s / 0.4s，它要读成"星光绽开"而不是"控件响应"）都不在这套词汇里，各自保留既定手感。
+**只有"指针反馈"归这四枚管。** 触控侧另有兜底两条：点按不再闪系统灰底（`html` 的 `-webkit-tap-highlight-color: transparent`，闪灰与指针反馈在同一条语义上打架），iOS 不自作主张放大正文（`text-size-adjust: 100%`）；32px 的顶栏图标钮把热区用 `.ico-btn::after` 外撑 4px 到 40px——四枚之间只隔 8px，再大就互相吃进对手的热区。入场动画、抽屉与浮层开合、打字机光标退场、`fall` 转场、按钮的 sheen 扫光、衍射芒的缓绽（0.26s / 0.4s，它要读成"星光绽开"而不是"控件响应"）都不在这套词汇里，各自保留既定手感。
 
 **新增一处 hover 动效时**：要么用这四枚令牌，要么把例外显式写进 `tests/motion-feedback.test.mjs` 的 `NON_FEEDBACK` 名单——那条判据会红，除非你承认它是例外。
 
@@ -300,11 +300,11 @@ p.sr-only[aria-live] → 路由播报，内容取 route.meta.t
 | --- | --- | --- | --- |
 | `StarTrails` | 只有一处：`HorizonHero`（`interactive`） | `interactive`(Bool)；无对外事件 | 星轨 Canvas 装置——**只是取景器**，底片与星群归 `src/lib/sky.js`，见 §3.1 |
 | `HorizonHero` | `HomeView` | — | 首页首屏排版层：站名打字机 + 十六字宣言 + 一枚可点的下滑提示（`scroll-cue`，滚过一整屏到折线以下），不画星星、不放文章入口 |
-| `SiteHeader` | `App.vue` | — | 顶部：`N.nav` 导航高亮、主题切换（`data-theme` + `localStorage['en-theme']`）、播放器卡 / 设置卡 / 搜索卡三个开关与抽屉（四张面板互斥，任何时刻只开一张）。搜索那枚另接全局快捷键：裸按 `/` 或 `Ctrl/⌘+K` 从任意页面开卡（`onHotkey`；输入框 / textarea / contenteditable 里的 `/` 属内容，不拦；`Ctrl/⌘+K` 即使在输入框里也接管）。≤1280px 的汉堡抽屉里一条导航一枚卡，与首页同取 `--card-*` 一组令牌（标题栏也收成一张窄卡），不再用发丝线分区；内容比视口高时从卡头起向下滚（内层 `margin-block: auto`、外层 `align-items: flex-start`）——反过来写成 `align-items: center`，矮视口会把卡头挤进负偏移、滚不回来 |
+| `SiteHeader` | `App.vue` | — | 顶部：`N.nav` 导航高亮、主题切换（`data-theme` + `localStorage['en-theme']`）、播放器卡 / 设置卡 / 搜索卡三个开关与抽屉（四张面板互斥，任何时刻只开一张）。搜索那枚另接全局快捷键：裸按 `/` 或 `Ctrl/⌘+K` 从任意页面开卡（`onHotkey`；输入框 / textarea / contenteditable 里的 `/` 属内容，不拦；`Ctrl/⌘+K` 即使在输入框里也接管）。≤1280px 的汉堡抽屉是整屏遮罩 + 居中列表：标题栏与每一条导航之间走 `--line` 发丝线分区，当前项冷色 6% 底、序号与标签转冷；内容比视口高时从顶部起向下滚（内层 `margin-block: auto`、外层 `align-items: flex-start`）——反过来写成 `align-items: center`，矮视口会把卡头挤进负偏移、滚不回来 |
 | `SiteFooter` | `App.vue` | — | 页脚，一条发丝顶线下一行三格（`1fr auto 1fr`）：版权与许可 / 致谢 / 回到顶部，≤720px 叠成三行居中。版权格：`© {年份} {site.author}` + 协议链接（`site.license` 的 `name` 与 `url`，站外故带 `↗`、`rel="license"`）——名字与协议都不写字面量，年份运行时取，免得跨年还要手改一个数字。链接的 `title` 挂 `N.footer.licenseScope`：CC 只覆盖博客内容，源代码与设计不在它下面，这句话放悬停而不是页面上。右格那枚是 `.en-btn-quiet`（仪器字面），`↑` 不写在文案里而是 `.en-ico .en-ico-up`——hover 时它朝自己承诺的方向上移一枚 `--nudge` |
 | `MusicCard` | `SiteHeader` | `@close` | 播放器卡片，全站唯一的播放界面。卡头（标题 + 关闭键）/ 走带 / 进度 / 音量 / 队列。走带三枚热区 44×44、播放键 48×48，图标与顶栏同一套 1.6px 描边 SVG；主按钮用 `--cold` 实心，红色只留作"当前曲"的小记号（唱片芯、当前曲名、三根小柱）。两枚滑杆共用一张 `auto 1fr auto` 栅格，起止点对齐。本身不持有 `<audio>`——状态与操作在 `lib/music.js`（全站唯一引擎）；曲目与位置存 `en-track` / `en-track-progress`，Media Session 接系统媒体键，加载与失败各有状态 |
 | `SettingsCard` | `SiteHeader` | `@close` | 设置卡：两枚控件。① 底片模糊滑杆（0–12px，**默认拉满 12**），读写在 `lib/plate.js`；② 卡片颜色两档单选（**不透底 = 默认**，排在第一位 / 半透明），读写在 `lib/surface.js`——不透底那一档的标签跟主题走（浅色「纯白」、深色「实底」），深色下写"纯白"是对着一块近黑卡面说谎。值都不持有，与 `MusicCard` 同一模子（Esc 关、点卡外关、`trapFocus`）。控件一律原生：滑杆 `input[type=range]`、档位 `input[type=radio]` + `accent-color`，不自造 thumb |
-| `SearchCard` | `SiteHeader` | `@close` | 搜索卡：与上面两张同一模子（Esc 关、点卡外关、`trapFocus` 把焦点直接交给那格输入框，所以不写 `autofocus`）；顶栏那枚钮与全局 `/`、`Ctrl/⌘+K` 都能开它。**判据不另起一套**——与归档页 `?q=` 那条筛法同一个 filter（标题 + 摘要 + 标签，小写包含），空态复用 `N.empty.search`。卡内只列前 6 条（320px 的卡不是归档页），第 7 条起交给底部那枚「在文章列表看全部 N 篇」，它把词交给 `/blog?q=`，于是「搜索词写进 URL」这件事仍然只有归档页一处，卡内不留第二套状态。取数走组件模块级的一份 `loadPosts()` 缓存：卡每次开都重挂一次组件，没这层缓存一次搜索就要把同一份文章取两遍。路由一变即收（顶栏不随路由换，卡是自己那一层） |
+| `SearchCard` | `SiteHeader` | `@close` | 搜索卡：与上面两张同一模子（Esc 关、点卡外关、开着时锁掉 body 滚动——三张卡与两处灯箱同抽屉一条；`trapFocus` 把焦点直接交给那格输入框，所以不写 `autofocus`）；顶栏那枚钮与全局 `/`、`Ctrl/⌘+K` 都能开它。**判据不另起一套**——与归档页 `?q=` 那条筛法同一个 filter（标题 + 摘要 + 标签，小写包含），空态复用 `N.empty.search`。卡内只列前 6 条（320px 的卡不是归档页），第 7 条起交给底部那枚「在文章列表看全部 N 篇」，它把词交给 `/blog?q=`，于是「搜索词写进 URL」这件事仍然只有归档页一处，卡内不留第二套状态。取数走组件模块级的一份 `loadPosts()` 缓存：卡每次开都重挂一次组件，没这层缓存一次搜索就要把同一份文章取两遍。路由一变即收（顶栏不随路由换，卡是自己那一层） |
 
 ### 6.3 页面路由表
 

@@ -459,11 +459,20 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 /* 图标按钮：32px 正方形等大一枚（右上角四枚与汉堡/关闭共用这一档）。
-   描边 SVG 的着色走 currentColor，所以 hover/播放中的变色规则与文字按钮同一条 */
+   描边 SVG 的着色走 currentColor，所以 hover/播放中的变色规则与文字按钮同一条。
+   热区：32px 太小、四枚之间只隔 8px，所以热区只外撑 4px（颜色/圆角不变，flow 不动）——
+   单枚落到 40px，四枚的热区正好在间隙中部相接、互不侵占。 */
 .ico-btn {
   width: 32px;
   padding: 0;
   justify-content: center;
+  position: relative;
+}
+
+.ico-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
 }
 
 .en-svg {
@@ -506,9 +515,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 /* ---- 移动端菜单（全屏遮罩抽屉） ---- */
-/* 全屏 backdrop-filter 遮罩保留；里面的列表并到首页同一套卡面语言：一条一枚卡，
-   白底 / --card-brd 边线 / --r-md 圆角（玻璃档跟着 --card-bg 一起透），不再用发丝线分区。
-   标题栏也收成一张窄卡，和首页「此刻」那条同一形态。 */
+/* 保留全屏 backdrop-filter 遮罩作为整体强调效果；内部结构换新：标题栏、居中列表、冷色当前态。 */
 .drawer {
   position: fixed;
   inset: 0;
@@ -516,11 +523,12 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: var(--space-2);
+  padding: var(--space-3);
   background: color-mix(in srgb, var(--ink-0) 88%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   overflow-y: auto;
+  overscroll-behavior: contain; /* 手机橡皮筋别把滚动捅到底层页面 */
 }
 
 .drawer-inner {
@@ -531,7 +539,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   margin-block: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .sheet-head {
@@ -539,10 +547,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--card-brd);
-  border-radius: var(--r-md);
-  background: var(--card-bg);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
 }
 
 .sheet-title {
@@ -561,32 +567,21 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 .sheet-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
 }
 
 .sheet-link {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  padding: var(--space-2) var(--card-pad);
-  border: 1px solid var(--card-brd);
-  border-radius: var(--r-md);
-  background: var(--card-bg);
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--line);
   text-decoration: none;
-  transition:
-    color var(--dur-fast),
-    background-color var(--dur-fast),
-    border-color var(--dur-fast);
-}
-
-.sheet-link:hover {
-  border-color: var(--card-brd-hover);
+  transition: color var(--dur-fast), background-color var(--dur-fast);
 }
 
 .sheet-link.active {
   color: var(--cold);
-  background: color-mix(in srgb, var(--cold) 6%, var(--card-bg));
-  border-color: color-mix(in srgb, var(--cold) 55%, var(--card-brd));
+  background: color-mix(in srgb, var(--cold) 6%, transparent);
 }
 
 .sheet-code {
@@ -627,7 +622,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 .sheet-foot {
-  padding: 0 var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
   font-size: var(--fs-xs);
   color: var(--text-1);
 }
