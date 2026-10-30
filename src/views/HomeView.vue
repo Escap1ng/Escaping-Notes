@@ -72,9 +72,12 @@ const day = ref('')
 let clk = 0
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
-/* 折线声波的高度与相位：哈希噪声经邻域平滑（不规则但相邻相近，仍舒缓），
-   再叠一层慢涨落给出整体起伏；相位加抖动，去掉整齐行波的机械感。
-   全部由下标确定，同一屏永远同一排，不随刷新跳变。
+/* 折线声波的高度与相位：一条横跨整排的钟形包络，乘三层正弦的起伏，再加按根微抖。
+   包络 `sin(πu)`（u 是这根在整排里的位置）两端为 0、正中为 1，肩部在 1/4 处约 0.71——
+   与参照图取的同一条弧。于是整排读作"中部高、两侧低、最边上消失"，与首屏山脊同向：
+   山在中间收顶，带子也在中间收顶。三层正弦只负责质感（合计 0.2 的摆幅），
+   轮廓始终是一条钟形，不会被搅成几个小丘。
+   全部由下标和根数确定（归一化到整排宽），同一宽度永远同一排，不随刷新跳变。
    粗细是设计值，不是视口宽除出来的商：一节 = 竖条 BAR_W + 间隙 BAR_GAP，根数按容器可视宽取整，
    于是每根在任何屏上都是同样的 5px。旧口径是 ≤1679px 恒 240 根、宽度靠 flex 拉伸，实测
    （DPR 1）1123px 上只有 3.672/3.688 两种宽交替、整排都压在半列栅格上，390px 上顶到
@@ -83,31 +86,40 @@ const WEEK = ['日', '一', '二', '三', '四', '五', '六']
    2026-10-29 作者评"波浪设计过于生硬"：平滑核从 5 抽扩到 7 抽（1-2-3-4-3-2-1），
    峰值 96 → 76、底座 24 → 26、指数 0.8 → 0.9、慢涨落幅度 0.5 → 0.35，值域收到约 18–71px
    （旧 17–84px）；呼吸从 3.4s / 0.55↔1 收到 5.6s / 0.72↔1，随机相位从 0.9s 收到 0.45s。
-   观感从"一排各自跳动的柱子"变成一条慢慢起伏的带子。 */
+   观感从"一排各自跳动的柱子"变成一条慢慢起伏的带子。
+   2026-10-30 上午："整排几乎等高"读成一道围栏，改成三条正弦叠 620px 局部包络，
+   值域 5–82px；随后作者给出参照图："中部高两侧低、最边上消失，配合首页山峰"——
+   包络改成与整排同宽的 `sin(πu)`：峰值 104px 落在正中，两端归零（1–3px），
+   三层正弦只留下 0.2 的摆幅给钟身加质感。小屏与桌面是同一个钟（按 u 归一化），
+   不会出现"桌面有峰、手机只剩一条边"。 */
 const frac = (x) => x - Math.floor(x)
 const noise = (i) => frac(Math.sin(i * 127.1 + 311.7) * 43758.5453)
-const smooth = (i) =>
-  (noise(i - 3) +
-    2 * noise(i - 2) +
-    3 * noise(i - 1) +
-    4 * noise(i) +
-    3 * noise(i + 1) +
-    2 * noise(i + 2) +
-    noise(i + 3)) /
-  16
 const BAR_W = 5
 const BAR_GAP = 2
 const WAVE_PITCH = BAR_W + BAR_GAP
-/* 波高只取旧对称版的上半段：整根 h 的上半 h/2 + 原先接在上面的 ::before 0.2h = 0.7h。
-   竖条现在整体立在折线上，0.7 就是"上半段轮廓"本身，桌面那一眼的高度一字不动。 */
-const WAVE_H_SCALE = 0.7
 /* 慢涨落的波长按视口收口：clamp(260px, 37vw, 530px)。≥1433px 仍是旧值 530px（2π·7/530
    ≈ 0.083 rad/根）；窄屏最短 260px。旧口径波长恒定，390px 上只装得下 0.74 个涨落——
    左边一堵高墙、右边一片平，读不成"波"；现在 390px 是 1.5 个，720px 与桌面都在 2.7 个附近。
-   两档之间连续，没有 720px 的断点跳变。 */
+   两档之间连续，没有 720px 的断点跳变。中频 / 细纹是固定波长：它们只给带子加质感，
+   不跟视口走，小屏上纹理才不会比桌面粗一截。 */
 const WAVE_LEN_MIN = 260
 const WAVE_LEN_MAX = 530
 const WAVE_LEN_VW = 0.37
+const WAVE_MID_LEN = 110
+const WAVE_FINE_LEN = 50
+/* 钟形包络：`sin(πu)^WAVE_BELL_POW`。指数 1 = 正圆弧，肩部在 1/4 处 0.71；
+   调小更宽、调大更陡。两端为 0，所以最边上几根本来就是 0px，不是被裁掉的。 */
+const WAVE_PEAK = 88
+const WAVE_BELL_POW = 1
+/* 质感楼层：0.8 起、0.2 的摆幅，三层正弦与微抖在这 0.2 里分配——包络占九成，
+   所以轮廓永远是那座钟。实测（320/390/768/1440/1920）峰 79–85px、正中 71–80px、
+   1/4 处 51–58px、两端 1–3px；相邻两根最多差 9px。 */
+const WAVE_T_FLOOR = 0.8
+const WAVE_T_SWING = 0.2
+const WAVE_W_SLOW = 0.05
+const WAVE_W_MID = 0.52
+const WAVE_W_FINE = 0.28
+const WAVE_W_JIT = 0.15
 const wavePhase = () =>
   (2 * Math.PI * WAVE_PITCH) / Math.max(WAVE_LEN_MIN, Math.min(WAVE_LEN_MAX, innerWidth * WAVE_LEN_VW))
 /* 根数取"整根放得下"的最大值：n 根共 pitch·n − gap px，floor 后末根不再越出容器。
@@ -127,10 +139,20 @@ const syncWave = () => {
 const onWaveResize = debounce(syncWave)
 const wave = computed(() => {
   const { count, phase } = waveTune.value
+  const midPhase = (2 * Math.PI * WAVE_PITCH) / WAVE_MID_LEN
+  const finePhase = (2 * Math.PI * WAVE_PITCH) / WAVE_FINE_LEN
   return Array.from({ length: count }, (_, i) => {
-    const swell = 0.5 + 0.5 * Math.sin(i * phase + 0.9)
+    const bell = Math.pow(Math.sin(Math.PI * ((i + 0.5) / count)), WAVE_BELL_POW)
+    const slow = 0.5 + 0.5 * Math.sin(i * phase + 0.9)
+    const mid = 0.5 + 0.5 * Math.sin(i * midPhase + 2.1)
+    const fine = 0.5 + 0.5 * Math.sin(i * finePhase + 5.2)
+    const jitter = (noise(i - 0.5) + noise(i) + noise(i + 0.5)) / 3 - 0.5
+    const texture = Math.min(
+      1,
+      Math.max(0, WAVE_T_FLOOR + WAVE_T_SWING * (WAVE_W_SLOW * slow + WAVE_W_MID * mid + WAVE_W_FINE * fine) + WAVE_W_JIT * jitter)
+    )
     return {
-      h: Math.round((26 + 76 * Math.pow(smooth(i), 0.9) * (0.65 + 0.35 * swell)) * WAVE_H_SCALE),
+      h: Math.round(WAVE_PEAK * bell * texture),
       d: `${-(i * 0.05 + noise(i + 41) * 0.45).toFixed(2)}s`,
     }
   })

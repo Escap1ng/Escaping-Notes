@@ -108,8 +108,11 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <!-- 下滑提示：可点（平滑滚到折线以下），也靠 bob 暗示"下面还有"；随 --shift 淡出 -->
-    <button class="scroll-cue" type="button" aria-label="向下滚动" @click="scrollDown">↓</button>
+    <!-- 下滑提示：首屏右下角一枚"走带"形状的按钮——细描边胶囊里一道短刻度往下走；
+         可点（平滑滚到折线以下），随 --shift 淡出 -->
+    <button class="scroll-cue" type="button" aria-label="向下滚动" @click="scrollDown">
+      <i aria-hidden="true"></i>
+    </button>
 
   </section>
 </template>
@@ -299,48 +302,67 @@ onUnmounted(() => {
   }
 }
 
-/* 下滑提示：一枚细圈 ↓，轻 bob 暗示"下面还有"；可点，平滑滚过首屏。
-   透明度挂 --shift：滚过首屏前 1/6 即淡出，不留残影。bob 用 transform，
-   居中靠 margin-left 而非 translateX，把 transform 整条让给动画。 */
+/* 下滑提示：首屏右下角一枚细描边胶囊（34×54），里面一道 2×8 的冷色刻度循环下移——
+   读作"往下走"，又不与顶栏那排圆钮撞形。2026-10-30 从正中挪到右侧：折线声波的峰
+   就在正中，圆钮压在波峰上像一颗樱桃，也让"下面还有"跟波形抢同一处视线。
+   透明度挂 --shift：滚过首屏前 1/6 即淡出，不留残影。
+   按钮本身不动（动的是那道刻度，就不会晃到点击位置）；34×54 靠 ::after 补到 44×64
+   的触控热区（manual §4 的 44px 兜底）。减弱动效下刻度停在中间那道静态短划。 */
 .scroll-cue {
   position: absolute;
-  left: 50%;
+  right: var(--space-4);
   bottom: var(--space-4);
   z-index: 2;
-  width: 52px;
-  height: 52px;
-  margin-left: -26px;
+  width: 38px;
+  height: 58px;
+  padding: 11px 0 0;
   display: flex;
-  align-items: center;
   justify-content: center;
   /* 冷色=交互：下滑提示是"该动了"的信号，用灰读不出，用冷色一眼锁定 */
-  border: 1px solid color-mix(in srgb, var(--cold) 70%, transparent);
-  /* 半透底托：山脊照片明暗不定，裸圈会被吃掉，垫一层同族底把箭头托出来 */
-  background: color-mix(in srgb, var(--ink-0) 45%, transparent);
-  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--cold) 75%, transparent);
+  /* 半透底托：山脊照片明暗不定，裸描边会被吃掉，垫一层同族底把刻度托出来 */
+  background: color-mix(in srgb, var(--ink-0) 52%, transparent);
+  border-radius: 19px;
   color: var(--cold);
-  font-family: var(--font-mono);
-  font-size: var(--fs-base);
-  line-height: 1;
   cursor: pointer;
   opacity: calc(1 - var(--shift, 0) * 6);
-  animation: cue-bob 1.8s ease-in-out infinite;
-  transition: border-color var(--dur-fast), color var(--dur-fast), background-color var(--dur-fast);
+  transition: border-color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.scroll-cue::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+}
+
+.scroll-cue i {
+  width: 3px;
+  height: 12px;
+  border-radius: 1.5px;
+  background: currentColor;
+  animation: cue-track 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 .scroll-cue:hover {
   border-color: var(--cold);
-  color: var(--cold);
   background: color-mix(in srgb, var(--ink-0) 62%, transparent);
 }
 
-@keyframes cue-bob {
-  0%,
-  100% {
+/* 一道刻度从上往下走：起手淡入、走到底淡出，末尾不弹回——移动比整枚按钮上下 bob 安静 */
+@keyframes cue-track {
+  0% {
     transform: translateY(0);
+    opacity: 0;
   }
-  50% {
-    transform: translateY(10px);
+  18% {
+    opacity: 0.95;
+  }
+  72% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(26px);
+    opacity: 0;
   }
 }
 
@@ -385,6 +407,22 @@ onUnmounted(() => {
   .hero-text {
     padding-left: var(--space-2);
     padding-right: var(--space-2);
+  }
+
+  /* 提示贴到 16px 页边，跟正文留白对齐；68px 的偏移在 390 上会浮在半空 */
+  .scroll-cue {
+    right: var(--space-2);
+    bottom: var(--space-3);
+  }
+}
+
+/* 减弱动效：全站那条规则把动画时长压到 0.01ms、只跑一次，刻度会停在"走到底、已淡出"
+   的那一帧上——这里显式停回中间那道静态短划，别让提示整个消失。 */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue i {
+    animation: none;
+    opacity: 0.9;
+    transform: translateY(9px);
   }
 }
 
