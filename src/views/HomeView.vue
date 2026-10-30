@@ -10,6 +10,7 @@ import { projectSlug } from '../lib/projects.js'
 import { content } from '../data/index.js'
 import { debounce } from '../lib/debounce.js'
 import { whenHeroReady } from '../lib/hero.js'
+import { WAVE_PEAK, ridgePath } from '../lib/wave.js'
 import { N, navLabel } from '../data/narrative.js'
 
 const posts = ref([])
@@ -72,91 +73,58 @@ const day = ref('')
 let clk = 0
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
-/* 折线声波的高度与相位：一条横跨整排的钟形包络，乘三层正弦的起伏，再加按根微抖。
-   包络 `sin(πu)`（u 是这根在整排里的位置）两端为 0、正中为 1，肩部在 1/4 处约 0.71——
-   与参照图取的同一条弧。于是整排读作"中部高、两侧低、最边上消失"，与首屏山脊同向：
-   山在中间收顶，带子也在中间收顶。三层正弦只负责质感（合计 0.2 的摆幅），
-   轮廓始终是一条钟形，不会被搅成几个小丘。
-   全部由下标和根数确定（归一化到整排宽），同一宽度永远同一排，不随刷新跳变。
-   粗细是设计值，不是视口宽除出来的商：一节 = 竖条 BAR_W + 间隙 BAR_GAP，根数按容器可视宽取整，
-   于是每根在任何屏上都是同样的 5px。旧口径是 ≤1679px 恒 240 根、宽度靠 flex 拉伸，实测
-   （DPR 1）1123px 上只有 3.672/3.688 两种宽交替、整排都压在半列栅格上，390px 上顶到
-   min-width 地板成 1px 且整排 479px 被 html 的 overflow-x 裁掉 45 根。
-   BAR_W/BAR_GAP 由模板写成 CSS 变量交给样式，一处真值。
-   2026-10-29 作者评"波浪设计过于生硬"：平滑核从 5 抽扩到 7 抽（1-2-3-4-3-2-1），
-   峰值 96 → 76、底座 24 → 26、指数 0.8 → 0.9、慢涨落幅度 0.5 → 0.35，值域收到约 18–71px
-   （旧 17–84px）；呼吸从 3.4s / 0.55↔1 收到 5.6s / 0.72↔1，随机相位从 0.9s 收到 0.45s。
-   观感从"一排各自跳动的柱子"变成一条慢慢起伏的带子。
-   2026-10-30 上午："整排几乎等高"读成一道围栏，改成三条正弦叠 620px 局部包络，
-   值域 5–82px；随后作者给出参照图："中部高两侧低、最边上消失，配合首页山峰"——
-   包络改成与整排同宽的 `sin(πu)`：峰值 104px 落在正中，两端归零（1–3px），
-   三层正弦只留下 0.2 的摆幅给钟身加质感。小屏与桌面是同一个钟（按 u 归一化），
-   不会出现"桌面有峰、手机只剩一条边"。 */
-const frac = (x) => x - Math.floor(x)
-const noise = (i) => frac(Math.sin(i * 127.1 + 311.7) * 43758.5453)
-const BAR_W = 5
-const BAR_GAP = 2
-const WAVE_PITCH = BAR_W + BAR_GAP
-/* 慢涨落的波长按视口收口：clamp(260px, 37vw, 530px)。≥1433px 仍是旧值 530px（2π·7/530
-   ≈ 0.083 rad/根）；窄屏最短 260px。旧口径波长恒定，390px 上只装得下 0.74 个涨落——
-   左边一堵高墙、右边一片平，读不成"波"；现在 390px 是 1.5 个，720px 与桌面都在 2.7 个附近。
-   两档之间连续，没有 720px 的断点跳变。中频 / 细纹是固定波长：它们只给带子加质感，
-   不跟视口走，小屏上纹理才不会比桌面粗一截。 */
-const WAVE_LEN_MIN = 260
-const WAVE_LEN_MAX = 530
-const WAVE_LEN_VW = 0.37
-const WAVE_MID_LEN = 110
-const WAVE_FINE_LEN = 50
-/* 钟形包络：`sin(πu)^WAVE_BELL_POW`。指数 1 = 正圆弧，肩部在 1/4 处 0.71；
-   调小更宽、调大更陡。两端为 0，所以最边上几根本来就是 0px，不是被裁掉的。 */
-const WAVE_PEAK = 88
-const WAVE_BELL_POW = 1
-/* 质感楼层：0.8 起、0.2 的摆幅，三层正弦与微抖在这 0.2 里分配——包络占九成，
-   所以轮廓永远是那座钟。实测（320/390/768/1440/1920）峰 79–85px、正中 71–80px、
-   1/4 处 51–58px、两端 1–3px；相邻两根最多差 9px。 */
-const WAVE_T_FLOOR = 0.8
-const WAVE_T_SWING = 0.2
-const WAVE_W_SLOW = 0.05
-const WAVE_W_MID = 0.52
-const WAVE_W_FINE = 0.28
-const WAVE_W_JIT = 0.15
-const wavePhase = () =>
-  (2 * Math.PI * WAVE_PITCH) / Math.max(WAVE_LEN_MIN, Math.min(WAVE_LEN_MAX, innerWidth * WAVE_LEN_VW))
-/* 根数取"整根放得下"的最大值：n 根共 pitch·n − gap px，floor 后末根不再越出容器。
-   宽度量抽屉自己的 clientWidth（绝对定位的 left/right:0 落在它的 padding box 上），
-   不用 innerWidth——后者含竖向滚动条。根数还要跟着容器宽变：滚动条出现/消失只改
-   clientWidth、不触发 window resize，所以另挂 ResizeObserver（见 onMounted）。
-   旧口径按 innerWidth 用 ceil 补根：1590px 视口、1582px 容器里整排 1594px，页面一直
-   多出 12px 横向滚动；clip-path 只裁画面、不改滚动溢出，收不住这一截。 */
-const barCount = (width) =>
-  Math.floor(((width || document.documentElement.clientWidth) + BAR_GAP) / WAVE_PITCH)
-const waveTune = ref({ count: barCount(), phase: wavePhase() })
-const syncWave = () => {
+/* 折线波脊：一条连续的山脊线（前层亮、后层暗两层），公式在 src/lib/wave.js。
+   2026-10-30 第三次改版——前两版都是等宽竖条：204 根 5px 柱子在 1440px 上是"频谱条/围栏"，
+   作者三次判"生硬/不够自然"。波浪分隔线在别处一律是连续曲线（shapedivider / getwaves 那类），
+   所以这里也改成曲线：包络仍是与整排同宽的 sin(πu)（正中最高、两端归零，与首屏山脊同向），
+   里面叠三列同向行波（长波快、短波慢，水的色散）——脊线在动、轮廓不动，才不像整块带子呼吸。
+   宽度按抽屉的 clientWidth 量（绝对定位的 left/right:0 落在它的 padding box 上）；
+   30fps 重算路径，离屏 / 标签页隐藏 / 减弱动效时停。 */
+const waveW = ref(typeof document === 'undefined' ? 1440 : document.documentElement.clientWidth)
+const waveFront = ref('')
+const waveBack = ref('')
+let waveT0 = 0
+let waveRaf = 0
+let waveLast = 0
+let waveOn = true
+const waveStill = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+
+function paintWave(now) {
+  const t = (now - waveT0) / 1000
+  waveFront.value = ridgePath(waveW.value, t, 0)
+  waveBack.value = ridgePath(waveW.value, t, 1)
+}
+
+function loopWave(now) {
+  waveRaf = 0
+  if (!waveOn || document.hidden) return
+  if (now - waveLast >= 32) {
+    waveLast = now
+    paintWave(now)
+  }
+  waveRaf = requestAnimationFrame(loopWave)
+}
+
+function kickWave() {
+  if (waveRaf || !waveOn || document.hidden || waveStill()) return
+  waveRaf = requestAnimationFrame(loopWave)
+}
+
+// 藏起来的标签页 rAF 会停：回来时补一脚，别等下一次滚动
+const onWaveVisible = () => {
+  if (!document.hidden) kickWave()
+}
+
+function syncWave() {
   const width = drawerEl.value?.clientWidth || document.documentElement.clientWidth
-  const next = { count: barCount(width), phase: wavePhase() }
-  if (next.count !== waveTune.value.count || next.phase !== waveTune.value.phase) waveTune.value = next
+  if (width !== waveW.value) {
+    waveW.value = width
+    waveFront.value = ''
+    waveBack.value = ''
+  }
+  paintWave(performance.now() || waveT0)
 }
 const onWaveResize = debounce(syncWave)
-const wave = computed(() => {
-  const { count, phase } = waveTune.value
-  const midPhase = (2 * Math.PI * WAVE_PITCH) / WAVE_MID_LEN
-  const finePhase = (2 * Math.PI * WAVE_PITCH) / WAVE_FINE_LEN
-  return Array.from({ length: count }, (_, i) => {
-    const bell = Math.pow(Math.sin(Math.PI * ((i + 0.5) / count)), WAVE_BELL_POW)
-    const slow = 0.5 + 0.5 * Math.sin(i * phase + 0.9)
-    const mid = 0.5 + 0.5 * Math.sin(i * midPhase + 2.1)
-    const fine = 0.5 + 0.5 * Math.sin(i * finePhase + 5.2)
-    const jitter = (noise(i - 0.5) + noise(i) + noise(i + 0.5)) / 3 - 0.5
-    const texture = Math.min(
-      1,
-      Math.max(0, WAVE_T_FLOOR + WAVE_T_SWING * (WAVE_W_SLOW * slow + WAVE_W_MID * mid + WAVE_W_FINE * fine) + WAVE_W_JIT * jitter)
-    )
-    return {
-      h: Math.round(WAVE_PEAK * bell * texture),
-      d: `${-(i * 0.05 + noise(i + 41) * 0.45).toFixed(2)}s`,
-    }
-  })
-})
 
 function tick() {
   const now = new Date()
@@ -166,19 +134,43 @@ function tick() {
 
 let io = null
 let waveRo = null
+let waveIo = null
 onMounted(async () => {
   tick()
   clk = setInterval(tick, 1000)
-  // 挂在早退分支之前：下面那条「隐藏页」路径会 return，声波补根不该只服务于可见页
+  waveT0 = performance.now()
+  // 挂在早退分支之前：下面那条「隐藏页」路径会 return，波脊不该只服务于可见页
   addEventListener('resize', onWaveResize)
-  // setup 时 DOM 还没渲染，根数只能拿 clientWidth 的初值；挂载后读一次抽屉的实宽，
+  // setup 时 DOM 还没渲染，宽度只能拿 clientWidth 的初值；挂载后读一次抽屉的实宽，
   // 把竖向滚动条出现前后那几像素收回来（读 clientWidth 会强制一次布局）
   syncWave()
-  // 滚动条出现/消失只改容器宽、不发 resize：根数跟容器走，末根才不会留在界外
+  // 滚动条出现/消失只改容器宽、不发 resize：波脊按容器宽重算
   if (drawerEl.value && 'ResizeObserver' in window) {
-    waveRo = new ResizeObserver(syncWave)
+    waveRo = new ResizeObserver(onWaveResize)
     waveRo.observe(drawerEl.value)
   }
+  // 波脊只在接缝附近有像素：滚进章节区深处就停帧，滚回来自动续上
+  const waveEl = drawerEl.value?.querySelector('.wave')
+  if (waveStill()) {
+    paintWave(waveT0)
+  } else if (waveEl && 'IntersectionObserver' in window) {
+    waveIo = new IntersectionObserver(
+      ([e]) => {
+        waveOn = e.isIntersecting
+        if (waveOn) kickWave()
+        else if (waveRaf) {
+          cancelAnimationFrame(waveRaf)
+          waveRaf = 0
+        }
+      },
+      { rootMargin: '160px' }
+    )
+    waveIo.observe(waveEl)
+    kickWave()
+  } else {
+    kickWave()
+  }
+  document.addEventListener('visibilitychange', onWaveVisible)
   // 章节数据等首屏照片 load 完再取：精选封面与动态行会和 LCP 抢带宽与主线程，
   // 而它们在折线以下，晚一步没人看得见空窗；合集/项目是同步数据，照常先渲染。
   await whenHeroReady()
@@ -206,7 +198,11 @@ onUnmounted(() => {
   clearInterval(clk)
   removeEventListener('resize', onWaveResize)
   onWaveResize.cancel()
+  document.removeEventListener('visibilitychange', onWaveVisible)
   if (waveRo) waveRo.disconnect()
+  if (waveIo) waveIo.disconnect()
+  if (waveRaf) cancelAnimationFrame(waveRaf)
+  waveRaf = 0
   if (io) io.disconnect()
 })
 </script>
@@ -218,14 +214,24 @@ onUnmounted(() => {
     <!-- 折线以下的风景底片层已上移到 App.vue（fixed 层不能放在带 filter 的页根子树里），
          这里只留章节区。 -->
     <section ref="drawerEl" class="drawer" :class="{ open }">
-      <!-- 折线声波：整排立在首屏/章节区接缝之上，只向上长，折线以下不留任何一段；装饰层 -->
-      <div
+      <!-- 折线波脊：一条连续山脊立在首屏/章节区接缝之上，只向上长，折线以下不留任何一段；
+           后层矮而暗、前层满高，两层相位错开 → 读作两道浪叠在一起。装饰层。 -->
+      <svg
         class="wave"
+        :viewBox="`0 0 ${waveW} ${WAVE_PEAK}`"
+        :style="{ '--wave-h': WAVE_PEAK }"
+        preserveAspectRatio="none"
         aria-hidden="true"
-        :style="{ '--wave-w': BAR_W + 'px', '--wave-gap': BAR_GAP + 'px' }"
       >
-        <i v-for="(w, i) in wave" :key="i" :style="{ '--h': w.h, '--d': w.d }"></i>
-      </div>
+        <defs>
+          <linearGradient id="wave-ink" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--wave-ink-top)" />
+            <stop offset="1" stop-color="var(--wave-ink)" />
+          </linearGradient>
+        </defs>
+        <path class="wave-back" :d="waveBack" />
+        <path class="wave-front" :d="waveFront" />
+      </svg>
 
       <div class="content">
         <!-- 此刻：一行日期读数，不单独占一张卡 -->
@@ -374,52 +380,41 @@ onUnmounted(() => {
   }
 }
 
-/* 折线声波：整排立在接缝上、只向上。容器把底边钉在 .drawer 的顶边（bottom:100%），
-   竖条走 align-items:flex-end 从这条线往上长——没有 ::before，也没有任何一段落到折线以下。
-   底座贴着线，呼吸的 transform-origin 就换成 bottom：收缩时底座不离线，读作从地平线长出来，
-   而不是一根浮在接缝上缩小。
-   clip-path 只裁底边：辉光外扩 4px，不裁会有一圈淡光漏进抽屉，与"只有折线上的"相抵；
-   顶端/两侧各放 8px，让辉光其余方向照旧。
-   每根恒为 var(--wave-w)、间隙 var(--wave-gap)，两个值由 script 经模板写成 CSS 变量（真值只有一处）；
-   铺满整屏宽靠的是**根数**跟着容器可视宽走，不再靠拉伸竖条。所以粗细与节距在任何屏上一致，
-   最后一根整根落在容器里，不会越出右沿把页面撑出横向滚动。 */
+/* 折线波脊：容器把底边钉在 .drawer 的顶边（bottom:100%），SVG 的 viewBox 高 = WAVE_PEAK，
+   y = WAVE_PEAK 就是接缝，路径在那里闭合——所以折线以下一段都没有。
+   两层：后层矮（0.62）、暗、相位错开，前层满高带渐变；两层各自在动，读作两道浪叠着走。
+   不再有辉光与 clip-path：连续曲线的轮廓自己就够清楚，而一直重画路径的元素上挂
+   box-shadow / drop-shadow 等于每帧重新栅格化一遍。
+   宽度是量出来的（viewBox 宽 = 抽屉 clientWidth），所以曲线不被拉伸，任何屏上粗细一致。 */
 .wave {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 100%;
   z-index: 3;
-  display: flex;
-  align-items: flex-end;
-  gap: var(--wave-gap);
+  display: block;
+  width: 100%;
+  height: calc(var(--wave-h) * 1px);
   pointer-events: none;
-  clip-path: inset(-8px 0 0 0);
+  overflow: visible;
 }
 
-.wave i {
-  position: relative;
-  flex: 0 0 var(--wave-w);
-  height: calc(var(--h) * 1px);
-  /* 顶端圆、底端平：底座直接坐在折线上，不给自己留一个"探到线下"的圆角 */
-  border-radius: 2px 2px 0 0;
-  /* 顶端提亮，落到折线回到接缝色（--h 已经是"线上高度"，不再有下半截） */
-  background: linear-gradient(to bottom, var(--wave-ink-top), var(--wave-ink));
-  box-shadow: 0 0 4px var(--wave-glow);
-  transform-origin: center bottom;
-  animation: wave-breathe 5.6s ease-in-out infinite;
-  animation-delay: var(--d);
+/* 两条脊线都是"水"不是"墙"：填充只到 26% / 16%，靠一条 1.5px 的亮脊线定形。
+   整块不透明的冷色在这张照片上会读成一块蓝板——折线以下是风景，不是纯色分区。 */
+.wave-front {
+  fill: url(#wave-ink);
+  fill-opacity: 0.16;
+  stroke: var(--wave-ink-top);
+  stroke-width: 1.4;
+  stroke-opacity: 0.92;
 }
 
-@keyframes wave-breathe {
-  0%,
-  100% {
-    transform: scaleY(0.72);
-    opacity: 0.9;
-  }
-  50% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
+.wave-back {
+  fill: var(--wave-ink);
+  fill-opacity: 0.09;
+  stroke: var(--wave-ink-top);
+  stroke-width: 0.8;
+  stroke-opacity: 0.3;
 }
 
 /* 底卡错峰显影：整块拉出后，一块面接一块面从下方浮起。只动 opacity / transform——
@@ -885,10 +880,6 @@ a.what:hover .go {
   .drawer.open,
   .drawer.open .dateline,
   .drawer.open .pane {
-    animation: none;
-  }
-
-  .wave i {
     animation: none;
   }
 
