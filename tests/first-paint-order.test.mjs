@@ -1,7 +1,9 @@
-// 首页首屏加载顺序的三条回归钉子（2026-10-27）：
+// 首页首屏加载顺序的回归钉子（2026-10-27 起，2026-10-30 补地景淡入）：
 //   ⑴ 照片先下：首屏地景是 LCP，星轨挂载与章节数据都排在它的 load 之后；
 //   ⑵ 星轨按需下载：异步组件 + v-if，不随 HomeView 主块一起解析，也不抢在照片前画；
-//   ⑶ 闸门从 --hero-img 令牌取图：图名不抄第三份，卡住 / 出错都要放行。
+//   ⑶ 闸门从 --hero-img 令牌取图：图名不抄第三份，卡住 / 出错都要放行；
+//   ⑷ 手机首帧先不取 CJK 分片，照片到位再摘降级类；
+//   ⑸ 地景图等闸门开了再 240ms 淡入，替身（LQIP）是独立一层、两套主题各一份。
 // 跑法：npm test
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -64,4 +66,32 @@ test('手机首页在首屏照片到位前先不取展示衬线的 CJK 分片', 
     '降级类没把 --font-display 落回系统宋体，147KB 的分片会抢在照片前面下'
   )
   assert.match(app, /classList\.remove\('hero-pending'\)/, '照片到位后没人摘类，字体永远换不回来')
+})
+
+// 地景淡入：透明起步、闸门开了才加 ready、过渡 0.24s
+const plateFadesIn = (h) =>
+  /const plateReady = ref\(false\)/.test(h) &&
+  /whenHeroReady\(\)\.then\(\(\) => \{\s*plateReady\.value = true/.test(h) &&
+  /<div class="hero-plate" :class="\{ ready: plateReady \}"/.test(h) &&
+  /\.hero-plate\s*\{[^}]*opacity:\s*0\s*;/.test(h) &&
+  /\.hero-plate\.ready\s*\{[^}]*transition:\s*opacity 0\.24s/.test(h)
+
+test('地景图等闸门开了再淡入，替身垫在下面', () => {
+  assert.equal(plateFadesIn(hero), true, '地景又回到了"图到就硬切"')
+
+  // 负向对照：去掉 ready 绑定，淡入链条必须断
+  const old = hero.replace(
+    '<div class="hero-plate" :class="{ ready: plateReady }" aria-hidden="true"></div>',
+    '<div class="hero-plate" aria-hidden="true"></div>'
+  )
+  assert.notEqual(old, hero, '这记假根本没改动文件体')
+  assert.equal(plateFadesIn(old), false)
+})
+
+test('首帧替身：独立一层，两套主题各一份 LQIP', () => {
+  const css = src('src/styles/site.css')
+  assert.match(hero, /<div class="hero-lqip" aria-hidden="true"><\/div>/, '替身层没了')
+  assert.match(hero, /background:\s*var\(--hero-lqip\)/, '替身层没吃 --hero-lqip')
+  const n = (css.match(/--hero-lqip:\s*url\('data:image\/jpeg;base64,/g) || []).length
+  assert.equal(n, 2, `--hero-lqip 应在两套主题块各定义一次，实际 ${n} 份`)
 })
