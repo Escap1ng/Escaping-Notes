@@ -108,10 +108,10 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <!-- 下滑提示：首屏右下角一枚"走带"形状的按钮——细描边胶囊里一道短刻度往下走；
-         可点（平滑滚到折线以下），随 --shift 淡出 -->
+    <!-- 下滑提示：首屏右下角一枚圆钮，细描边里一枚下箭头轻轻往下走；可点（平滑滚到折线以下），
+         随 --shift 淡出 -->
     <button class="scroll-cue" type="button" aria-label="向下滚动" @click="scrollDown">
-      <i aria-hidden="true"></i>
+      <svg class="cue-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 6 8 10.8 12.8 6" /></svg>
     </button>
 
   </section>
@@ -302,27 +302,27 @@ onUnmounted(() => {
   }
 }
 
-/* 下滑提示：首屏右下角一枚细描边胶囊（34×54），里面一道 2×8 的冷色刻度循环下移——
-   读作"往下走"，又不与顶栏那排圆钮撞形。2026-10-30 从正中挪到右侧：折线声波的峰
-   就在正中，圆钮压在波峰上像一颗樱桃，也让"下面还有"跟波形抢同一处视线。
+/* 下滑提示：首屏右下角一枚 46px 圆钮，细描边里一枚下箭头轻轻往下走——
+   读作"往下走"，形状与顶栏那排圆钮同族，但大一圈（32 vs 46），不至于被读成第五个顶栏按钮。
+   2026-10-30 从正中挪到右侧：折线声波的峰就在正中，圆钮压在波峰上像一颗樱桃，也让
+   "下面还有"跟波形抢同一处视线。同日由 38×58 胶囊改成圆形。
    透明度挂 --shift：滚过首屏前 1/6 即淡出，不留残影。
-   按钮本身不动（动的是那道刻度，就不会晃到点击位置）；34×54 靠 ::after 补到 44×64
-   的触控热区（manual §4 的 44px 兜底）。减弱动效下刻度停在中间那道静态短划。 */
+   按钮本身不动（动的是箭头，就不会晃到点击位置）；46 靠 ::after 补到 58 的触控热区
+   （manual §4 的 44px 兜底）。减弱动效下箭头停在正中的静态一撇。 */
 .scroll-cue {
   position: absolute;
   right: var(--space-4);
   bottom: var(--space-4);
   z-index: 2;
-  width: 38px;
-  height: 58px;
-  padding: 11px 0 0;
-  display: flex;
-  justify-content: center;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
   /* 冷色=交互：下滑提示是"该动了"的信号，用灰读不出，用冷色一眼锁定 */
   border: 1.5px solid color-mix(in srgb, var(--cold) 75%, transparent);
-  /* 半透底托：山脊照片明暗不定，裸描边会被吃掉，垫一层同族底把刻度托出来 */
+  /* 半透底托：山脊照片明暗不定，裸描边会被吃掉，垫一层同族底把箭头托出来 */
   background: color-mix(in srgb, var(--ink-0) 52%, transparent);
-  border-radius: 19px;
+  border-radius: 50%;
   color: var(--cold);
   cursor: pointer;
   opacity: calc(1 - var(--shift, 0) * 6);
@@ -332,14 +332,19 @@ onUnmounted(() => {
 .scroll-cue::after {
   content: '';
   position: absolute;
-  inset: -5px;
+  inset: -6px;
+  border-radius: 50%;
 }
 
-.scroll-cue i {
-  width: 3px;
-  height: 12px;
-  border-radius: 1.5px;
-  background: currentColor;
+/* 描边箭头，与顶栏那组 en-svg 同一套（fill:none + 圆头圆角），不另画实心三角形 */
+.cue-arrow {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   animation: cue-track 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
@@ -348,21 +353,17 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--ink-0) 62%, transparent);
 }
 
-/* 一道刻度从上往下走：起手淡入、走到底淡出，末尾不弹回——移动比整枚按钮上下 bob 安静 */
+/* 箭头在圆内轻轻起伏：3px 往返 + 透明度 0.55↔1，全程可见。
+   旧版是"走 6px、两端淡出"，一半时间按钮里是空的——换成圆钮之后那半个空圆像坏了。 */
 @keyframes cue-track {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.95;
-  }
-  72% {
-    opacity: 0.95;
-  }
+  0%,
   100% {
-    transform: translateY(26px);
-    opacity: 0;
+    transform: translateY(-3px);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(3px);
+    opacity: 1;
   }
 }
 
@@ -416,13 +417,13 @@ onUnmounted(() => {
   }
 }
 
-/* 减弱动效：全站那条规则把动画时长压到 0.01ms、只跑一次，刻度会停在"走到底、已淡出"
-   的那一帧上——这里显式停回中间那道静态短划，别让提示整个消失。 */
+/* 减弱动效：全站那条规则把动画时长压到 0.01ms、只跑一次，箭头会停在"走到底、已淡出"
+   的那一帧上——这里显式停回正中那道静态一撇，别让提示整个消失。 */
 @media (prefers-reduced-motion: reduce) {
-  .scroll-cue i {
+  .cue-arrow {
     animation: none;
     opacity: 0.9;
-    transform: translateY(9px);
+    transform: none;
   }
 }
 
