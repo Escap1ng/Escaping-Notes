@@ -339,13 +339,13 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 .mark {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   /* 光子环：全冷蓝单色调，避免红蓝混出紫色。环面取 --brand-ring——品牌蓝按主题兑出的
      那一枚（浅色约 #5085ea，深色仍是 #8ec9ff）；mix 里白色只占 25% 做高光段，结果仍是蓝的。
-     环壁回到 24px 上约 5.6px（mask 50%→53%）：63%→66% 那一版只有 4px，环太细，
-     压不住旁边的站名。 */
+     环壁 24px 上是 5.6px（hole 50%、壁起点 53%），32px 上按同样比例放大到 7.5px——
+     直径要对齐右上角那排 32px 圆钮，孤零零小一档读不成同一行。 */
   background: conic-gradient(
     from 210deg,
     var(--brand-ring),
