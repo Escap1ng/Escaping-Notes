@@ -6,10 +6,8 @@
       <span class="beam diag"></span>
     </div>
 
-    <header class="en-head">
-      <h2 class="en-h2 title">{{ N.nf.title }}</h2>
-      <p class="lede">{{ N.nf.text }}</p>
-    </header>
+    <h2 class="en-h2 title">{{ N.nf.title }}</h2>
+    <p class="lede">{{ N.nf.text }}</p>
 
     <div class="cta">
       <RouterLink class="en-btn en-btn-primary" to="/">{{ N.nf.home }}</RouterLink>
@@ -137,15 +135,10 @@ import { N } from '../data/narrative.js'
   margin-bottom: var(--space-0);
 }
 
-/* 页头底卡在居中页里收成一块告示卡：不满栏，随内容宽 */
-.nf .en-head {
-  width: min(100%, 560px);
-  margin-bottom: 0;
-  text-align: center;
-}
-
+/* 404 不坐底卡（2026-10-30 作者：这页不要底卡）：居中告示 + 取景框本身就是一整套，
+   再垫一张卡反而多一层白。其余次级页页头仍走 .en-head。 */
 .lede {
-  margin: 0;
+  margin: 0 0 var(--space-3);
   max-width: 34ch;
   color: var(--text-1);
   font-size: var(--fs-md);

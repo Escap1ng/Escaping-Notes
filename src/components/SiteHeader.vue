@@ -339,13 +339,13 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 .mark {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   /* 光子环：全冷蓝单色调，避免红蓝混出紫色。环面取 --brand-ring——品牌蓝按主题兑出的
      那一枚（浅色约 #5085ea，深色仍是 #8ec9ff）；mix 里白色只占 25% 做高光段，结果仍是蓝的。
-     环壁 24px 上是 5.6px（hole 50%、壁起点 53%），32px 上按同样比例放大到 7.5px——
-     直径要对齐右上角那排 32px 圆钮，孤零零小一档读不成同一行。 */
+     环壁比例不动（hole 50%、壁起点 53% → 24px 上 5.6px）；直径回 24px——32px 的实心环在
+     一排 1.6px 描边圆钮旁边读起来大一号（作者 2026-10-30：「控制大小」，不是改细）。 */
   background: conic-gradient(
     from 210deg,
     var(--brand-ring),
@@ -495,6 +495,52 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 .music-btn.on {
   color: var(--hot);
   border-color: color-mix(in srgb, var(--hot) 45%, transparent);
+}
+
+/* ---- 页顶字色跟随底片（lib/plateTone.js） ----
+   次级页顶栏不再垫白带；html[data-plate-tone] 挂着时，未吸顶的顶栏改用 --hdr-fg——
+   这枚变量是采样器按**当前那张底片**顶带亮度在墨字/纸字之间选的，与轮播同拍。
+   data-plate-cold 只在 --cold 的最坏样本仍 ≥4.5:1 时挂上（深色主题那枚亮蓝）；
+   否则 hover / 选中 / 下划线全部退成 --hdr-fg：蓝色压在 paper1 那种灰蓝底片上只有 1.8:1。 */
+html[data-plate-tone] .en-header:not(.stuck) .brand-name,
+html[data-plate-tone] .en-header:not(.stuck) .nav-link,
+html[data-plate-tone] .en-header:not(.stuck) .ico-btn {
+  color: var(--hdr-fg, var(--text-1));
+}
+
+/* 发丝框线在照片上会消失：换成当刻字色兑出的 28% */
+html[data-plate-tone] .en-header:not(.stuck) .ico-btn {
+  border-color: color-mix(in srgb, var(--hdr-fg) 28%, transparent);
+}
+
+html[data-plate-tone] .en-header:not(.stuck) .brand:hover .brand-name,
+html[data-plate-tone] .en-header:not(.stuck) .nav-link:hover,
+html[data-plate-tone] .en-header:not(.stuck) .nav-link.active,
+html[data-plate-tone] .en-header:not(.stuck) .ico-btn:hover {
+  color: var(--hdr-fg);
+}
+
+html[data-plate-tone] .en-header:not(.stuck) .ico-btn:hover {
+  border-color: var(--hdr-fg);
+}
+
+html[data-plate-tone] .en-header:not(.stuck) .nav-link::after {
+  background: var(--hdr-fg);
+}
+
+html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .brand:hover .brand-name,
+html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link:hover,
+html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link.active,
+html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .ico-btn:hover {
+  color: var(--cold);
+}
+
+html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .ico-btn:hover {
+  border-color: var(--cold);
+}
+
+html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link::after {
+  background: var(--cold);
 }
 
 /* 不可用的图标按钮（音乐曲目为空）：置灰 */

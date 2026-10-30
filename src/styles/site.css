@@ -669,7 +669,9 @@ html:root main.en-sub {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  margin: 0 0 var(--space-4);
+  /* 上边距 --space-3：卡顶落在羽化终点（140px）之下，白带与卡之间留一条底片，
+     免得「72px 白带 + 白卡」贴成一堵白墙（2026-10-30 作者：「顶部过于白」） */
+  margin: var(--space-3) 0 var(--space-4);
   padding: var(--card-pad-lg) var(--card-pad-lg) var(--card-pad);
   border: 1px solid var(--card-brd);
   border-radius: var(--r-md);
@@ -683,6 +685,22 @@ html:root main.en-sub {
 .en-head .en-lede {
   margin: 0;
   max-width: var(--measure);
+}
+
+/* 底片上的次要裸字（作者 2026-10-30：这四处**不接** --hdr-fg 动态，只在颜色上优化）：
+   合集总览的卷头（序号 / 摘要 / 读数）、合集详情的组标题、映像墙图注、404 的标题与导语。
+   原先一律 --text-1——压在底色亮的那档底片上只有 2.4:1 上下。抬到 --text-0 一档，
+   叠一条纸色晕（首屏刊头同一手法，§9 第 4 条）把字边从照片里裁出来，仍然不加任何底卡。 */
+html:root .vol-head .vol-no,
+html:root .vol-head .vol-sum,
+html:root .vol-head .vol-tally,
+html:root .block-head,
+html:root .shot .cap,
+html:root .en-shell > .tally,
+html:root .nf .title,
+html:root .nf .lede {
+  color: var(--text-0);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--ink-0) 65%, transparent);
 }
 
 .en-mono {

@@ -46,6 +46,7 @@ onMounted(async () => {
 
 <template>
   <section class="en-shell">
+    <!-- 页头只有一张卡：面包屑 + 标题/导语/篇数同住，别让面包屑另起一张（叠两张白卡更白） -->
     <header class="en-head">
       <nav class="crumbs en-mono" aria-label="合集路径">
         <RouterLink to="/collections">{{ N.collection.crumb }}</RouterLink>
@@ -55,24 +56,25 @@ onMounted(async () => {
           <span v-else aria-current="page">{{ c.title }}</span>
         </template>
       </nav>
-    </header>
 
-    <div v-if="!collection" class="lost">
-      <header class="en-head">
+      <template v-if="!collection">
         <h2 class="en-h2">{{ N.collection.lost }}</h2>
-      </header>
-      <RouterLink class="en-btn en-btn-ghost" to="/collections">{{ N.collection.crumb }}</RouterLink>
-    </div>
-
-    <template v-else>
-      <header class="en-head">
+      </template>
+      <template v-else>
         <h2 class="en-h2">{{ collection.title }}</h2>
         <p class="en-lede">{{ collection.summary }}</p>
         <p class="tally en-mono">
           {{ totalLabel }}
           <span v-if="kids.length"> · {{ N.collection.kids.replace('{n}', kids.length) }}</span>
         </p>
-      </header>
+      </template>
+    </header>
+
+    <div v-if="!collection" class="lost">
+      <RouterLink class="en-btn en-btn-ghost" to="/collections">{{ N.collection.crumb }}</RouterLink>
+    </div>
+
+    <template v-else>
 
       <section v-if="kids.length" class="block">
         <h3 class="block-head en-mono">{{ N.collection.children }}</h3>
