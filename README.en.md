@@ -7,6 +7,11 @@
 [**Live demo → escaping.top**](https://escaping.top)
 
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
+[![Pages](https://img.shields.io/github/actions/workflow/status/Escap1ng/Escaping-Notes/deploy.yml?label=Pages)](https://github.com/Escap1ng/Escaping-Notes/actions/workflows/deploy.yml)
+[![Live](https://img.shields.io/badge/live-escaping.top-2f81f7)](https://escaping.top)
+[![Vue 3](https://img.shields.io/badge/Vue%203-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![Vite 5](https://img.shields.io/badge/Vite%205-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Personal%20Use-4d4d4d)](#license--usage-terms)
 
 [中文](README.md) · **English**
@@ -57,6 +62,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 
 **Visual**
 
+- The landing screen keeps only an English masthead (8.8vw, about 81% of the viewport); the sixteen-character couplet and the typewriter are gone, and the section below the fold is split into chapter cards
 - Switching theme no longer swaps the mountain: the dark landing screen is a darkened bake of the same framing, both themes share one ridge polyline, and each theme deposits its own plate to keep colours from bleeding
 - The default is light and the first frame deliberately ignores `prefers-color-scheme`: the landing screen is a bright photograph, and following the system into dark would float a bright image on black
 - Trails are drawn frame by frame with an offscreen accumulation buffer (Canvas 2D) and masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px
@@ -116,7 +122,7 @@ CI in `.github/workflows/deploy.yml` runs `npm ci` → `npm test` → `npm run c
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` | Posting gate and receipt first, then `dist/` (including `rss.xml`, `sitemap.xml` and one static shell per route) |
 | `npm run preview` | Serve `dist/` the way production would |
-| `npm test` | Everything under `tests/`, no test framework |
+| `npm test` | Everything under `tests/` (147 cases today), no test framework |
 | `npm run check` | The four gates in sequence: content / docs / naming / contrast |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, with full text and categories; `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
@@ -150,7 +156,7 @@ All 11 routes are lazy-loaded and each carries `meta.t` for the document title a
 
 | Route | Page | What it is |
 | --- | --- | --- |
-| `/` | Home · long-exposure star trails | Photo landscape band + trails + typed title + drawer |
+| `/` | Home · long-exposure star trails | Photo landscape band + trails + English masthead + drawer |
 | `/blog` | Articles | Archive: four site-wide counters, tag filters that carry their own count; the query lives in the URL, there is no second input on the page |
 | `/blog/:slug` | Article | A single post with its cover placed on top; inline images open the lightbox |
 | `/collections` | Collections | Top-level collections and their sub-collections, grouped by subject |

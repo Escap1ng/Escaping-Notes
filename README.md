@@ -7,6 +7,11 @@
 [**在线体验 → escaping.top**](https://escaping.top)
 
 [![Release](https://img.shields.io/github/v/release/Escap1ng/Escaping-Notes)](https://github.com/Escap1ng/Escaping-Notes/releases)
+[![Pages](https://img.shields.io/github/actions/workflow/status/Escap1ng/Escaping-Notes/deploy.yml?label=Pages)](https://github.com/Escap1ng/Escaping-Notes/actions/workflows/deploy.yml)
+[![Live](https://img.shields.io/badge/live-escaping.top-2f81f7)](https://escaping.top)
+[![Vue 3](https://img.shields.io/badge/Vue%203-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![Vite 5](https://img.shields.io/badge/Vite%205-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Personal%20Use-4d4d4d)](#许可与使用声明)
 
 [中文](README.md) · [English](README.en.md)
@@ -57,6 +62,7 @@
 
 **视觉**
 
+- 首屏只剩一行英文刊头（8.8vw，整行约 81% 视口）；十六字联句与打字机已撤除，折线以下按章分卡
 - 双主题不换山：深色首屏是同一取景的压暗版，两套共用一条山脊折线；底片按主题各沉积一张，防串色
 - 默认浅色，首帧刻意不读系统 `prefers-color-scheme`——首屏是一张亮底照片，跟着系统翻到深色会变成亮图压在黑底上
 - 星轨由离屏累积缓冲逐帧绘制（Canvas 2D），沿山脊以 `destination-in` 遮挡，脊线附近保留到六成亮度、26px 羽化
@@ -116,7 +122,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 | `npm run dev` | Vite 开发服务器，改文件即时热更 |
 | `npm run build` | 先跑发文门禁与回执，再出 `dist/`（含 `rss.xml`、`sitemap.xml`、每条路由一份静态壳） |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
-| `npm test` | `tests/` 下的 `.mjs` 用例全收，零测试框架 |
+| `npm test` | `tests/` 下的 `.mjs` 用例全收（当前 147 项），零测试框架 |
 | `npm run check` | 四道门禁连跑：内容 / 文档 / 命名 / 对比度 |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、带全文与标签，`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
