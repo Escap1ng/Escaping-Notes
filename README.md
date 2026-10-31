@@ -159,7 +159,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 | `/gallery` | 映像 | 全站用图墙 |
 | `/projects` | 项目 | 项目卡片栅格 |
 | `/projects/:slug` | 项目介绍 | 与文章页共用阅读底板；`Esc` 或点空白退回列表 |
-| `/about` | 关于 | 自述 · 三枚读数 · 档案 / SOCIAL · 友链 · 技术栈 |
+| `/about` | 关于 | 自述 + 读数 · 档案 / 社交 / 友链 · 技术栈 |
 | `/:pathMatch(.*)*` | 404 | 未匹配路由的兜底页，标题与页内大字同一句「这里没有页面」 |
 
 ## 目录结构
