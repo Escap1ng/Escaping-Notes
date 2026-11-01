@@ -33,7 +33,7 @@ test('星轨等首屏图片 load 完再挂载，组件按需下载', () => {
   // 负向对照：改回静态 import + 无条件渲染，同一条判据必须变红
   const old = hero
     .replace("defineAsyncComponent(() => import('./StarTrails.vue'))", 'StarTrails')
-    .replace('<StarTrails v-if="stars" interactive />', '<StarTrails interactive />')
+    .replace('<StarTrails v-if="stars" />', '<StarTrails />')
   assert.notEqual(old, hero, '这记假根本没改动文件体')
   assert.equal(starsAfterPhoto(old), false)
 })

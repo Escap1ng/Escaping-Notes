@@ -82,14 +82,15 @@ test('负向对照：本文件的判据抓得住重复定义、单侧定义与�
   const dupFound = [...new Set(b)].filter((p) => out.includes(p) || deep.includes(p))
   assert.deepEqual(dupFound, ['--ink-0'], `⑴的判据该只揪出这一枚，实际 ${dupFound.join(', ') || '没揪出来'}`)
 
-  // ⑵ 删掉一处 --scrim → 两套主题块就只剩一边有，必须报不对称。
-  //    （文件里深色块在浅色块之前，所以"删第一处"删掉的是深色那份；断言只问不对称，不问方向。）
-  const oneSide = CSS.replace(/^[ \t]*--scrim:[^\n]*\n/m, '')
+  // ⑵ 删掉一处 --cold → 两套主题块就只剩一边有，必须报不对称。
+  //    （文件里深色块在浅色块之前，所以"删第一处"删掉的是深色那份；断言只问不对称，不问方向。
+  //    探针令牌只要是两套主题各定义一份的成对令牌即可；初版探针是 --scrim，它退役后换 --cold。）
+  const oneSide = CSS.replace(/^[ \t]*--cold:[^\n]*\n/m, '')
   const o2 = topBlocks(oneSide).filter(([sel]) => isTheme(sel) && !isDeep(sel)).flatMap(([, x]) => decls(x))
   const d2 = topBlocks(oneSide).filter(([sel]) => isDeep(sel)).flatMap(([, x]) => decls(x))
   assert.notEqual(
-    o2.includes('--scrim'),
-    d2.includes('--scrim'),
+    o2.includes('--cold'),
+    d2.includes('--cold'),
     '⑵的判据此刻抓得到单侧定义吗——两边同缺或同有都不算造出故障（先确认这条造假真的改动了文件体）'
   )
 

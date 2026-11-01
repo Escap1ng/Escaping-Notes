@@ -138,92 +138,6 @@ a {
   text-transform: uppercase;
 }
 
-/* 通用页面骨架：原先只服务登录 / 管理两页，2026-10-16 两页随后端一起下线 → 零消费方 */
-.page {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-3);
-}
-
-.page-code {
-  margin: 0;
-}
-
-.page-title {
-  font-family: var(--font-serif);
-  font-size: clamp(32px, 6vw, 56px);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-tight);
-  letter-spacing: 0.02em;
-  margin: var(--space-1) 0 var(--space-3);
-}
-
-/* ---------- 表单控件（原先登录 / 管理两页共用，2026-10-16 随其后端一起下线 → 零消费方） ----------
-   形态规则：
-     单行输入 / 搜索 → 下划线式（.field）
-     多行文本域     → 发丝框（textarea.field）——长文编辑需要明确的边界与内边距
-   状态规则：hover 抬亮描边、focus 转为交互色（冷）、disabled 降到 50% 不透明。
-   次级页的设计系统输入是 §6 的 .en-field，2026-10-13 起改成卡面底板形态
-   （与卡片共用 --card-bg / --card-brd），两者已不同形。这一段退役与否等他定。 */
-.field {
-  width: 100%;
-  padding: var(--space-1) 2px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  background: none;
-  color: var(--text-0);
-  /* 必须显式声明：输入框常嵌在 .readout 标签里，inherit 会把等宽字体与大写转换带进来 */
-  font-family: var(--font-sans);
-  font-size: var(--fs-md);
-  line-height: var(--lh-snug);
-  text-transform: none;
-  transition: border-color var(--dur-fast);
-}
-
-.field::placeholder {
-  color: var(--text-1);
-  opacity: 0.7;
-}
-
-.field:hover {
-  border-color: color-mix(in srgb, var(--signal) 50%, var(--line));
-}
-
-.field:focus,
-.field:focus-visible {
-  outline: none;
-  border-color: var(--signal);
-}
-
-/* 多行文本域：唯一允许"盒子"形态的输入，因为长文需要边界 */
-textarea.field {
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm, 8px);
-  resize: vertical;
-}
-
-textarea.field:hover {
-  border-color: color-mix(in srgb, var(--signal) 45%, var(--line));
-}
-
-textarea.field:focus,
-textarea.field:focus-visible {
-  border-color: var(--signal);
-}
-
-.field.mono {
-  font-family: var(--font-mono);
-  font-size: var(--fs-2xs);
-  line-height: var(--lh-normal);
-}
-
-.field:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* 移动端输入框 ≥16px，避免 iOS 聚焦自动缩放 */
 @media (max-width: 720px) {
   input,
@@ -307,19 +221,6 @@ html:root {
   --brand-ring: color-mix(in srgb, var(--brand-cold) 45%, var(--cold));
   --brand-hot: #ff5c39;
 
-  /* 暗带契约（§3.3）：文字底下的天空必须被压低，天空只在带外全亮。
-     压低系数 --sky-k 在 §2/§3 两个主题块各定一档（两套主题差 2.5 倍）。
-     带宽 1120px = .en-shell 的 max-width，保证正文整块落在带内。用 % 而不是 vw：
-     mask 的定位面积就是画布盒子（fixed inset:0，已排除滚动条），vw 会把滚动条算进来。 */
-  --sky-band: min(1120px, 100%);
-  /* 羽化段"恰好吃掉带外的全部余量"：带内全压、到视口边缘全亮，中间线性过渡。
-     写成固定值会留坑——视口 ≤1120px 时内容宽是 100%−48px、比带宽更宽，
-     卡片边缘就落在羽化段上（实测那样一来文字底下的天空保留强度会回到 0.23，超出 AA 上限）。
-     所以这里让它自适应：视口越窄羽化越短，≤1120px 时为 0 —— 即窄屏上一次级页的天空被
-     整片压低、只在宽屏的两条侧廊里恢复亮度。这是这套契约的**固有取舍**（手机屏上没有横向
-     余量可留给天空），不是漏算；大气感由首页那台不加遮罩的相机负责。 */
-  --sky-feather: calc((100% - var(--sky-band)) / 2);
-
   /* 卡面：全站唯一色面（文章卡 / 图片格 / 后台面板都从这里取，§6c 的阅读底板也取它）。
      resting 档 = **不透底**：卡面取 --card-solid（浅色 #ffffff / 深色不透明的 --ink-1），
      hover 只掺 6% 冷色——再亮就没得亮了。
@@ -387,8 +288,6 @@ html:root:not([data-theme='out']) {
      胶带是压住框边的那条美纹纸——全站唯一一处暖色表面，它讲的是材料不是强调色 */
   --polar: #1e2733;
   --tape: rgba(252, 211, 77, 0.22);
-  --void-a: rgba(2, 2, 4, 0.34); /* 运动模糊覆盖色 */
-  --scrim: rgba(2, 2, 4, 0.78); /* 文字底衬色：当前零消费方。首屏那条压在照片带上的白纱已删——它把山脚抬到和天空同亮度，是"上下割裂"的一半。留着是因为跟随底色的语义色必须两套主题各自定义，只删一套会让使用处整条失效；要退役就连下面那行一起删。 */
   --plate-img: url('/plates/plate-bg-deep.jpg'); /* 深色不轮播：三档指向同一张压暗底，避免夜里换景跳变 */
   --plate-img-2: url('/plates/plate-bg-deep.jpg');
   --plate-img-3: url('/plates/plate-bg-deep.jpg');
@@ -410,11 +309,6 @@ html:root:not([data-theme='out']) {
      比 52% 半透时略亮一档——语义是"卡片不透背景"，不是"卡片变白"。 */
   --card-solid: var(--ink-1);
 
-  /* 暗带压低系数（§3.3）。解法：取最差那一档星轨色（琥珀 tier2 #ff977d）在峰值
-     alpha 0.753 下的天光底，要求最小的次要文字 text-1 也过 AA 4.5 —— k ≤ 0.2，
-     取 0.15 留 22% 余量（实测 5.48:1）。按峰值而非中位数（0.247）算是必须的：
-     星轨在动，同一枚文字像素的底会随时间明暗波动，按中位数设计等于放任它闪烁出界。 */
-  --sky-k: 0.15;
 }
 
 /* ---------- 3. 白矮冷调（浅色） ---------- */
@@ -453,12 +347,6 @@ html:root[data-theme='out'] {
   /* 映像柜的拍立得：浅色下一张真白框（相纸就是白的，压成灰反而像没加载完） */
   --polar: #ffffff;
   --tape: rgba(253, 230, 138, 0.55);
-  /* 运动模糊覆盖色。这枚是浅色主题里最后一个字面量米黄，跟着底色收冷。
-     它**必须留字面量**而不是 color-mix：StarTrails.vue 用 getPropertyValue 读原始串直接当
-     canvas 的 fillStyle，canvas 不解析 color-mix()，写进去会整条静默失效（画错但不报错）。
-     (242,245,249) = --ink-0 的字节值，改底色时这两处要一起动。 */
-  --void-a: rgba(242, 245, 249, 0.34);
-  --scrim: rgba(242, 245, 249, 0.78); /* 文字底衬色：当前零消费方，理由见深色那一条——要退役就两处一起删 */
   /* 折线以下轮播的三张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
      里的那张 jpg），不是第几张：paper2 / paper5 / paper6 三档空着——paper2 搬去当第三篇
      《本博客的写作与上传》的封面，paper5 已删除，paper6 暂存到 photos-src/ 待用。别为了序号连贯
@@ -483,10 +371,6 @@ html:root[data-theme='out'] {
      色面各按主题给，见深色块那一条。 */
   --card-solid: #ffffff;
 
-  /* 暗带压低系数：浅色主题比深色主题**更严**。这里的星轨是接近纯黑的墨迹（tier1 #51240e），
-     压的是接近纯黑的 text-0 与中性的 text-1；同一套算法解到 text-1 ≥ 4.5 要 k ≤ 0.06
-     （实测 4.65:1），k=0.1 只有 4.40 —— 不达标。两套主题差 2.5 倍，所以这个值必须分主题定。 */
-  --sky-k: 0.06;
 }
 
 /* ---------- 3a. 手机档地景 ----------
@@ -930,16 +814,8 @@ html:root .nf .lede {
   letter-spacing: 0.06em;
 }
 
-/* 中性标签：只是"标记"，不带交互语义。它唯一的消费方是文章页那枚"本地读数"，
-   2026-10-10 随本地回退计数一起撤走 → 现在零消费方，退役与否等他定 */
-.en-tag-quiet {
-  background: color-mix(in srgb, var(--text-1) 14%, transparent);
-  color: var(--text-1);
-}
-
 /* 单行输入 / 搜索：一块卡面底板（与 .en-card 同一组色面令牌，故「卡片颜色」两档同样驱动它）。
-   多行文本域见下方 textarea.en-field —— 形态规则全站只有这一条。
-   旧 .field（原先归登录 / 管理两页，已随其后端下线）是下划线式，这一档只覆盖 .en-field。 */
+   多行文本域见下方 textarea.en-field —— 形态规则全站只有这一条。 */
 .en-field {
   width: 100%;
   padding: var(--space-1) var(--space-2);
@@ -1173,9 +1049,7 @@ html:root .en-glass {
   z-index: 1;
   /* 栏宽 = 正文 44 字，按 §1 的 --prose-size 算成绝对长度。
      不用 ch：ch 随消费元素自身字号漂移，同一枚 --measure 在 16px 的 .head 与 20px 的
-     正文里会算出两个宽度，两栏就错开了。
-     上限受 §3.3 暗带契约约束：44 × 20px = 880px < --sky-band 1120px，正文整块仍落在带内；
-     底板比带宽，多出来的那一截是玻璃边，不吃文字。 */
+     正文里会算出两个宽度，两栏就错开了。 */
   --measure: calc(var(--prose-size) * 44);
   /* 底板贴近屏幕（≤1280px 或 94vw），大屏下占据更多宽度；正文栏居中于 --measure */
   max-width: min(1280px, 94vw);
@@ -1553,20 +1427,6 @@ html:root .en-prose th {
     max-width: 100%;
     overflow-x: auto;
   }
-}
-
-/* ---------- 10. 沿用旧组件页面的协调化 ----------
-   这一段服务的 .page / .page-title 原先归登录 / 管理两页（2026-10-16 随其后端一起下线），
-   现在零消费方。表单（.field）与按钮已统一为 .en-* 的同一套规格，不再需要覆盖——
-   新增页面请直接用 .en-btn / .en-field / .en-note-*，不要再写页面私有样式。 */
-html:root .page {
-  max-width: 1120px;
-  padding: var(--space-4) var(--space-3);
-}
-
-html:root .page-title {
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
 }
 
 /* ---------- 11. 减弱动效 ---------- */

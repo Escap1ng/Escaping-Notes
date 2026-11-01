@@ -208,7 +208,7 @@ BLOG/
   - `--lh-tight/snug/normal/relaxed` 行高（1.35 / 1.6 / 1.75 / 1.9）
   - `--fw-normal/medium/bold` 字重（400 / 600 / 700）
   - **指针反馈四枚**：`--dur-fast`（0.22s，颜色 / 描边）、`--dur`（0.3s，位移 / 缩放）、`--nudge`（4px，行内右移）、`--lift`（-2px，控件抬起）——见 design.md §4.6。入场动画与开合转场不归这四枚管。
-- **两套主题块**：真正生效的配色——`--cold`（交互与强调 / 蓝移）、`--hot`（当前播放与错误 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）、`--void-a`（画布覆盖色，**是字面量，改底色要两处一起动**）。另有 `--r-sm/--r-md/--r-pill` 三档圆角（没有 `--r-lg`，用到"大圆角"的地方取 `--r-pill`）、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
+- **两套主题块**：真正生效的配色——`--cold`（交互与强调 / 蓝移）、`--hot`（当前播放与错误 / 红移）、`--white`（星核高光）、`--shadow`（抬升阴影）、`--panel-frost-bg`（阅读底板在无 `backdrop-filter` 时的兜底）、`--polar` / `--tape`（映像柜）。另有 `--r-sm/--r-md/--r-pill` 三档圆角（没有 `--r-lg`，用到"大圆角"的地方取 `--r-pill`）、`--font-display` 标题字体、`--page-top` 次级页顶部留白、**卡片令牌** `--card-bg/--card-bg-hover/--card-brd/--card-brd-hover/--card-pad/--card-pad-lg`，以及**卡面 resting 的色面** `--card-solid`（深色 `var(--ink-1)` / 浅色 `#ffffff`）——`--card-bg` 默认就取它，`site.css` §3 之后那条 `html[data-card-surface='glass']` 门控块把填充绕回 52%/62% 的半透那一档；档位由设置卡经 `src/lib/surface.js` 拨，**默认是不透底**。`--card-bg` 的消费方不止卡片：`.en-chip`、`.en-field` 与 §6c 的阅读底板 `.en-glass` 都取它，所以那一档开关一次翻满全站表面。
 
 改完保存即生效。四条约定：
 
@@ -221,7 +221,7 @@ BLOG/
 
 ### 3.1.1 组件库：新页面该用哪些类
 
-全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义；`quiet` 那一档的字面是等宽仪器字面，不是 sans，见 design.md §4.3）、**筛选与页签**（`en-chip`）、**标签**（`en-tag` / `en-tag-quiet`）、**输入**（`en-field`，多行用 `textarea.en-field`；`en-chip` 与 `en-field` 的底和边都取 `--card-bg` / `--card-brd`，即与卡片同一块色面，设置卡「卡片颜色」两档一起翻）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，音乐 / 项目 / 关于 / 文章列表都用它；动态满宽、一条一枚卡，不吃 `en-cards`；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**阅读底板**（`en-glass`——文章页与项目详情页共用同一块；填充取 `--card-bg`，即与卡片、胶囊、输入框同一块色面，设置卡「卡片颜色」两档一起翻）、**图标**（`en-ico` 单字符符号：`▶ ❚ « » ✦ ✧ ≡ ✕ → ↗ ↑`；方向图标另有 `en-ico-up`，被指到时朝自己那侧让一枚 `--nudge`；**例外**只有描边 SVG `.en-svg`——顶栏右上角那四枚（搜索 / 主题 / 音乐 / 设置，主题那枚两副字形按当前档取一副）与播放器卡片里那枚星轨符号）。
+全站只有一套组件，都在 `src/styles/site.css`：**按钮**（`en-btn` + `en-btn-sm` 尺寸 × `primary`/`ghost`/`danger`/`quiet` 语义；`quiet` 那一档的字面是等宽仪器字面，不是 sans，见 design.md §4.3）、**筛选与页签**（`en-chip`）、**标签**（`en-tag`）、**输入**（`en-field`，多行用 `textarea.en-field`；`en-chip` 与 `en-field` 的底和边都取 `--card-bg` / `--card-brd`，即与卡片同一块色面，设置卡「卡片颜色」两档一起翻）、**状态提示**（`en-note-ok` / `en-note-err` / `en-note-info`）、**卡片**（`en-card` 一张卡面 + `en-cards` 两列栅格，音乐 / 项目 / 关于 / 文章列表都用它；动态满宽、一条一枚卡，不吃 `en-cards`；带封面的再加 `en-flush`（图贴边）与一格 `en-shot`（3:2 封面，没图时加 `blank` 给斜纹空版））、**阅读底板**（`en-glass`——文章页与项目详情页共用同一块；填充取 `--card-bg`，即与卡片、胶囊、输入框同一块色面，设置卡「卡片颜色」两档一起翻）、**图标**（`en-ico` 单字符符号：`▶ ❚ « » ✦ ✧ ≡ ✕ → ↗ ↑`；方向图标另有 `en-ico-up`，被指到时朝自己那侧让一枚 `--nudge`；**例外**只有描边 SVG `.en-svg`——顶栏右上角那四枚（搜索 / 主题 / 音乐 / 设置，主题那枚两副字形按当前档取一副）与播放器卡片里那枚星轨符号）。
 
 - **不要**为某个页面另造按钮、输入框、卡片或提示类。早期 `/login` `/admin` 各自写过一套，现已全部并入上面这些类。
 - 首页章节区是另一套组合：`.dateline` / `.pane` 是章节底卡，`.pick` 是章节面里的带框瓦片（只加边、底透出章节面），两者都不走 `.en-card`，但边 / 角取同一组 `--card-*` 令牌；章节里的动态 / 合集 / 项目条目是行，不是卡。
@@ -268,7 +268,7 @@ BLOG/
 - **动画只动 `opacity` / `transform`**。不要**新增**整页或大面积的 `filter: blur()`——那会每帧重新栅格化整棵子树。两处既有例外：`fall` 转场（换页时的下坠模糊，刻意保留的手感），以及底片的 `--plate-blur`（运行时可调参数，见 design.md §8「首页折线以下」条）。后者的边界条件：**初值 12px = 拉满**，所以默认就会建这层渲染面，只有滑杆拖回 0 时 filter 整条消失；图层向四周多撑 3 倍模糊半径，免得边缘淡进透明露出白边。新组件仍请勿照抄大面积 blur。
 - **不要给常驻悬在画布之上的元素加 `backdrop-filter`**——星轨每动一帧它就要重算背后模糊。实际消费方清单（都落在"瞬时模态"或"长时间阅读面"两类里）：文章页与项目详情页的 `.en-glass`（**只在设置卡「卡片颜色 = 半透明」那一档建**：不透底时板后已被卡面挡死，留着模糊只剩开销）、`/gallery` 灯箱糊底与那条胶带、顶栏抽屉。首页章节区（`.dateline` / `.pane`）是常驻面，**不建**这层模糊：填充走 `--card-bg`，糊感由底片自己的 `--plate-blur` 提供。**常驻顶栏刻意不用** `backdrop-filter`，用高不透明实底。
 - **`resize` 一律经 `src/lib/debounce.js` 去抖（150ms）**，因为大多数处理要重建画布或重新测量布局。
-- **不要各自写滚动监听**。滚动深度统一由 `App.vue` 写入 `--shift`（0..1），CSS 里 `var(--shift, 0)`，JS 里读 `src/lib/shift.js` 的 `shift.v`；`scrollHeight` 会强制同步布局，绝不能每帧读。
+- **不要各自写滚动监听**。滚动深度统一由 `App.vue` 写入 `--shift`（0..1），CSS 里 `var(--shift, 0)`；JS 侧没有镜像（原 `lib/shift.js` 的 `shift.v` 只服务星轨已删的非交互分支，2026-11-01 随之删除）。`scrollHeight` 会强制同步布局，绝不能每帧读。
 - **星轨那几条数值约束**（改常量前必读 design.md §3.1 与 §9）：① 往累积缓冲沉积的那笔 alpha 必须乘帧时长比例（`accPass(…, dep, step)`）——漏乘会让高刷屏整体变亮变密，而 60Hz 开发机上看不见；② `DEP` 与 `FADE_*` 是一对，只能同倍率一起动，且 `fd` 不许低于 ~0.1——底片是 RGBA8，`α·fd < 0.5 LSB` 的那一档永远掉不下去；③ 改线宽必须同倍率反向改 `DEP`（单位弧长的墨 = α·lw）；④ 天空的口味常量按主题分档，不许两主题共用一个数，新增这类常量时两档都要各测各的、报结论也报两遍。
 - **焦点与播报**：新增模态 / 浮层请用 `src/lib/focus.js` 的 `trapFocus()` 锁住 Tab 并在关闭时归还焦点；`#main` 带 `tabindex="-1"` 供「跳到内容」使用；路由切换由 `App.vue` 的 `aria-live` 区域播报 `route.meta.t`——**新页面记得在 `src/router/index.js` 写上 `meta.t`**。
 - **详情页的返回不要自己写**：`/blog/:slug` 与 `/projects/:slug` 共用 `src/lib/exit.js` 的 `useDetailExit(列表路径, canExit)`（Esc 与点空白）。再抄一份 Esc 监听就是站内第二套返回机制，`tests/detail-exit.test.mjs` 会红。

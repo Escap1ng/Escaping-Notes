@@ -5,7 +5,6 @@ import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import { debounce } from './lib/debounce.js'
 import { whenHeroReady } from './lib/hero.js'
-import { shift } from './lib/shift.js'
 import { createPlateTone } from './lib/plateTone.js'
 import { theme } from './lib/theme.js'
 
@@ -56,10 +55,10 @@ watch(
   }
 )
 
-// 滚动深度：写入 --shift（0..1）与 lib/shift.js，驱动全站晕影、首屏下滑提示淡出，
-// 以及文章页顶部那条进度线。shift.js 那份镜像是给 JS 侧每帧读用的，
-// 目前它唯一的读者在 StarTrails 那条已经不触发的非交互分支里（design.md §3.2）。
-// maxScroll 只缓存、不每帧读取：scrollHeight 会强制同步布局，60fps 下等于每帧一次重排。
+// 滚动深度：一次写入 --shift（0..1），驱动全站晕影、首屏下滑提示淡出，以及文章页顶部那条进度线。
+// JS 侧没有第二个读者（原 lib/shift.js 的 shift.v 镜像只服务 StarTrails 那条非交互分支，
+// 随它的退役一并删了）。maxScroll 只缓存、不每帧读取：scrollHeight 会强制同步布局，
+// 60fps 下等于每帧一次重排。
 let shiftRaf = 0
 let maxScroll = 0
 let lastShift = -1
@@ -71,7 +70,6 @@ function applyShift() {
   const p = maxScroll > 0 ? Math.min(1, Math.max(0, scrollY / maxScroll)) : 0
   if (p === lastShift) return // 值没变就不写样式，省掉一次无关的重算
   lastShift = p
-  shift.v = p
   document.documentElement.style.setProperty('--shift', p.toFixed(4))
 }
 function onScroll() {

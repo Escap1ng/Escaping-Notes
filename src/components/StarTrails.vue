@@ -10,10 +10,10 @@
 // 管线：ACC 累积离屏缓冲（destination-out 衰减 pass + 每星短弧增量 pass，尾迹自然累积）
 //       → 主画布每帧：底 → drawImage(ACC) → 流星（当帧层，不累积，保持锐利）
 //       → 首页相机末尾 destination-in 一张山脊遮罩（src/lib/ridge.js）：山体不吃星轨，
-//         脊线以上再按高度渐淡（大气透视）。遮罩在绘制时裁、不在沉积时裁——底片全站共享，
-//         次级页背景没有山，沉积时切弧会在那边读出一圈缺角。
-// 天与相机：底片与星群在 src/lib/sky.js 里是全站一份，本组件只是取景器——
-//       换页 = 挪动相机，同一张底片继续感光，"一夜连续曝光"因此才成立。
+//         脊线以上再按高度渐淡（大气透视）。遮罩在绘制时裁、不在沉积时裁——
+//         底片是跨路由常驻的一张共底，沉积时切弧会把缺角写进底片。
+// 天与相机：底片与星群在 src/lib/sky.js 里全站一份，本组件只是取景器——
+//       离开首页底片不清零，回到首页接着长，"一夜连续曝光"因此才成立。
 // 主题：深色=冷白/暖白/琥珀（lighter 发光）；浅色=板岩/石墨/朱砂（source-over）。
 //       色温跟星等走（暗星冷、亮星少数抽暖），色相承载层次，不是第三路独立随机。
 // 工程约定：像素预算封顶、rAF 单循环、三重停帧闸门（标签页隐藏 / 划出视口 / 取景权被接走）、
@@ -21,16 +21,11 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { debounce } from '../lib/debounce.js'
 import { music } from '../lib/music.js'
-import { shift } from '../lib/shift.js'
 import { claimPlate, ensurePlate, ownsPlate, plateSpace, releasePlate, resetPlate, sky } from '../lib/sky.js'
 import { buildRidgeMask } from '../lib/ridge.js'
 
 // 取景权凭据：每个组件实例一份，fall 转场期间两机并存时只有最后挂载的那个往底片上画。
 const self = {}
-
-const props = defineProps({
-  interactive: { type: Boolean, default: false },
-})
 
 const cvs = ref(null)
 const TAU = Math.PI * 2
@@ -111,14 +106,6 @@ const PLATE_OM = 0.17 // 快进角速度 rad/s
 // 比 live 页顶那一档长一些——它是一张"冲好的长曝光"，该比实时那一眼更满。
 const PLATE_FADE = 0.1
 const PLATE_LEN = 1.6 // 静态底片的弧长倍率（live 的对应量由 flow 算出来，见 update）
-// 次级页限帧到 30fps。长曝光靠短弧增量累积，帧率减半不影响观感，
-// 但全屏 destination-out + drawImage 的绘制量直接减半（首页交互层仍走满帧）。
-const SUB_FPS = 30
-// 次级页曝光响应：页顶维持安静的短尾迹基线，随文档深度逐渐延长并加速，
-// 让「越往下读，曝光越久」在文章页真的成立。深度取 App.vue 写入的 shift.v（文档级），
-// 不用首页那套 scrollY/(H*1.1)——长文章滚过一屏它就饱和了，读不出整篇的进度。
-const SUB_FADE_TOP = FADE_0 * 1.3 // 页顶衰减/帧（沿用原静默基线：更短尾迹）
-const SUB_FLOW = 1.1 // 最深处的流速加成（首页 FLOW_MAX 的一半，次级页保持克制）
 /* 半径取样：等距槽 + 槽内抖动 + 单调弯折。
  * 为什么不再用独立随机：n 条环自由落体必然结块——实测（n=180，12 次取均值）"最挤 10 条的跨度 ÷
  * 最松 10 条的跨度"是 5.81，且最小间距 0.0px（两条环几乎重合，读起来就是一根粗线旁边一大片空）。
@@ -142,11 +129,10 @@ let H = 0
 let dpr = 1
 let reduced = false
 // 预曝光只做一次：底片跨路由常驻，回到首页不该把已经感光的这一夜倒掉重冲。
-// 本组件现在只被首页（interactive）挂载，所以模块级就够，不需要挂到 sky 上。
+// 本组件只有一个挂载点（首页），所以模块级就够，不需要挂到 sky 上。
 let warmed = false
 let raf = 0
 let last = 0
-let lastDraw = 0 // 上一次真正绘制的时刻（次级页限帧用）
 let visible = true // 标签页是否可见（visibilitychange）
 let onScreen = true // 本机盒子是否在视口内（仅首页相机有意义）
 
@@ -183,7 +169,6 @@ const C = {
   trail: [],
   boost: 0,
 }
-let voidA = 'rgba(2,2,4,.34)'
 
 function hex2rgb(h) {
   const s = String(h).replace('#', '').trim()
@@ -208,7 +193,6 @@ function readColors() {
   C.white = get('--white', C.white)
   C.ink = get('--text-0', C.ink)
   C.boost = theme === 'out' ? 1 : 0
-  voidA = cs.getPropertyValue('--void-a').trim() || voidA
   // 星轨色板：色相承载星等。暗档冷（板岩/冷白）、中档中性（石墨/暖白）、只有亮星里
   // 三成抽到暖档（朱砂/琥珀）做点睛。旧版色温是第三路独立随机（56/33/11），橙弧会以
   // 同样的概率出现在暗线里——亮色照片上读成锈划痕；现在暖色只跟在亮星后面，出现即重点。
@@ -218,7 +202,7 @@ function readColors() {
   // 只有真的换了主题才重铺底片（防串色）。同主题下挂载、换页都继续用这张——
   if (theme !== sky.theme) {
     sky.theme = theme
-    resetPlate() // 两台相机各挂一个 MutationObserver，先跑的那个改 sky.theme、后跑的走早返回
+    resetPlate() // 重铺以 sky.theme 比对挡下：同一主题的重复通知在这里走早返回，幂等
     seedStars() // 底片反正要重铺，星数按新主题重定（深色/浅色差 N_DEEP_K 倍）
     rebuildRidge() // 首屏地景随主题换底（同一取景的压暗版），折线复算一遍
   }
@@ -240,7 +224,7 @@ function ensureStaticPlate() {
 /* ---------------- 山脊遮罩（只首页相机） ---------------- */
 function rebuildRidge() {
   const key = C.boost ? 'out' : 'deep'
-  if (!props.interactive || !W || !H || !cvs.value) {
+  if (!W || !H || !cvs.value) {
     ridgeMask = null
     return
   }
@@ -264,7 +248,7 @@ function rebuildRidge() {
 
 /* ---------------- 尺寸 ---------------- */
 function resize() {
-  // 两台相机一律取**视口**尺寸：底片就是视口大小，于是 kx/ky 恒为 1。
+  // 相机一律取**视口**尺寸：底片就是视口大小，于是 kx/ky 恒为 1。
   // 首页相机不再量 hero 的盒子——它是 100svh，手机上比 innerHeight 小最多 ~17%，
   // 拿它当相机等于把底片非等比压扁：同心弧在首页变椭圆、进文章页又跳回正圆，
   // 正是统一天极要消灭的那种穿帮。多出来的一截由 .hero{overflow:hidden} 裁掉，
@@ -341,8 +325,7 @@ function mkStar(i, n) {
 
 function seedStars() {
   if (!sky.maxR) return
-  // 星群是天空的属性，不是相机的：底片全站共享后，若次级页只沉积一半星，
-  // 那另一半圆弧会在阅读过程中因全局衰减慢慢消失。所以只按视口宽度定一次数。
+  // 星群是天空的属性，不是相机的；挂载形态不影响它，按视口宽度定一次数。
   // 主题倍率在这里生效：深色近黑底会把每条线的羽化边都放大成可见的灰轨，星数要收一档
   const n = Math.round((innerWidth <= 720 ? N_SMALL : N_BIG) * (C.boost ? 1 : N_DEEP_K))
   if (sky.stars && sky.stars.length === n) {
@@ -371,12 +354,7 @@ function pickFeat(tSec) {
 
 /* ---------------- 滚动 = 时间流速 ---------------- */
 function onFlowScroll() {
-  if (!props.interactive || !H) {
-    // 次级页只在此设基线：它不注册 scroll 监听，深度响应由 update() 按 shift.v 逐帧推进
-    flowT = 1
-    fadeT = SUB_FADE_TOP
-    return
-  }
+  if (!H) return
   const k = clamp01(scrollY / (H * 1.1))
   flowT = 1 + k * FLOW_MAX
   fadeT = FADE_0 - k * (FADE_0 - FADE_1)
@@ -523,13 +501,6 @@ function update(dt, now) {
   // 流速/衰减/指针光锥的惯性推进。0.9 时约 1/3 秒就贴到目标，改滚动速度的瞬间会"弹"一下；
   // 放到 0.94（约 1 秒收敛）让天空是被慢慢推动的，而不是被拽过去的。
   const sp = 1 - Math.pow(0.94, step)
-  if (!props.interactive) {
-    // 阅读即曝光：下潜越深，沉积越快、衰减越慢 → 星轨更长更亮。
-    // 目标值交给下面既有的惯性推进平滑，无需额外补间。
-    const d = shift.v
-    flowT = 1 + d * SUB_FLOW
-    fadeT = SUB_FADE_TOP - d * (SUB_FADE_TOP - FADE_1)
-  }
   flow += (flowT - flow) * sp
   fade += (fadeT - fade) * sp
   if (hasPointer) {
@@ -538,8 +509,8 @@ function update(dt, now) {
   }
   const tSec = (now - sky.t0) / 1000
   // 只有底片的主人能改天空：抽独立尾部、以及 accPass 里推进的星角。
-  // 非主人照常往下走并 draw()——转场重叠的那 260ms 里两台相机显示的是同一张
-  // "还在长"的底片，交出取景权的那台不再冻在半帧上（那是切换顿挫感的真正来源）。
+  // 非主人照常往下走并 draw()：这条互斥是护栏（docs/design.md §3.1）——如今只挂一台相机
+  // 实际不会并存，但交出取景权的相机不许冻在半帧上（那是切换顿挫感的真正来源）。
   if (ownsPlate(self)) {
     // 独立尾部消失：定时随机挑 1-3 根，周期独立、与整体旋转周期量级协调
     if (now > sky.featNext && sky.stars.length) {
@@ -547,23 +518,21 @@ function update(dt, now) {
       sky.featNext = now + FEAT_MIN + Math.random() * (FEAT_MAX - FEAT_MIN)
     }
     if (sky.feat.length) sky.feat = sky.feat.filter((f) => tSec - f.t0 < FEAT_DUR + 0.6)
-    const dep = DEP * (C.boost ? 1.5 : 1) * (props.interactive ? 1 : 0.75)
+    const dep = DEP * (C.boost ? 1.5 : 1)
     // 角速度呼吸：见 GUST_*。两个慢波不可通约，gust 在几分钟内不重复，
     // 恒定 ω 的节拍器感就是这么破掉的；全场星共享同一个 gust，刚体叙事不变。
     const gust = 1 + GUST_A * Math.sin(tSec * GUST_W) * Math.sin(tSec * GUST_W * 0.37 + 1.3)
     // len：曝光窗口越长（下潜越深）弧拖得越长，压缩幂见 LEN_POW。
     accPass(OMEGA * flow * gust, fade * (C.boost ? 1.4 : 1) * step, dt / 1000, tSec, dep, step, Math.pow((flow * FADE_0) / fade, LEN_POW))
   }
-  if (props.interactive) {
-    if (now > nextMeteor) {
-      spawnMeteor()
-      // 播放中把随机间隔压向最短值 → 流星更密；停下后下一次生成即自然回弹。
-      // 这里只是读一个普通属性（在 rAF 内），不会给 Vue 建立依赖。
-      const span = (METEOR_MAX - METEOR_MIN) * (music.playing ? 0.4 : 1)
-      nextMeteor = now + METEOR_MIN + Math.random() * span
-    }
-    for (let i = meteors.length - 1; i >= 0; i--) if ((now - meteors[i].t0) / 900 > 1) meteors.splice(i, 1)
+  if (now > nextMeteor) {
+    spawnMeteor()
+    // 播放中把随机间隔压向最短值 → 流星更密；停下后下一次生成即自然回弹。
+    // 这里只是读一个普通属性（在 rAF 内），不会给 Vue 建立依赖。
+    const span = (METEOR_MAX - METEOR_MIN) * (music.playing ? 0.4 : 1)
+    nextMeteor = now + METEOR_MIN + Math.random() * span
   }
+  for (let i = meteors.length - 1; i >= 0; i--) if ((now - meteors[i].t0) / 900 > 1) meteors.splice(i, 1)
 }
 
 // 衍射星芒绘制（流星亮头）：柔晕 + 锥形芒，随脉动呼吸；rot 让芒随飞行方向旋转
@@ -646,20 +615,11 @@ function draw(now) {
   // 底
   ctx.globalCompositeOperation = 'source-over'
   ctx.globalAlpha = 1
-  if (props.interactive) ctx.clearRect(0, 0, W, H)
-  else {
-    ctx.fillStyle = voidA
-    ctx.fillRect(0, 0, W, H)
-  }
+  ctx.clearRect(0, 0, W, H)
 
   // 底片（长曝光星轨）：drawImage 顺带把天区坐标缩放进本相机的盒子（首页 hero ≈ 视口，比例≈1）
   ctx.globalCompositeOperation = C.boost ? 'source-over' : 'lighter'
   ctx.drawImage(sky.acc, 0, 0, W, H)
-
-  if (!props.interactive) {
-    ctx.globalCompositeOperation = 'source-over'
-    return
-  }
 
   /* --- 流星 --- */
   for (const m of meteors) {
@@ -705,11 +665,6 @@ function tick(now) {
   // 取景权不在这里判——那只管沉积，见 update()；否则交出底片的相机会冻在半帧上。
   if (reduced || !visible || !onScreen) return
   raf = requestAnimationFrame(tick)
-  // 次级页限帧：不足一帧间隔就空转（一次 rAF 回调的开销可忽略，不画任何东西）。
-  if (!props.interactive && now - lastDraw < 1000 / SUB_FPS - 1) return
-  lastDraw = now
-  // last 只在真正绘制时推进：dt 会是 ~33ms，update() 按真实时长累积，
-  // 因此星轨的转速与满帧完全一致，只是每秒少画一半帧。
   // 下界也要夹：kick() 里 last 取 performance.now()，而下一帧的 rAF 时间戳是帧起始时刻，
   // 可能比它更早 → 首帧 dt<0 → step<0 → 衰减 fillStyle 成 rgba(0,0,0,-x) 被静默丢弃，
   // 那一帧会沿用上一帧的衰减量、且短弧反向扫。
@@ -769,7 +724,6 @@ function onLeave() {
 }
 
 function onDown(e) {
-  if (!props.interactive) return
   const p = toSky(e.clientX, e.clientY)
   if (!p) return
   hasPointer = true
@@ -803,28 +757,23 @@ onMounted(() => {
   observer = new MutationObserver(readColors)
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
   document.addEventListener('visibilitychange', onVisibility)
-  if (props.interactive) {
-    addEventListener('scroll', onFlowScroll, { passive: true })
-  }
+  addEventListener('scroll', onFlowScroll, { passive: true })
   addEventListener('resize', onResize)
-  // 首页相机在流内（hero 100svh）：整块滚出视口后就没人看了，停帧。
-  // 次级页相机是 position:fixed 满屏，恒在视口内，不需要观察。
+  // 相机挂在 hero 100svh 流内：整块滚出视口后就没人看了，停帧。
   // rootMargin 外扩 200px：留一点余量，回滚时不会先看到一帧停滞的画面。
-  if (props.interactive) {
-    io = new IntersectionObserver(
-      ([e]) => {
-        onScreen = e.isIntersecting
-        if (onScreen) kick()
-        else stopLoop()
-      },
-      { rootMargin: '200px' },
-    )
-    io.observe(cvs.value)
-  }
+  io = new IntersectionObserver(
+    ([e]) => {
+      onScreen = e.isIntersecting
+      if (onScreen) kick()
+      else stopLoop()
+    },
+    { rootMargin: '200px' },
+  )
+  io.observe(cvs.value)
   if (reduced) {
     ensureStaticPlate()
     draw(performance.now())
-  } else if (props.interactive && !warmed) {
+  } else if (!warmed) {
     // 预曝光：首帧就交出一张"已经拍了一阵"的底片，而不是从空盘开始慢慢长。
     // 复用减弱动效那条快进路径（warmPlate 跑 PLATE_STEPS 步 accPass，星角与弧长都由它推进），
     // 它本来就是"冲好的长曝光"；区别是分片跑，不让它变成一个几百毫秒的长任务。
@@ -865,7 +814,7 @@ onUnmounted(() => {
 <template>
   <canvas
     ref="cvs"
-    :class="interactive ? 'st st-abs' : 'st st-fixed'"
+    class="st st-abs"
     aria-hidden="true"
     @pointermove="onMove"
     @pointerleave="onLeave"
@@ -876,37 +825,6 @@ onUnmounted(() => {
 <style scoped>
 .st {
   display: block;
-}
-
-.st-fixed {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* 暗带契约（令牌在 site.css §1 的 --sky-band / --sky-feather 与 §2/§3 各自的 --sky-k；
-     设计说明见 docs/design.md §3.3）：视口正中 --sky-band 宽的一条天空被压到 --sky-k
-     强度，两侧各 --sky-feather 羽化回全亮。整站一处生效——9 个次级页共用这块 fixed 画布
-     （App.vue 的 isSub 是 path !== '/'，路由 10 条里除首页外全部命中，含 404），
-     而画布在 main **之外**，所以它不随页根 transform 变包含块（那是进度线的老毛病）。
-     mask 走 alpha 模式，故 rgba() 的 alpha 就是"天空保留多少"。
-     首页那台 .st-abs 不进这里：它是主视觉，压暗带会把盘子本身压掉一半；
-     它的文字对比改由 .title 自己的 --ink-0 text-shadow 柔光承担（见 HorizonHero）。
-     不支持 mask 的浏览器等于回到改动前的样子（可读性不达标但不会画错），可优雅降级。 */
-  --_band-in: calc(50% - var(--sky-band) / 2);
-  --_band-out: calc(50% + var(--sky-band) / 2);
-  --_sky-mask: linear-gradient(
-    90deg,
-    #000 0,
-    #000 calc(var(--_band-in) - var(--sky-feather)),
-    rgba(0, 0, 0, var(--sky-k)) var(--_band-in),
-    rgba(0, 0, 0, var(--sky-k)) var(--_band-out),
-    #000 calc(var(--_band-out) + var(--sky-feather)),
-    #000 100%
-  );
-  -webkit-mask-image: var(--_sky-mask);
-  mask-image: var(--_sky-mask);
-  mask-repeat: no-repeat;
-  mask-size: 100% 100%;
 }
 
 .st-abs {

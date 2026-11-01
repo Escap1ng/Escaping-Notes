@@ -1,6 +1,6 @@
 <script setup>
 // HorizonHero · 首页首屏排版层：站名刊头 + 下滑提示
-// 长曝光星轨装置由 StarTrails(interactive) 提供（等首屏照片 load 完再按需挂载），本组件只负责叙事排版
+// 长曝光星轨装置由 StarTrails 提供（等首屏照片 load 完再按需挂载），本组件只负责叙事排版
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 import { N } from '../data/narrative.js'
 import { whenHeroReady } from '../lib/hero.js'
@@ -65,7 +65,7 @@ onUnmounted(() => {
 
     <!-- StarTrails 不再对外发事件：变星（文章节点）装置 2026-10-09 整体撤除，
          首屏不再有点击入口，文章归折线以下的精选卡；挂载本身等首屏照片就位（见 script） -->
-    <StarTrails v-if="stars" interactive />
+    <StarTrails v-if="stars" />
 
     <div ref="textEl" class="hero-text">
       <h1 class="title">{{ N.heroTitle }}</h1>
