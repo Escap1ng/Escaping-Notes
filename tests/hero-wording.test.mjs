@@ -20,6 +20,17 @@ test('首屏站名存在、已 trim、全大写', () => {
   assert.equal(N.heroTitle, N.heroTitle.toUpperCase())
 })
 
+// 首屏重锚星环中心（2026-11-01）：刊头的 --arc-y 是照着天极常量写的，两处各写一个 0.38，
+// 谁动了一边都看不出来——刊头锚的"星环中心"与星轨画出来的圆心悄悄分家。同值钉住。
+test('刊头锚的星环中心与 sky.js 的 POLE_FY 同值', () => {
+  const hero = src('src/components/HorizonHero.vue')
+  const sky = src('src/lib/sky.js')
+  const jy = Number(sky.match(/export const POLE_FY = ([\d.]+)/)[1])
+  const cy = Number(hero.match(/--arc-y:\s*calc\(var\(--svh\)\s*\*\s*([\d.]+)\)/)[1])
+  assert.ok(Number.isFinite(jy) && Number.isFinite(cy), '正则没取到天极系数，判据失效')
+  assert.equal(cy, jy, `刊头锚的星环中心 ${cy} 与天极 ${jy} 分家了`)
+})
+
 test('视图里每一处 N.字段 引用都真实存在', () => {
   const files = ['src/components/HorizonHero.vue', 'src/App.vue', 'src/views/HomeView.vue']
   let hits = 0

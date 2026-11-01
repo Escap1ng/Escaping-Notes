@@ -62,7 +62,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 
 **Visual**
 
-- The landing screen keeps only an English masthead (8.8vw, about 81% of the viewport); the sixteen-character couplet and the typewriter are gone, and the section below the fold is split into chapter cards
+- The landing screen keeps only an English masthead (one line at 8.8vw on desktop, about 81% of the viewport; two lines at 15vw on phones); the sixteen-character couplet and the typewriter are gone, and the section below the fold is split into chapter cards
 - Switching theme no longer swaps the mountain: the dark landing screen is a darkened bake of the same framing, both themes share one ridge polyline, and each theme deposits its own plate to keep colours from bleeding
 - The default is light and the first frame deliberately ignores `prefers-color-scheme`: the landing screen is a bright photograph, and following the system into dark would float a bright image on black
 - Trails are drawn frame by frame with an offscreen accumulation buffer (Canvas 2D) and masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px

@@ -103,14 +103,19 @@ onUnmounted(() => {
   --svh: 100vh;
   --band-h: clamp(calc(var(--svh) * 0.54), 31vw, calc(var(--svh) * 0.7));
   --peak-y: calc(var(--svh) - var(--band-h) + 0.208 * max(var(--band-h), 31vw));
-  /* lockup 自己的高：只剩站名一行。字号/行高都引下面那条规则用的同一枚令牌，
-     改字号不会让这里的推算悄悄失准 */
-  /* 刊头一行约 9.22em 宽（100px 下实测：无字距 8.66em，0.04em 字距 9.22em）。
-     字号取 8.8vw，整行约占 81% 视口：1440 上 127px、1920 上 169px，手机 390 上
-     34px；横向留白 320/360/390 为 30.2/34.0/36.9px，三档窄屏都不出画。 */
+  /* lockup 自己的高 = 行数 × 行高 × 字号。--hero-lines 是断行数：桌面 1，手机
+     （窄且够高）2，见下面那条窄屏规则。三枚令牌都引字号/行高，改一处不会让上面
+     那条几何链悄悄失准 */
+  /* 刊头字宽（100px 下实测，0.04em 字距已计入）：整行 "ESCAPING NOTES" 9.219em，
+     断两行时 "ESCAPING" 5.352em、"NOTES" 3.594em。
+     桌面取 8.8vw，整行约占 81% 视口：1440 上 127px、1920 上 169px；横向留白
+     320/360/390 为 30.2/34.0/36.9px，三档窄屏都不出画。
+     手机两行取 15vw：长行 ESCAPING 占约 80% 视口（320 上 257px，留白 31px）；
+     而整行 9.219em × 15vw ≈ 1.38 视口宽，必然在词间空格处分行——不靠标记断行。 */
   --fs-hero-title: 8.8vw;
   --lh-hero-title: 1.1;
-  --lockup-h: calc(var(--lh-hero-title) * var(--fs-hero-title));
+  --hero-lines: 1;
+  --lockup-h: calc(var(--hero-lines) * var(--lh-hero-title) * var(--fs-hero-title));
   --crest-gap: 56px;
 }
 
@@ -188,19 +193,30 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* 底部垫量：由峰顶位置反解出来，不是钉一个 vh。
-     居中模型里块底 = (--svh - 垫)/2 + 块高/2，令它等于 --peak-y - --crest-gap 即得下面的式子。
-     横带高度随视口比例变（见 --band-h），固定 vh 在宽屏上会让刊头压上山尖、在方屏上又把字
-     抬得过高。垫量下限留 --space-4：横带很矮的视口（竖屏手机）峰顶本来就低，不必再把块心
-     顶到顶栏。上限 0.42 个视口高是保险：窗口矮到装不下这条链时，宁可少留一口气，也不要让
-     padding 吃掉整个内容盒。
+  /* 块底目标分两档，取更靠上的那条：
+     ① 不压山尖：块底 ≤ --peak-y − --crest-gap（山尖取 ridge.js 折线最小值 v=0.208，正落在
+        居中的刊头底下——矮窗与宽屏上这是防压山的硬下限）。
+     ② 压住星环中心：天极在视口 38%（src/lib/sky.js 的 POLE_FY，测试钉两处同值），刊头块心
+        抬到它上方 --arc-gap。居中模型里块心 = 块底 − --lockup-h/2，反解得块底 = 星环中心
+        − --arc-gap + --lockup-h/2。
+     2026-11-01 作者判「英文刊头太低、应比星环中心再高一点」：此前只挂 ①，块底贴峰顶，块心
+     落在天极下方（1440×900：389 vs 342）；现在 ② 是主约束，① 降为下限，矮窗仍由它兜底。
+     垫量下限留 --space-4：横带很矮的视口（竖屏手机）峰顶本来就低，不必再把块心顶到顶栏。
+     上限 0.42 个视口高是保险：窗口矮到装不下这条链时，宁可少留一口气，也不要让 padding
+     吃掉整个内容盒。
      顶部再补一道「最低让位」：窗口够高时块心本来就在顶栏以下（--hero-top-free 更大），
      padding-top 算出来是 0，版式一字不动；窗口矮到刊头顶进固定顶栏时，把块整体下推，
      让刊头顶边恰好落在 --hero-header-clear。96px = 未吸顶的顶栏 65px + 滚动 40px 时
      刊头相对上移的 30px（首屏视差 translateY(y*0.25)），再往上吸顶底就接上了。
      下推量与居中模型严格对应：加 T 顶部垫后块顶 = 原块顶 + T/2，所以 T = 2×(目标 − 原块顶)。 */
+  --arc-y: calc(var(--svh) * 0.38);
+  --arc-gap: 32px;
+  --hero-block-b: min(
+    calc(var(--peak-y) - var(--crest-gap)),
+    calc(var(--arc-y) - var(--arc-gap) + var(--lockup-h) / 2)
+  );
   --hero-pad-b: min(
-    max(var(--space-4), calc(var(--svh) + var(--lockup-h) - 2 * (var(--peak-y) - var(--crest-gap)))),
+    max(var(--space-4), calc(var(--svh) + var(--lockup-h) - 2 * var(--hero-block-b))),
     calc(var(--svh) * 0.42)
   );
   --hero-top-free: calc((var(--svh) - var(--hero-pad-b) - var(--lockup-h)) / 2);
@@ -291,6 +307,23 @@ onUnmounted(() => {
   50% {
     transform: translateY(3px);
     opacity: 1;
+  }
+}
+
+/* 手机刊头断成 ESCAPING / NOTES 两行（2026-11-01）：单行 8.8vw 在 390 上只有 34px，
+   断行后长行能占到 80% 视口。上界 600px 高是给两行 lockup 留出竖向余量——横屏
+   手机（≤430px 高）仍走上面的单行，不然两行字高会把内容盒撑爆（首屏 overflow:hidden）。
+   行高 1.0：两行全大写 Didone 之间不留行距，栈起来才像一刊刊头而不是两个标题。
+   块放在 .title 之后：同为 .title 一条规则，写在前面会被上面的 white-space: nowrap 盖掉。 */
+@media (max-width: 720px) and (min-height: 600px) {
+  .hero {
+    --fs-hero-title: 15vw;
+    --lh-hero-title: 1;
+    --hero-lines: 2;
+  }
+
+  .title {
+    white-space: normal;
   }
 }
 

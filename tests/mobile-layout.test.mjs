@@ -1,5 +1,6 @@
 // 手机端的回归钉子（2026-10-19 实测 390/360/320，2026-10-30 补触控兜底）：
-//   ⑴ 刊头整行约 9.22em，字号按 8.8vw 铺满约 81% 视口（全档位同一条式子）；
+//   ⑴ 刊头桌面整行约 9.219em，字号按 8.8vw 铺满约 81% 视口；手机（≤720 宽、≥600 高）
+//      断成 ESCAPING / NOTES 两行、字号 15vw，长行占约 80% 视口；
 //   ⑵ 三列表格在 320px 上必须能自己横向滚动；
 //   ⑶ 触屏拖动也会发 pointermove，透镜不该跟着滚动改光斑坐标；
 //   ⑷ 点按不闪灰底、iOS 不放大正文、32px 图标钮热区外撑 4px 到 40px；
@@ -21,6 +22,20 @@ const fitted = (css) => {
   return !!m && /^\s*8\.8vw\s*$/.test(m[1])
 }
 
+// 手机两行块：媒体查询起头后取 600 字符，够覆盖 .hero 与 .title 两条规则
+function phoneLockup(vue) {
+  const at = vue.indexOf('@media (max-width: 720px) and (min-height: 600px)')
+  if (at < 0) return null
+  const block = vue.slice(at, at + 600)
+  const fs = block.match(/--fs-hero-title:\s*([\d.]+)vw/)
+  const lines = block.match(/--hero-lines:\s*(\d+)/)
+  return {
+    fs: fs ? Number(fs[1]) : null,
+    lines: lines ? Number(lines[1]) : null,
+    wraps: /\.title\s*\{[^}]*white-space:\s*normal/.test(block),
+  }
+}
+
 function tableScrolls(css) {
   // 直接锚到"包着表格规则的那一个窄屏块"，别再懒匹配跨过前面 700 行
   const block = css.match(/@media \(max-width: 720px\) \{\s*html:root \.en-prose table \{([\s\S]*?)\n  \}/)
@@ -34,6 +49,32 @@ test('刊头按 8.8vw 铺满约 81% 视口，旧 clamp 与 10.5vw 都不许复�
   // 负向对照：换成 2026-10-13 那版裸 clamp 或旧 10.5vw，同一条判据必须变红
   assert.equal(fitted(hero.replace(/--fs-hero-title:\s*[^;]+;/, '--fs-hero-title: clamp(40px, 7vw, 96px);')), false)
   assert.equal(fitted(hero.replace(/--fs-hero-title:\s*[^;]+;/, '--fs-hero-title: 10.5vw;')), false)
+  // 两行时 --lockup-h 必须按行数走，否则块底目标还按一行算，刊头会被顶进山尖
+  assert.match(
+    hero,
+    /--lockup-h:\s*calc\(var\(--hero-lines\)\s*\*\s*var\(--lh-hero-title\)\s*\*\s*var\(--fs-hero-title\)\)/,
+    '--lockup-h 不再乘 --hero-lines：手机两行的高度没进几何链'
+  )
+})
+
+test('手机刊头断两行：长行不出画，整行必然断在词间空格', () => {
+  const hero = src('src/components/HorizonHero.vue')
+  const lock = phoneLockup(hero)
+  assert.ok(lock, '没找到手机两行的媒体查询（≤720 宽、≥600 高）')
+  assert.equal(lock.wraps, true, '.title 还是 nowrap，两行永远断不出来')
+  assert.equal(lock.lines, 2, '--hero-lines 不是 2，--lockup-h 会按一行算')
+  // 字宽实测（Didone 子集，100px，0.04em 字距已计入）
+  const ESCAPING = 5.352
+  const WHOLE = 9.219
+  for (const w of [320, 360, 390]) {
+    const content = w - 2 * 16 // 窄屏左右各一枚 --space-2
+    const px = (lock.fs / 100) * w
+    assert.ok(ESCAPING * px < content, `${w}px：ESCAPING 这行长出画了`)
+    assert.ok(WHOLE * px > content, `${w}px：整行还塞得下一行，手机没断行`)
+  }
+  // 负向对照：字号退到 9vw，整行在 320 上就塞得下，同一条判据必须变红
+  const loose = phoneLockup(hero.replace(/--fs-hero-title:\s*15vw/, '--fs-hero-title: 9vw'))
+  assert.equal(WHOLE * ((loose.fs / 100) * 320) > 320 - 32, false, '这条负向对照没量到东西')
 })
 
 test('窄屏表格自己横向滚动，不再把最后一列顶出视口', () => {
