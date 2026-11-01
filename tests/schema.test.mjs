@@ -64,6 +64,14 @@ test('stats 按去空白字数计，中文一字计一', () => {
   assert.deepEqual(stats(''), { words: 0, minutes: 1 }) // 空正文也不显示 0 分钟
 })
 
+test('围栏代码块不算进字数与阅读时长，行内代码仍算', () => {
+  const md = '正文\n\n```python\nprint("这段不算")\n```\n\n结尾'
+  assert.deepEqual(stats(md), { words: 4, minutes: 1 })
+  // 未闭合的围栏按 markdown.js 的口径一直算到文末，后面的字也不计
+  assert.deepEqual(stats('前\n```\n未闭合'), { words: 1, minutes: 1 })
+  assert.equal(stats('用 `print` 输出').words, 10)
+})
+
 test('阅读时长按 400 字/分四舍五入，故 599 字仍显示 1 分钟', () => {
   // 口径备忘：这是 Math.round 而非 ceil，"不足 400 字算 1 分钟"只在 <600 字时成立。
   // 改这里就等于改全站所有文章显示的时长，别再当"四舍五入写错了"来"修"。

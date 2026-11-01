@@ -113,22 +113,10 @@ export function parseFrontmatter(raw) {
   return { meta, body, closed: !!m }
 }
 
-export function stats(body) {
-  const words = body.replace(/\s/g, '').length
-  return { words, minutes: Math.max(1, Math.round(words / 400)) }
-}
-
-// 一卷里那张封面：按 COVER_NAMES 的顺序认。两张都算（cover.jpg + cover.png）不是"选第一张"，
-// 是那卷没定过用哪张——报出来，让作者删掉一张。
-function coverOf(files) {
-  const hits = COVER_NAMES.filter((n) => files.includes(n))
-  return { name: hits[0] || '', dup: hits.length > 1 }
-}
-
-// 围栏（```）里的那些行是"给作者看的语法"，不是站内引用：改写与判据都要跳过它们，
-// 否则一篇讲怎么写的文章会因为示范了一张图而被门禁拦下。
+// 围栏（```）里的那些行是"给作者看的语法"，不是站内引用：改写、取正文与字数都要跳过它们，
+// 否则一篇讲怎么写的文章会因为示范了一张图而被门禁拦下，代码也会被算进阅读时长。
 // 围栏的识别与 src/lib/markdown.js 同一条（行首三个反引号切换状态），未闭合时后面全按代码算，
-// 也和那边一致。这一条只实现一次，改写与取正文都用它。
+// 也和那边一致。这一条只实现一次，改写、取正文与统计都用它。
 function markProse(body) {
   let fence = false
   return body.split('\n').map((line) => {
@@ -138,6 +126,25 @@ function markProse(body) {
     }
     return { line, prose: !fence }
   })
+}
+
+// 判据与统计看的正文：围栏那一块与它的 ``` 标记都剔除。
+const proseOnly = (body) =>
+  markProse(body)
+    .filter((l) => l.prose)
+    .map((l) => l.line)
+    .join('\n')
+
+export function stats(body) {
+  const words = proseOnly(body).replace(/\s/g, '').length
+  return { words, minutes: Math.max(1, Math.round(words / 400)) }
+}
+
+// 一卷里那张封面：按 COVER_NAMES 的顺序认。两张都算（cover.jpg + cover.png）不是"选第一张"，
+// 是那卷没定过用哪张——报出来，让作者删掉一张。
+function coverOf(files) {
+  const hits = COVER_NAMES.filter((n) => files.includes(n))
+  return { name: hits[0] || '', dup: hits.length > 1 }
 }
 
 // 正文里的裸文件名 → 这一卷的资产 URL。已经是站内绝对路径（/ 起头）或带协议的不动，
@@ -166,13 +173,6 @@ function rewriteImages(body, slug, files, problems) {
     .join('\n')
   return { body: out, refs }
 }
-
-// 判据看的正文：围栏那一块与它的 ``` 标记都剔除，示范写法不该被读成站内引用
-const proseOnly = (body) =>
-  markProse(body)
-    .filter((l) => l.prose)
-    .map((l) => l.line)
-    .join('\n')
 
 // 校验 + 归一：一卷的原文与素材清单进来，可渲染的记录与问题清单出去。
 // 纯函数——不碰磁盘，所以门禁、测试、打包三处都能用同一套判据（测试可以凭空造一卷来验判据本身）。

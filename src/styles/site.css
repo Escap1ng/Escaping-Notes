@@ -1358,6 +1358,7 @@ html:root .en-prose pre::before {
 }
 
 html:root .en-prose pre code {
+  display: block;
   background: none;
   border: 0;
   padding: 0;

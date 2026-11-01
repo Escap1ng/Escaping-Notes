@@ -23,4 +23,10 @@ export const collections = [
     parent: 'escaping-notes',
     order: 2,
   },
+  {
+    slug: 'build-agent',
+    title: '从零做一个 Agent',
+    summary: '三篇递进的手记：先把循环跑通，再把工具与评测做扎实，最后处理多 Agent、协议与安全。',
+    order: 2,
+  },
 ]
