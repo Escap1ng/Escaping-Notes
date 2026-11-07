@@ -12,7 +12,7 @@ import { findAlias, isLive, parseRollUrl } from './src/lib/schema.js'
 
 // ---------- 一卷底片 = 一个目录 = 一段 URL 前缀 ----------
 // content/posts/<slug>/ 里的素材（除 index.md 与 *-src.* 原图）上线到 /blog/<slug>/<文件名>。
-// 这条路由由构造决定：封面、正文插图、映像柜那张都是同一个文件，作者不写路径、也不必手抄。
+// 这条路由由构造决定：封面与正文插图是同一个文件，作者不写路径、也不必手抄。
 // 三件事在这里办齐：
 //   1. 构建/启动时读盘 → 打发文回执，构建遇问题直接红（门禁的判据在 src/lib/schema.js）
 //   2. 把清单交给浏览器（virtual:rolls，src/lib/posts.js 用它判断某卷有没有封面）

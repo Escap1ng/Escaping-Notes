@@ -1,6 +1,9 @@
 // 小型 Markdown 渲染器：先转义再渲染，覆盖个人博客常用语法
 // 支持：标题/加粗/斜体/行内代码/链接/图片/代码块/列表/引用/分隔线/表格（GFM 管道语法）
 // 链接与图片的 URL 走白名单（见下方 safeHref）：站内相对路径、锚点、http(s)、mailto、tel
+// 代码块交 lib/highlight.js 上色（python/json/js/powershell）：它收未转义原文、自己转义，
+// 所以 code 缓冲存原文、flush 时才交出去
+import { highlight } from './highlight.js'
 
 const esc = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -92,10 +95,10 @@ export function renderMarkdown(src) {
 
     if (code !== null) {
       if (/^```/.test(t)) {
-        out.push(`<pre data-lang="${esc(lang)}"><code>${code.join('\n')}</code></pre>`)
+        out.push(`<pre data-lang="${esc(lang)}"><code>${highlight(code.join('\n'), lang)}</code></pre>`)
         code = null
       } else {
-        code.push(esc(raw))
+        code.push(raw)
       }
       continue
     }
@@ -180,7 +183,7 @@ export function renderMarkdown(src) {
     para.push(t)
   }
 
-  if (code !== null) out.push(`<pre data-lang="${esc(lang)}"><code>${code.join('\n')}</code></pre>`)
+  if (code !== null) out.push(`<pre data-lang="${esc(lang)}"><code>${highlight(code.join('\n'), lang)}</code></pre>`)
   flushAll()
   return { html: out.join('\n'), toc }
 }

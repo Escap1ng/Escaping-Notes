@@ -243,11 +243,8 @@ html:root {
                    <html>。用户拖到 0 时 App.vue 那条 filter 规则整个不匹配（门控是
                    html[data-plate-blur]），那一档才真的不建渲染面。三处默认值必须同口径：
                    这里、lib/plate.js 的 BLUR_DEFAULT、index.html 首帧内联，由测试钉住。
-     --plate-cycle 轮播一整圈的时长 = 3 张 × 每张 10s。每张占其中一格，关键帧只有一条
-                   （见 App.vue 的 plate-slot），逐层用 animation-delay 错开，所以加一张就是
-                   这里 +10s、再加一层 <i>。要改节奏只改这里，别去动 @keyframes。 */
+                   来源池是 plates-src/（深色压暗底烘自 plate1.jpg，浅色抽屉底烘自 plate4.jpg）。 */
   --plate-blur: 12px;
-  --plate-cycle: 30s;
 
   /* 运行时由 App.vue 写入：滚动深度 0..1 */
   --shift: 0;
@@ -284,16 +281,12 @@ html:root:not([data-theme='out']) {
   /* 抬升阴影：深色主题下即近黑。浅色主题必须换成底色同族的深色，
      否则直接拿 --ink-2 当阴影会在浅底上晕出一圈浅淡的光斑 */
   --shadow: rgba(0, 0, 0, 0.62);
-  /* 映像柜的拍立得：白框在深色下是一块冷灰石板（照片本身亮，框再亮就抢了图），
-     胶带是压住框边的那条美纹纸——全站唯一一处暖色表面，它讲的是材料不是强调色 */
-  --polar: #1e2733;
-  --tape: rgba(252, 211, 77, 0.22);
-  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 深色不轮播：三档指向同一张压暗底，避免夜里换景跳变 */
-  --plate-img-2: url('/plates/plate-bg-deep.jpg');
-  --plate-img-3: url('/plates/plate-bg-deep.jpg');
+  --plate-img: url('/plates/plate-bg-deep.jpg'); /* 抽屉底：plate1 烘出的压暗底，单张常驻（2026-11-07 起不再三档指向同一张装轮播） */
   --plate-img-sm: url('/plates/plate-bg-deep-sm.jpg'); /* 手机档：同图 1280px 重采样（运行时还有 12px 模糊），0.10MB → 0.03MB */
-  --plate-img-2-sm: url('/plates/plate-bg-deep-sm.jpg');
-  --plate-img-3-sm: url('/plates/plate-bg-deep-sm.jpg');
+  /* 次级页未吸顶顶栏的字色（压在底片上）：deep 顶带近黑，字取 --text-0、
+     hover / 选中 / 下划线保留 --cold 那枚亮蓝（压得住）。消费方在 SiteHeader 的 .plate 规则。 */
+  --plate-hdr: var(--text-0);
+  --plate-fg: var(--cold);
   --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
   --hero-img-sm: url('/plates/plate-hero-deep-sm.jpg'); /* 手机档：同取景 1800px 重采样，0.62MB → 0.05MB */
   /* 首屏第一帧的替身：36px 宽的模糊底（0.46KB data URI）随样式表一起到，真图不透明、load 完自然盖住 */
@@ -344,19 +337,16 @@ html:root[data-theme='out'] {
   /* 浅色主题的阴影必须走底色同族的深色（不能复用深色主题那枚近黑，也不可用偏亮的 --ink-2）。
      (14,20,29) 就是 --text-0 的字节值——旧值 (23,21,15) 是冷色化之前的旧墨色，跟着一起收冷。 */
   --shadow: rgba(14, 20, 29, 0.22);
-  /* 映像柜的拍立得：浅色下一张真白框（相纸就是白的，压成灰反而像没加载完） */
-  --polar: #ffffff;
-  --tape: rgba(253, 230, 138, 0.55);
-  /* 折线以下轮播的三张底，见 App.vue 的 .sub-plate。文件名里的号是**源图号**（plates-src/
-     里的那张 jpg），不是第几张：paper2 / paper5 / paper6 三档空着——paper2 搬去当第三篇
-     《本博客的写作与上传》的封面，paper5 已删除，paper6 暂存到 photos-src/ 待用。别为了序号连贯
-     重烘改名，映像柜与 build_plate_bg.ps1 都按源图号认它。 */
-  --plate-img: url('/plates/plate-bg-paper1.jpg');
-  --plate-img-2: url('/plates/plate-bg-paper3.jpg');
-  --plate-img-3: url('/plates/plate-bg-paper4.jpg');
-  --plate-img-sm: url('/plates/plate-bg-paper1-sm.jpg'); /* 手机档：1280px 重采样，三张 1.5MB → 0.49MB；底片运行时糊 12px，降采样看不出来 */
-  --plate-img-2-sm: url('/plates/plate-bg-paper3-sm.jpg');
-  --plate-img-3-sm: url('/plates/plate-bg-paper4-sm.jpg');
+  /* 折线以下的抽屉底（.sub-plate）。2026-11-07 起轮播收敛成单张常驻：作者定的默认是
+     「浅色底片 · 其三」，原先另两张（源图 plate1/plate3）撤出轮播——plate1 的源图仍留在
+     plates-src/，因为深色那套的 plate-bg-deep.jpg 是它烘的；plate3 挪去 photos-src/ 待用。
+     文件名里的号是**源图号**，不是第几张，别为了序号连贯重烘改名，build_plate_bg.ps1 按源图号认它。 */
+  --plate-img: url('/plates/plate-bg-paper4.jpg');
+  --plate-img-sm: url('/plates/plate-bg-paper4-sm.jpg'); /* 手机档：1280px 重采样；底片运行时糊 12px，降采样看不出来 */
+  /* 次级页未吸顶顶栏的字色（压在底片上）：paper4 顶带暗（p50 亮度 0.014），整条落纸色，
+     --cold 亮蓝压上去只有 1.8:1 所以也不在 hover / 选中档。消费方在 SiteHeader 的 .plate 规则。 */
+  --plate-hdr: var(--ink-0);
+  --plate-fg: var(--ink-0);
   --hero-img: url('/plates/plate-hero.jpg'); /* 首屏的地景底：亮色下墨色星轨以 source-over 压在它上面。暗色是同一张取景的压暗版（plate-hero-deep），两套共用一条山脊折线 */
   --hero-img-sm: url('/plates/plate-hero-sm.jpg'); /* 手机档：同取景 1800px 重采样，1.45MB → 0.09MB */
   /* 首屏第一帧的替身：36px 宽的模糊底（0.52KB data URI）随样式表一起到，真图不透明、load 完自然盖住 */
@@ -375,7 +365,7 @@ html:root[data-theme='out'] {
 
 /* ---------- 3a. 手机档地景 ----------
    窄屏把首屏照片换成同取景的 1800px 重采样版（亮 1.45MB → 0.09MB，深 0.62MB → 0.05MB），
-   轮播底片换 1280px 版（三张 1.5MB → 0.49MB；运行时还糊 12px，看不出来）。
+   抽屉底片换 1280px 版（两张 1.5MB → 0.49MB；运行时还糊 12px，看不出来）。
    断点必须与 index.html 首帧 preload 里那条 matchMedia 是同一个数：预加载错版本等于白下
    一张，首屏反而更慢；tests/hero-preload.test.mjs 从两边解析出来对拍。
    主题块的选择器是 (0,2,1)，所以这里也写成主题选择器、放在两套主题块之后，靠层叠扳 --hero-img。
@@ -391,8 +381,6 @@ html.hero-pending {
   html:root[data-theme='well'] {
     --hero-img: var(--hero-img-sm);
     --plate-img: var(--plate-img-sm);
-    --plate-img-2: var(--plate-img-2-sm);
-    --plate-img-3: var(--plate-img-3-sm);
   }
 }
 
@@ -568,15 +556,14 @@ html:root main.en-sub {
   max-width: var(--measure);
 }
 
-/* 底片上的次要裸字（作者 2026-10-30：这四处**不接** --hdr-fg 动态，只在颜色上优化）：
-   合集总览的卷头（序号 / 摘要 / 读数）、合集详情的组标题、映像墙图注、404 的标题与导语。
+/* 底片上的次要裸字（作者 2026-10-30；顶栏那套动态字色 2026-11-07 已退役）：
+   合集总览的卷头（序号 / 摘要 / 读数）、合集详情的组标题、404 的标题与导语。
    原先一律 --text-1——压在底色亮的那档底片上只有 2.4:1 上下。抬到 --text-0 一档，
    叠一条纸色晕（首屏刊头同一手法，§9 第 4 条）把字边从照片里裁出来，仍然不加任何底卡。 */
 html:root .vol-head .vol-no,
 html:root .vol-head .vol-sum,
 html:root .vol-head .vol-tally,
 html:root .block-head,
-html:root .shot .cap,
 html:root .en-shell > .tally,
 html:root .nf .title,
 html:root .nf .lede {
@@ -1269,6 +1256,8 @@ html:root .en-prose h6 {
   font-family: var(--font-display);
   line-height: 1.35;
   letter-spacing: -0.01em;
+  /* 目录与文中锚点跳进来的落点：顶栏是 fixed（z-60），不留出 --page-top 会被压在栏下 */
+  scroll-margin-top: calc(var(--page-top) - 24px);
 }
 
 html:root .en-prose h2 {
@@ -1364,6 +1353,30 @@ html:root .en-prose pre code {
   padding: 0;
   font-size: var(--fs-xs);
   line-height: var(--lh-normal);
+}
+
+/* 代码高亮（lib/highlight.js 产出的 tok-*）：蓝灰单色系，全部从现有令牌取色——
+   代码块底是 --ink-1，各档对它的实测比值（check_contrast 同款数学，2026-11-07 算）：
+   kw/num 取 --cold，深 11.23:1 / 浅 5.65:1；str/com 取 --text-1，深 5.98:1 / 浅 5.38:1；
+   key/fn 取两者 55% 混（混色亮度落在两端之间，两端过线它必过线，实测深 8.57 / 浅 5.78）。
+   代码块底对三档的审计在 check_contrast.mjs 的「代码块」一节。 */
+html:root .en-prose .tok-kw,
+html:root .en-prose .tok-num {
+  color: var(--cold);
+}
+
+html:root .en-prose .tok-key,
+html:root .en-prose .tok-fn {
+  color: color-mix(in srgb, var(--cold) 55%, var(--text-1));
+}
+
+html:root .en-prose .tok-str,
+html:root .en-prose .tok-com {
+  color: var(--text-1);
+}
+
+html:root .en-prose .tok-com {
+  font-style: italic;
 }
 
 html:root .en-prose blockquote {

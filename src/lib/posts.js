@@ -29,7 +29,7 @@ async function allRolls() {
   return sortByDate(items)
 }
 
-// 草稿只在 dev 露面：列表、首页那三格精选、映像柜、关于页读数、RSS、sitemap、静态壳
+// 草稿只在 dev 露面：列表、首页那三格精选、关于页读数、RSS、sitemap、静态壳
 // 全都不带它——写了一半的稿子不该被读者或搜索引擎先看见。
 // dev 里保留是为了让他自己看一眼这篇成什么样了（`npm run dev` 是唯一能看到草稿的地方）。
 export async function loadPosts() {

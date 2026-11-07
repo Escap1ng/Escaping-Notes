@@ -99,15 +99,14 @@ const FAKE = {
 test('计划里有导航、每一个合集、每一卷、每一个项目与一份 404，根路径不重复写', () => {
   const plans = planShells(FAKE)
   const files = plans.map((p) => p.file)
-  assert.deepEqual(files.slice(0, 6), [
+  assert.deepEqual(files.slice(0, 5), [
     'blog/index.html',
     'collections/index.html',
     'updates/index.html',
-    'gallery/index.html',
     'projects/index.html',
     'about/index.html',
   ])
-  assert.deepEqual(files.slice(6), [
+  assert.deepEqual(files.slice(5), [
     'collections/root/index.html',
     'collections/leaf/index.html',
     'blog/jia/index.html',
@@ -197,7 +196,7 @@ test('旧的 #/ 链接在挂载前改道，且只许改到本站的路径上', (
 })
 
 test('草稿「不进产物」这条只有一个判据，三个地方问的是同一句', () => {
-  // 浏览器那一岸（列表/精选/读数/映像柜）、RSS 与 sitemap 与壳、以及构建拷素材那一步。
+  // 浏览器那一岸（列表/精选/读数）、RSS 与 sitemap 与壳、以及构建拷素材那一步。
   // 三处各写一遍 `!post.draft` 的话，总有一处会漏——症状是页面看不到它、RSS 里却带着全文
   const isLive = /isLive/
   assert.match(src('src/lib/posts.js'), isLive)

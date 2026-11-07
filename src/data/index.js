@@ -14,7 +14,6 @@
 // 因此 Node 那一岸（scripts/）也 import 得动——同一扇门，两个岸。
 import { collections } from './collections.js'
 import { friends } from './friends.js'
-import { sitePlates } from './gallery.js'
 import { playlist } from './music.js'
 import { projects } from './projects.js'
 import { site } from './site.js'
@@ -27,6 +26,4 @@ export const content = Object.freeze({
   projects,
   playlist,
   friends,
-  // 映像柜里站点自己的那几张底片；文章封面不在这儿，由 src/lib/gallery.js 从各卷目录收
-  plates: sitePlates,
 })

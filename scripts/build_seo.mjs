@@ -112,7 +112,6 @@ const VIEW_OF = (url) => {
   if (url === '/collections') return 'src/views/CollectionsView.vue'
   if (url.startsWith('/collections/')) return 'src/views/CollectionView.vue'
   if (url === '/updates') return 'src/views/UpdatesView.vue'
-  if (url === '/gallery') return 'src/views/GalleryView.vue'
   if (url === '/projects') return 'src/views/ProjectsView.vue'
   if (url.startsWith('/projects/')) return 'src/views/ProjectView.vue'
   if (url === '/about') return 'src/views/AboutView.vue'

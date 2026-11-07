@@ -82,9 +82,9 @@ test('toc 只收 h2/h3，h4 及更深不入目录', () => {
 })
 
 /* ---------------- 代码块 ---------------- */
+// 代码块交 lib/highlight.js 上色：js 会被分词，这里改用无词法的语言钉转义与换行形态
 test('代码块内转义且保留换行，未闭合也要产出', () => {
-  assert.equal(html('```js\nlet a = 1\n```'), '<pre data-lang="js"><code>let a = 1</code></pre>')
-  assert.equal(html('```\n<b>x</b>\n```'), '<pre data-lang=""><code>&lt;b&gt;x&lt;/b&gt;</code></pre>')
+  assert.equal(html('```text\nlet a = 1\n<b>x</b>\n```'), '<pre data-lang="text"><code>let a = 1\n&lt;b&gt;x&lt;/b&gt;</code></pre>')
   assert.ok(html('```js\n没有闭合').includes('</pre>'), '未闭合的代码块不该把内容吞掉')
 })
 

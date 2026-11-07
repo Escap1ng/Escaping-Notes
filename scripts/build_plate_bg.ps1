@@ -16,9 +16,8 @@
 #              an opt-in filter on one background layer, off by default, is a different trade.
 #
 # Usage:  npm run bg:build
-# Out:    public/plates/plate-bg-deep.jpg     (night reading surface: desaturated cool + veiled down)
-#         public/plates/plate-bg-paper{1,3,4}.jpg
-#                                             (paper reading surface: sharp, graded, NO veil)
+# Out:    public/plates/plate-bg-deep.jpg     (night reading surface baked from plate1.jpg: desaturated cool + veiled down)
+#         public/plates/plate-bg-paper4.jpg   (paper reading surface: sharp, graded, NO veil -- the drawer's single resident plate; the old three-slide carousel was retired on 2026-11-07, plate1/plate3 sources left the light rotation)
 #         public/plates/plate-hero.jpg        (FIRST SCREEN base: cropped to sky+ridge, sky veiled into the page colour)
 #         public/plates/plate-hero-deep.jpg   (FIRST SCREEN base, dark: the SAME hero frame graded down; see $HERO_DEEP)
 # The original never enters the repo: 1/ is gitignored, only the derived assets are kept.
@@ -259,9 +258,11 @@ $HERO_SUMMIT = 1120
 $HERO_BOTTOM = 2560
 
 # PAPER = the same hue curve as $HERO (R pulled, B high) with the diagonal raised to
-# 1.15/1.20/1.25 and NO black offset. The author picked this grade off a rendered comparison
-# (meanL 115.7, std 53.2, 0.64% highlights clipped on plate1) -- those numbers are the check:
-# re-measure plate-bg-paper1.jpg after any edit here and they should still come out.
+# 1.15/1.20/1.25 and NO black offset. The author picked this grade off a rendered comparison;
+# the baseline numbers (meanL 115.7, std 53.2, 0.64% highlights clipped on plate1) were measured
+# on the old plate-bg-paper1.jpg while plate1 still sat in the light rotation. plate1 left the
+# rotation on 2026-11-07 (its source keeps baking the dark deep plate), so after an edit here
+# re-measure the shipped plate-bg-paper4.jpg and record what you get instead of trusting these.
 # It is deliberately NOT applied to $HERO: the first screen's mountain base is the dark anchor
 # the whole top/bottom-split fix rests on, and a 1.2x gain lifts it back toward the sky's own tone.
 # Same hue family, different brightness -- not the old cool/beige split, which was a hue
@@ -279,17 +280,21 @@ $PAPER = @(
 # shrink/scale pair is 1:1, i.e. no blur at all.
 $QUALITY_HERO = 90
 
-# The drawer may use a DIFFERENT photo from the hero -- that is the author's design (plates 1-3).
+# The drawer may use a DIFFERENT photo from the hero -- that is the author's design.
+# Since 2026-11-07 the light drawer holds ONE plate (plate4); plate1 only bakes the deep surface.
 # The fold leak that made me collapse these was a layering bug, not a subject conflict: the
 # fixed drawer layer also lives behind the hero, so the hero now paints an opaque floor
 # (see HorizonHero .hero background) and the two photos meet only AT the fold, never through it.
 #
 # Source names are ASCII now (plates-src/ holds copies of 1/'s photos renamed to hero.jpg /
-# plate1.jpg / plate3-4.jpg; article cover originals live with their rolls as
+# plate1.jpg / plate4.jpg; article cover originals live with their rolls as
 # content/posts/<slug>/cover-src.jpg), so the defaults below are safe to keep in this file --
 # PowerShell 5.1 decodes .ps1 with the ANSI codepage, and a Chinese literal here once silently
 # swallowed the following statement: the script "succeeded" while producing one file short.
-# Override without editing:  SRC_HERO=plate4.jpg SRC_PLATE=plate3.jpg npm run bg:build
+# plate3.jpg moved to photos-src/ (the pending-photo area) on 2026-11-07 when the carousel retired.
+# Override without editing:  SRC_HERO=plate4.jpg SRC_PLATE=plate4.jpg npm run bg:build
+# $SourceName / $SourcePlate split: hero is the first screen; plate1 now feeds ONLY the dark
+# drawer bake (plate-bg-deep) -- the light drawer is a single paper4 with no slide to swap.
 $SourceName = if ($env:SRC_HERO) { $env:SRC_HERO } else { 'hero.jpg' }
 $SourcePlate = if ($env:SRC_PLATE) { $env:SRC_PLATE } else { 'plate1.jpg' }
 if (-not (Test-Path (Join-Path $SrcDir $SourcePlate))) { throw "drawer source '$SourcePlate' not in 1/" }
@@ -310,12 +315,11 @@ try {
   # -- that split IS the "top and bottom don't belong together" complaint, not a taste issue.
   # It now runs $PAPER: same hue curve as the hero's $HERO, brighter diagonal, no black offset.
   # See the $PAPER block for why the two are not simply the same matrix.
-  # The drawer rotates through three backdrops (plate1/3/4 -- the old plate2.jpg went to
-  # article 3 and is now content/posts/writing-and-uploading/cover-src.jpg, read only by
-  # build_post_covers.ps1; plate5.jpg was deleted on request; plate6.jpg moved to
-  # photos-src/ for later use).
-  # One bake pass per source; the dark theme keeps the single $SourcePlate variant above.
-  foreach ($n in @('plate1.jpg', 'plate3.jpg', 'plate4.jpg')) {
+  # One bake pass: the dark drawer surface from $SourcePlate (plate1), the light drawer from
+  # plate4. Paper numbering is the SOURCE number, not a slot index -- plate2 went to article 3
+  # (content/posts/writing-and-uploading/cover-src.jpg, read only by build_post_covers.ps1),
+  # plate5 was deleted on request, plate3 moved to photos-src/ for later use (2026-11-07).
+  foreach ($n in @('plate4.jpg')) {
     $idx = $n.Substring(5, 1)
     $imgN = [System.Drawing.Image]::FromFile((Join-Path $SrcDir $n))
     Write-Output ("paper{0} <- {1}" -f $idx, $n)

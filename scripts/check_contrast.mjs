@@ -51,6 +51,14 @@ function checks(T, themeName) {
   need('次文字 --text-1', T['--text-1'], 4.5)
   need('交互 --cold', T['--cold'], themeName === '浅色' ? 5.5 : 4.5)
   need('深度 --hot', T['--hot'], themeName === '浅色' ? 5.5 : 4.5)
+  // 代码块（.en-prose pre，底 --ink-1）里的高亮档：tok-kw/tok-num 取 --cold、
+  // tok-str/tok-com 取 --text-1；tok-key/tok-fn 是两者 55% 混（site.css §9），混色亮度
+  // 夹在两端之间——两端过线它必过线，所以只审两端，混色那档不单列。
+  const codeBg = T['--ink-1']
+  for (const [label, fg] of [['代码块 tok-kw --cold', T['--cold']], ['代码块 tok-str --text-1', T['--text-1']]]) {
+    const v = ratio(fg, codeBg)
+    out.push({ theme: themeName, label, value: v.toFixed(2) + ':1', ok: v >= 4.5, rule: '≥4.5:1' })
+  }
   return out
 }
 

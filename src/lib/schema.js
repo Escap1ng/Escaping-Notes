@@ -8,7 +8,7 @@
 
 // 一卷 = content/posts/<slug>/ 一个目录：`index.md` 是稿子，同目录其余文件是它的素材。
 // 目录名即 slug 即网址（/blog/<slug>），素材 URL 即 /blog/<slug>/<文件名>。
-// 封面按文件名认（cover.jpg）：列表页那格、阅读页顶部那张满栏图、映像柜墙上那张，
+// 封面按文件名认（cover.jpg）：列表页那格、阅读页顶部那张满栏图，
 // 用的都是同一个文件——作者既不在 frontmatter 里写路径，也不必在正文手抄一遍 ![]()。
 export const INDEX_NAME = 'index.md'
 export const COVER_NAMES = ['cover.jpg', 'cover.jpeg', 'cover.png']
@@ -283,11 +283,11 @@ export function normalizeRoll({ slug, raw, files, dirs = [] }) {
   return { record, problems, notes }
 }
 
-// 「这一卷发不发得出去」也只此一处：浏览器那一岸（列表、精选、映像柜、关于页读数）与
+// 「这一卷发不发得出去」也只此一处：浏览器那一岸（列表、精选、关于页读数）与
 // Node 那一岸（RSS、sitemap、静态壳）都问它，免得出现"页面上没有、RSS 里却有"这种半发布。
 export const isLive = (post) => !post.draft
 
-// 全站只此一处排序：文章列表、首页精选、映像柜、RSS、sitemap 都跟着它。
+// 全站只此一处排序：文章列表、首页精选、RSS、sitemap 都跟着它。
 export const sortByDate = (items) => [...items].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
 // 旧 slug → 现 slug。PostView 报「这里没有这篇」之前先问这一句。

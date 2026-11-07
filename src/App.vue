@@ -5,26 +5,14 @@ import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import { debounce } from './lib/debounce.js'
 import { whenHeroReady } from './lib/hero.js'
-import { createPlateTone } from './lib/plateTone.js'
-import { theme } from './lib/theme.js'
 
 const route = useRoute()
 const router = useRouter()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
 const isSub = computed(() => route.path !== '/')
 
-/* 页顶字色跟随底片（lib/plateTone.js）：次级页顶栏不垫白带，字色按当前那张底片
-   顶带的实测亮度在墨字/纸字之间换，与 10s 一档的轮播同拍。首页不接——
-   首页顶栏压的是 .hero-plate（自带天空纱），字色维持主题默认。 */
-const plateTone = createPlateTone()
-watch(isSub, (sub) => (sub ? plateTone.start() : plateTone.stop()), { immediate: true })
-watch(
-  () => theme.mode,
-  () => plateTone.refresh()
-)
-
-/* 手机首页的轮播底片等首屏照片 load 完再挂（见模板 .sub-plate 的 live 类与下面的 CSS）。
-   三张 2560px 底片合计约 1.5MB，Slow 4G 上与 LCP 那张照片抢同一条下行——实测首屏
+/* 手机首页的抽屉底片等首屏照片 load 完再挂（见模板 .sub-plate 的 live 类与下面的 CSS）。
+   2560px 底片约 0.5MB，Slow 4G 上与 LCP 那张照片抢同一条下行——实测首屏
    从 ~7s 拖到 ~21s。桌面与次级页维持原样：次级页的底片就是正文背景，等不得。 */
 const deferPlate = !isSub.value && matchMedia('(max-width: 720px)').matches
 const plateLive = ref(!deferPlate)
@@ -78,8 +66,6 @@ function onScroll() {
 const onResize = debounce(() => {
   measure()
   onScroll()
-  // 视口的宽高比变了，底片按 cover 映射露出的顶带就不是同一段像素——重采
-  plateTone.refresh()
 }, 150)
 
 let ro = null
@@ -108,7 +94,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (shiftRaf) cancelAnimationFrame(shiftRaf)
-  plateTone.stop()
   ro?.disconnect()
   removeEventListener('scroll', onScroll)
   removeEventListener('resize', onResize)
@@ -124,9 +109,8 @@ onUnmounted(() => {
        `fall` 转场给页根加了 transform + filter，而 filter 会让页根成为 position:fixed
        后代的包含块——放在 HomeView 里的那层 fixed 实测被解析成 .home 的盒子
        （rect 587x1629、跟着滚动），根本不是"不动的底图"。挂在这里才在视口上。
-       首页与次级页共用这一层；首页上方由 .hero-plate（不透明、在 hero 内）盖住。
-       两个 <i> 是轮播的第 2–3 张，父元素自己那张是第 1 张，见下面的 plate-slot。 -->
-  <div class="sub-plate" :class="{ live: plateLive }" aria-hidden="true"><i></i><i></i></div>
+       首页与次级页共用这一层；首页上方由 .hero-plate（不透明、在 hero 内）盖住。 -->
+  <div class="sub-plate" :class="{ live: plateLive }" aria-hidden="true"></div>
   <div class="en-vignette" aria-hidden="true"></div>
   <SiteHeader />
   <main id="main" tabindex="-1" :class="{ 'en-sub': isSub }">
@@ -155,8 +139,10 @@ onUnmounted(() => {
    不再是一块死白，最底一条仍能托住页脚。
    2026-10-30：页顶裸字压在底片上读不清（浅色 /blog 实测导航 --text-1 2.4:1、当前项 --cold
    1.3:1）。先选了「短白带」（顶部 72px 纯 --ink-0，72 → 182px 渐入底片），同日又嫌
-   「顶部白条实在太丑」——白带整体撤掉，改成**字色跟随底片**：顶栏不垫任何色面，由
-   lib/plateTone.js 采样当前那张底片顶带的亮度，在墨字/纸字之间换（--hdr-fg），与轮播同拍。
+   「顶部白条实在太丑」——白带整体撤掉，改成**字色跟随底片**（lib/plateTone.js 逐张采样）。
+   2026-11-07：抽屉收敛成单张，平白逐秒换色的依据没了，动态采样退役——次级页未吸顶的
+   顶栏改为**静态**换色（浅色整体纸色 `--plate-hdr`，深色 `--text-0`，见 site.css 两套
+   主题块与 SiteHeader 的 `.plate` 规则），首页仍维持主题默认。
    底片自 y=0 起原样露出，这里不再有遮罩，也没有坐标系要补。
    模糊不再烘在素材里，是 --plate-blur 这个运行时参数（0–12px 滑杆，见 lib/plate.js）。
    初值 12 = 拉满（默认口味），所以**默认就会建这层渲染面**；只有用户把滑杆拖回 0，
@@ -177,69 +163,29 @@ html[data-plate-blur] .sub-plate {
   filter: blur(var(--plate-blur));
 }
 
-/* 抽屉底图轮播三张（源图 plate1/3/4）。第一张是 .sub-plate 自己的背景，其余两张各占一层
-   <i>，每层自带一份"沉回 ink-0"的渐变——渐变必须跟着每一层走，否则浮上来的那张会盖掉父层的
-   压暗，文字对比就没了。
-   两层共用一条关键帧，只靠 animation-delay 错开：每张独占 9s、两端各 1s 与邻张交叉，
-   第 29–30s 两层全灭，露出来的就是父层那张。延迟写成 10s 的倍数减 1s，是为了让淡出与下一张的
-   淡入落在同一秒上。
-   深色主题下三个令牌指向同一张，动画照跑但看不出变化。
-   周期 30s = 每张 10s（原来是 48s / 每张 16s，作者改口要 10s 一张），常数在 site.css。
-   加一张要动三处：模板多一个 <i>、这里多一档延迟、--plate-cycle +10s（关键帧的
-   3.333%/33.333%/36.667% 是按 30s 一圈算的，改了周期就得跟着重算）。 */
-.sub-plate > i {
-  position: absolute;
+/* 抽屉底图 2026-11-07 起不再轮播：原先三层（父层 + 两个 <i>，各占 10s 错拍）收敛成
+   .sub-plate 一张常驻（默认 = 源图 plate4 烘的 paper4），原先的 plate-slot 关键帧、
+   --plate-cycle、负向延迟、lib/plateTone.js 的动态字色随之退役。 */
+.sub-plate {
+  position: fixed;
   inset: 0;
-  opacity: 0;
-  background-repeat: no-repeat;
-  background-size: auto, cover;
-  background-position: 50% 0, 50% 34%;
-  background-image: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%), var(--pi);
-  animation: plate-slot var(--plate-cycle) ease-in-out infinite;
-  animation-delay: var(--pd);
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%) no-repeat,
+    var(--plate-img) no-repeat 50% 34% / cover;
 }
 
-.sub-plate > i:nth-child(1) {
-  --pi: var(--plate-img-2);
-  --pd: 9s;
+html[data-plate-blur] .sub-plate {
+  inset: calc(var(--plate-blur) * -3);
+  -webkit-filter: blur(var(--plate-blur));
+  filter: blur(var(--plate-blur));
 }
 
-.sub-plate > i:nth-child(2) {
-  --pi: var(--plate-img-3);
-  --pd: 19s;
-}
-
-/* 手机首页：首屏照片没到位之前，三张轮播底片先不挂。只留下压暗渐变，页脚 / 抽屉露出来
+/* 手机首页：首屏照片没到位之前底片先不挂。只留下压暗渐变，页脚 / 抽屉露出来
    也不会看到半张图；live 类由 script 在 whenHeroReady() 之后加。桌面与次级页从首帧起就是
    live，所以这两条只影响窄屏首页。 */
 .sub-plate:not(.live) {
   background-image: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%);
-}
-
-.sub-plate:not(.live) > i {
-  background-image: none;
-}
-
-/* 3.333% = 1s、33.333% = 10s：淡入 1s、满 9s、淡出 1s，其余 20s 待着。 */
-@keyframes plate-slot {
-  0%,
-  36.667%,
-  100% {
-    opacity: 0;
-  }
-  3.333%,
-  33.333% {
-    opacity: 1;
-  }
-}
-
-/* 减弱动效：停掉轮播，只留第一张。10s 一张比原来的 48s 显眼得多，
-   这条以前没有——是这次把频率提高才必须补的。 */
-@media (prefers-reduced-motion: reduce) {
-  .sub-plate > i {
-    animation: none;
-    opacity: 0;
-  }
 }
 
 main {

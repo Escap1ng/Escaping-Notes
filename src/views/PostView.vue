@@ -15,6 +15,7 @@ const route = useRoute()
 const post = ref(null)
 const missing = ref(false)
 const htmlBody = ref('')
+const toc = ref([])
 const all = ref([])
 const copied = ref(false)
 const lightbox = ref('')
@@ -99,7 +100,9 @@ onMounted(async () => {
     return
   }
   post.value = p
-  htmlBody.value = renderMarkdown(p.body).html
+  const rendered = renderMarkdown(p.body)
+  htmlBody.value = rendered.html
+  toc.value = rendered.toc
   // 与构建期那份静态壳同一个拼法（scripts/lib/shell.mjs 用同一个 pageTitle）：
   // 分享卡上的标题与打开后标签页的标题必须是同一句话
   document.title = pageTitle(p.title)
@@ -164,6 +167,18 @@ onUnmounted(() => {
             <span v-for="t in post.tags" :key="t" class="en-tag">{{ t }}</span>
           </p>
         </header>
+
+        <nav v-if="toc.length" class="toc" aria-label="目录">
+          <span class="en-mono toc-label">{{ N.reader.toc }}</span>
+          <a
+            v-for="item in toc"
+            :key="item.id"
+            :class="['toc-item', { sub: item.level === 3 }]"
+            :href="`#${item.id}`"
+          >
+            {{ item.text }}
+          </a>
+        </nav>
 
         <div class="en-prose" v-html="htmlBody" @click="onProseClick"></div>
 
@@ -347,6 +362,45 @@ onUnmounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-1);
+}
+
+/* 目录带：与正文同宽，压在页眉与正文之间。段落式 flex wrap，不做侧栏——
+   单栏 68ch 的阅读版式，右浮栏会破版。h3 缩进一档表层级；锚跳借 html 的
+   scroll-behavior: smooth（site.css §0），路由转场不动 */
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  row-gap: var(--space-0);
+  max-width: var(--measure);
+  margin: var(--space-3) auto 0;
+  padding: var(--space-1) 0 var(--space-2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.toc-label {
+  color: var(--text-1);
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toc-item {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-1);
+  text-decoration: none;
+  transition: color var(--dur-fast);
+}
+
+.toc-item:hover {
+  color: var(--cold);
+}
+
+.toc-item.sub {
+  margin-left: var(--space-2);
 }
 
 .tags {

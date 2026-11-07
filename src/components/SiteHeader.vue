@@ -133,7 +133,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 </script>
 
 <template>
-  <header class="en-header" :class="{ stuck }">
+  <header class="en-header" :class="{ stuck, plate: route.path !== '/' }">
     <a class="skip-link" href="#main">跳到内容</a>
 
     <RouterLink to="/" class="brand" aria-label="返回首页">
@@ -497,50 +497,37 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   border-color: color-mix(in srgb, var(--hot) 45%, transparent);
 }
 
-/* ---- 页顶字色跟随底片（lib/plateTone.js） ----
-   次级页顶栏不再垫白带；html[data-plate-tone] 挂着时，未吸顶的顶栏改用 --hdr-fg——
-   这枚变量是采样器按**当前那张底片**顶带亮度在墨字/纸字之间选的，与轮播同拍。
-   data-plate-cold 只在 --cold 的最坏样本仍 ≥4.5:1 时挂上（深色主题那枚亮蓝）；
-   否则 hover / 选中 / 下划线全部退成 --hdr-fg：蓝色压在 paper1 那种灰蓝底片上只有 1.8:1。 */
-html[data-plate-tone] .en-header:not(.stuck) .brand-name,
-html[data-plate-tone] .en-header:not(.stuck) .nav-link,
-html[data-plate-tone] .en-header:not(.stuck) .ico-btn {
-  color: var(--hdr-fg, var(--text-1));
+/* ---- 次级页顶栏字色（静态，2026-11-07 起） ----
+   抽屉收敛为单张后底片不再换，采样的动态字色（--hdr-fg / data-plate-tone）退役；
+   次级页（.plate = 非首页路由）顶栏直接压在底片上，未吸顶时静态换色：
+   浅色底片（paper4）顶带很暗，--text-1 只有 2.4:1 上下、--cold 亮蓝只有 1.8:1，
+   整条落 --ink-0（纸色）——普通字、hover / 选中 / 下划线、发丝框线全用同一枚。
+   深色底片（deep）顶带近黑：字取 --text-0，--cold 那枚亮蓝压得住（≈5:1），
+   hover / 选中 / 下划线保持默认蓝。吸顶后顶栏有实底，回到主题默认。 */
+.en-header.plate:not(.stuck) .brand-name,
+.en-header.plate:not(.stuck) .nav-link,
+.en-header.plate:not(.stuck) .ico-btn {
+  color: var(--plate-hdr);
 }
 
 /* 发丝框线在照片上会消失：换成当刻字色兑出的 28% */
-html[data-plate-tone] .en-header:not(.stuck) .ico-btn {
-  border-color: color-mix(in srgb, var(--hdr-fg) 28%, transparent);
+.en-header.plate:not(.stuck) .ico-btn {
+  border-color: color-mix(in srgb, var(--plate-hdr) 28%, transparent);
 }
 
-html[data-plate-tone] .en-header:not(.stuck) .brand:hover .brand-name,
-html[data-plate-tone] .en-header:not(.stuck) .nav-link:hover,
-html[data-plate-tone] .en-header:not(.stuck) .nav-link.active,
-html[data-plate-tone] .en-header:not(.stuck) .ico-btn:hover {
-  color: var(--hdr-fg);
+.en-header.plate:not(.stuck) .brand:hover .brand-name,
+.en-header.plate:not(.stuck) .nav-link:hover,
+.en-header.plate:not(.stuck) .nav-link.active,
+.en-header.plate:not(.stuck) .ico-btn:hover {
+  color: var(--plate-fg);
 }
 
-html[data-plate-tone] .en-header:not(.stuck) .ico-btn:hover {
-  border-color: var(--hdr-fg);
+.en-header.plate:not(.stuck) .ico-btn:hover {
+  border-color: var(--plate-fg);
 }
 
-html[data-plate-tone] .en-header:not(.stuck) .nav-link::after {
-  background: var(--hdr-fg);
-}
-
-html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .brand:hover .brand-name,
-html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link:hover,
-html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link.active,
-html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .ico-btn:hover {
-  color: var(--cold);
-}
-
-html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .ico-btn:hover {
-  border-color: var(--cold);
-}
-
-html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link::after {
-  background: var(--cold);
+.en-header.plate:not(.stuck) .nav-link::after {
+  background: var(--plate-fg);
 }
 
 /* 不可用的图标按钮（音乐曲目为空）：置灰 */
@@ -712,8 +699,8 @@ html[data-plate-tone][data-plate-cold] .en-header:not(.stuck) .nav-link::after {
    所以原先"≤1400px 收起文字"那一档已无消费者，删掉 */
 
 /* 导航整条实测 424.8px（6 枚 × 67.6px + 5 × 4px 间距，本机 Chrome 量的）；
-   加「合集」后为 7 枚、约 497px。折叠断点 1280 沿用加「映像」时抬高的值，
-   现为保守值；加一枚导航实打实多 72px，这个数别凭感觉估，估小了就是整条溢出被裁 */
+   折叠断点 1280 沿用加「映像」那阵抬高的值，现为保守值；
+   加一枚导航实打实多 72px，这个数别凭感觉估，估小了就是整条溢出被裁 */
 @media (max-width: 1280px) {
   .en-header {
     padding: var(--space-1) var(--space-2);

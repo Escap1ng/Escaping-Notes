@@ -42,11 +42,6 @@ const router = createRouter({
       meta: { t: navTitle('/updates') },
     },
     {
-      path: '/gallery',
-      component: () => import('../views/GalleryView.vue'),
-      meta: { t: navTitle('/gallery') },
-    },
-    {
       path: '/projects',
       component: () => import('../views/ProjectsView.vue'),
       meta: { t: navTitle('/projects') },

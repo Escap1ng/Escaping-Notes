@@ -27,7 +27,6 @@ const VUE_FILES = [
   'src/views/ProjectsView.vue',
   'src/views/BlogView.vue',
   'src/views/UpdatesView.vue',
-  'src/views/GalleryView.vue',
   'src/views/AboutView.vue',
   'src/views/PostView.vue',
   'src/views/ProjectView.vue',
@@ -121,11 +120,4 @@ test('指针反馈不许写裸时长：每条 transition 要么用令牌，要�
   // 5 条是眼下所有"非指针反馈"的裸时长（吸顶 / 抽屉开合 / 抽屉条目 / 播放器浮层 / 地景淡入）
   // 加上 site.css 的两条例外（减弱动效开关、衍射芒缓绽）。新例外要写进 NON_FEEDBACK 才算数。
   assert.equal(whitelisted, 7, `例外数量异常（${whitelisted}）：名单或判据出了问题`)
-})
-
-// 同一个"点开看大图"必须共用一种指针：文章页插图与映像墙照片都是 zoom-in
-test('点开看大图的两处都是 zoom-in', () => {
-  assert.ok(/cursor: zoom-in/.test(code(CSS)), '文章页插图的 zoom-in 没了')
-  const gallery = code('src/views/GalleryView.vue')
-  assert.ok(/\.shot\s*\{[^}]*cursor: zoom-in/.test(gallery), '映像墙照片不再是 zoom-in——它点开也是看大图')
 })

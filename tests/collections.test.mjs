@@ -83,7 +83,7 @@ test('合集门禁：重复 slug、坏父链、成环、文章挂错合集都必
 })
 
 test('导航编号连续，合集排在 01 文章与 03 动态之间', () => {
-  assert.deepEqual(N.nav.map((n) => n.code), ['00', '01', '02', '03', '04', '05', '06'])
+  assert.deepEqual(N.nav.map((n) => n.code), ['00', '01', '02', '03', '04', '05'])
   assert.equal(N.nav.find((n) => n.to === '/collections').code, '02')
   assert.equal(N.nav.findIndex((n) => n.to === '/collections'), 2)
 })

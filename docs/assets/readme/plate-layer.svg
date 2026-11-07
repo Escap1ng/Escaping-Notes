@@ -1,12 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate under a solid 72px top band, sinking into the page colour, three carousel slots staggered over a 30 second cycle, and the measured contrast of naked text versus text on a card">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate at full strength until 52%, sinking into the page colour, a single resident image since the three-slot carousel was retired, and the measured contrast of naked text versus text on a card">
   <defs>
     <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".5"/>
       <stop offset="1" stop-color="#8ec9ff" stop-opacity=".3"/>
-    </linearGradient>
-    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#020204" stop-opacity="1"/>
-      <stop offset="1" stop-color="#8ec9ff" stop-opacity=".5"/>
     </linearGradient>
     <linearGradient id="sink" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".3"/>
@@ -31,57 +27,35 @@
   <text class="h" x="40" y="30">site backdrop, vertical cross-section</text>
   <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in site.css §1 / §2 / §3</text>
 
-  <!-- A. 视口剖面：顶部 72px 白带 → 72–182px 羽化 → 照片满强度到 52% → 沉回页面色 -->
-  <rect x="60" y="70" width="140" height="13" fill="#020204"/>
-  <rect x="60" y="83" width="140" height="20" fill="url(#band)"/>
-  <rect x="60" y="103" width="140" height="50" fill="url(#photo)"/>
+  <!-- A. 视口剖面：photos at full strength from y=0 (no band or veil on top since 2026-10-30) → sunk from 52% on -->
+  <rect x="60" y="70" width="140" height="83" fill="url(#photo)"/>
   <rect x="60" y="153" width="140" height="77" fill="url(#sink)"/>
   <rect x="60" y="70" width="140" height="160" class="line"/>
-  <path d="M60 83 H200" stroke="#f4f1ea" stroke-opacity=".3" fill="none"/>
+  <path d="M200 76 H208 M200 120 H208 M200 160 H208 M200 212 H208" class="lead"/>
+  <text class="t" x="216" y="79">photo at full strength · y = 0 → 52%</text>
+  <text class="s" x="216" y="93">the un-stuck top bar sits directly on the plate --</text>
+  <text class="s" x="216" y="106">sub-page bars use the static --plate-hdr (paper ink / theme white)</text>
+  <text class="t" x="216" y="163">sinks into the page colour · 52% → 100%</text>
+  <text class="s" x="216" y="177">the sink gradient lives on the layer itself, with the photo</text>
+  <text class="s" x="216" y="191">-- one gradient, one resident image, no crossfades</text>
+  <text class="t" x="216" y="215">footer sits on ~80–90% ink-0 — the photo stays faintly visible</text>
   <text class="s" x="18" y="74">0svh</text>
   <text class="s" x="12" y="234">100svh</text>
 
-  <path d="M200 76 H208 M200 120 H208 M200 160 H208 M200 212 H208" class="lead"/>
-  <text class="t" x="216" y="79">solid --ink-0 · 0 → 72px</text>
-  <text class="s" x="216" y="93">the un-stuck transparent top bar sits here (nav 5.8:1 light / 6.3:1 dark)</text>
-  <text class="t" x="216" y="123">masked in · 72 → 182px</text>
-  <text class="s" x="216" y="137">transparent at 72px → #000 at 182px, stops offset by --plate-pad</text>
-  <text class="t" x="216" y="163">photo at full strength · 182px → 52%</text>
-  <text class="s" x="216" y="177">every carousel slot carries its own sink copy — one on the parent</text>
-  <text class="s" x="216" y="191">and the next one fading up would cover the dimming</text>
-  <text class="t" x="216" y="215">sinks into the page colour · 52% → 100%</text>
-  <text class="s" x="216" y="229">footer sits on ~80–90% ink-0 — the photo stays faintly visible</text>
-
-  <!-- B. 轮播时序 -->
-  <text class="s" x="430" y="252">3.333% / 33.333% / 36.667% of 30s = 1s in · 9s hold · 1s out</text>
-  <text class="h" x="60" y="266">--plate-cycle: 30s = three plates × 10s</text>
-  <text class="s" x="430" y="266">one @keyframes (plate-slot); the two &lt;i&gt; layers differ only by delay</text>
-
-  <rect x="60" y="278" width="820" height="14" fill="url(#fade)"/>
-  <text class="s" x="66" y="289">parent .sub-plate — slot 1, exposed while both sit at 0</text>
-  <rect x="306" y="298" width="301" height="14" fill="url(#fade)"/>
-  <rect x="579" y="298" width="301" height="14" fill="url(#fade)"/>
-  <text class="s" x="310" y="333">9s</text>
-  <text class="s" x="583" y="333">19s</text>
-  <path d="M60 320 H880" stroke="#f4f1ea" stroke-opacity=".25"/>
-  <g stroke="#f4f1ea" stroke-opacity=".12">
-    <path d="M60 316 V324 M333 316 V324 M607 316 V324 M880 316 V324"/>
-  </g>
-  <text class="s" x="56" y="347">0s</text>
-  <text class="s" x="324" y="347">10s</text>
-  <text class="s" x="598" y="347">20s</text>
-  <text class="s" x="866" y="347">30s</text>
-  <text class="s" x="60" y="363">deep theme: --plate-img … --plate-img-3 are one file, so the carousel runs and nothing visibly changes</text>
+  <!-- B. 抽屉底片：单张常驻 -->
+  <text class="h" x="60" y="266">.sub-plate: one resident image</text>
+  <text class="s" x="430" y="252">the three-slot carousel (30s cycle, 10s per plate) was retired on 2026-11-07</text>
+  <text class="s" x="430" y="266">light = plate-bg-paper4.jpg · dark = plate-bg-deep.jpg · mobile swaps 1280px resamples</text>
 
   <!-- C. 对比度实测 -->
   <text class="h" x="40" y="382">foreground contrast, measured</text>
   <rect x="40" y="390" width="190" height="26" fill="#020204"/>
   <rect x="40" y="390" width="190" height="26" fill="#ff5c39" fill-opacity=".55"/>
-  <text class="t" x="50" y="407">on photo · 1.3-2.4:1</text>
+  <text class="t" x="50" y="407">bare on photo · 1.0-2.4:1 — retired</text>
   <rect x="240" y="390" width="160" height="26" fill="#020204"/>
   <rect x="240" y="390" width="160" height="26" fill="#8ec9ff" fill-opacity=".2"/>
   <text class="t" x="250" y="407">on a card · 5.5:1 +</text>
   <text class="s" x="420" y="401">A scrim-free photo cannot reach AA for naked text, whatever shape</text>
-  <text class="s" x="420" y="415">the gradient has — except the solid 72px band at the top, which</text>
-  <text class="s" x="420" y="429">carries the top bar. Body copy belongs on .pane / .en-glass / .en-card.</text>
+  <text class="s" x="420" y="415">the gradient has — so the page-head copy moved onto the .en-head</text>
+  <text class="s" x="420" y="429">card, and the top bar's colour follows the plate instead of a band.</text>
 </svg>

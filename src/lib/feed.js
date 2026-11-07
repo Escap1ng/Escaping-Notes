@@ -22,6 +22,6 @@ export function mergeFeed(updates, posts) {
   }))
   const articles = (Array.isArray(posts) ? posts : []).map(fromPost)
   // 同一天的文章排在手写动态前：文章是内容，手写条目是注脚。
-  // sortByDate 是全站唯一排序口径（文章列表 / 精选 / 映像柜 / RSS / sitemap 同一条），且为稳定排序。
+  // sortByDate 是全站唯一排序口径（文章列表 / 精选 / RSS / sitemap 同一条），且为稳定排序。
   return sortByDate([...articles, ...notes])
 }

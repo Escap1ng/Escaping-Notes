@@ -260,7 +260,7 @@ test('parseRollUrl 只认 /blog/<slug>/<文件名> 这一种形状', () => {
 
 /* ---------------- 排序：全站只有这一处 ---------------- */
 
-test('sortByDate 倒序且不改入参（列表、精选、映像柜、RSS 共用它）', () => {
+test('sortByDate 倒序且不改入参（列表、精选、RSS 共用它）', () => {
   const items = [{ date: '2026-09-01' }, { date: '2026-10-10' }, { date: '' }]
   const out = sortByDate(items)
   assert.deepEqual(out.map((i) => i.date), ['2026-10-10', '2026-09-01', ''])

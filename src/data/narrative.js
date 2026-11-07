@@ -14,9 +14,8 @@ export const N = {
     { to: '/blog', label: '文章', code: '01', t: '文章 · Escaping Notes' },
     { to: '/collections', label: '合集', code: '02', t: '合集 · Escaping Notes' },
     { to: '/updates', label: '动态', code: '03', t: '动态 · Escaping Notes' },
-    { to: '/gallery', label: '映像', code: '04', t: '映像 · Escaping Notes' },
-    { to: '/projects', label: '项目', code: '05', t: '项目 · Escaping Notes' },
-    { to: '/about', label: '关于', code: '06', t: '关于 · Escaping Notes' },
+    { to: '/projects', label: '项目', code: '04', t: '项目 · Escaping Notes' },
+    { to: '/about', label: '关于', code: '05', t: '关于 · Escaping Notes' },
   ],
 
   // 首屏站名。`description` 是全站摘要：RSS 频道与分享卡的说法都从这里出，
@@ -43,20 +42,12 @@ export const N = {
   hints: {
     collections: '按主题成组；点开一个合集，按顺序往下读。',
     updates: '短的、不成篇的记录。',
-    gallery: '这一面墙收的是文章封面，与抽屉轮播的三张底片。',
     projects: '做过的东西，点开卡片看介绍。',
   },
 
   // 动态时间线里文章自动条目的前缀（标题由 src/lib/feed.js 拼上去）
   feed: {
     post: '新文上线',
-  },
-
-  // 映像柜（/gallery）：墙上那行的计数与放大提示。照片的歪斜角不在这里，
-  // 它按 src 哈希算出（src/lib/gallery.js），同一张图永远同一个姿态
-  gallery: {
-    count: '共 {n} 张图片',
-    open: '点按放大',
   },
 
   // 合集（/collections）：树由 src/data/collections.js 定，这里只放界面读得懂的说法。
@@ -83,8 +74,8 @@ export const N = {
     lost: '这里没有这个项目的介绍',
   },
 
-  // 看片灯箱：/gallery 的轮播框与 /blog/:slug 的单图框共用这一组标签
-  //（两处各写一份的话，将来只会有一处被改）
+  // 看片灯箱：/blog/:slug 的单图框专用这一组标签（原先与 /gallery 的轮播框共用，
+  // 映像模块 2026-11-07 下线后只剩这一处，别再各自抄第二份）
   lightbox: {
     aria: '图片预览',
     close: '关闭',
@@ -96,13 +87,14 @@ export const N = {
   // 唯一一处文学位：关于页自述。允许意象，但不借已退役的概念（下潜 / 深渊 / 视界 / 回声）说话
   aboutBio: 'Escap1ng。记录技术思考、设计实践与生活片段。',
 
-  // 文章页：页尾出口、上下篇、复制链接与插图 alt。
+  // 文章页：页尾出口、上下篇、复制链接、目录带与插图 alt。
   // 原先正文末尾那枚「时间膨胀」手记已删——字数与时长本来就在页眉读着，那行只是把同一件事说成诗
   reader: {
     copy: '复制链接',
     copied: '已复制 ✓',
     endsAria: '上下篇与返回目录',
     imgAlt: '文章插图，点按关闭预览',
+    toc: '目录',
   },
   postEnd: { back: '返回文章列表' },
   postPrev: '← 上一篇',
@@ -130,7 +122,6 @@ export const N = {
     collections: '// 还没有合集',
     collectionPosts: '// 这个合集还没有文章',
     updates: '// 还没有动态',
-    gallery: '// 还没有图片',
     projects: '// 还没有项目',
   },
 }

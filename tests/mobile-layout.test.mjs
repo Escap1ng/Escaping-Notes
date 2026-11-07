@@ -104,7 +104,6 @@ test('五层浮层开着时都锁掉 body 滚动', () => {
     'src/components/MusicCard.vue',
     'src/components/SettingsCard.vue',
     'src/components/SearchCard.vue',
-    'src/views/GalleryView.vue',
     'src/views/PostView.vue',
   ]
   for (const f of locks) {
