@@ -432,8 +432,13 @@ Pages 是主线交付：文章用打包版，站点内容来自 `src/data/*.js`�
 
 ## 6. 版本与里程碑
 
-本站当前版本 **v1.4.0**（全站收口）。**这一节是写 GitHub Release 正文的取材处**，按版本记"当时交付了什么"；旧版本记录已清理，此后已下线的能力单列在末尾，不要当现状读。
+本站当前版本 **v1.4.1**（底片收敛与映像下线）。**这一节是写 GitHub Release 正文的取材处**，按版本记"当时交付了什么"；旧版本记录已清理，此后已下线的能力单列在末尾，不要当现状读。
 
+- **v1.4.1 · 底片收敛与映像下线**
+  - 退役——`/gallery` 映像墙整体下线：路由、视图、取数与数据门上的 `plates` 项随之拆除，导航重排 00–05（项目 04、关于 05），sitemap 16 条 URL、构建期静态壳 21 份（次级导航 5）。
+  - 底片——浅色抽屉三张轮播收敛成单张常驻（作者定「浅色底片 · 其三」）：`plate-bg-paper1 / plate-bg-paper3` 四枚烘件删除、plates-src 的 plate3 源图挪 `photos-src/` 待用，plate1 源图保留只为烘深色压暗底；顶栏字色的动态采样（原 `lib/plateTone.js`）随之退役，改 `--plate-hdr` / `--plate-fg` 两枚静态令牌（两主题各定义一遍，规则在 `SiteHeader.vue` 的 `.plate` 块）。
+  - 阅读层——文章页目录带（`N.reader.toc`，h2/h3 两级）与 markdown 代码高亮（`lib/highlight.js`：python / json / js / powershell 四种词法，`site.css` §9 的 `tok-*` 蓝灰单色系），`check:contrast` 增代码块两档判据。
+  - 防护网——零依赖 `node --test` 共 151 项。
 - **v1.4.0 · 全站收口**
   - 纯静态化——后端整体下线：原 `server/api.py`、登录 / 后台 / 自助注册与留言墙 / 阅读计数 / 服务端 OG 注入全部撤除（相关文件已删除），`www.escaping.top` 的解析与自建服务器一并停止维护；站点只剩 GitHub Pages（主线）与 Vercel（只读镜像）两处静态交付，`git push` 即发布。
   - 内容层——`content/posts/` 一篇一卷一个目录（`index.md` + 自己的图），slug 即目录名；`draft` 让草稿不进产物，`movedFrom` 给旧网址改道；文章必填 `collection`，`src/data/collections.js` 定义两级合集，合集页聚合后代文章，文章页补面包屑、组内上下篇与「返回合集」。
