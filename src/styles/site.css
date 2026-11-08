@@ -1239,6 +1239,36 @@ html:root[data-card-surface='glass'] .en-glass {
   }
 }
 
+/* 首页专属（2026-11-08 作者判「坍缩感太重，自然平和一点」）：出现与消失只留 opacity，
+   scale / 模糊 / 色偏全收掉，换成一进一出的交叉淡化，曲线收缓、重叠比全站 fall 再长 70ms。
+   转场类挂在组件根上，HomeView 的根类是 .home，两条复合选择器直接命中，零 JS，其余页面不动。
+   顺带省掉整页 blur 的每帧重栅格化——首页是最高的页，原先那是本站最贵的一处绘制。 */
+.home.fall-enter-active {
+  animation: home-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home.fall-leave-active {
+  animation: home-out 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes home-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes home-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* ---------- 9. 正文排版（命中 v-html，放全局） ---------- */
 html:root .en-prose {
   max-width: var(--measure);
@@ -1448,7 +1478,9 @@ html:root .en-prose th {
 /* ---------- 11. 减弱动效 ---------- */
 @media (prefers-reduced-motion: reduce) {
   .fall-enter-active,
-  .fall-leave-active {
+  .fall-leave-active,
+  .home.fall-enter-active,
+  .home.fall-leave-active {
     animation: none;
   }
 

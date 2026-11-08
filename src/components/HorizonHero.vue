@@ -6,10 +6,13 @@ import { N } from '../data/narrative.js'
 import { whenHeroReady } from '../lib/hero.js'
 
 /* 星轨是首屏最重的运行期工作：挂载即跑一次预曝光 buildPlate，之后每帧合成。
-   它底下那张地景才是 LCP——先让照片 load 完，再挂星轨；异步组件顺带把 StarTrails
-   拆出 HomeView 的 chunk，按需下载。隐藏页里 rAF 不推进，星轨就停在"未挂载"，
+   它底下那张地景才是 LCP——先让照片 load 完，再挂星轨。块本身在照片下载期间就提前取回
+   （那会儿下行基本闲着，小块 JS 抢不动照片的带宽），闸门开时 loader 的 import 命中模块缓存，
+   星轨省一个块的往返。隐藏页里 rAF 不推进，星轨就停在"未挂载"，
    页面可见时再补上，不会抢在照片前面画出一屏无底片的星。 */
 const StarTrails = defineAsyncComponent(() => import('./StarTrails.vue'))
+// 只预取、不挂载；拒绝在这里吞掉，挂载时 Vue 走同一条 promise 会再报一次
+import('./StarTrails.vue').catch(() => {})
 const stars = ref(false)
 // 地景图默认透明，等 whenHeroReady() 后再淡入；替身（.hero-lqip）垫在下面，
 // 于是照片是从一层模糊山影里"对焦"出来的。闸门带 error/20s 超时兜底，不会永远藏着。

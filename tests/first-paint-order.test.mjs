@@ -1,9 +1,10 @@
-// 首页首屏加载顺序的回归钉子（2026-10-27 起，2026-10-30 补地景淡入）：
+// 首页首屏加载顺序的回归钉子（2026-10-27 起，2026-10-30 补地景淡入，2026-11-08 补梯队）：
 //   ⑴ 照片先下：首屏地景是 LCP，星轨挂载与章节数据都排在它的 load 之后；
-//   ⑵ 星轨按需下载：异步组件 + v-if，不随 HomeView 主块一起解析，也不抢在照片前画；
+//   ⑵ 星轨块预取但不提前挂载：异步组件 + v-if，块在照片下载期间先取回，挂载仍等闸门；
 //   ⑶ 闸门从 --hero-img 令牌取图：图名不抄第三份，卡住 / 出错都要放行；
 //   ⑷ 手机首帧先不取 CJK 分片，照片到位再摘降级类；
-//   ⑸ 地景图等闸门开了再 240ms 淡入，替身（LQIP）是独立一层、两套主题各一份。
+//   ⑸ 地景图等闸门开了再 240ms 淡入，替身（LQIP）是独立一层、两套主题各一份；
+//   ⑹ 手机抽屉底片排最后：照片到位那一拍让给字体与数据，底片等第一次滚动，去次级页立即放行。
 // 跑法：npm test
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -24,11 +25,15 @@ const starsAfterPhoto = (h) =>
   /whenHeroReady\(\)\.then\(/.test(h) &&
   /stars\.value = true/.test(h)
 
+// 预取是 loader 之外另起的一条 import：同一条模块缓存，取回不挂载
+const starsPrefetched = (h) => /import\('\.\/StarTrails\.vue'\)\.catch\(\(\) => \{\}\)/.test(h)
+
 const postsAfterPhoto = (v) =>
   /await whenHeroReady\(\)\s+posts\.value = await loadPosts\(\)/.test(v)
 
-test('星轨等首屏图片 load 完再挂载，组件按需下载', () => {
+test('星轨等首屏图片 load 完再挂载，块在照片下载期间预取', () => {
   assert.equal(starsAfterPhoto(hero), true, '星轨又回到跟首屏照片同时开工')
+  assert.equal(starsPrefetched(hero), true, '星轨块又回到照片到了才开始下')
 
   // 负向对照：改回静态 import + 无条件渲染，同一条判据必须变红
   const old = hero
@@ -36,6 +41,11 @@ test('星轨等首屏图片 load 完再挂载，组件按需下载', () => {
     .replace('<StarTrails v-if="stars" />', '<StarTrails />')
   assert.notEqual(old, hero, '这记假根本没改动文件体')
   assert.equal(starsAfterPhoto(old), false)
+
+  // 负向对照：撤掉预取，块回到照片后面才下
+  const noPrefetch = hero.replace("import('./StarTrails.vue').catch(() => {})", '')
+  assert.notEqual(noPrefetch, hero, '这记假根本没改动文件体')
+  assert.equal(starsPrefetched(noPrefetch), false)
 })
 
 test('折线以下的章节数据等首屏图片 load 完再取', () => {
@@ -66,6 +76,30 @@ test('手机首页在首屏照片到位前先不取展示衬线的 CJK 分片', 
     '降级类没把 --font-display 落回系统宋体，147KB 的分片会抢在照片前面下'
   )
   assert.match(app, /classList\.remove\('hero-pending'\)/, '照片到位后没人摘类，字体永远换不回来')
+})
+
+// 手机抽屉底片：照片到位那一拍只摘字体降级类，底片等第一次滚动；次级页的底片是正文背景，立即放行
+const plateWaitsForScroll = (a) =>
+  /if \(scrollY > 0\) releasePlate\(\)/.test(a) &&
+  /addEventListener\('scroll', releasePlate, \{ passive: true, once: true \}\)/.test(a) &&
+  /watch\(isSub, \(sub\) => \{\s*if \(sub\) releasePlate\(\)/.test(a)
+
+test('手机首页抽屉底片等第一次滚动再取，去次级页立即放行', () => {
+  const app = src('src/App.vue')
+  assert.equal(plateWaitsForScroll(app), true, '抽屉底片又回到照片到位就放行')
+  assert.doesNotMatch(
+    app,
+    /whenHeroReady\(\)\.then\(\(\) => \{\s*plateLive\.value = true/,
+    '底片又在照片到位那一拍抢下行'
+  )
+
+  // 负向对照：把滚动闸门改回立即放行，判据必须变红
+  const old = app.replace(
+    "addEventListener('scroll', releasePlate, { passive: true, once: true })",
+    'plateLive.value = true'
+  )
+  assert.notEqual(old, app, '这记假根本没改动文件体')
+  assert.equal(plateWaitsForScroll(old), false)
 })
 
 // 地景淡入：透明起步、闸门开了才加 ready、过渡 0.24s

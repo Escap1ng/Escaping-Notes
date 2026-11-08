@@ -11,11 +11,24 @@ const router = useRouter()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
 const isSub = computed(() => route.path !== '/')
 
-/* 手机首页的抽屉底片等首屏照片 load 完再挂（见模板 .sub-plate 的 live 类与下面的 CSS）。
-   2560px 底片约 0.5MB，Slow 4G 上与 LCP 那张照片抢同一条下行——实测首屏
-   从 ~7s 拖到 ~21s。桌面与次级页维持原样：次级页的底片就是正文背景，等不得。 */
+/* 手机首页的抽屉底片排在最后取：它只在折线以下露脸，照片到位后也先不抓这 0.5MB——
+   那一拍下行让给字体分片与章节数据，底片等第一次滚动再开始下，没人滚就没人下。
+   历史：最早挂在照片后面立刻取，Slow 4G 上与 LCP 那张照片抢同一条下行，实测首屏
+   从 ~7s 拖到 ~21s；后来改成等照片，如今再往后挪一拍。两道放行：⑴ 滚动（含 scroll-cue
+   的平滑滚动与键盘）；⑵ 离开首页去次级页——那里的底片就是正文背景，等不得。
+   桌面与次级页从首帧起就是 live。 */
 const deferPlate = !isSub.value && matchMedia('(max-width: 720px)').matches
 const plateLive = ref(!deferPlate)
+
+function releasePlate() {
+  plateLive.value = true
+  removeEventListener('scroll', releasePlate)
+}
+
+// 去次级页立即放行：底片是正文背景，不能扣在滚动闸门后面
+watch(isSub, (sub) => {
+  if (sub) releasePlate()
+})
 
 // 站内换页的视图块是按路由动态 import 的：指到链接上就先取，点下去时通常已经就位。
 // 只预热同源、无 target/download 的链接；组件 loader 由路由表自己给出，别在这里再抄一份路径。
@@ -74,9 +87,11 @@ onMounted(() => {
   measure()
   if (deferPlate) {
     whenHeroReady().then(() => {
-      plateLive.value = true
       // 照片已就位，展示衬线可以取回来了（首帧脚本挂的临时降级，见 site.css §3a）
       document.documentElement.classList.remove('hero-pending')
+      // 底片最后取：等第一次滚动；刷新时已滚过首屏则立即放行
+      if (scrollY > 0) releasePlate()
+      else addEventListener('scroll', releasePlate, { passive: true, once: true })
     })
   }
   // body 尺寸变化 = 页面变高了（内容/图片加载、路由切换、字体换入）：重测缓存
@@ -99,6 +114,7 @@ onUnmounted(() => {
   removeEventListener('resize', onResize)
   removeEventListener('pointerover', warm)
   removeEventListener('focusin', warm)
+  removeEventListener('scroll', releasePlate)
   onResize.cancel()
   document.documentElement.style.removeProperty('--shift')
 })
@@ -181,9 +197,9 @@ html[data-plate-blur] .sub-plate {
   filter: blur(var(--plate-blur));
 }
 
-/* 手机首页：首屏照片没到位之前底片先不挂。只留下压暗渐变，页脚 / 抽屉露出来
-   也不会看到半张图；live 类由 script 在 whenHeroReady() 之后加。桌面与次级页从首帧起就是
-   live，所以这两条只影响窄屏首页。 */
+/* 手机首页：首屏照片没到位之前底片先不挂，照片到位后也等第一次滚动再取。
+   只留下压暗渐变，页脚 / 抽屉露出来也不会看到半张图；live 类由 script 在滚动闸门后加
+   （去次级页立即加）。桌面与次级页从首帧起就是 live，所以这两条只影响窄屏首页。 */
 .sub-plate:not(.live) {
   background-image: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%);
 }
