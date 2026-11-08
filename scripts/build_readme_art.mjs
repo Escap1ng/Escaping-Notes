@@ -269,9 +269,18 @@ function render(theme) {
       c[0] = (c[0] / cell) * dev
       c[1] = (c[1] / cell) * dev
       c[2] = (c[2] / cell) * dev
+      // 深色 = 加色合成，色相由 c 的三通道比例决定。线性增益在亮部逐通道截顶，
+      // 会把冷蓝 / 朱砂一起漂成奶白（README 缩略图上看去近乎黑白）。改为整像素等比
+      // 收进上限：三通道乘同一系数，色相锁住、亮度观感不变。浅色走 source-over
+      // （底色与墨色的线性插值），天然不截顶，不需要这一步。
+      let k = 1
+      if (!boost) {
+        const m = Math.max(base[0] + c[0], base[1] + c[1], base[2] + c[2])
+        if (m > 255) k = 255 / m
+      }
       const o = (y * W + x) * 3
       for (let ch = 0; ch < 3; ch++) {
-        const v = boost ? base[ch] * (1 - a) + c[ch] : base[ch] + c[ch]
+        const v = (boost ? base[ch] * (1 - a) + c[ch] : base[ch] + c[ch]) * k
         rgb[o + ch] = v < 0 ? 0 : v > 255 ? 255 : Math.round(v)
       }
     }

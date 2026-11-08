@@ -135,11 +135,13 @@ onMounted(async () => {
 }
 
 .crumbs {
+  /* 面包屑在标题之上独占一行：跨满页头卡的两列栅格 */
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-0);
-  /* 进了 .en-head 底卡：间距交给卡的 flex gap，不再自持下边距 */
+  /* 进了 .en-head 底卡：间距交给卡的 gap，不再自持下边距 */
   margin-bottom: 0;
 }
 
@@ -168,7 +170,8 @@ onMounted(async () => {
 }
 
 .tally {
-  /* 进了 .en-head 底卡：上边距由卡的 flex gap 接管，下边距归 .en-head 自己的 margin */
+  /* 篇数行在标题/副题之下独占一行；上下间距由卡的 gap 接管 */
+  grid-column: 1 / -1;
   margin: var(--space-1) 0 0;
   font-size: var(--fs-3xs);
 }

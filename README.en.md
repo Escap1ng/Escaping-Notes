@@ -25,9 +25,9 @@
   </tr>
 </table>
 
-Left dark / right light. Neither is a screenshot: both are plates recomputed from the site's own constants (`npm run art:build`), drawing the trail layer only, and recomputing the steady-state plate that `prefers-reduced-motion` users are shown. They were lifted by a ×2.8 / ×1.6 developing gain, so the site itself is darker than they look.
+Left dark / right light. Neither is a screenshot: both are plates recomputed offline from the site's own constants (`npm run art:build`), drawing the trail layer only — recomputing the very steady-state plate a `prefers-reduced-motion` visitor sees. They were lifted by a ×2.8 / ×1.6 developing gain, so the live site is darker than they look. The dark plate then gets a hue-locking highlight compression: all three channels are scaled by a single ratio into range, so the cold blue and vermilion are not clipped channel-by-channel into cream.
 
-A personal blog that treats writing as a long exposure of the night sky: the landing screen is a camera left open, with posts ordered by date and collections grouped by theme. Fully static, fixed at build time, publish on push.
+A personal blog built as a long exposure of the night sky: the home screen is a camera left open, posts run by date, collections group by theme. Fully static, fixed at build time, publish on push.
 
 **Stack**: Vue 3 · Vue Router 4 · Vite 5 · Canvas 2D. No backend, no third-party UI kit, no font CDN.
 
@@ -35,7 +35,7 @@ A personal blog that treats writing as a long exposure of the night sky: the lan
 
 - [The camera keeps the exposure](#the-camera-keeps-the-exposure)
 - [Interface](#interface)
-- [Two load-bearing designs](#two-load-bearing-designs)
+- [Three load-bearing designs](#three-load-bearing-designs)
 - [Quick start](#quick-start)
 - [Adding things](#adding-things)
 - [Route Map](#route-map)
@@ -48,13 +48,13 @@ A personal blog that treats writing as a long exposure of the night sky: the lan
 
 ## The camera keeps the exposure
 
-This is a personal blog and journal that treats writing as a long exposure of the night sky. One camera set up on the landing screen keeps the time; posts run by date and collections group by theme. Three devices:
+Writing as a long exposure of the night sky: one camera set up on the home screen keeps the time for me. Three devices:
 
-- **Scroll as time:** within the landing screen, the further down you go the longer the exposure window and the faster the sky turns (1 → 3.2×); it saturates after 1.1 viewport heights
+- **Scroll as time:** within the landing screen, the further down you go the longer the exposure window and the faster the sky turns (1 → 3.2×), saturating past 1.1 viewport heights
 - **Pointer as time dilation:** trails within a 180px cursor radius locally accelerate and curl, fastest at the centre (up to 2.8×)
 - **Meteors as narrative:** one falls every 6–9s, lives 900ms, at most 9 in frame; while the player is running the gap is squeezed to 40% of its range and relaxes back on its own
 
-Trails are painted only inside the landing screen; the plate pixels and the site clock are singletons in `src/lib/sky.js`. Changing routes never re-lays the plate, and when you return the arcs continue from the previous exposure. Below the fold, photographs take over.
+Trails are painted only inside the home screen's cell; the plate pixels and the site clock are singletons in `src/lib/sky.js` — changing routes never re-lays the plate, and returning home the arcs continue the previous exposure. Below the fold, photographs take over.
 
 Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md](docs/design.md) §3.
 
@@ -62,41 +62,57 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 
 **Visual**
 
-- The landing screen keeps only an English masthead (one line at 8.8vw on desktop, about 81% of the viewport; two lines at 15vw on phones); the sixteen-character couplet and the typewriter are gone, and the section below the fold is split into chapter cards
-- Switching theme no longer swaps the mountain: the dark landing screen is a darkened bake of the same framing, both themes share one ridge polyline, and each theme deposits its own plate to keep colours from bleeding
-- The default is light and the first frame deliberately ignores `prefers-color-scheme`: the landing screen is a bright photograph, and following the system into dark would float a bright image on black
-- Trails are drawn frame by frame with an offscreen accumulation buffer (Canvas 2D) and masked off along the ridge with `destination-in`, keeping ~60% of their brightness near the crest and feathering over 26px
-- Below the fold everything rides on one photographic plate shared site-wide: the "light plate III" as a single resident image, the dark theme keeping its own darkened bake so nothing changes at night
-- Every screen is assembled from one set of tokens and primitives: 6 spacing steps, 11 type sizes, 4 line heights, 3 weights, plus 3 radii and 4 pointer-feedback tokens; one card token group; buttons in 2 sizes × 4 semantics. No raw font sizes or durations inside components, so changing a scale updates the whole site
-- Two self-hosted font families: the body serif (Noto Serif SC) is sharded by `unicode-range` so only the used shards load, and the masthead Didone (Playfair Display) is a single uppercase-and-space file. No font CDN
+- The landing screen carries only an English masthead: one line at 8.8vw on desktop (about 81% of the viewport), two lines at 15vw on phones; below the fold, chapters sit on cards
+- Two themes, one mountain: the dark landing screen is a darkened bake of the same framing, both share a single ridge polyline; each theme deposits its own plate so colours never bleed
+- The default is light and the first frame deliberately ignores the system `prefers-color-scheme`: the landing screen is a bright photograph, and following the system into dark would float a bright image on black
+- Trails accumulate frame by frame in an offscreen buffer (Canvas 2D) and mask off along the ridge with `destination-in`: ~60% brightness kept near the crest, feathered over 26px
+- Below the fold everything rides on one photographic plate shared site-wide: the "light plate III" as a single resident image, the dark theme on its own darkened bake — no scene change at night
+- One token set builds every screen: 6 spacing steps, 11 type sizes, 4 line heights, 3 weights, 3 radii and 4 pointer-feedback tokens; one card token group; buttons in 2 sizes × 4 semantics. No raw font sizes or durations inside components — change a scale and the whole site follows
+- Two self-hosted font families: the body serif Noto Serif SC is sharded by `unicode-range` and fetched on demand; the masthead Didone, Playfair Display, ships as a single file of uppercase and space. No font CDN
 
 **Interaction**
 
 - Plate blur and card surface are runtime parameters: a 0–12px slider (defaulted to full) and two radios (opaque / translucent) in the settings card, remembered in `localStorage`
-- Focus traps live in the header drawer, the search card, the player card, the settings card and the article lightbox, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; a bare `/` or `Ctrl/Cmd+K` anywhere opens the search card; route changes are announced through the live region in `App.vue`
-- The player remembers the last track and position across reloads, answers OS media keys, and states "cannot play" when the audio file is missing instead of loading forever
-- Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload; the archive opens on a row of site-wide counters and every tag chip carries its own count
+- Focus traps live in the header drawer, the search card, the player card, the settings card and the article lightbox; closing returns focus to the trigger; `Esc` or a click outside the reading panel returns to the list; a bare `/` or `Ctrl/Cmd+K` anywhere opens search; route changes are announced through the live region in `App.vue`
+- The player remembers track and position (the first play after a reload resumes), answers OS media keys, and states "cannot play" outright when the audio is missing — never stuck loading
+- Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results"; tag and keyword filters live in the URL query, so a filtered view is shareable and survives reload; the archive opens on a row of site-wide counters and every tag chip carries its own count
 
 **Fallback and readability**
 
-- `prefers-reduced-motion` gets a full static fallback: trails settle on the steady-state plate, transitions do not blur, and the vignette shuts off; touch targets reach 44px and the minimum type size is 11.5px
-- A scrim-free landscape photo cannot reach WCAG AA for naked text; the worst measured point is 1.0–1.8:1 regardless of gradient shape. So the plate stays scenery and body copy always lands on cards and reading panels. `npm run check:contrast` recomputes the theme tokens against a solid ground before every commit, which does not cover the composited photo
-- The plate layer lives on `App.vue`, not in each page, so routing never repaints it. The landing photo is the home page's LCP element, so the inline first-paint script in `index.html` preloads it for the active theme and it starts alongside the stylesheet; at ≤720px it preloads an 1800px resample instead (1.45 → 0.09 MB light, 0.62 → 0.05 MB dark). The plate starts transparent over a 36px, ~0.5 KB blurred stand-in (`--hero-lqip`, shipped with the stylesheet) and cross-fades in over 240 ms once `whenHeroReady()` opens. Star-trail mounting and the section data below the fold wait for that image's `load` event (`whenHeroReady()` in `src/lib/hero.js`); the trail chunk itself is prefetched while the photo downloads (a small chunk that won't steal its bandwidth — mounting still waits, saving one chunk round-trip). The mobile home page's drawer plate (a 1280px resample) comes last: once the photo lands, fonts and section data go first and the plate waits for the first scroll — no scroll, no download. The CJK display-serif slice (147 KB) also waits until the photo lands (headings fall back to the system serif meanwhile)
-- The persistent header avoids `backdrop-filter`; glass is left to the reading panel (translucent mode) and the nav drawer. The article lightbox is a flat backdrop and builds no blur; the home section cards are persistent surfaces and build no blur either—the plate's own `--plate-blur` supplies the softness
+- `prefers-reduced-motion` gets a full static fallback: trails settle on the steady-state plate, transitions stay sharp, the vignette shuts off; touch targets reach 44px and the minimum type size is 11.5px
+- Naked text on a scrim-free landscape photo cannot reach WCAG AA; the worst measured point is 1.0–1.8:1 regardless of gradient shape. So the plate stays scenery and body copy always lands on cards and reading panels. `npm run check:contrast` recomputes the theme tokens against a solid ground before every commit; it does not cover the composited photo
+- The persistent header avoids `backdrop-filter`; glass is reserved for the reading panel (translucent mode) and the nav drawer. The article lightbox is flat, and the home chapter cards are persistent surfaces — neither builds this blur; the plate's own `--plate-blur` supplies the softness
 
-## Two load-bearing designs
+## Three load-bearing designs
 
 ### The plate layer hangs on `App.vue` — one `fixed` containing-block trap
 
-<img src="docs/assets/readme/plate-layer.svg" alt="Cross-section of the site-wide backdrop layer: the photo at full strength along the top sinking into the page colour between 52% and 100%, and measured contrast for naked text versus text on a card" width="920">
+<img src="docs/assets/readme/plate-layer-light.svg#gh-light-mode-only" alt="Cross-section of the site-wide backdrop layer: the photo at full strength along the top sinking into the page colour between 52% and 100%, and measured contrast for naked text versus text on a card" width="920">
+<img src="docs/assets/readme/plate-layer.svg#gh-dark-mode-only" alt="Cross-section of the site-wide backdrop layer: the photo at full strength along the top sinking into the page colour between 52% and 100%, and measured contrast for naked text versus text on a card" width="920">
 
-Below the fold the landscape is one `position: fixed` `.sub-plate` layer living in `App.vue`, shared by the home section area and every secondary page. It has to be there: `fall` puts a `filter` on the page root, and a filter becomes the containing block for `position: fixed` descendants. The same layer mounted inside `HomeView` measured as a `.home` box (587×1629) scrolling with the document, so it was not a stationary backdrop at all. Since 2026-11-07 the drawer plate is a single resident image (the old three-slot carousel is retired; the plate list lives in `site.css` §3). The measurements behind all three decisions are recorded in the comments of `src/App.vue` and `src/lib/plate.js`.
+Below the fold the landscape is one `position: fixed` `.sub-plate` layer living in `App.vue`, shared by the home chapters and every secondary page. It has to hang there: `fall` puts a `filter` on the page root, and a filter becomes the containing block for `position: fixed` descendants — the same layer mounted inside `HomeView` measured as a `.home` box (587×1629, scrolling with the document), not a stationary backdrop at all. The drawer plate is a single resident image (the source list and the convergence rationale live in `site.css` §3). The measurements behind these decisions are recorded in the comments of `src/App.vue` and `src/lib/plate.js`.
 
-### The `fall` afterimage — two pages on screen for 380ms
+### The `fall` afterimage — two pages on screen at once
 
-<img src="docs/assets/readme/fall-timing.svg" alt="Timing diagram of the fall transition: the 0.56s enter and the 0.38s leave run in parallel and overlap for 380ms" width="920">
+<img src="docs/assets/readme/fall-timing-light.svg#gh-light-mode-only" alt="Timing diagram of the fall transition: the 0.56s enter and the 0.38s leave run in parallel and overlap for 380ms" width="920">
+<img src="docs/assets/readme/fall-timing.svg#gh-dark-mode-only" alt="Timing diagram of the fall transition: the 0.56s enter and the 0.38s leave run in parallel and overlap for 380ms" width="920">
 
-Now that the plate persists across routes, `fall` is the only transition left: enter and leave run in parallel without `out-in`, and for the 380ms they overlap both pages are on screen, both blurred; that overlap is the afterimage. During those 380ms the plate must stay the same exposed pixels. The star-trail camera now exists only on the home screen, and it is still on screen and drawing every frame as it leaves, so the plate never freezes mid-frame. The `claimPlate()` hand-over lock in `sky.js` (deposition only, never redraw) remains as a guardrail; with a single camera it no longer fires. The home page runs a lighter variant (2026-11-08): its enter and leave are a plain opacity cross-dissolve (0.5s / 0.45s, 450ms overlap) with the scale, blur and color shift all removed — the author judged the collapse feel too heavy and asked for something calmer; every other page keeps the fall above.
+Now that the plate persists across routes, `fall` is the only transition left: enter and leave run in parallel without `out-in`, and for the 380ms they overlap both pages are on screen, both blurred — that overlap is the afterimage. The plate must stay the same exposing pixels throughout: the star-trail camera now exists only on the home screen, still on screen and drawing every frame as it leaves, so the plate never freezes mid-frame. The `claimPlate()` hand-over lock in `sky.js` (deposition only, never redraw) remains as a guardrail; with a single camera it never fires.
+
+The home page runs its own register: enter and leave are a plain opacity cross-dissolve (0.5s / 0.45s, 450ms overlap) with no scale, blur or colour shift. The home page is the tallest on the site — retiring the collapse feel also retires the per-frame re-rasterization of a full-page blur, the most expensive paint job here. Every other page keeps the fall in the diagram.
+
+### The first-paint load order — the photo goes first, everything queues
+
+The landscape photo on the landing screen is the home page's LCP. The inline first-paint script in `index.html` preloads it for the active theme, starting alongside the stylesheet; at ≤720px it takes an 1800px resample instead (1.45 → 0.09 MB light, 0.62 → 0.05 MB dark). The photo starts transparent over a 36px-wide, ~0.5 KB blurred stand-in (`--hero-lqip`, shipped with the stylesheet) and cross-fades in over 240ms once the gate opens.
+
+The gate is `whenHeroReady()` in `src/lib/hero.js`: it reads the same URL from the `--hero-img` token and waits for one `load` — the image name is never copied a second time, and a stuck or failed image still releases instead of holding the page hostage. Everything else queues behind the photo:
+
+- **Star trails**: the chunk prefetches while the photo downloads (the downlink is mostly idle then; a small chunk cannot steal its bandwidth), but mounting still waits for the gate — the loader then hits the module cache, saving one chunk round-trip
+- **Section data**: `loadPosts()` below the fold runs after the gate; collections and projects are synchronous data and render as usual
+- **Fonts**: on the mobile home page the display serif's CJK shard (~147 KB) also waits for the photo; until then headings use the system serif
+- **The drawer plate** (mobile home, a 1280px resample) comes last: it only shows below the fold, so the beat when the photo lands gives the downlink to fonts and section data; the plate waits for the first scroll — no scroll, no download. A reload already past the fold, or leaving home for a secondary page, releases it immediately (there the plate is the body background)
+
+So the order is **photo → trail mounting / section data / fonts, with the mobile drawer plate waiting for scroll**. The measurements behind it live in [docs/design.md](docs/design.md) §3 and the comments of `src/App.vue`.
 
 ## Quick start
 

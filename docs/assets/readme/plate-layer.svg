@@ -45,7 +45,8 @@
   <!-- B. 抽屉底片：单张常驻 -->
   <text class="h" x="60" y="266">.sub-plate: one resident image</text>
   <text class="s" x="430" y="252">the three-slot carousel (30s cycle, 10s per plate) was retired on 2026-11-07</text>
-  <text class="s" x="430" y="266">light = plate-bg-paper4.jpg · dark = plate-bg-deep.jpg · mobile swaps 1280px resamples</text>
+  <text class="s" x="430" y="266">light = plate-bg-paper4.jpg · dark = plate-bg-deep.jpg</text>
+  <text class="s" x="430" y="280">mobile swaps 1280px resamples</text>
 
   <!-- C. 对比度实测 -->
   <text class="h" x="40" y="382">foreground contrast, measured</text>
@@ -57,5 +58,5 @@
   <text class="t" x="250" y="407">on a card · 5.5:1 +</text>
   <text class="s" x="420" y="401">A scrim-free photo cannot reach AA for naked text, whatever shape</text>
   <text class="s" x="420" y="415">the gradient has — so the page-head copy moved onto the .en-head</text>
-  <text class="s" x="420" y="429">card, and the top bar's colour follows the plate instead of a band.</text>
+  <text class="s" x="420" y="429">card; the top bar uses static plate-aware ink, not a white band.</text>
 </svg>

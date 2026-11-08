@@ -31,7 +31,7 @@ import { N, navLabel } from '../data/narrative.js'
 
 <style scoped>
 .en-shell {
-  padding-top: 120px;
+  padding-top: var(--page-top);
 }
 
 /* 卡面（边/角/底/hover/内边距）全在 .en-card 里，这里只留卡内排版 */

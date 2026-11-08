@@ -44,7 +44,7 @@ onMounted(async () => {
 
 <style scoped>
 .en-shell {
-  padding-top: 120px;
+  padding-top: var(--page-top);
 }
 
 /* 动态是一句话，两列栅格把它读成两栏报纸——这里一条一枚满宽卡，

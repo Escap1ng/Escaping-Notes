@@ -38,6 +38,7 @@ const stats = computed(() => {
   <section class="en-shell">
     <header class="en-head">
       <h2 class="en-h2">{{ navLabel('/about') }}</h2>
+      <p class="en-lede">{{ N.hints.about }}</p>
     </header>
 
     <div class="about-stack">
@@ -119,7 +120,7 @@ const stats = computed(() => {
   padding-top: var(--page-top);
 }
 
-/* 关于页没有导语，页头卡与内容之间不必留全站那档 64；收一档让整页成一摞 */
+/* 页头卡与内容之间不必留全站那档 64；收一档让整页成一摞 */
 .en-head {
   margin-bottom: var(--space-3);
 }

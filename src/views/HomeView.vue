@@ -69,7 +69,8 @@ const recentProjects = computed(() => content.projects.slice(0, 3))
    （「本次停留 / 这一夜已曝」计时读数 2026-10-09 删除——它数的是打开页面后的秒数，
     没有任何信息量，还把 `sky.t0` 的全站曝光时钟错标成"自这一页打开时起算"。） */
 const clock = ref('--:--:--')
-const day = ref('')
+const dateNum = ref('')
+const weekday = ref('')
 let clk = 0
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -129,7 +130,10 @@ const onWaveResize = debounce(syncWave)
 function tick() {
   const now = new Date()
   clock.value = now.toLocaleTimeString('zh-CN', { hour12: false })
-  day.value = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEK[now.getDay()]}`
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  dateNum.value = `${now.getFullYear()} · ${mm} · ${dd} ·`
+  weekday.value = `星期${WEEK[now.getDay()]}`
 }
 
 let io = null
@@ -234,11 +238,17 @@ onUnmounted(() => {
       </svg>
 
       <div class="content">
-        <!-- 此刻：一行日期读数，不单独占一张卡 -->
+        <!-- 此刻：时:分升为展示衬线主角，章名与秒数、日期降成仪器小字 -->
         <div class="dateline">
           <span class="dl-k">{{ N.drawer.clock }}</span>
-          <span class="dl-v en-mono">{{ clock }}</span>
-          <span class="dl-d">{{ day }}</span>
+          <div class="dl-now">
+            <span class="dl-v">{{ clock.slice(0, 5) }}</span>
+            <span class="dl-s en-mono">{{ clock.slice(5) }}</span>
+            <span class="dl-d">
+              <span class="dl-num">{{ dateNum }}</span>
+              <span class="dl-wk">{{ weekday }}</span>
+            </span>
+          </div>
         </div>
 
         <!-- 一个章节一张半透明底卡：章节头与条目共用这块面 -->
@@ -472,26 +482,57 @@ onUnmounted(() => {
   background: var(--card-bg);
 }
 
-/* ---------- 此刻：一行日期读数 ---------- */
+/* ---------- 此刻：时刻带 ----------
+   时:分是这一带的主角，走展示衬线（与刊头同族的高对比衬线，数字用 tabular-nums，
+   分钟跳变时宽度不抖）；章名「此刻」与下面各章同大（章名体），秒数与日期星期排在
+   同一基线、日期贴右沿。卡面仍是章节底卡那一档（--card-bg / --card-brd），只是收成一条带。 */
 .dateline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--card-pad-lg);
+}
+
+.dl-now {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  padding: var(--space-1) var(--card-pad-lg);
+  gap: var(--space-1);
 }
 
 .dl-v {
-  font-size: var(--fs-xl);
-  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 92px);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--text-0);
   font-variant-numeric: tabular-nums;
 }
 
-.dl-d {
-  margin-left: auto;
-  font-size: var(--fs-xs);
+.dl-s {
+  font-size: var(--fs-2xl);
   color: var(--text-1);
+}
+
+/* 日期数字走等宽仪器体；「星期X」是三个汉字，落进 mono 的 CJK 回退（Windows 上是宋体，
+   与数字不同族、笔画也偏细），所以单拎出来给无衬线栈。 */
+.dl-d {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  margin-left: auto;
+  font-size: var(--fs-lg);
+  color: var(--text-1);
+}
+
+.dl-num {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.dl-wk {
+  font-family: var(--font-sans);
 }
 
 /* ---------- 章节头 ---------- */
@@ -506,7 +547,7 @@ onUnmounted(() => {
   margin-bottom: var(--space-2);
 }
 
-/* 「此刻」不是仪器小标签，是这一章的章名：章名体（.pane-t）与它共用一条规则。 */
+/* 「此刻」与下面各章一样是章名：章名体（.pane-t）与它共用一条规则，不缩成仪器小字。 */
 .pane-t,
 .dl-k {
   margin: 0;
@@ -859,7 +900,7 @@ a.what:hover .go {
   }
 
   .dateline {
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-2);
   }
 
   .dl-d {

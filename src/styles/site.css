@@ -535,9 +535,12 @@ html:root main.en-sub {
 .en-head {
   position: relative;
   z-index: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  /* 标题在左、副题在右（2026-11-08 作者定）：副题贴右沿右对齐，与标题基线相齐。
+     右列 minmax(0,…) 可折行，左列 auto 按标题收宽；合集详情的面包屑与篇数行跨满两列。 */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
   /* 上边距 --space-3：卡顶落在羽化终点（140px）之下，白带与卡之间留一条底片，
      免得「72px 白带 + 白卡」贴成一堵白墙（2026-10-30 作者：「顶部过于白」） */
   margin: var(--space-3) 0 var(--space-4);
@@ -554,8 +557,27 @@ html:root main.en-sub {
 }
 
 .en-head .en-lede {
+  justify-self: end;
   margin: 0;
   max-width: var(--measure);
+  text-align: right;
+}
+
+/* 详情页找不到态：.lost 按内容收宽（align-items: flex-start），页头卡要自己占满一行，
+   否则这张卡比其余页头窄一截 */
+.lost .en-head {
+  align-self: stretch;
+}
+
+/* 手机上左右两列挤不下：叠回标题在上、副题在下，副题不再贴右 */
+@media (max-width: 720px) {
+  .en-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .en-head .en-lede {
+    justify-self: start;
+    text-align: left;
+  }
 }
 
 /* 底片上的次要裸字（作者 2026-10-30；顶栏那套动态字色 2026-11-07 已退役）：

@@ -6,27 +6,27 @@ export const collections = [
   {
     slug: 'escaping-notes',
     title: '本站',
-    summary: '这座博客自己：为什么这样设计、怎么用、怎么把一篇稿子写进来。',
+    summary: '这个博客本身：设计、实现，以及怎么在这里发文。',
     order: 1,
   },
   {
     slug: 'site-design',
     title: '设计与实现',
-    summary: '首页、星轨、主题与排版背后的取舍。',
+    summary: '首页、星轨、主题与排版，为什么做成现在这样。',
     parent: 'escaping-notes',
     order: 1,
   },
   {
     slug: 'site-guide',
     title: '使用与写作',
-    summary: '读者怎么用这个站，作者怎么把一篇稿子发上来。',
+    summary: '这个站怎么用，文章怎么写、怎么发。',
     parent: 'escaping-notes',
     order: 2,
   },
   {
     slug: 'build-agent',
     title: '从零做一个 Agent',
-    summary: '三篇递进的手记：先把循环跑通，再把工具与评测做扎实，最后处理多 Agent、协议与安全。',
+    summary: '从跑通一个循环，到接上工具和评测，再到多 Agent、协议与安全。',
     order: 2,
   },
 ]

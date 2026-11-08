@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440" role="img" aria-label="Cross-section of the site-wide backdrop layer: a fixed photo plate at full strength until 52%, sinking into the page colour, a single resident image since the three-slot carousel was retired, and the measured contrast of naked text versus text on a card">
+  <defs>
+    <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d4ed8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#1d4ed8" stop-opacity=".3"/>
+    </linearGradient>
+    <linearGradient id="sink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d4ed8" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#f2f5f9" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d4ed8" stop-opacity=".05"/>
+      <stop offset=".5" stop-color="#1d4ed8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#1d4ed8" stop-opacity=".05"/>
+    </linearGradient>
+    <style>
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; fill: #0e141d; }
+      .t { font-size: 13px; }
+      .s { font-size: 11px; fill: #55606f; }
+      .h { font-size: 14px; fill: #1d4ed8; }
+      .line { stroke: #0e141d; stroke-opacity: .18; stroke-width: 1; fill: none; }
+      .lead { stroke: #0e141d; stroke-opacity: .22; stroke-width: 1; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="920" height="440" fill="#e7ecf3"/>
+  <text class="h" x="40" y="30">site backdrop, vertical cross-section</text>
+  <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in site.css §1 / §2 / §3</text>
+
+  <!-- A. 视口剖面：photos at full strength from y=0 (no band or veil on top since 2026-10-30) → sunk from 52% on -->
+  <rect x="60" y="70" width="140" height="83" fill="url(#photo)"/>
+  <rect x="60" y="153" width="140" height="77" fill="url(#sink)"/>
+  <rect x="60" y="70" width="140" height="160" class="line"/>
+  <path d="M200 76 H208 M200 120 H208 M200 160 H208 M200 212 H208" class="lead"/>
+  <text class="t" x="216" y="79">photo at full strength · y = 0 → 52%</text>
+  <text class="s" x="216" y="93">the un-stuck top bar sits directly on the plate --</text>
+  <text class="s" x="216" y="106">sub-page bars use the static --plate-hdr (paper ink / theme white)</text>
+  <text class="t" x="216" y="163">sinks into the page colour · 52% → 100%</text>
+  <text class="s" x="216" y="177">the sink gradient lives on the layer itself, with the photo</text>
+  <text class="s" x="216" y="191">-- one gradient, one resident image, no crossfades</text>
+  <text class="t" x="216" y="215">footer sits on ~80–90% ink-0 — the photo stays faintly visible</text>
+  <text class="s" x="18" y="74">0svh</text>
+  <text class="s" x="12" y="234">100svh</text>
+
+  <!-- B. 抽屉底片：单张常驻 -->
+  <text class="h" x="60" y="266">.sub-plate: one resident image</text>
+  <text class="s" x="430" y="252">the three-slot carousel (30s cycle, 10s per plate) was retired on 2026-11-07</text>
+  <text class="s" x="430" y="266">light = plate-bg-paper4.jpg · dark = plate-bg-deep.jpg</text>
+  <text class="s" x="430" y="280">mobile swaps 1280px resamples</text>
+
+  <!-- C. 对比度实测 -->
+  <text class="h" x="40" y="382">foreground contrast, measured</text>
+  <rect x="40" y="390" width="190" height="26" fill="#f2f5f9"/>
+  <rect x="40" y="390" width="190" height="26" fill="#9a3412" fill-opacity=".55"/>
+  <text class="t" x="50" y="407">bare on photo · 1.0-2.4:1 — retired</text>
+  <rect x="240" y="390" width="160" height="26" fill="#f2f5f9"/>
+  <rect x="240" y="390" width="160" height="26" fill="#1d4ed8" fill-opacity=".2"/>
+  <text class="t" x="250" y="407">on a card · 5.5:1 +</text>
+  <text class="s" x="420" y="401">A scrim-free photo cannot reach AA for naked text, whatever shape</text>
+  <text class="s" x="420" y="415">the gradient has — so the page-head copy moved onto the .en-head</text>
+  <text class="s" x="420" y="429">card; the top bar uses static plate-aware ink, not a white band.</text>
+</svg>
