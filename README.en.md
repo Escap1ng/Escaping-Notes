@@ -73,7 +73,7 @@ Flow curves, mask profiles and meteor parameters are recorded in [docs/design.md
 **Interaction**
 
 - Plate blur and card surface are runtime parameters: a 0–12px slider (defaulted to full) and two radios (opaque / translucent) in the settings card, remembered in `localStorage`
-- Focus traps live in the header drawer, the search card, the player card, the settings card and both lightboxes, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; a bare `/` or `Ctrl/Cmd+K` anywhere opens the search card; route changes are announced through the live region in `App.vue`
+- Focus traps live in the header drawer, the search card, the player card, the settings card and the article lightbox, and return focus to whatever opened them; `Esc` or a click outside the reading plate returns to the list; a bare `/` or `Ctrl/Cmd+K` anywhere opens the search card; route changes are announced through the live region in `App.vue`
 - The player remembers the last track and position across reloads, answers OS media keys, and states "cannot play" when the audio file is missing instead of loading forever
 - Skeleton cards while the archive loads, distinct copy for "nothing here yet" vs "no search results", and tag/keyword filters written into the URL query, so a filtered view is shareable and survives reload; the archive opens on a row of site-wide counters and every tag chip carries its own count
 
@@ -121,7 +121,7 @@ CI in `.github/workflows/deploy.yml` runs `npm ci` → `npm test` → `npm run c
 | `npm run dev` | Vite dev server with HMR |
 | `npm run build` | Posting gate and receipt first, then `dist/` (including `rss.xml`, `sitemap.xml` and one static shell per route) |
 | `npm run preview` | Serve `dist/` the way production would |
-| `npm test` | Everything under `tests/` (147 cases today), no test framework |
+| `npm test` | Everything under `tests/` (151 cases today), no test framework |
 | `npm run check` | The four gates in sequence: content / docs / naming / contrast |
 | `npm run seo:build` | Regenerate SEO artefacts only (`dist/rss.xml` — last 20 items, with full text and categories; `dist/sitemap.xml`) |
 | `npm run og:build` | Redraw the share card `public/og.png` (1200×630, procedural star trails drawn with Node built-ins, no text, committed) |
@@ -146,7 +146,7 @@ There is no admin UI — everything is a file in this repo, and pushing publishe
 - **Collections:** the list lives in `src/data/collections.js`; a `parent` field nests one collection under another. Posts belong to a leaf, and a parent page aggregates every descendant post. `/collections` is the overview, each article header shows its collection and position, and previous/next stay inside the collection.
 - **Publishing a post adds it to the activity feed.** Every live post becomes a dated entry linking to the article, merged with the hand-written notes in `src/data/updates.js` (`src/lib/feed.js`); on the same date posts come before notes. Notes are for everything that is not a post — do not hand-write an "article is live" line.
 - **Site-owned content:** collections, activity, projects, playlist, plates and friend links each have a data file; gear lives in the `gear` field of `src/data/site.js`; everything reaches the UI only through `src/data/index.js` — that single door. Adding a kind means adding a file and one line on the door; no view gets a second path to the same array.
-- **Site info and copy:** the site name, author, socials, coordinates and gear live in `src/data/site.js`; interface copy lives in `src/data/narrative.js`; appearance tokens live in `src/styles/site.css`.
+- **Site info and copy:** the site name, author, socials, motto and gear live in `src/data/site.js`; interface copy lives in `src/data/narrative.js`; appearance tokens live in `src/styles/site.css`.
 - **The build is the pre-flight check.** `npm run build` first validates every roll (a malformed date, a misspelled key, an image referenced from prose that is not in that roll, two rolls claiming one old slug — any of these stops the artefact from being produced), then writes `rss.xml`, `sitemap.xml` and one static shell per route.
 
 ## Route Map
@@ -184,7 +184,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
     ├── data/              # everything site-owned lives here, index.js being the single door
     ├── lib/               # sky the plate and the clock · ridge the mask · plate the layer · schema the posting rules · posts the loader · feed the activity merge · markdown · theme / storage / …
     ├── styles/site.css    # the only stylesheet: structural scales + the two theme palettes + site-wide primitives
-    └── views/             # 11 views, one file each, flat
+    └── views/             # 10 views, one file each, flat
 ```
 
 Originals (`plates-src/` · `music/` · `fonts-src/` · each roll's `*-src.*`) are gitignored — do not report that as a leak. The file-by-file annotated version is in **[docs/manual.md §0](docs/manual.md)** (Chinese).

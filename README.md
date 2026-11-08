@@ -73,7 +73,7 @@
 **交互**
 
 - 底片模糊与卡面颜色是运行时参数：设置卡里一条 0–12px 滑杆（默认拉满）与两档单选（不透底 / 半透明），偏好记在 `localStorage`
-- 焦点陷阱在顶栏抽屉、搜索卡、播放器卡、设置卡与两处灯箱，关闭后焦点回到触发元素；`Esc` 或点正文底板以外的空白即退回列表；任意页面裸按 `/` 或 `Ctrl/⌘+K` 开搜索卡；路由切换由 `App.vue` 的 `aria-live` 区域播报当前页
+- 焦点陷阱在顶栏抽屉、搜索卡、播放器卡、设置卡与文章看片框，关闭后焦点回到触发元素；`Esc` 或点正文底板以外的空白即退回列表；任意页面裸按 `/` 或 `Ctrl/⌘+K` 开搜索卡；路由切换由 `App.vue` 的 `aria-live` 区域播报当前页
 - 播放器会记住上次的曲目与位置（刷新后第一次播放续上），并接系统媒体键；音频文件取不到时卡片直接写明「无法播放」，不会停在载入中
 - 列表有骨架屏，「本来没有内容」与「筛选无结果」分文案，标签与关键词筛选状态写进 URL query，可分享、刷新不丢；归档页顶着一排全站读数，标签胶囊各带计数
 
@@ -121,7 +121,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 | `npm run dev` | Vite 开发服务器，改文件即时热更 |
 | `npm run build` | 先跑发文门禁与回执，再出 `dist/`（含 `rss.xml`、`sitemap.xml`、每条路由一份静态壳） |
 | `npm run preview` | 本地模拟线上环境预览 `dist/` |
-| `npm test` | `tests/` 下的 `.mjs` 用例全收（当前 147 项），零测试框架 |
+| `npm test` | `tests/` 下的 `.mjs` 用例全收（当前 151 项），零测试框架 |
 | `npm run check` | 四道门禁连跑：内容 / 文档 / 命名 / 对比度 |
 | `npm run seo:build` | 只重跑 SEO 产物（`dist/rss.xml` 取最近 20 条、带全文与标签，`dist/sitemap.xml`） |
 | `npm run og:build` | 重绘分享卡片 `public/og.png`（1200×630，纯 Node 画的程序化星轨，无文字，需提交） |
@@ -146,7 +146,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 - **合集**：合集清单在 `src/data/collections.js`，`parent` 指向另一个合集就再分一级；文章只挂在最末那一层，上级合集页自动汇总所有后代的文章。`/collections` 是总览，每篇正文页眉也标着所属合集与篇序，上下篇在合集内翻。
 - **发文即进动态**：每一卷已发布文章按 `date` 自动进 `/updates` 与首页最近动态，链向正文；`src/data/updates.js` 只记文章之外的事，别再手写「某篇上线」。合并口径在 `src/lib/feed.js`，同一天文章排在手写条目前。
 - **站点自有内容**：合集 / 动态 / 项目 / 友链各有一份数据文件，装备在 `src/data/site.js` 的 `gear` 字段里；它们进界面只经 `src/data/index.js` 那道门。加一类内容 = 放一份文件 + 门上挂一行，视图那边不用新开一条路。
-- **改站点信息与文案**：站点名、作者、社交、坐标、装备在 `src/data/site.js`；界面文案在 `src/data/narrative.js`；外观令牌在 `src/styles/site.css`。
+- **改站点信息与文案**：站点名、作者、社交、标语、装备在 `src/data/site.js`；界面文案在 `src/data/narrative.js`；外观令牌在 `src/styles/site.css`。
 - **构建就是发文自检**。`npm run build` 先逐卷校验再出产物：日期写歪、键名拼错、正文引用了本卷没有的图、两个旧名撞车，任一条红就不发布。跑绿之后顺手产出 `rss.xml`、`sitemap.xml` 与每条路由一份静态壳。
 
 ## 页面地图
@@ -184,7 +184,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
     ├── data/              # 站点自有内容全在这一目录，index.js 是唯一的取数门
     ├── lib/               # sky 底片与时钟 · ridge 山脊遮罩 · plate 底片层 · schema 发文口径 · posts 取数 · feed 动态合并 · markdown · theme / storage / …
     ├── styles/site.css    # 唯一的样式表：结构刻度 + 两套主题配色 + 全站基元
-    └── views/             # 11 个视图平铺，一页一个文件
+    └── views/             # 10 个视图平铺，一页一个文件
 ```
 
 原图（`plates-src/` · `music/` · `fonts-src/` · 各卷的 `*-src.*`）在 `.gitignore` 里，别当泄漏报。逐文件的注解版见 **[docs/manual.md §0](docs/manual.md)**。
