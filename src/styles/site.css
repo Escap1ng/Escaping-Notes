@@ -541,7 +541,9 @@ html:root main.en-sub {
   /* 上边距 --space-3：卡顶落在羽化终点（140px）之下，白带与卡之间留一条底片，
      免得「72px 白带 + 白卡」贴成一堵白墙（2026-10-30 作者：「顶部过于白」） */
   margin: var(--space-3) 0 var(--space-4);
-  padding: var(--card-pad-lg) var(--card-pad-lg) var(--card-pad);
+  /* 上下对称：页头可能只有一行标题（关于页、详情页找不到态），上 lg 下 pad 会把单行推偏；
+     .en-card 内容从顶往下流、不要求居中，不吃这条 */
+  padding: var(--card-pad) var(--card-pad-lg);
   border: 1px solid var(--card-brd);
   border-radius: var(--r-md);
   background: var(--card-bg);

@@ -279,8 +279,9 @@ onUnmounted(() => {
           </header>
           <ol class="feed">
             <li v-for="(u, i) in recent" :key="u.key" class="pulse">
-              <span class="dot" :class="i === 0 ? 'hot' : 'cold'" aria-hidden="true"></span>
-              <span class="when en-mono">{{ u.date }}</span>
+              <span class="meta" :class="i === 0 ? 'hot' : 'cold'">
+                <span class="when en-mono">{{ u.date }}</span>
+              </span>
               <RouterLink v-if="u.to" :to="u.to" class="what">
                 {{ u.text }}<span class="go" aria-hidden="true">→</span>
               </RouterLink>
@@ -615,7 +616,7 @@ onUnmounted(() => {
 
 .pulse {
   display: grid;
-  grid-template-columns: auto max-content minmax(0, 1fr);
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: baseline;
   gap: var(--space-2);
   padding: calc(var(--space-1) * 1.5) var(--space-1);
@@ -627,25 +628,33 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--text-0) 5%, transparent);
 }
 
-/* 日期列取 max-content 而不是 10ch：ch 在栅格列上按容器字体度量算（这里是 body 的 sans），
-   换一台机器 mono 就不是那个宽度。所有日期都是十个字符，所以各行正文对齐在同一条竖线上 */
-.dot {
+/* 首列取 max-content 而不是 10ch：ch 在栅格列上按容器字体度量算（这里是 body 的 sans），
+   换一台机器 mono 就不是那个宽度。所有日期都是十个字符，所以各行正文对齐在同一条竖线上。
+   圆点挂在日期组左侧、与日期垂直居中——独立成栅格列时它被 gap 推离日期 16px，读成单独的装饰列 */
+.meta {
+  position: relative;
+  padding-left: 14px;
+}
+
+.meta::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  transform: translateY(-50%);
+  background: var(--cold);
   transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.pulse:hover .dot {
-  transform: scale(1.8);
-}
-
-.dot.cold {
-  background: var(--cold);
-}
-
-.dot.hot {
+.meta.hot::before {
   background: var(--hot);
+}
+
+.pulse:hover .meta::before {
+  transform: translateY(-50%) scale(1.8);
 }
 
 .when {
@@ -865,14 +874,10 @@ a.what:hover .go {
     grid-template-columns: 1fr;
   }
 
-  /* 手机上日期与正文并排只剩一行七八个字：日期另起一行，正文仍缩进到日期之下 */
+  /* 手机上日期与正文并排只剩一行七八个字：正文整行换到圆点+日期之下 */
   .pulse {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     row-gap: calc(var(--space-1) / 2);
-  }
-
-  .what {
-    grid-column: 2;
   }
 }
 
@@ -883,7 +888,7 @@ a.what:hover .go {
     animation: none;
   }
 
-  .pulse:hover .dot,
+  .pulse:hover .meta::before,
   .pick:hover .en-shot img,
   .pick:hover .pick-ttl,
   .row:hover .coll-ttl,

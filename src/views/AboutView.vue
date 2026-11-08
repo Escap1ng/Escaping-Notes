@@ -1,5 +1,5 @@
 <script setup>
-// 新版观测者：第一人称自述 + 三枚读数 + 事实发丝表 + 技术栈 + 社交/友链
+// 关于页：第一人称自述 + 三枚读数 + 技术栈 + 社交/友链
 import { computed, onMounted, ref } from 'vue'
 import { content } from '../data/index.js'
 import { loadPosts } from '../lib/posts.js'
@@ -8,12 +8,6 @@ import { N, navLabel } from '../data/narrative.js'
 
 // 头像与友链都从 content 这道门取（头像地址在 site.avatar，换图只改 src/data/site.js）
 const { friends } = content
-
-const facts = [
-  { k: 'OBSERVER', v: () => content.site.author },
-  { k: 'LOC', v: () => content.site.location },
-  { k: 'COORDS', v: () => content.site.coords },
-]
 
 /* 三枚读数全部从文章表现算，不另开接口。
    还没算出来时显示 --：把"没算到"说成"一个都没有"，是本站明令要分开的那两件事 */
@@ -64,6 +58,7 @@ const stats = computed(() => {
           />
           <div class="profile-main">
             <p class="bio">{{ N.aboutBio }}</p>
+            <p v-if="content.site.motto" class="motto">{{ content.site.motto }}</p>
             <!-- 三枚读数全部从文章表现算，没有新接口 -->
             <ul class="stats">
               <li v-for="s in stats" :key="s.k" class="stat">
@@ -75,18 +70,8 @@ const stats = computed(() => {
         </div>
       </div>
 
-      <!-- 档案 / 社交 / 友链：一张卡三组，桌面三列、窄屏叠成一列 -->
+      <!-- 社交 / 友链：一张卡两组，桌面两列、窄屏叠成一列 -->
       <div class="en-card info en-lens" @pointermove="onLens">
-        <div class="info-col">
-          <p class="en-eyebrow">档案</p>
-          <dl class="facts">
-            <div v-for="f in facts" :key="f.k" class="fact">
-              <dt class="en-mono">{{ f.k }}</dt>
-              <dd>{{ f.v() }}</dd>
-            </div>
-          </dl>
-        </div>
-
         <div class="info-col">
           <p class="en-eyebrow">社交</p>
           <ul class="links">
@@ -139,7 +124,7 @@ const stats = computed(() => {
   margin-bottom: var(--space-3);
 }
 
-/* 三张满宽卡：自述+读数 / 档案·社交·友链 / 技术栈 */
+/* 三张满宽卡：自述+读数 / 社交·友链 / 技术栈 */
 .about-stack {
   display: grid;
   gap: var(--space-2);
@@ -186,6 +171,14 @@ const stats = computed(() => {
   line-height: var(--lh-relaxed);
 }
 
+.motto {
+  margin: calc(var(--space-1) * -1) 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-lg);
+  color: var(--text-1);
+}
+
 /* 读数不再各占一张卡：卡内一条三列读数，与自述同卡 */
 .stats {
   list-style: none;
@@ -217,10 +210,10 @@ const stats = computed(() => {
   font-size: var(--fs-3xs);
 }
 
-/* ---------- 档案 / 社交 / 友链：一张卡三列 ---------- */
+/* ---------- 社交 / 友链：一张卡两列 ---------- */
 .info {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
   align-items: start;
   min-height: 0;
@@ -237,32 +230,6 @@ const stats = computed(() => {
 .info-col + .info-col {
   border-left: 1px solid var(--line);
   padding-left: var(--space-2);
-}
-
-.facts {
-  margin: 0;
-}
-
-.fact {
-  display: grid;
-  grid-template-columns: 12ch 1fr;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
-  border-top: 1px solid var(--line);
-}
-
-.fact:last-child {
-  border-bottom: 1px solid var(--line);
-}
-
-.fact dt {
-  padding-top: var(--space-0);
-}
-
-.fact dd {
-  margin: 0;
-  font-size: var(--fs-md);
-  overflow-wrap: anywhere;
 }
 
 /* ---------- 技术栈：一张卡内 2×2 ---------- */
@@ -389,10 +356,6 @@ const stats = computed(() => {
   }
   .sv {
     font-size: var(--fs-2xl);
-  }
-  .fact {
-    grid-template-columns: 1fr;
-    gap: var(--space-0);
   }
   .gears {
     grid-template-columns: 1fr;

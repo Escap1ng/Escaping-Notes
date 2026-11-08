@@ -163,7 +163,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 | `/updates` | Activity | Hand-written notes plus automatic post entries; post entries link to the article |
 | `/projects` | Projects | Grid of project cards |
 | `/projects/:slug` | Project write-up | Shares the reading panel with an article; `Esc` or a click outside returns to the list |
-| `/about` | About | Bio + counters · archive / social / friends · stack |
+| `/about` | About | Bio + counters · social / friends · stack |
 | `/:pathMatch(.*)*` | 404 | The fallback for anything unmatched; its tab title and its page heading are the same sentence |
 
 ## Project Structure
