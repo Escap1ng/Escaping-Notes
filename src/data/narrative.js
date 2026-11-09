@@ -113,7 +113,7 @@ export const N = {
   footer: {
     thanks: '谢谢你读到这里。',
     top: '回到顶部',
-    licenseScope: '只覆盖博客内容（文章、原创图片与文案），源代码与设计保留原声明',
+    licenseScope: '只覆盖博客内容（文章、原创图片与文案）；源代码与设计依 Apache-2.0 授权',
   },
   theme: { dark: '深色', light: '浅色' },
 

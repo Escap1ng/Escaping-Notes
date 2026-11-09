@@ -2,6 +2,7 @@
  "name": "escaping-notes",
  "private": true,
  "version": "1.4.3",
+ "license": "Apache-2.0",
  "engines": {
   "node": ">=22"
  },

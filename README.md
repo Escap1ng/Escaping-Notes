@@ -12,7 +12,7 @@
 [![Vue 3](https://img.shields.io/badge/Vue%203-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Vite 5](https://img.shields.io/badge/Vite%205-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Personal%20Use-4d4d4d)](#许可与使用声明)
+[![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Apache--2.0-4d4d4d)](#许可与使用声明)
 
 [中文](README.md) · [English](README.en.md)
 
@@ -186,6 +186,7 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 
 ```text
 ├── .github/workflows/     # CI：npm ci → test → check → build → GitHub Pages
+├── LICENSE                # 源代码与设计的许可全文（Apache-2.0）
 ├── package.json           # scripts + 两条运行时依赖（vue / vue-router）
 ├── vite.config.js         # Vite；构建期把每卷的素材清单交给前端（virtual:rolls）
 ├── index.html             # 壳层：首帧内联脚本（主题 / 底片模糊 / 卡面档位 / 按主题预加载首屏地景，都不闪一下）+ SEO/OG 元信息
@@ -224,21 +225,20 @@ CI 在 `.github/workflows/deploy.yml` 里按 `npm ci` → `npm test` → `npm ru
 
 ## 许可与使用声明
 
-本节分开授权：**博客内容**走 CC BY-NC-SA 4.0，**源代码与设计**保留原声明。
+本节分开授权：**博客内容**走 CC BY-NC-SA 4.0，**源代码与设计**走 Apache-2.0。
 
 | 客体 | 许可 |
 | --- | --- |
 | **博客内容** —— 文章正文、站内原创图片与文案 | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)：可复制、可改编、可转载，须署名作者、不得用于商业用途、衍生作品须以同一协议发布 |
-| **源代码与设计** —— `src/`、`scripts/`、`docs/`、视觉与交互设计、星轨交互装置 | 非商用声明，即下列五条 |
+| **源代码与设计** —— `src/`、`scripts/`、`docs/`、视觉与交互设计、星轨交互装置 | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)：可自由使用、修改、分发与商用，须保留版权与许可声明；条款全文见 [LICENSE](LICENSE) |
 | **字体** | 展示层子集（正文衬线按 unicode-range 分片）与刊头 Didone 分别取自 Noto Serif SC 与 Playfair Display（均 SIL OFL 1.1），条款全文见 [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
 | **第三方素材** | 嵌入的友链与站外内容各自依其原许可，不在本节授权范围内 |
 
-以下五条只约束上表第二行的「源代码与设计」：
+以下补充说明只针对上表第二行的「源代码与设计」，条款本身以 Apache-2.0 全文为准：
 
-1. **禁止商用**：未经作者事先书面许可，不得将本项目源代码与设计的全部或部分用于任何商业用途或以任何方式营利。
-2. **原创保护**：未经许可，不得对核心原创设计（「长曝光星轨」隐喻、视觉语言、星轨交互装置）整体复制、仿冒或二次包装发布。
-3. **学习引用**：学习性引用须显著注明项目来源与作者信息，并保留本声明。
-4. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用产生的任何损失或纠纷，作者不承担责任。
-5. **授权联系**：chunqi-yu@outlook.com。
+1. **保留声明**：再分发时须保留 `LICENSE` 与 `package.json` 中的版权与许可信息，修改过的文件须注明改动。
+2. **商标不随许可授予**：Apache-2.0 不授予商标权；「Escaping Notes」名称与标识不得用于暗示作者对本项目的背书。
+3. **免责条款**：本项目按「现状」提供，不附任何明示或暗示的担保；因使用产生的任何损失或纠纷，作者不承担责任（Apache-2.0 第 7、8 条）。
+4. **授权联系**：chunqi-yu@outlook.com。
 
-© 2026 Escap1ng · 博客内容依 CC BY-NC-SA 4.0 授权，源代码与设计保留所有权利
+© 2026 Escap1ng · 博客内容依 CC BY-NC-SA 4.0 授权，源代码与设计依 Apache-2.0 授权

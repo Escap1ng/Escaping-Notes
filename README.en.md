@@ -12,7 +12,7 @@
 [![Vue 3](https://img.shields.io/badge/Vue%203-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Vite 5](https://img.shields.io/badge/Vite%205-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Personal%20Use-4d4d4d)](#license--usage-terms)
+[![License](https://img.shields.io/badge/Content%20CC%20BY--NC--SA%20·%20Code%20Apache--2.0-4d4d4d)](#license--usage-terms)
 
 [中文](README.md) · **English**
 
@@ -186,6 +186,7 @@ All 10 routes are lazy-loaded and each carries `meta.t` for the document title a
 
 ```text
 ├── .github/workflows/     # CI: npm ci → test → check → build → GitHub Pages
+├── LICENSE                # full licence for the source code and design (Apache-2.0)
 ├── package.json           # scripts + two runtime dependencies (vue / vue-router)
 ├── vite.config.js         # Vite; hands each roll's asset list to the client at build time (virtual:rolls)
 ├── index.html             # Shell: inline first-paint script (theme / plate blur / card surface / preloading the landing photo for that theme, so none of them flashes) + SEO/OG metadata
@@ -224,21 +225,20 @@ Full steps for both targets (GitHub Pages / Vercel read-only mirror) live in **[
 
 ## License & Usage Terms
 
-Two things are licensed separately here: **blog content** is under CC BY-NC-SA 4.0, **source code and design** keep the original notice.
+Two things are licensed separately here: **blog content** is under CC BY-NC-SA 4.0, **source code and design** under Apache-2.0.
 
 | Subject | Terms |
 | --- | --- |
 | **Blog content** — article text, original images and copy on this site | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): you may copy, adapt and redistribute it, with attribution, for non-commercial purposes only, and derivatives must be published under the same licence |
-| **Source code & design** — `src/`, `scripts/`, `docs/`, the visual and interaction design and the star-trail device | the non-commercial notice, i.e. the five items below |
+| **Source code & design** — `src/`, `scripts/`, `docs/`, the visual and interaction design and the star-trail device | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0): use, modify, distribute and commercialise freely, provided the copyright and licence notices are kept; the full text is in [LICENSE](LICENSE) |
 | **Fonts** | the display subsets (body serif split into unicode-range shards) and the masthead Didone are derived from Noto Serif SC and Playfair Display respectively (both SIL OFL 1.1); the full licence is at [src/assets/fonts/LICENSE-OFL.txt](src/assets/fonts/LICENSE-OFL.txt) |
 | **Third-party material** | embedded blogroll links and off-site content keep their own terms and are not covered by this section |
 
-The five items below govern only the "source code & design" row above:
+The notes below cover only the "source code & design" row above; the Apache-2.0 text governs:
 
-1. **No commercial use** — Without prior written permission, no part of the source code or design may be used commercially or monetized in any way.
-2. **Originality protection** — The core original designs (the "Long-Exposure Star Trails" metaphor, visual language and star-trail devices) may not be copied, imitated or republished under another name without permission.
-3. **Citation** — Learning-purpose references must clearly credit the project and the author, and keep this notice.
-4. **Disclaimer** — The project is provided "as is", without warranty of any kind; the author is not liable for any loss arising from its use.
-5. **Licensing contact** — chunqi-yu@outlook.com.
+1. **Notices** — redistributions must keep the copyright and licence notices in `LICENSE` and `package.json`; modified files must state the change.
+2. **No trademark licence** — Apache-2.0 grants no trademark rights; the "Escaping Notes" name and marks may not be used to imply endorsement by the author.
+3. **Disclaimer** — the project is provided "as is", without warranty of any kind; the author is not liable for any loss arising from its use (Apache-2.0 §7–8).
+4. **Licensing contact** — chunqi-yu@outlook.com.
 
-© 2026 Escap1ng · Blog content under CC BY-NC-SA 4.0; source code and design all rights reserved
+© 2026 Escap1ng · Blog content under CC BY-NC-SA 4.0; source code and design under Apache-2.0
