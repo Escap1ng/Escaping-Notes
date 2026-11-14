@@ -49,6 +49,14 @@ const TH_JIT = num(ST, 'TH_JIT')
 const SHEAR_MIN = num(ST, 'SHEAR_MIN')
 const SHEAR_SPAN = num(ST, 'SHEAR_SPAN')
 const SHEAR_POW = num(ST, 'SHEAR_POW')
+const ARC_MIN_PX = num(ST, 'ARC_MIN_PX')
+const SHEAR_JIT = num(ST, 'SHEAR_JIT')
+const ARC_LAG = num(ST, 'ARC_LAG')
+const CLS_BRIGHT = num(ST, 'CLS_BRIGHT')
+const CLS_MID = num(ST, 'CLS_MID')
+const WARM_P = num(ST, 'WARM_P')
+const LW_MIN = num(ST, 'LW_MIN')
+const TH_TIER_JIT = num(ST, 'TH_TIER_JIT')
 const LW_BASE = num(ST, 'LW_BASE')
 const LW_SPAN = num(ST, 'LW_SPAN')
 const POLE_FX = num(SKY, 'POLE_FX')
@@ -92,9 +100,11 @@ const H = Number(process.env.ART_H || 760)
 // 线宽 0.6~1.8 **CSS px** 在 2× 屏上占 1.2~3.6 个真实像素。用 1× 复算会把尾迹
 // 少算一半厚度——观感差主要就出在这里。所以按 DPR 超采样，再盒式降采样回视口尺寸。
 const DPR = Number(process.env.ART_DPR || 2)
-// 冲印增益（仅显示端，见 render() 里的说明）；图注要如实标出这两个倍数
-const DEV_DEEP = Number(process.env.ART_DEV_DEEP || 2.8)
-const DEV_PAPER = Number(process.env.ART_DEV_PAPER || 1.6)
+// 冲印增益：**与组件共用同一对常数**（StarTrails 的 DEV_DEEP / DEV_PAPER，见 render() 说明）。
+// 原先脚本写死 2.8/1.6、组件那边另有一套，于是"配图看着明确、页面淡得读不出"，
+// 两边来回追齐过两轮。现在单一来源：改浓度只改组件，配图跟着走；环境变量仍可临时覆盖出图。
+const DEV_DEEP = Number(process.env.ART_DEV_DEEP || 1 + num(ST, 'DEV_DEEP'))
+const DEV_PAPER = Number(process.env.ART_DEV_PAPER || 1 + num(ST, 'DEV_PAPER'))
 const RW = W * DPR
 const RH = H * DPR
 const pole = { x: W * POLE_FX * DPR, y: H * POLE_FY * DPR }
@@ -111,34 +121,82 @@ function pickRn(i, n) {
   const g = u + (MID_BIAS / TAU) * Math.sin(TAU * u)
   return R_MIN + (1 - R_MIN) * Math.min(1, Math.max(0, g))
 }
-function mkStar(i, n) {
+/* 星等分层：与 StarTrails.vue 的 tierPlan 逐行同款（按星数精确配额 + 亮/中两档等分圆周）。
+ * 旧式 (i·0.381966)%1 是角度序列的补数，会把三档各自锁进一段圆弧——源码里已修，这里跟着修，
+ * 否则 README 配图与站点实际观感分叉。 */
+function coprimeStep(m) {
+  let st = Math.max(2, Math.round(m * TH_GOLD))
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a)
+  while (gcd(st, m) !== 1) st++
+  return st
+}
+function tierPlan(n) {
+  const nb = Math.max(1, Math.round(n * CLS_BRIGHT))
+  const nm = Math.max(1, Math.round(n * CLS_MID))
+  const cls = new Int8Array(n)
+  const slot = new Int16Array(n)
+  const bright = new Set()
+  for (let k = 0; k < nb; k++) bright.add(Math.min(n - 1, Math.floor(((k + 0.5) * n) / nb)))
+  let bi = 0
+  for (const i of [...bright].sort((a, b) => a - b)) {
+    cls[i] = 2
+    slot[i] = bi++
+  }
+  let mi = 0
+  for (let k = 0; k < nm; k++) {
+    let i = Math.min(n - 1, Math.floor(((k + 0.5) * n) / nm))
+    while (cls[i] !== 0 && i < n - 1) i++
+    if (cls[i] !== 0) continue
+    cls[i] = 1
+    slot[i] = mi++
+  }
+  // 角度槽位过一道互质步长排列：解耦半径与角度（组件里同款，见 TH_TIER_JIT 下方实测）
+  const qb = coprimeStep(nb)
+  const qm = coprimeStep(Math.max(1, mi))
+  const ang = new Int16Array(n)
+  for (let i = 0; i < n; i++) {
+    if (cls[i] === 2) ang[i] = (slot[i] * qb) % nb
+    else if (cls[i] === 1) ang[i] = (slot[i] * qm) % Math.max(1, mi)
+  }
+  return { cls, slot, ang, nb, nm: mi }
+}
+function mkStar(i, n, plan) {
   // 与 StarTrails.vue 的 mkStar 同款三档星等（72/22/6）：色温跟星等走，亮星加粗加弧长
-  // 档位同样走 1/φ² 低差异序列（源码里也是这个式子），亮星才会绕天极等距分布
-  const cr = (i * 0.3819660112501051) % 1
-  const cls = cr < 0.72 ? 0 : cr < 0.94 ? 1 : 2
+  const cls = plan.cls[i]
   const z =
     cls === 0
-      ? 0.1 + Math.pow(rnd(), 1.8) * 0.22
+      ? 0.07 + Math.pow(rnd(), 1.8) * 0.15
       : cls === 1
-        ? 0.34 + rnd() * 0.3
-        : 0.75 + rnd() * 0.25
+        ? 0.42 + rnd() * 0.26
+        : 0.78 + rnd() * 0.22
   const rr = rnd()
+  const jitter = rnd()
+  // 槽内抖动走低差异序列（与组件同款）：纯随机会让少量亮星的相邻间隙摆动到 0.4×–1.6×，
+  // 等分槽位白铺；黄金角小数部分让间隙稳定在 1±0.19 槽宽。
+  const q = plan.ang[i]
+  const tj = ((q * TH_GOLD) % 1) - 0.5
+  const th =
+    cls === 0
+      ? ((((i * TH_GOLD + (jitter - 0.5) * TH_JIT) % 1) + 1) % 1) * TAU
+      : (((q + 0.5 + tj * TH_TIER_JIT) / (cls === 2 ? plan.nb : Math.max(1, plan.nm))) % 1) * TAU
   return {
     rn: pickRn(i, n),
-    th: ((((i * TH_GOLD + (rnd() - 0.5) * TH_JIT) % 1) + 1) % 1) * TAU,
+    th,
     z,
-    tier: cls === 0 ? 0 : cls === 1 ? 1 : rr < 0.3 ? 2 : 1,
-    lw: (LW_BASE + z * LW_SPAN) * (cls === 2 ? 1.35 : 1),
+    tier: cls === 0 ? 0 : cls === 1 ? 1 : rr < WARM_P ? 2 : 1,
+    lw: (LW_BASE + z * LW_SPAN) * (cls === 2 ? 1.55 : cls === 1 ? 1.2 : 0.9),
     head: cls === 2 || (cls === 1 && z > 0.55),
     bleed: cls === 2,
-    dk: cls === 2 ? 1.5 : cls === 1 ? 1 : 0.8,
-    ta: 0.08 + 0.13 * z,
+    dk: cls === 2 ? 1.75 : cls === 1 ? 1.25 : 0.5,
+    ta: 0.04 + 0.08 * Math.min(1, z), // 与组件同款（旧值 0.08+0.13z 是已退役的分叉）
     tw: 0.3 + rnd() * 1.3,
     ph: rnd() * TAU,
-    ca: 0.1 + rnd() * 0.12,
+    ca: 0.05 + rnd() * 0.07, // 与组件同款（旧值 0.1+0.12 是已退役的分叉）
     cw: 0.05 + rnd() * 0.11,
     cp: rnd() * TAU,
-    shear: (SHEAR_MIN + Math.pow(rnd(), SHEAR_POW) * SHEAR_SPAN) * (cls === 2 ? 1.5 : cls === 1 ? 1.15 : 1),
+    // 统一曝光角长（刚体周日视运动）+ 相位偏移，与组件同款
+    shear: SHEAR_MIN * (1 + (rnd() - 0.5) * 2 * SHEAR_JIT),
+    lag: rnd(),
   }
 }
 // 星数按主题定：seedStars() 里深色乘 N_DEEP_K，两张配图各按自己那一档出图
@@ -147,7 +205,8 @@ const stars = []
 function seedStars(theme) {
   const n = nOf(theme)
   stars.length = 0
-  for (let i = 0; i < n; i++) stars.push(mkStar(i, n))
+  const plan = tierPlan(n)
+  for (let i = 0; i < n; i++) stars.push(mkStar(i, n, plan))
   for (const s of stars) s.r = s.rn * maxR
   return n
 }
@@ -162,9 +221,10 @@ const CUTOFF = 0.006 // 尾迹暗到就停：0.006 的不透明度约等于 1.5/
 function render(theme) {
   const boost = theme === 'paper'
   const V = boost ? PAPER : DEEP
+  // 与组件 readColors 同款（五次配色：三档在色相与明度上同时拉开）
   const trail = boost
-    ? [mix(V['text-0'], V.cold, 0.42), mix(V['text-0'], V.cold, 0.12), V.hot]
-    : [mix(V.white, V.cold, 0.55), V.white, mix(V.white, V.hot, 0.6)]
+    ? [mix(V['text-0'], V.cold, 0.34), mix(V['text-0'], V.cold, 0.5), V.hot]
+    : [mix(V.white, V.cold, 0.6), V.white, mix(V.white, V.hot, 0.72)]
   const dep = DEP * (boost ? 1.5 : 1) // 浅色主题在 accPass 里多沉积五成
 
   const A = new Float32Array(RW * RH) // 底片累积不透明度
@@ -199,7 +259,13 @@ function render(theme) {
   }
 
   for (const s of stars) {
-    const L = (s.shear * PLATE_LEN) / dth // 尾迹框宽（帧）：弧长 = shear·PLATE_LEN
+    // 弧长兜一个像素下限，与 accPass 同款（内圈 r 小时 5° 不足几 px，会读成碎点）。
+    // 这里的半径是**超采样后**的设备像素，所以先折回 CSS px 再比下限。
+    const arcRad = Math.max(
+      s.shear * PLATE_LEN * (1 - s.lag * ARC_LAG),
+      s.r / DPR > 1 ? ARC_MIN_PX / (s.r / DPR) : 0
+    )
+    const L = arcRad / dth // 尾迹框宽（帧）：弧长 = max(shear·PLATE_LEN, 下限)
     const Lh = (s.bleed ? 0.3 : 0.22) * L // 头部亮段的短窗（accPass 里同比例）
     const iMax = PLATE_STEPS + L // 第 0 帧那笔的尾端也在这条线上
     // α_j：j 帧前那次沉积的 alpha（含闪烁）；它如今的浓度是 α_j·decay^j。
@@ -223,7 +289,7 @@ function render(theme) {
     }
     const Wm = (i, len) => interp(i) - (i - len - 1 < 0 ? 0 : interp(i - len - 1))
 
-    const hw = s.lw / 2 // 笔带半宽 CSS px（canvas 的 lineWidth 是全长，不摊薄 alpha）
+    const hw = Math.max(LW_MIN, s.lw) / 2 // 与组件同款最小线宽：亚像素笔画是淡线的物理来源
     const hwH = (s.lw * 0.72) / 2 // 头部亮段按源码一样细一些
     const n = Math.max(6, Math.min(8000, Math.ceil(iMax * dth * s.r)))
     for (let k = 0; k <= n; k++) {
@@ -233,8 +299,8 @@ function render(theme) {
       const y = pole.y + Math.sin(ang) * s.r
       const a1 = Wm(i, L)
       if (s.bleed) {
-        const a0 = a1 * 0.16
-        if (a0 > CUTOFF) stroke(x, y, trail[s.tier], Math.min(0.95, a0), hw * 2.6)
+        const a0 = a1 * 0.11
+        if (a0 > CUTOFF) stroke(x, y, trail[s.tier], Math.min(0.95, a0), hw * 1.9)
       }
       if (a1 > CUTOFF) stroke(x, y, trail[s.tier], Math.min(0.95, a1), hw)
       if (s.head) {

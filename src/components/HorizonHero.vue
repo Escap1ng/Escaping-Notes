@@ -17,6 +17,9 @@ const stars = ref(false)
 // 地景图默认透明，等 whenHeroReady() 后再淡入；替身（.hero-lqip）垫在下面，
 // 于是照片是从一层模糊山影里"对焦"出来的。闸门带 error/20s 超时兜底，不会永远藏着。
 const plateReady = ref(false)
+// 刊头的入场（快门开启）：与地景同一道闸门放行，减弱动效下不做位移。
+const heroIn = ref(false)
+const still = ref(false)
 
 const textEl = ref(null)
 
@@ -27,7 +30,9 @@ function onScroll() {
   raf = requestAnimationFrame(() => {
     raf = 0
     const y = scrollY
-    if (textEl.value) {
+    // 照片没就位之前不写行内样式：那会与刊头入场动画争同一个 transform/opacity，
+    // 行内样式赢，入场就白写了。此时页面还在首屏顶部，视差本来也无位移可言。
+    if (textEl.value && plateReady.value) {
       textEl.value.style.transform = `translateY(${(y * 0.25).toFixed(1)}px)`
       textEl.value.style.opacity = Math.max(0, 1 - y / 520).toFixed(3)
     }
@@ -41,11 +46,13 @@ function scrollDown() {
 }
 
 onMounted(() => {
+  still.value = matchMedia('(prefers-reduced-motion: reduce)').matches
   addEventListener('scroll', onScroll, { passive: true })
   // 图先到、星轨后画：等首屏照片 load（whenHeroReady 自带 error / 超时兜底），下一帧再挂。
   // 隐藏文档里 rAF 不推进（内置 / 无头 surface 就是这一类），这时直接挂，别把星轨永远扣在门外。
   whenHeroReady().then(() => {
     plateReady.value = true
+    heroIn.value = true // 快门开启：地景对焦的同时刊头落位
     if (document.visibilityState === 'hidden') stars.value = true
     else requestAnimationFrame(() => (stars.value = true))
   })
@@ -70,7 +77,7 @@ onUnmounted(() => {
          首屏不再有点击入口，文章归折线以下的精选卡；挂载本身等首屏照片就位（见 script） -->
     <StarTrails v-if="stars" />
 
-    <div ref="textEl" class="hero-text">
+    <div ref="textEl" class="hero-text" :class="{ in: heroIn, still }">
       <h1 class="title">{{ N.heroTitle }}</h1>
     </div>
 
@@ -233,6 +240,40 @@ onUnmounted(() => {
 
 .hero-text > * {
   pointer-events: auto;
+}
+
+/* 快门开启：刊头随首屏照片一起显影——从轻微散焦、略大、偏下的位置落定。
+   读作"这一夜开始曝光"，不是控件弹入，所以时长比指针反馈长一档、曲线慢起慢收。
+   只作用在 .title 上（不动 .hero-text 自己）：那一层的 transform/opacity 归首屏视差写行内样式，
+   两者分层才不会互相盖掉。照片未就位时不加类，于是刷新在页面中段也不会先闪一下刊头。
+   减弱动效：.still 直接给终态，不做位移与散焦。 */
+.hero-text .title {
+  opacity: 0;
+}
+
+.hero-text.in .title {
+  animation: hero-develop 1.15s cubic-bezier(0.16, 0.72, 0.18, 1) both;
+}
+
+.hero-text.in.still .title {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes hero-develop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(1.03);
+    filter: blur(7px);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
 }
 
 /* 站名刊头：唯一主角。高对比 Didone 子集，字号随视口铺满约 85% 宽；

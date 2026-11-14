@@ -47,6 +47,24 @@ function warm(e) {
   }
 }
 
+/* 换页：把离开方钉在它原来的视野上。
+   路由的 scrollBehavior 是瞬时回顶（§6.3），而离开方还要在场上淡出 0.38–0.45s。两件事叠起来
+   有个可见的缺陷：从首页折线以下点导航时，scrollY 归零让首屏重新进视野——地景照片与刊头
+   在淡出的那半秒里"闪回"一次。这里在 before-leave 记下当前 scrollY，把离开方整页上移同样的
+   距离（它已是 position:absolute，移动不影响进入方），于是旧页保持用户离开那一刻的画面淡出。
+   进入方从顶部开始，正是它该有的落点。离开结束即复位，不留残留。
+   位移走 `translate` 而不是 `transform`：fall-out 的关键帧自己在动 transform(scale)，
+   写进 transform 会被动画整条盖掉（首页那条只动 opacity 才不受影响）。两者是可叠加的独立
+   属性——docs/design.md §9 第 19 条留下的正是这条教训。不支持 translate 的浏览器忽略它，
+   回到改动前的行为，不会画错。 */
+function onLeaveStart(el) {
+  const y = scrollY
+  if (y > 0 && el?.style) el.style.translate = `0 ${-y}px`
+}
+function onLeaveDone(el) {
+  if (el?.style) el.style.translate = ''
+}
+
 // 路由切换后向读屏播报新页面（SPA 不会自行触发）
 const announced = ref('')
 watch(
@@ -133,7 +151,7 @@ onUnmounted(() => {
     <RouterView v-slot="{ Component, route }">
       <!-- 不用 out-in：Vue 3.5 下离开方在 leave 期间重渲染（如 RouterLink active 翻转）
            会丢失挂起的 enter；并行模式 + leave 绝对定位叠层规避 -->
-      <Transition name="fall">
+      <Transition name="fall" @before-leave="onLeaveStart" @after-leave="onLeaveDone">
         <component :is="Component" :key="route.path" />
       </Transition>
     </RouterView>
