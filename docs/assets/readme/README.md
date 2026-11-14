@@ -1,12 +1,14 @@
 # README 配图
 
-六张文件，两类来源：两张 PNG 由脚本复算，两张手写剖面图各有一深一浅两版。两张剖面图在 README 里用
+八张文件，两类来源：四张 PNG 由脚本复算（两张底片 + 两张首图），两张手写剖面图各有一深一浅两版。首图与剖面图在 README 里用
 GitHub 的 `#gh-light-mode-only` / `#gh-dark-mode-only` 片段按阅读者的界面主题切换（本地预览会把两版都画出来）。
 **都不是一张照片**——它们要么是从源码复算出来的，要么是从 CSS 里抄出来的，
 所以改了代码必须回来重跑，否则图就开始说谎。
 
 | 文件 | 怎么来的 | 改动后要不要重跑 |
 | --- | --- | --- |
+| `hero-deep-space.png` | `ART_HERO=1 npm run art:build`，同一套常数的横幅取景（1568×560，天极居中） | 要 |
+| `hero-paper.png` | 同上，浅色主题 | 要 |
 | `plate-deep-space.png` | `npm run art:build` 按 `StarTrails.vue` 的常数离线复算稳态底片 | 要 |
 | `plate-paper.png` | 同上，浅色主题（墨压干版，`source-over`） | 要 |
 | `plate-layer.svg` · `plate-layer-light.svg` | 手写深 / 浅两版；数字取自 `src/App.vue`（`.sub-plate` 的 52% → 100% 压暗渐变、单张常驻、四周外撑 3 倍模糊半径）与 `site.css` 的 `--plate-*` / `--ink-0`，对比度两档实测取自 `App.vue` 注释与 `check_contrast` 输出 | 改底片层几何/节奏/实测值时手改，两版一起 |
@@ -23,15 +25,20 @@ GitHub 的 `#gh-light-mode-only` / `#gh-dark-mode-only` 片段按阅读者的界
 那张稳态底片，也就是 `prefers-reduced-motion` 用户实际看到的同一张。
 
 ```bash
-npm run art:build                       # 默认 1280×760、2× 超采样
+npm run art:build                       # 底片双图，默认 1280×760、2× 超采样
+ART_HERO=1 npm run art:build            # 首图双图，默认 1568×560、天极居中
 ART_W=1600 ART_H=950 npm run art:build  # 换尺寸
 ART_DEV_DEEP=1 ART_DEV_PAPER=1 npm run art:build  # 关掉冲印增益，看底片本来的浓度
 ```
 
+首图与底片共用全部星群与尾迹常数，只有取景不同：横幅把天极摆在正中（沿用 `sky.js` 的分数会把星环推出画外），
+外环出框是裁切的结果，不是模型变了。改星轨参数后两种取景都要重跑。
+
 **必须知道的一处加工**：底片按星等幂分布压向暗端，原样出图在 README 的缩略尺寸下几乎看不见，
-所以出图时乘了一档显示增益（当前 深色 ×2.8 / 浅色 ×1.6，见脚本末尾的 `冲印增益=` 日志）。
-**站点实际观感比图更暗**，README 的图注里也这么写着。要换倍数就改 `ART_DEV_DEEP` / `ART_DEV_PAPER`
-并重跑，然后同步图注。
+所以出图时乘了一档显示增益（当前 深色 ×2.0 / 浅色 ×1.42，见脚本末尾的 `冲印增益=` 日志）。
+这对增益**与组件共用同一来源**（`StarTrails.vue` 的 `DEV_DEEP` / `DEV_PAPER`，脚本以 `1 + num(...)` 读入），
+所以图上的浓淡就是页面上的浓淡，README 图注也这么写。要换浓度只改组件并重跑；
+`ART_DEV_DEEP` / `ART_DEV_PAPER` 仍可临时覆盖出图，覆盖后记得同步图注。
 
 **深色那张还有一道锁色相的高光压缩**：加色合成的色相由三通道比例决定，线性增益的亮部逐通道截顶
 会把冷蓝 / 朱砂一起漂成奶白；所以合成末段按整像素等比收进上限（三通道乘同一系数），色相锁住、
