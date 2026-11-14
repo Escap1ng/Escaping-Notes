@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360" role="img" aria-label="The ring rework, schematic: before, magnitude was the complement of the angle sequence so bright stars clustered in one 45-degree sector and radius tracked angle into a spiral; after, per-count quotas and evenly spread angles give concentric rings">
+  <defs>
+    <style>
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; fill: #0e141d; }
+      .t { font-size: 12.5px; }
+      .s { font-size: 11px; fill: #55606f; }
+      .h { font-size: 14px; fill: #1d4ed8; }
+      .guide { stroke: #0e141d; stroke-opacity: .10; fill: none; }
+      .bright { fill: #9a3412; }
+      .mid { fill: #1d4ed8; fill-opacity: .5; }
+    </style>
+  </defs>
+
+  <rect width="920" height="360" fill="#e7ecf3"/>
+  <text class="h" x="60" y="30">the ring rework — bright-star positions, before / after (schematic)</text>
+  <text class="s" x="60" y="48">measurements from docs/design.md §3.1 · dots are bright-tier stars, guides are concentric radii</text>
+
+  <!-- before -->
+  <text class="t" x="120" y="76">before</text>
+  <circle class="guide" cx="230" cy="190" r="36"/>
+  <circle class="guide" cx="230" cy="190" r="66"/>
+  <circle class="guide" cx="230" cy="190" r="96"/>
+  <circle class="guide" cx="230" cy="190" r="114"/>
+  <path d="M230 190 L344 190 A114 114 0 0 1 313 268 Z" fill="#9a3412" fill-opacity=".07" stroke="#9a3412" stroke-opacity=".35" stroke-dasharray="4 4"/>
+  <g class="bright">
+    <circle cx="244.2" cy="192.5" r="3.4"/><circle cx="252.8" cy="195.3" r="3.4"/>
+    <circle cx="261.2" cy="198.9" r="3.4"/><circle cx="269.1" cy="203.5" r="3.4"/>
+    <circle cx="276.7" cy="208.9" r="3.4"/><circle cx="283.8" cy="215.1" r="3.4"/>
+    <circle cx="290.4" cy="222.1" r="3.4"/><circle cx="296.4" cy="229.9" r="3.4"/>
+    <circle cx="301.6" cy="238.3" r="3.4"/><circle cx="306.2" cy="247.4" r="3.4"/>
+    <circle cx="309.9" cy="257.1" r="3.4"/><circle cx="312.9" cy="267.3" r="3.4"/>
+  </g>
+  <text class="s" x="120" y="322">tier = (i·0.381966)%1 = complement of the angle sequence:</text>
+  <text class="s" x="120" y="337">bright R=0.996 in one 45° sector · radius tracks angle (0.998) = a spiral</text>
+
+  <!-- after -->
+  <text class="t" x="580" y="76">after</text>
+  <circle class="guide" cx="690" cy="190" r="36"/>
+  <circle class="guide" cx="690" cy="190" r="66"/>
+  <circle class="guide" cx="690" cy="190" r="96"/>
+  <circle class="guide" cx="690" cy="190" r="114"/>
+  <g class="bright">
+    <circle cx="786" cy="190" r="3.4"/><circle cx="747.2" cy="223" r="3.4"/>
+    <circle cx="747" cy="288.9" r="3.4"/><circle cx="690" cy="226" r="3.4"/>
+    <circle cx="642" cy="273.1" r="3.4"/><circle cx="632.8" cy="223" r="3.4"/>
+    <circle cx="576" cy="190" r="3.4"/><circle cx="658.8" cy="172" r="3.4"/>
+    <circle cx="642" cy="106.9" r="3.4"/><circle cx="690" cy="124" r="3.4"/>
+    <circle cx="747" cy="91.1" r="3.4"/><circle cx="721.2" cy="172" r="3.4"/>
+  </g>
+  <text class="s" x="580" y="322">per-count quota + evenly spread start angles + coprime step:</text>
+  <text class="s" x="580" y="337">bright spread round the circle · radius/angle corr 0.205 · one shared 64° exposure</text>
+</svg>

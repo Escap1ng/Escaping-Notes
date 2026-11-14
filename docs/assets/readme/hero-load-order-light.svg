@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360" role="img" aria-label="First-paint order: the landscape photo is preloaded by the inline script and opens the gate on load; trail mount, section data and the CJK font slice queue behind it, and the phone drawer plate waits for the first scroll">
+  <defs>
+    <linearGradient id="photo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d4ed8" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#1d4ed8" stop-opacity=".8"/>
+    </linearGradient>
+    <style>
+      text { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; fill: #0e141d; }
+      .t { font-size: 12.5px; }
+      .s { font-size: 11px; fill: #55606f; }
+      .h { font-size: 14px; fill: #1d4ed8; }
+      .lane { fill: #55606f; font-size: 11px; }
+    </style>
+  </defs>
+
+  <rect width="920" height="360" fill="#e7ecf3"/>
+  <text class="h" x="60" y="30">first paint — the photo goes first, everything else queues</text>
+  <text class="s" x="60" y="48">index.html inline preload · src/lib/hero.js whenHeroReady() · lane lengths are order, not milliseconds</text>
+
+  <!-- 闸门 -->
+  <path d="M430 66 V296" stroke="#9a3412" stroke-opacity=".55" stroke-dasharray="4 4"/>
+  <text class="s" x="438" y="78" fill="#9a3412">gate opens: photo load</text>
+  <text class="s" x="438" y="92" fill="#9a3412">error releases at once · 20s timeout backstop</text>
+
+  <!-- 照片 -->
+  <text class="lane" x="60" y="112">photo · LCP</text>
+  <rect x="180" y="100" width="250" height="22" fill="url(#photo)"/>
+  <text class="s" x="188" y="115">preload, races the stylesheet</text>
+  <rect x="430" y="100" width="96" height="22" fill="#1d4ed8" fill-opacity=".22"/>
+  <text class="s" x="438" y="115">fade 0.24s</text>
+  <text class="s" x="536" y="115">36px / ~0.5KB blurred stand-in underneath · ≤720px takes the 1800px resample (1.45MB → 0.09MB)</text>
+
+  <!-- 星轨 -->
+  <text class="lane" x="60" y="152">trails</text>
+  <rect x="180" y="140" width="250" height="22" fill="none" stroke="#55606f" stroke-opacity=".5" stroke-dasharray="3 3"/>
+  <text class="s" x="188" y="155">chunk prefetched while photo downloads</text>
+  <rect x="430" y="140" width="150" height="22" fill="#0e141d" fill-opacity=".14"/>
+  <text class="s" x="438" y="155">mount + 0.9s fade-in</text>
+  <text class="s" x="590" y="155">loader hits the module cache</text>
+
+  <!-- 章节数据 -->
+  <text class="lane" x="60" y="192">section data</text>
+  <rect x="430" y="180" width="120" height="22" fill="#0e141d" fill-opacity=".14"/>
+  <text class="s" x="438" y="195">loadPosts()</text>
+  <text class="s" x="560" y="195">collections / projects are synchronous, render as usual</text>
+
+  <!-- 字体 -->
+  <text class="lane" x="60" y="232">fonts (phone)</text>
+  <rect x="430" y="220" width="120" height="22" fill="#0e141d" fill-opacity=".14"/>
+  <text class="s" x="438" y="235">CJK slice ~147KB</text>
+  <text class="s" x="560" y="235">titles fall back to the system serif until then</text>
+
+  <!-- 抽屉底片 -->
+  <text class="lane" x="60" y="272">drawer plate</text>
+  <rect x="640" y="260" width="180" height="22" fill="#9a3412" fill-opacity=".12" stroke="#9a3412" stroke-opacity=".4"/>
+  <text class="s" x="648" y="275" fill="#9a3412">waits for the first scroll</text>
+  <text class="s" x="180" y="275">phone home, 1280px resample · no scroll, no download</text>
+
+  <text class="s" x="60" y="322">a reload already past the hero, or leaving home for a secondary page, releases the drawer plate at once —</text>
+  <text class="s" x="60" y="337">there it is the reading background. Returning home holds frame-by-frame accumulation for 240ms (RETURN_HOLD).</text>
+</svg>
