@@ -342,6 +342,7 @@ function clearFilters() {
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: -0.01em;
+  text-wrap: balance; /* 折行均衡（design.md §4.7），下同各视图卡片标题 */
   transition: color var(--dur-fast), transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 

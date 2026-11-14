@@ -516,6 +516,8 @@ html:root main.en-sub {
   font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
   line-height: 1.2;
+  /* 折行均衡（§4.7）：两行标题不再末行孤悬一两个字 */
+  text-wrap: balance;
   margin: var(--space-1) 0 var(--space-2);
 }
 
@@ -524,6 +526,8 @@ html:root main.en-sub {
   color: var(--text-1);
   font-size: var(--fs-base);
   line-height: var(--lh-relaxed);
+  /* 断行美化（§4.7）：只调末行孤字，不动其余行 */
+  text-wrap: pretty;
   margin: 0 0 var(--space-3);
 }
 
@@ -842,9 +846,10 @@ html:root .nf .lede {
     background var(--dur-fast);
 }
 
+/* 占位文字不再额外减淡：--text-1 已是对页底 ≥4.5:1 的次文字色（check_contrast 的判据），
+   再叠 0.7 透明度会把浅色主题下的对比度压到 3:1 以下。占位与真实输入靠颜色区分即可。 */
 .en-field::placeholder {
   color: var(--text-1);
-  opacity: 0.7;
 }
 
 .en-field:hover {
@@ -951,6 +956,11 @@ textarea.en-field {
   transform: scaleY(1);
 }
 
+/* 键盘焦点与指针同一套反馈（§4.6）：光带随 focus-visible 生长，复用同一条过渡 */
+.en-lens:focus-visible > .bar {
+  transform: scaleY(1);
+}
+
 /* 按钮高光扫过 */
 .en-btn {
   position: relative;
@@ -976,6 +986,12 @@ textarea.en-field {
 }
 
 .en-btn:hover::before {
+  opacity: 1;
+  animation: en-sheen 0.65s cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+
+/* 键盘焦点与指针同一套反馈（§4.6）：复用 hover 的动画与时长，不新增裸秒数 */
+.en-btn:focus-visible::before {
   opacity: 1;
   animation: en-sheen 0.65s cubic-bezier(0.3, 0.6, 0.3, 1);
 }
@@ -1040,9 +1056,12 @@ textarea.en-field {
   transform: rotate(90deg);
 }
 
-/* 宿主页 hover 即缓绽：只挂在可交互元素上，避免任意容器 hover 误触发 */
+/* 宿主页 hover 即缓绽：只挂在可交互元素上，避免任意容器 hover 误触发。
+   键盘焦点同一套反馈（§4.6）：focus-visible 与 hover 并列，复用同一条过渡 */
 a:hover > .en-spike,
+a:focus-visible > .en-spike,
 button:hover > .en-spike,
+button:focus-visible > .en-spike,
 .en-spike.on {
   opacity: 1;
   transform: scale(1) rotate(45deg);
@@ -1300,6 +1319,14 @@ html:root .en-prose {
   font-weight: var(--fw-normal);
   line-height: var(--lh-relaxed);
   color: var(--text-0);
+  /* 中西文混排自动间距（§4.7）：汉字与西文/数字之间由浏览器补 1/4 em，
+     不靠内容里手打空格。Chrome 140+ / Safari 18.4+；旧浏览器忽略，保持现状 */
+  text-autospace: normal;
+  /* 行首/行尾标点悬挂（§4.7）：引号、句号挂到栏外，汉字网格对齐；
+     目前仅 Safari 实现，其余浏览器忽略 */
+  hanging-punctuation: first last;
+  /* 长 URL / 代码串兜底折行（§4.7）：只在无断行机会时生效，不改中文正常断行 */
+  overflow-wrap: break-word;
 }
 
 html:root .en-prose h2,
@@ -1310,6 +1337,8 @@ html:root .en-prose h6 {
   font-family: var(--font-display);
   line-height: 1.35;
   letter-spacing: -0.01em;
+  /* 折行均衡（§4.7）：多行小标题不再末行孤悬一两个字 */
+  text-wrap: balance;
   /* 目录与文中锚点跳进来的落点：顶栏是 fixed（z-60），不留出 --page-top 会被压在栏下 */
   scroll-margin-top: calc(var(--page-top) - 24px);
 }
@@ -1358,6 +1387,8 @@ html:root .en-prose h6 {
 
 html:root .en-prose p {
   margin: var(--space-2) 0;
+  /* 断行美化（§4.7）：只调末行孤字与短尾，不动其余行 */
+  text-wrap: pretty;
 }
 
 html:root .en-prose a {
@@ -1438,7 +1469,9 @@ html:root .en-prose blockquote {
   padding: var(--space-1) var(--space-2);
   border-left: 2px solid var(--cold);
   color: var(--text-1);
-  font-style: italic;
+  /* 本站引用均为中文（§4.7）：宋体栈没有真斜体，italic 会被浏览器合成倾斜，
+     汉字笔画发糊。引用感交给冷色竖线与次文字色，字身保持直立 */
+  font-style: normal;
 }
 
 html:root .en-prose img {
@@ -1527,7 +1560,9 @@ html:root .en-prose th {
   /* 衍射芒的绽开靠 transform：减弱动效下两态都钉成 none，只留淡入淡出 */
   .en-spike,
   a:hover > .en-spike,
+  a:focus-visible > .en-spike,
   button:hover > .en-spike,
+  button:focus-visible > .en-spike,
   .en-spike.on {
     transform: none;
   }
