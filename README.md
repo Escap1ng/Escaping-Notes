@@ -20,12 +20,12 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="深色主题的长曝光底片：数百条同心星轨弧绕一枚偏心天极累积" title="深色"></td>
+    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="深色主题的长曝光底片：数十道疏朗的同心星轨弧绕天极累积，大片夜空留白" title="深色"></td>
     <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="浅色主题的同一张底片：板岩/石墨轨迹压在干版上，朱砂只点最亮的几根" title="浅色"></td>
   </tr>
 </table>
 
-左 深色 / 右 浅色。两张都不是截图，是按站点同一套常数离线复算的底片（`npm run art:build`），只画星轨层——复算的正是 `prefers-reduced-motion` 访客看到的那张稳态底片。出图提了 ×2.8 / ×1.6 一档冲印增益，站点实际观感比这两张暗。深色那张在增益之后还做了一步锁色相的高光压缩：三通道按同一比例收进上限，不让冷蓝与朱砂被逐通道截顶漂成奶白。
+左 深色 / 右 浅色。两张都不是截图，是按站点同一套常数离线复算的底片（`npm run art:build`），只画星轨层——复算的正是 `prefers-reduced-motion` 访客看到的那张稳态底片。出图与站点现在共用同一对显示增益（×2.0 / ×1.42，`StarTrails.vue` 的 `DEV_DEEP` / `DEV_PAPER`），所以这两张的浓淡就是页面上的浓淡——原先脚本写死 ×2.8 / ×1.6、页面另有一套，两边追齐过两轮，已收成单一来源。深色那张在增益之后还做了一步锁色相的高光压缩：三通道按同一比例收进上限，不让冷蓝与朱砂被逐通道截顶漂成奶白。
 
 一个把博客做成相机长曝光的个人站点：首页是一台开着快门的相机，文章按时间排，合集按主题分。纯静态，构建期定稿，push 即发布。
 

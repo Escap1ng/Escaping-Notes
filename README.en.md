@@ -20,12 +20,12 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="Dark theme plate: hundreds of concentric star-trail arcs accumulating around an offset celestial pole" title="Dark"></td>
+    <td width="50%"><img src="docs/assets/readme/plate-deep-space.png" alt="Dark theme plate: a few dozen sparse concentric star-trail arcs around the celestial pole, most of the sky left empty" title="Dark"></td>
     <td width="50%"><img src="docs/assets/readme/plate-paper.png" alt="The same plate on the light theme: slate/graphite trails laid over a dry plate, vermilion only on the brightest few" title="Light"></td>
   </tr>
 </table>
 
-Left dark / right light. Neither is a screenshot: both are plates recomputed offline from the site's own constants (`npm run art:build`), drawing the trail layer only — recomputing the very steady-state plate a `prefers-reduced-motion` visitor sees. They were lifted by a ×2.8 / ×1.6 developing gain, so the live site is darker than they look. The dark plate then gets a hue-locking highlight compression: all three channels are scaled by a single ratio into range, so the cold blue and vermilion are not clipped channel-by-channel into cream.
+Left dark / right light. Neither is a screenshot: both are plates recomputed offline from the site's own constants (`npm run art:build`), drawing the trail layer only — recomputing the very steady-state plate a `prefers-reduced-motion` visitor sees. The art script and the live site now share one pair of developing gains (×2.0 / ×1.42, `DEV_DEEP` / `DEV_PAPER` in `StarTrails.vue`), so the density here is the density on the page — the script used to hard-code ×2.8 / ×1.6 while the page had its own pair, and the two were chased into alignment twice before being collapsed into a single source. The dark plate then gets a hue-locking highlight compression: all three channels are scaled by a single ratio into range, so the cold blue and vermilion are not clipped channel-by-channel into cream.
 
 A personal blog built as a long exposure of the night sky: the home screen is a camera left open, posts run by date, collections group by theme. Fully static, fixed at build time, publish on push.
 
