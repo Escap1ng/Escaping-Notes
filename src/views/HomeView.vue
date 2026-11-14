@@ -627,6 +627,7 @@ onUnmounted(() => {
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   color: var(--text-0);
+  text-wrap: balance; /* 折行均衡（design.md §4.7） */
   transition:
     color var(--dur-fast),
     transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);

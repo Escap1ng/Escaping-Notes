@@ -47,6 +47,7 @@ import { N, navLabel } from '../data/narrative.js'
   font-weight: var(--fw-bold);
   letter-spacing: -0.01em;
   line-height: var(--lh-tight);
+  text-wrap: balance; /* 折行均衡（design.md §4.7） */
   transition:
     color var(--dur-fast),
     transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
