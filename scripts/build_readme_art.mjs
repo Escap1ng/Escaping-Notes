@@ -94,8 +94,11 @@ for (const [n, v] of [['深色', DEEP], ['浅色', PAPER]]) {
 }
 
 /* ---------------- 取景：视口 CSS 像素，天极按 sky.js 的分数 ---------------- */
-const W = Number(process.env.ART_W || 1280)
-const H = Number(process.env.ART_H || 760)
+// 首图（ART_HERO=1）另取一景：宽幅、天极居中，其余常数一字不改。
+// 它复算的仍是同一台相机的稳态底片，只是把取景框换成 README 顶部那条横幅。
+const HERO = process.env.ART_HERO === '1'
+const W = Number(process.env.ART_W || (HERO ? 1568 : 1280))
+const H = Number(process.env.ART_H || (HERO ? 560 : 760))
 // 底片在浏览器里是按 DPR 开的（sky.ensurePlate：dpr ≤ 2 且受像素预算封顶），
 // 线宽 0.6~1.8 **CSS px** 在 2× 屏上占 1.2~3.6 个真实像素。用 1× 复算会把尾迹
 // 少算一半厚度——观感差主要就出在这里。所以按 DPR 超采样，再盒式降采样回视口尺寸。
@@ -107,7 +110,11 @@ const DEV_DEEP = Number(process.env.ART_DEV_DEEP || 1 + num(ST, 'DEV_DEEP'))
 const DEV_PAPER = Number(process.env.ART_DEV_PAPER || 1 + num(ST, 'DEV_PAPER'))
 const RW = W * DPR
 const RH = H * DPR
-const pole = { x: W * POLE_FX * DPR, y: H * POLE_FY * DPR }
+// 首图把天极摆在横幅正中：宽幅下沿用 sky.js 的分数会把星环推出画外，
+// 只剩一角弧线。居中之后同心环完整落在取景框里，这是横幅该给的第一眼。
+const pole = HERO
+  ? { x: (W / 2) * DPR, y: (H / 2) * DPR }
+  : { x: W * POLE_FX * DPR, y: H * POLE_FY * DPR }
 const maxR = Math.hypot(Math.max(pole.x, RW - pole.x), Math.max(pole.y, RH - pole.y))
 const TAU = Math.PI * 2
 
@@ -355,16 +362,22 @@ function render(theme) {
 }
 
 mkdirSync(OUT, { recursive: true })
-for (const [name, theme] of [
-  ['plate-deep-space.png', 'deep'],
-  ['plate-paper.png', 'paper'],
-]) {
+for (const [name, theme] of HERO
+  ? [
+      ['hero-deep-space.png', 'deep'],
+      ['hero-paper.png', 'paper'],
+    ]
+  : [
+      ['plate-deep-space.png', 'deep'],
+      ['plate-paper.png', 'paper'],
+    ]) {
   // 每张图按自己的星数重铺星群（深色/浅色差 N_DEEP_K 倍）
   const n = seedStars(theme)
   const png = render(theme)
   writeFileSync(join(OUT, name), png)
   console.log(`art: docs/assets/readme/${name} (${W}×${H}, ${n} 根星, ${(png.length / 1024).toFixed(1)} KB)`)
 }
+console.log(`art: 取景=${HERO ? '首图（天极居中）' : '底片（天极按 sky.js）'}`)
 console.log(
   `art: 复算常数 OMEGA=${OMEGA} DEP=${DEP} HEAD_GAIN=${HEAD_GAIN} 底片=${PLATE_OM}/${PLATE_FADE}/${PLATE_STEPS}/弧×${PLATE_LEN}（衰减尾 ${tailDeg}°）弧长=${SHEAR_MIN}+r^${SHEAR_POW}·${SHEAR_SPAN} 星=深色${nOf('deep')}/浅色${nOf('paper')} 半径取样=槽抖动${SLOT_JIT}/中段偏密${MID_BIAS}/内空${R_MIN} 角度=黄金角${TH_GOLD}±${TH_JIT} 天极=(${POLE_FX},${POLE_FY}) | 显示端 超采样=${DPR}x 冲印增益=深色${DEV_DEEP}/浅色${DEV_PAPER}`
 )
