@@ -17,7 +17,9 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const src = (p) => readFileSync(join(ROOT, p), 'utf8')
+// 归一化换行符：core.autocrlf=true 的 Windows 检出会把 site.css 变成 CRLF，
+// 而下面负向对照的多行造假串写死 \n，不归一化就替换落空、量具自造假阴性。
+const src = (p) => readFileSync(join(ROOT, p), 'utf8').replace(/\r\n/g, '\n')
 
 // 与 tests/plate-blur.test.mjs 同一套最小垫：surface.js 在模块求值时就要 read() 一次
 // localStorage，applyCardSurface 要碰 document.documentElement。
