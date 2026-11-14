@@ -65,6 +65,28 @@ function toggleSearch() {
 function closeDrawer() {
   drawer.value = false
 }
+
+/* 菜单里每条导航的一句说明：复用 N.hints，首页单独补一条。
+   放在这里而不是往 N.nav 里塞字段——那一列同时供顶栏、路由 meta 与构建期静态壳读，
+   加字段会让三处都跟着变，而这句话只有菜单用得到。 */
+function menuHint(to) {
+  if (to === '/') return N.menu.home
+  return N.hints[to.slice(1)] || ''
+}
+
+/* 抽屉里的快捷操作：先收抽屉，等它退场后再开对应的卡。
+   两层浮层同时在场会各自锁一次 body 滚动，后关的那个把 overflow 还成空串时，
+   先关的那个还开着——页面就提前能滚了。等 220ms（抽屉退场 0.28s 的主体段）错开。 */
+let menuTimer = 0
+function fromMenu(which) {
+  closeDrawer()
+  clearTimeout(menuTimer)
+  menuTimer = setTimeout(() => {
+    if (which === 'search') search.value = true
+    else if (which === 'player') player.value = true
+    else if (which === 'settings') settings.value = true
+  }, 220)
+}
 function onDrawerBackdrop(e) {
   // 点空白处即收，点内容区不收
   if (e.target === e.currentTarget) closeDrawer()
@@ -94,6 +116,14 @@ function onHotkey(e) {
     if (!search.value) toggleSearch()
   }
 }
+/* 换页即收抽屉。导航链接自己带 @click="closeDrawer"，但浏览器前进/后退、
+   程序化跳转、以及"点的是当前页链接"这几种情况都不经过那个 click——
+   少这一条的话新页面会盖着一层菜单，读者得再按一次 Esc。 */
+watch(
+  () => route.path,
+  () => closeDrawer()
+)
+
 watch(drawer, async (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
   if (open) {
@@ -125,6 +155,7 @@ onUnmounted(() => {
   removeEventListener('keydown', onKey)
   removeEventListener('keydown', onHotkey)
   onResize.cancel()
+  clearTimeout(menuTimer)
   trap?.()
   document.body.style.overflow = ''
 })
@@ -223,13 +254,21 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 
       <button
         class="burger ico-btn"
+        :class="{ open: drawer }"
         type="button"
         :aria-expanded="drawer"
         aria-controls="en-drawer"
-        :aria-label="drawer ? '关闭菜单' : '打开菜单'"
+        :aria-label="drawer ? N.menu.close : N.menu.open"
+        :title="drawer ? N.menu.close : N.menu.open"
         @click="toggleDrawer"
       >
-        <span class="en-ico" aria-hidden="true">{{ drawer ? '✕' : '≡' }}</span>
+        <!-- 三根线而不是「≡」字形：字形在不同字体里粗细与基线都不一样，且没法做形变。
+             开合时上下两根收拢并旋成叉，中间那根淡出——按钮自己就说清了当前状态。 -->
+        <span class="burger-box" aria-hidden="true">
+          <i class="bar bar-1"></i>
+          <i class="bar bar-2"></i>
+          <i class="bar bar-3"></i>
+        </span>
       </button>
     </div>
 
@@ -258,29 +297,88 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
       >
         <div class="drawer-inner" @click.stop>
           <div class="sheet-head">
-            <span class="sheet-title en-mono">// MENU</span>
-            <button class="sheet-close ico-btn" type="button" aria-label="关闭菜单" @click="closeDrawer">
-              <span class="en-ico" aria-hidden="true">✕</span>
+            <span class="sheet-title en-mono">// {{ N.menu.title }}</span>
+            <button
+              class="sheet-close ico-btn"
+              type="button"
+              :aria-label="N.menu.close"
+              @click="closeDrawer"
+            >
+              <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6" />
+              </svg>
             </button>
           </div>
 
-          <nav class="sheet-nav" aria-label="移动端主导航">
+          <nav class="sheet-nav" :aria-label="N.menu.nav">
             <RouterLink
               v-for="(item, i) in N.nav"
               :key="item.to"
               :to="item.to"
               class="sheet-link"
               :class="{ active: i === activeIdx }"
+              :aria-current="i === activeIdx ? 'page' : undefined"
               :style="{ transitionDelay: `${60 + i * 45}ms` }"
               @click="closeDrawer"
             >
               <span class="sheet-code en-mono" aria-hidden="true">{{ item.code }}</span>
-              <span class="sheet-label">{{ item.label }}</span>
-              <span class="sheet-arrow" aria-hidden="true">→</span>
+              <span class="sheet-txt">
+                <span class="sheet-label">{{ item.label }}</span>
+                <span class="sheet-hint">{{ menuHint(item.to) }}</span>
+              </span>
+              <!-- 当前页那一枚给一个静态记号，不靠颜色单独承担；其余是箭头 -->
+              <span v-if="i === activeIdx" class="sheet-dot" aria-hidden="true"></span>
+              <span v-else class="sheet-arrow" aria-hidden="true">→</span>
             </RouterLink>
           </nav>
 
-          <p class="sheet-foot en-mono">// Escap1ng · 仍在坠入</p>
+          <!-- 快捷操作：窄屏下右上角那四枚图标挤在一行，这里给一次带文字的入口。
+               搜索/播放器/设置点下去先收抽屉再开对应的卡，不叠着两层浮层。 -->
+          <div class="sheet-quick">
+            <p class="quick-lbl en-mono">// {{ N.menu.quick }}</p>
+            <div class="quick-row">
+              <button class="quick-btn" type="button" @click="fromMenu('search')">
+                <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="10.8" cy="10.8" r="6.6" />
+                  <path d="M15.7 15.7 20.4 20.4" />
+                </svg>
+                <span>{{ N.menu.search }}</span>
+              </button>
+              <button class="quick-btn" type="button" @click="toggleTheme">
+                <svg v-if="theme.mode === 'well'" class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 14.2A8.4 8.4 0 1 1 9.8 4 6.8 6.8 0 0 0 20 14.2Z" />
+                </svg>
+                <svg v-else class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5" />
+                </svg>
+                <span>{{ themeLabel }}</span>
+              </button>
+              <button
+                class="quick-btn"
+                type="button"
+                :disabled="!music.available"
+                @click="fromMenu('player')"
+              >
+                <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 17.4V5.9l9-1.8v11.4" />
+                  <circle cx="6.6" cy="17.4" r="2.4" />
+                  <circle cx="15.6" cy="15.5" r="2.4" />
+                </svg>
+                <span>{{ N.menu.player }}</span>
+              </button>
+              <button class="quick-btn" type="button" @click="fromMenu('settings')">
+                <svg class="en-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 8h8.8M17.2 8h2.8M4 16h2.8M11.2 16h8.8" />
+                  <circle cx="15" cy="8" r="2.2" />
+                  <circle cx="9" cy="16" r="2.2" />
+                </svg>
+                <span>{{ N.menu.settings }}</span>
+              </button>
+            </div>
+          </div>
+
+          <p class="sheet-foot en-mono">{{ N.menu.keys }}</p>
         </div>
       </div>
     </Transition>
@@ -544,7 +642,64 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 
 .burger {
   display: none;
-  padding: var(--space-0) var(--space-1);
+  padding: 0;
+}
+
+/* 三根线：14×10px，线宽 1.4px。口径来回校准过三次——1.6px 判太粗、1px 判太细，
+   1.4px 落在两者之间：比同排描边 SVG 的 1.6px 略细（那四枚带圆形轮廓，是完整图标；
+   这三根是纯线，同粗会更重），又不至于细到在 1× 屏上被抗锯齿吃掉。
+   长度由 16 收到 14：短一点更紧凑，与 32px 钮的留白比例也更舒服。
+
+   两个量单一来源：--bar-h 线宽、--bar-step 顶位步进。步进 = 中线(5px) − 半根线宽，
+   于是三根的中心恰好落在 0.7 / 5 / 9.3，中间那根正压盒子中线上——
+   开合时上下两根各移一个步进就与它重合，改线宽只改这两枚，位移自动跟着走。 */
+.burger-box {
+  --bar-h: 1.4px;
+  --bar-step: 4.3px;
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 10px;
+}
+
+.burger .bar {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--bar-h);
+  /* 端点圆头，与同排 SVG 的 stroke-linecap: round 同一套收尾 */
+  border-radius: 1px;
+  background: currentColor;
+  transition:
+    transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity var(--dur-fast) ease;
+}
+
+.burger .bar-1 {
+  top: 0;
+}
+
+.burger .bar-2 {
+  top: var(--bar-step);
+}
+
+.burger .bar-3 {
+  top: calc(var(--bar-step) * 2);
+}
+
+/* 打开态：上下两根各移一个步进到中线再转 45°，中间那根横向收掉。
+   两段位移写在同一个 transform 里，避免两条规则互相覆盖。 */
+.burger.open .bar-1 {
+  transform: translateY(var(--bar-step)) rotate(45deg);
+}
+
+.burger.open .bar-2 {
+  opacity: 0;
+  transform: scaleX(0.2);
+}
+
+.burger.open .bar-3 {
+  transform: translateY(calc(var(--bar-step) * -1)) rotate(-45deg);
 }
 
 /* ---- 移动端菜单（全屏遮罩抽屉） ---- */
@@ -604,17 +759,51 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 
 .sheet-link {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-1);
   border-bottom: 1px solid var(--line);
+  border-radius: var(--r-sm);
   text-decoration: none;
   transition: color var(--dur-fast), background-color var(--dur-fast);
 }
 
+/* 当前页：冷色底 + 左缘一道竖线。竖线与底色一起给，不让颜色单独承担状态
+   （色弱读者与深色底片上都能读出来） */
 .sheet-link.active {
   color: var(--cold);
-  background: color-mix(in srgb, var(--cold) 6%, transparent);
+  background: color-mix(in srgb, var(--cold) 8%, transparent);
+  box-shadow: inset 2px 0 0 var(--cold);
+}
+
+/* 标签 + 说明两行；min-width:0 让长说明能正常换行而不是把箭头挤出容器 */
+.sheet-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sheet-hint {
+  font-family: var(--font-serif);
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
+  color: var(--text-1);
+}
+
+.sheet-link.active .sheet-hint {
+  color: color-mix(in srgb, var(--cold) 72%, var(--text-1));
+}
+
+/* 当前页的静态记号：一枚实心点，与其余行的箭头占同一格，行宽不跳 */
+.sheet-dot {
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  margin-right: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cold);
 }
 
 .sheet-code {
@@ -629,9 +818,11 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--cold);
 }
 
+/* 标签从 --fs-2xl 收到 --fs-xl：每行现在多了一句说明，两行加起来的高度与原先
+   单行大字相当，六条仍能在常见手机高度里一屏放下，不必滚动 */
 .sheet-label {
   font-family: var(--font-display);
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   letter-spacing: -0.01em;
@@ -654,10 +845,60 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   color: var(--cold);
 }
 
+/* ---- 快捷操作：四枚带文字的按钮，两列排布 ---- */
+.quick-lbl {
+  margin: 0 0 var(--space-1);
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.1em;
+  color: var(--text-1);
+}
+
+.quick-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-0);
+  font-family: var(--font-serif);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast),
+    border-color var(--dur-fast),
+    background-color var(--dur-fast);
+}
+
+.quick-btn:hover {
+  color: var(--cold);
+  border-color: var(--cold);
+  background: color-mix(in srgb, var(--cold) 7%, transparent);
+}
+
+.quick-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.quick-btn:disabled:hover {
+  color: var(--text-0);
+  border-color: var(--line);
+  background: none;
+}
+
 .sheet-foot {
   padding-top: var(--space-2);
   border-top: 1px solid var(--line);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-3xs);
   color: var(--text-1);
 }
 
@@ -752,6 +993,16 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   }
   .sheet-link,
   .sheet-arrow {
+    transition: none;
+  }
+  /* 汉堡的形变靠 transform：减弱动效下不做动画，但**终态仍要区分**——
+     上一版把两态都钉成 transform:none，结果打开与关闭长得一模一样，只剩中间那根
+     淡出，读不出这是个"关闭"按钮。现在直接给终态、去掉过渡：形态照旧变成叉，
+     只是瞬间完成，不做位移过程。 */
+  .burger .bar {
+    transition: none;
+  }
+  .quick-btn {
     transition: none;
   }
 }
