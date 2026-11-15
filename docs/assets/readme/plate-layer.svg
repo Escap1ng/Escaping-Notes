@@ -6,7 +6,7 @@
     </linearGradient>
     <linearGradient id="sink" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".3"/>
-      <stop offset="1" stop-color="#020204" stop-opacity="1"/>
+      <stop offset="1" stop-color="#0b0e16" stop-opacity="1"/>
     </linearGradient>
     <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".05"/>
@@ -23,7 +23,7 @@
     </style>
   </defs>
 
-  <rect width="920" height="440" fill="#0a0a10"/>
+  <rect width="920" height="440" fill="#141821"/>
   <text class="h" x="40" y="30">site backdrop, vertical cross-section</text>
   <text class="s" x="40" y="48">src/App.vue .sub-plate · position: fixed, z-index: -1 · tokens in site.css §1 / §2 / §3</text>
 
@@ -50,10 +50,10 @@
 
   <!-- C. 对比度实测 -->
   <text class="h" x="40" y="382">foreground contrast, measured</text>
-  <rect x="40" y="390" width="190" height="26" fill="#020204"/>
+  <rect x="40" y="390" width="190" height="26" fill="#0b0e16"/>
   <rect x="40" y="390" width="190" height="26" fill="#ff5c39" fill-opacity=".55"/>
   <text class="t" x="50" y="407">bare on photo · 1.0-2.4:1 — retired</text>
-  <rect x="240" y="390" width="160" height="26" fill="#020204"/>
+  <rect x="240" y="390" width="160" height="26" fill="#0b0e16"/>
   <rect x="240" y="390" width="160" height="26" fill="#8ec9ff" fill-opacity=".2"/>
   <text class="t" x="250" y="407">on a card · 5.5:1 +</text>
   <text class="s" x="420" y="401">A scrim-free photo cannot reach AA for naked text, whatever shape</text>

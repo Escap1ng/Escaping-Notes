@@ -11,7 +11,7 @@
     </style>
   </defs>
 
-  <rect width="920" height="360" fill="#0a0a10"/>
+  <rect width="920" height="360" fill="#141821"/>
   <text class="h" x="60" y="30">the ring rework — bright-star positions, before / after (schematic)</text>
   <text class="s" x="60" y="48">measurements from docs/design.md §3.1 · dots are bright-tier stars, guides are concentric radii</text>
 

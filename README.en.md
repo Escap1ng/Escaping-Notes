@@ -20,7 +20,7 @@ The home screen is a camera left open: scroll down and the exposure deepens and 
 <img src="docs/assets/readme/hero-deep-space.png#gh-dark-mode-only" alt="Dark hero: concentric star-trail arcs accumulating around a centred pole, cold blue and warm white with a few amber cores, outer rings running out of frame" width="100%">
 <img src="docs/assets/readme/hero-paper.png#gh-light-mode-only" alt="Light hero: slate and graphite-blue trails laid over a dry plate, vermilion on the brightest few, outer rings running out of frame" width="100%">
 
-<sub>Not a screenshot: the steady-state plate recomputed offline from the site's own constants (`npm run art:build`, add `ART_HERO=1` for the banner crop) — the very plate a `prefers-reduced-motion` visitor sees. Art and page share one pair of developing gains (×2.0 / ×1.42), so the thumbnail density matches the page.</sub>
+<sub>Not a screenshot: the steady-state plate recomputed offline from the site's own constants (`npm run art:build`, add `ART_HERO=1` for the banner crop) — the very plate a `prefers-reduced-motion` visitor sees. Art and page share one pair of developing gains (×2.6 dark / ×1.18 light), so the thumbnail density matches the page.</sub>
 
 ---
 
@@ -49,7 +49,9 @@ This section records the rework behind several rounds of "that looks wrong", bac
 
 Two more structural floors: no stroke thinner than `LW_MIN = 1.25` CSS px — sub-pixel strokes sample into broken grey dots on a 1× screen, the source of the faint clutter, so the dim tier recedes by colour instead; and star cores are painted on the current-frame layer, never accumulated (accumulating turns them back into arcs), so each trail carries a point-like star at its head.
 
-Current counts: 96 light / 62 dark (50 / 33 on narrow screens). The plate is allocated per viewport, capped at `MAXPX = 6e6` with a `MIN_DPR = 1.25` floor — every frame costs one full-screen `destination-out` plus one `drawImage`, so pixel count is the fixed overhead.
+Current counts: 76 light / 53 dark (40 / 28 on narrow screens). The plate is allocated per viewport, capped at `MAXPX = 6e6` with a `MIN_DPR = 1.25` floor — every frame costs one full-screen `destination-out` plus one `drawImage`, so pixel count is the fixed overhead.
+
+Density and darkness were tuned separately, because they had different causes. The dark theme used to stack three near-black layers — page colour, a graded-down hero photo and a veiled drawer plate — leaving 94% of pixels below level 40. The page colour is now a deep blue night (`#0b0e16`), the dark hero's grading factor went 0.32 → 0.5 (mean luminance 37 → 60, near-black pixels 58% → 26%) and the drawer's veil 0.62 → 0.42 (near-black 97% → 40%). The developing gain went up for dark (×2.6, not enough light) and down for light (×1.18, too much ink). The plate's own density is unchanged; what moved is the display stage and the ground colours.
 
 ## Interface
 

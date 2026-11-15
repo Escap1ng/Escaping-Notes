@@ -254,9 +254,15 @@ html:root {
 /* 选择器写成 :not([data-theme='out']) 而不是 [data-theme='well']，所以属性没写上时
    这里就是渲染结果。首开默认浅色由 index.html 决定，与此无关。 */
 html:root:not([data-theme='out']) {
-  --ink-0: #020204;
-  --ink-1: #0a0a10;
-  --ink-2: #15151d;
+  /* 2026-11-15（作者「整体比较偏黑」）：#020204 / #0a0a10 / #15151d → 下面三档。
+     旧值近纯黑（亮度 2.2 级），叠上压暗照片后整页 94% 的像素低于 40 级，读作一块黑板。
+     现在抬到深蓝夜色：页底 ~13 级、面板 ~22 级、抬升面 ~33 级，仍是明确的夜，
+     但天空与山体有了层次。色相留在冷蓝一侧（B > G > R），与 --cold 同族。
+     烘图脚本的天空纱必须跟着落到同一个 --ink-0，否则首屏横带顶边会出现一道横杠
+     （build_plate_bg.ps1 的 veilTopColor，两处一起改）。 */
+  --ink-0: #0b0e16;
+  --ink-1: #141821;
+  --ink-2: #202634;
 
   --text-0: #f4f1ea;
   --text-1: #8f8c96;
@@ -282,13 +288,13 @@ html:root:not([data-theme='out']) {
      否则直接拿 --ink-2 当阴影会在浅底上晕出一圈浅淡的光斑 */
   --shadow: rgba(0, 0, 0, 0.62);
   --plate-img: url('/plates/plate-bg-deep.jpg'); /* 抽屉底：plate1 烘出的压暗底，单张常驻（2026-11-07 起不再三档指向同一张装轮播） */
-  --plate-img-sm: url('/plates/plate-bg-deep-sm.jpg'); /* 手机档：同图 1280px 重采样（运行时还有 12px 模糊），0.10MB → 0.03MB */
+  --plate-img-sm: url('/plates/plate-bg-deep-sm.jpg'); /* 手机档：同图 1280px 重采样（运行时还有 12px 模糊），0.12MB → 0.04MB */
   /* 次级页未吸顶顶栏的字色（压在底片上）：deep 顶带近黑，字取 --text-0、
      hover / 选中 / 下划线保留 --cold 那枚亮蓝（压得住）。消费方在 SiteHeader 的 .plate 规则。 */
   --plate-hdr: var(--text-0);
   --plate-fg: var(--cold);
   --hero-img: url('/plates/plate-hero-deep.jpg'); /* 首屏的地景底：与亮色同一座山（同一取景的压暗版），星轨以 lighter 叠在它上面 */
-  --hero-img-sm: url('/plates/plate-hero-deep-sm.jpg'); /* 手机档：同取景 1800px 重采样，0.62MB → 0.05MB */
+  --hero-img-sm: url('/plates/plate-hero-deep-sm.jpg'); /* 手机档：同取景 1800px 重采样，0.90MB → 0.06MB */
   /* 首屏第一帧的替身：36px 宽的模糊底（0.46KB data URI）随样式表一起到，真图不透明、load 完自然盖住 */
   --hero-lqip: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAALACQDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAIEAQb/xAAeEAACAgIDAQEAAAAAAAAAAAAAAQIDERIhUVIxQv/EABYBAQEBAAAAAAAAAAAAAAAAAAEAAv/EABURAQEAAAAAAAAAAAAAAAAAAAAR/9oADAMBAAIRAxEAPwDklTR5Qk40RXEU2SbPH1i5fHJuCqIOrL2gh9aH+UTZMy+xgqlxp8oCZSfYBFX/2Q==');
 
@@ -364,8 +370,10 @@ html:root[data-theme='out'] {
 }
 
 /* ---------- 3a. 手机档地景 ----------
-   窄屏把首屏照片换成同取景的 1800px 重采样版（亮 1.45MB → 0.09MB，深 0.62MB → 0.05MB），
-   抽屉底片换 1280px 版（两张 1.5MB → 0.49MB；运行时还糊 12px，看不出来）。
+   窄屏把首屏照片换成同取景的 1800px 重采样版（亮 1.45MB → 0.09MB，深 0.90MB → 0.06MB），
+   抽屉底片换 1280px 版（浅 0.63MB → 0.21MB、深 0.12MB → 0.04MB；运行时还糊 12px，看不出来）。
+   四张手机档由 npm run bg:build 末尾的 Resample 从桌面成品降采样生成（2026-11-15 起；
+   此前是手工烘的，重烘桌面时会静默漏掉它们，窄屏于是一直用着旧调色）。
    断点必须与 index.html 首帧 preload 里那条 matchMedia 是同一个数：预加载错版本等于白下
    一张，首屏反而更慢；tests/hero-preload.test.mjs 从两边解析出来对拍。
    主题块的选择器是 (0,2,1)，所以这里也写成主题选择器、放在两套主题块之后，靠层叠扳 --hero-img。

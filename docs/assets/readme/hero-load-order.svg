@@ -13,7 +13,7 @@
     </style>
   </defs>
 
-  <rect width="920" height="360" fill="#0a0a10"/>
+  <rect width="920" height="360" fill="#141821"/>
   <text class="h" x="60" y="30">first paint — the photo goes first, everything else queues</text>
   <text class="s" x="60" y="48">index.html inline preload · src/lib/hero.js whenHeroReady() · lane lengths are order, not milliseconds</text>
 

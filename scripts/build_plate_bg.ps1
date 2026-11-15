@@ -51,6 +51,12 @@ $QUALITY = 72  # was 62 -- that was tuned for a blurred image, where block edges
 # Keep in step with src/styles/site.css --ink-0 in the 'out' theme.
 $INK_LIGHT = [System.Drawing.Color]::FromArgb(242, 245, 249)
 
+# The deep theme's page colour, same contract as $INK_LIGHT above: the dark hero's sky veil
+# and the deep drawer's wash both have to land on it EXACTLY. Keep in step with
+# src/styles/site.css --ink-0 in the html:root:not([data-theme='out']) block.
+# Was (2,2,4) = #020204 until 2026-11-15, when the author judged the whole page too black.
+$INK_DEEP = [System.Drawing.Color]::FromArgb(11, 14, 22)
+
 # Two INDEPENDENT blur knobs: how blurry the drawer is must never move how blurry the hero is.
 # Larger = blurrier (the source is shrunk to 1/N then scaled back; two resamples ~ a gaussian).
 # Retuning is one command, not an edit:  BLUR_HERO=8 BLUR_DRAWER=44 npm run bg:build
@@ -160,6 +166,31 @@ function Add-SkyVeil([System.Drawing.Graphics]$g, [int]$w, [int]$h, [double]$fra
   $lgb.Dispose()
 }
 
+# Phone resamples. Until 2026-11-15 these four were baked by hand, so `npm run bg:build`
+# silently left them behind: the desktop plates got a new grade while the <=720px variants
+# still shipped the old near-black ones (measured: hero-deep-sm meanL 37.2 vs the new
+# desktop 59.5). Same grade, same crop, same veil as the desktop pass -- only the width
+# differs -- so the two can never drift apart again. Downscale from the FINISHED desktop
+# file (not the original) to keep the byte cost low and the pixels identical in tone.
+#   hero  -> 1800px (site.css --hero-img-sm), drawer -> 1280px (--plate-img-sm)
+function Resample([string]$srcFile, [string]$outFile, [int]$w, [long]$quality) {
+  $img = [System.Drawing.Image]::FromFile($srcFile)
+  try {
+    $h = [int][Math]::Round($img.Height * ($w / [double]$img.Width))
+    $bmp = New-Bmp $w $h
+    $bmp.Gfx.DrawImage($img, (New-Object System.Drawing.Rectangle(0, 0, $w, $h)))
+    $bmp.Gfx.Dispose()
+    $p = New-Object System.Drawing.Imaging.EncoderParameters(1)
+    $p.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
+      [System.Drawing.Imaging.Encoder]::Quality, $quality)
+    $bmp.Bmp.Save($outFile, $codec, $p)
+    $bmp.Bmp.Dispose(); $p.Dispose()
+    Write-Output ("out {0} {1}x{2} {3:N0} KB" -f (Split-Path -Leaf $outFile), $w, $h,
+      ((Get-Item $outFile).Length / 1KB))
+  }
+  finally { $img.Dispose() }
+}
+
 function Bake($img, [string]$out, [double[]]$matrix, [System.Drawing.Color]$veil, [double]$veilA,
               [int]$blur = $BLUR_DRAWER, [double]$keep = 1.0, [int]$w = $W,
               [double]$cropTop = 0.0, [double]$veilTop = 0.0,
@@ -237,7 +268,11 @@ $HERO = @(
 # only the grade and the veil colour differ. Keeping $HERO's hue keeps the ridge readable and
 # the mountain recognisable; scaling the offset as well puts pure black back on --ink-0
 # (#020204) instead of the #030810 an offset left behind. Retune:  DEEP_HERO_K=0.4 npm run bg:build
-$DEEP_HERO_K = 0.32
+# 2026-11-15 (author: "the whole thing reads too black"): 0.32 -> 0.5.
+# At 0.32 the shipped dark hero measured meanL 37.3 with 58.2% of pixels under level 40 --
+# the mountain was a black silhouette and the sky above it was pure page colour. 0.5 keeps
+# the same cool grade and the same ridge, but the snow and rock get their tones back.
+$DEEP_HERO_K = 0.5
 if ($env:DEEP_HERO_K) { $DEEP_HERO_K = [double]$env:DEEP_HERO_K }
 $HERO_DEEP = Scale-Color $HERO $DEEP_HERO_K
 $HERO_DEEP[20] = [double]$HERO[20] * $DEEP_HERO_K
@@ -310,7 +345,12 @@ try {
   # --_sky-mask dark band instead. The deep plate KEEPS its 0.62 veil for now: in the night theme
   # that wash is what the dark identity stands on, and lifting it would put #f4f1ea text on a
   # mid-tone photo. Flagged, not silently kept -- see the report.
-  Bake $plate (Join-Path $OutDir 'plate-bg-deep.jpg') $COLD ([System.Drawing.Color]::FromArgb(2, 2, 4)) 0.62
+  # 2026-11-15: veil 0.62 -> 0.42 and the wash colour lifted to the new --ink-0.
+  # The shipped deep drawer measured meanL 23.5 with 96.8% of pixels under level 40 -- nearly
+  # a black rectangle, which is half of "the whole thing reads too black". The 0.62 wash was
+  # kept back when legibility depended on it; today body copy sits on cards and .en-head
+  # (>=5.98:1 measured), so the plate is scenery and can afford to show its own tones.
+  Bake $plate (Join-Path $OutDir 'plate-bg-deep.jpg') $COLD $INK_DEEP 0.42
   # The drawer used to run $SEPIA, so one photo was cool-blue above the fold and beige below it
   # -- that split IS the "top and bottom don't belong together" complaint, not a taste issue.
   # It now runs $PAPER: same hue curve as the hero's $HERO, brighter diagonal, no black offset.
@@ -333,12 +373,13 @@ try {
     -w $full.Width -keep ($HERO_BOTTOM / $full.Height) -cropTop ($HERO_TOP / $full.Height) `
     -veilTop (($HERO_SUMMIT - $HERO_TOP) / [double]($HERO_BOTTOM - $HERO_TOP))
   # The dark first screen: identical source, crop and sky dissolve. veilTopColor must be the
-  # dark --ink-0 (#020204) here, not the $INK_LIGHT default, or row 0 lands on the light page
-  # colour and the strip pops. One $full, so the ridge polyline in src/lib/ridge.js is shared.
+  # dark --ink-0 (#0b0e16 since 2026-11-15) here, not the $INK_LIGHT default, or row 0 lands on
+  # the light page colour and the strip pops. One $full, so the ridge polyline in
+  # src/lib/ridge.js is shared. Keep this in step with site.css --ink-0 in the deep block.
   Bake $full (Join-Path $OutDir 'plate-hero-deep.jpg') $HERO_DEEP ([System.Drawing.Color]::FromArgb(0, 0, 0)) 0.0 1 `
     -w $full.Width -keep ($HERO_BOTTOM / $full.Height) -cropTop ($HERO_TOP / $full.Height) `
     -veilTop (($HERO_SUMMIT - $HERO_TOP) / [double]($HERO_BOTTOM - $HERO_TOP)) `
-    -veilTopColor ([System.Drawing.Color]::FromArgb(2, 2, 4))
+    -veilTopColor $INK_DEEP
   $ep.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
     [System.Drawing.Imaging.Encoder]::Quality, [long]$QUALITY)
 }
@@ -347,3 +388,11 @@ finally {
   $plate.Dispose()
   [System.GC]::Collect()
 }
+
+# Phone variants, from the finished desktop files (see Resample above). Quality 82: these are
+# 1800/1280px wide and already carry a runtime 12px blur on the drawer, so the old 72 was
+# leaving visible blocks in the hero's sky gradient at phone width.
+Resample (Join-Path $OutDir 'plate-hero.jpg') (Join-Path $OutDir 'plate-hero-sm.jpg') 1800 82
+Resample (Join-Path $OutDir 'plate-hero-deep.jpg') (Join-Path $OutDir 'plate-hero-deep-sm.jpg') 1800 82
+Resample (Join-Path $OutDir 'plate-bg-paper4.jpg') (Join-Path $OutDir 'plate-bg-paper4-sm.jpg') 1280 78
+Resample (Join-Path $OutDir 'plate-bg-deep.jpg') (Join-Path $OutDir 'plate-bg-deep-sm.jpg') 1280 78
