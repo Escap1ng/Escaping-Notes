@@ -17,8 +17,14 @@ const stars = ref(false)
 // 地景图默认透明，等 whenHeroReady() 后再淡入；替身（.hero-lqip）垫在下面，
 // 于是照片是从一层模糊山影里"对焦"出来的。闸门带 error/20s 超时兜底，不会永远藏着。
 const plateReady = ref(false)
-// 刊头的入场（快门开启）：与地景同一道闸门放行，减弱动效下不做位移。
-const heroIn = ref(false)
+/* 刊头的入场（快门开启）：**不等照片**。站名是纯文字，首帧就该在，它才是这一页的身份；
+   扣在 1.45MB 地景后面等于让最轻的东西等最重的东西。此前 heroIn 初值 false、由闸门翻真，
+   而折线以下的合集与项目是同步数据、第一帧就画出来——于是读作"底部先于顶部加载"：
+   首屏是一块只有模糊替身的空场，站名要一两秒后才出现，下方的卡片却早就在那儿了。
+   现在挂载即显影（CSS 入场动画在首帧就跑），地景对焦、星轨挂载仍各自等闸门。
+   字体是 font-display: swap（site.css 顶部两枚 @font-face），所以文字不会被字体扣住，
+   Didone 到了再换形。 */
+const heroIn = ref(true)
 const still = ref(false)
 
 const textEl = ref(null)
@@ -30,8 +36,8 @@ function onScroll() {
   raf = requestAnimationFrame(() => {
     raf = 0
     const y = scrollY
-    // 照片没就位之前不写行内样式：那会与刊头入场动画争同一个 transform/opacity，
-    // 行内样式赢，入场就白写了。此时页面还在首屏顶部，视差本来也无位移可言。
+    // 照片没就位之前不写行内样式：刊头入场动画此刻正在跑（它不再等照片），
+    // 行内 transform/opacity 会盖掉那条动画。等 plateReady 之后再接手视差。
     if (textEl.value && plateReady.value) {
       textEl.value.style.transform = `translateY(${(y * 0.25).toFixed(1)}px)`
       textEl.value.style.opacity = Math.max(0, 1 - y / 520).toFixed(3)
@@ -51,8 +57,7 @@ onMounted(() => {
   // 图先到、星轨后画：等首屏照片 load（whenHeroReady 自带 error / 超时兜底），下一帧再挂。
   // 隐藏文档里 rAF 不推进（内置 / 无头 surface 就是这一类），这时直接挂，别把星轨永远扣在门外。
   whenHeroReady().then(() => {
-    plateReady.value = true
-    heroIn.value = true // 快门开启：地景对焦的同时刊头落位
+    plateReady.value = true // 只有地景对焦等这道闸门；刊头已在首帧显影（见 heroIn）
     if (document.visibilityState === 'hidden') stars.value = true
     else requestAnimationFrame(() => (stars.value = true))
   })
@@ -247,7 +252,10 @@ onUnmounted(() => {
 /* 快门开启：刊头随首屏照片一起显影——从轻微散焦、略大、偏下的位置落定。
    读作"这一夜开始曝光"，不是控件弹入，所以时长比指针反馈长一档、曲线慢起慢收。
    只作用在 .title 上（不动 .hero-text 自己）：那一层的 transform/opacity 归首屏视差写行内样式，
-   两者分层才不会互相盖掉。照片未就位时不加类，于是刷新在页面中段也不会先闪一下刊头。
+   两者分层才不会互相盖掉。
+   2026-11-15：.in 从挂载起就在（heroIn 初值 true），不再等照片——站名是首屏的身份，
+   不该排在 1.45MB 地景后面。视差那段行内样式仍等 plateReady 才写，所以入场动画不会被它盖掉；
+   刷新停在页面中段时动画照跑一次（0.24s 内视差接手），比"顶部空着等图"轻得多。
    减弱动效：.still 直接给终态，不做位移与散焦。 */
 .hero-text .title {
   opacity: 0;

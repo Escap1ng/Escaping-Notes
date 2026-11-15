@@ -146,6 +146,34 @@ test('地景图等闸门开了再淡入，替身垫在下面', () => {
   assert.equal(plateFadesIn(old), false)
 })
 
+// 刊头不等照片（2026-11-15，作者「首页加载顺序还是不对」）：站名是纯文字、是这一页的身份，
+// 此前扣在 1.45MB 地景的闸门后面，而折线以下的合集/项目是同步数据、第一帧就画出来——
+// 读作"底部先于顶部加载"。现在挂载即显影，地景对焦与星轨挂载仍各自等闸门。
+const titleNotGated = (h) =>
+  /const heroIn = ref\(true\)/.test(h) &&
+  !/heroIn\.value = true/.test(h) &&
+  /\.hero-text\.in \.title\s*\{[^}]*animation:\s*hero-develop/.test(h)
+
+test('刊头首帧即显影，不等首屏照片；地景与星轨仍等闸门', () => {
+  assert.equal(titleNotGated(hero), true, '刊头又被扣回照片闸门后面，顶部会空着等图')
+
+  // 负向对照①：把初值改回 false，刊头重新变成"等照片才出现"
+  const gated = hero.replace('const heroIn = ref(true)', 'const heroIn = ref(false)')
+  assert.notEqual(gated, hero, '这记假根本没改动文件体')
+  assert.equal(titleNotGated(gated), false)
+
+  // 负向对照②：把闸门里那句赋值加回去（旧写法），判据同样必须变红
+  const regated = hero.replace(
+    'plateReady.value = true',
+    'plateReady.value = true\n    heroIn.value = true'
+  )
+  assert.notEqual(regated, hero, '这记假根本没改动文件体')
+  assert.equal(titleNotGated(regated), false)
+
+  // 照片这一侧不许被顺手拆掉：地景仍然透明起步、等闸门才 ready
+  assert.equal(plateFadesIn(hero), true, '解耦刊头时把地景的闸门也拆了')
+})
+
 test('首帧替身：独立一层，两套主题各一份 LQIP', () => {
   const css = src('src/styles/site.css')
   assert.match(hero, /<div class="hero-lqip" aria-hidden="true"><\/div>/, '替身层没了')
