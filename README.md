@@ -98,10 +98,10 @@
 
 ### 首屏的加载次序
 
-<img src="docs/assets/readme/hero-load-order-light.svg#gh-light-mode-only" alt="首屏加载次序图：照片由首帧脚本预载、load 后开闸；星轨挂载、章节数据与字体分片排在闸后，手机抽屉底片等第一次滚动" width="920">
-<img src="docs/assets/readme/hero-load-order.svg#gh-dark-mode-only" alt="首屏加载次序图：照片由首帧脚本预载、load 后开闸；星轨挂载、章节数据与字体分片排在闸后，手机抽屉底片等第一次滚动" width="920">
+<img src="docs/assets/readme/hero-load-order-light.svg#gh-light-mode-only" alt="首屏加载次序图：照片由首帧脚本预载、load 后开闸；星轨挂载、章节数据与字体分片排在闸后，风景底片也等照片——桌面 load 完即取、手机再等首滚" width="920">
+<img src="docs/assets/readme/hero-load-order.svg#gh-dark-mode-only" alt="首屏加载次序图：照片由首帧脚本预载、load 后开闸；星轨挂载、章节数据与字体分片排在闸后，风景底片也等照片——桌面 load 完即取、手机再等首滚" width="920">
 
-首屏那张地景照片是首页的 LCP。`index.html` 的首帧内联脚本按当前主题 `preload` 它，与样式表并行起跑；≤720px 取 1800px 重采样版（亮 1.45MB → 0.09MB，深 0.62MB → 0.05MB）。照片默认透明，底下先垫一张 36px 宽、约 0.5KB 的模糊替身，闸门开了再 240ms 淡入真图。闸门是 `src/lib/hero.js` 的 `whenHeroReady()`：从 `--hero-img` 令牌取同一个 URL 再等一次 `load`，图卡住或出错都放行，不把整页扣死。其余的事排在照片后面：星轨块在照片下载期间预取、挂载仍等闸门；折线以下的章节数据排在闸门后；手机展示衬线的 CJK 分片也等照片；手机抽屉底片排最后，等第一次滚动再取。实测过程记在 [docs/design.md](docs/design.md) §3 与 `src/App.vue` 的注释里。
+首屏那张地景照片是首页的 LCP。`index.html` 的首帧内联脚本按当前主题 `preload` 它，与样式表并行起跑；≤720px 取 1800px 重采样版（亮 1.45MB → 0.09MB，深 0.62MB → 0.05MB）。照片默认透明，底下先垫一张 36px 宽、约 0.5KB 的模糊替身，闸门开了再 240ms 淡入真图。闸门是 `src/lib/hero.js` 的 `whenHeroReady()`：从 `--hero-img` 令牌取同一个 URL 再等一次 `load`，图卡住或出错都放行，不把整页扣死。其余的事排在照片后面：星轨块在照片下载期间预取、挂载仍等闸门；折线以下的章节数据排在闸门后；手机展示衬线的 CJK 分片也等照片；折线以下的风景底片同样等闸门——桌面照片 load 完即取，手机再等第一次滚动。此前桌面底片首帧就下（约 1.5MB），与首屏照片抢同一条下行，结果下方先显形、顶部还在替身上，读作「底部先于顶部加载」；2026-11-15 把桌面也排到闸后。实测过程记在 [docs/design.md](docs/design.md) §3 与 `src/App.vue` 的注释里。
 
 ## 两套主题的底片
 

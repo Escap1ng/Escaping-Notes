@@ -4,7 +4,8 @@
 //   ⑶ 闸门从 --hero-img 令牌取图：图名不抄第三份，卡住 / 出错都要放行；
 //   ⑷ 手机首帧先不取 CJK 分片，照片到位再摘降级类；
 //   ⑸ 地景图等闸门开了再 240ms 淡入，替身（LQIP）是独立一层、两套主题各一份；
-//   ⑹ 手机抽屉底片排最后：照片到位那一拍让给字体与数据，底片等第一次滚动，去次级页立即放行。
+//   ⑹ 抽屉底片一律等首屏照片：桌面照片 load 完即取，手机再等第一次滚动，去次级页立即放行；
+//      次级页首帧即 live。此前桌面首页首帧就取底片，与 LCP 抢下行，读作"底部先于顶部加载"。
 // 跑法：npm test
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -100,6 +101,29 @@ test('手机首页抽屉底片等第一次滚动再取，去次级页立即放�
   )
   assert.notEqual(old, app, '这记假根本没改动文件体')
   assert.equal(plateWaitsForScroll(old), false)
+})
+
+// 桌面首页的底片也等首屏照片：此前它从首帧就 live，~1.5MB 与 LCP 抢同一条下行，
+// 折线以下先显形为清晰照片而顶部首屏还在替身上——"底部先于顶部加载"。
+// 桌面在闸门后直接放行（下行已空闲），手机再等首滚（上一条），次级页首帧即 live。
+const plateAfterHero = (a) =>
+  /const plateLive = ref\(!isHome\)/.test(a) &&
+  /if \(isHome\) \{\s*whenHeroReady\(\)\.then\(/.test(a) &&
+  /else \{[^}]*releasePlate\(\)/.test(a)
+
+test('桌面首页底片等首屏照片 load 完再取，次级页首帧即 live', () => {
+  const app = src('src/App.vue')
+  assert.equal(plateAfterHero(app), true, '桌面底片又回到首帧就取，与 LCP 抢下行')
+
+  // 负向对照：把初始值改回"非手机即 live"，桌面重新首帧抢跑，判据必须变红
+  const old = app.replace('const plateLive = ref(!isHome)', 'const plateLive = ref(!narrowHome)')
+  assert.notEqual(old, app, '这记假根本没改动文件体')
+  assert.equal(plateAfterHero(old), false)
+
+  // 负向对照：撤掉闸门分支，底片不再等照片
+  const noGate = app.replace(/if \(isHome\) \{\s*whenHeroReady\(\)\.then\(/, 'if (false) {')
+  assert.notEqual(noGate, app, '这记假根本没改动文件体')
+  assert.equal(plateAfterHero(noGate), false)
 })
 
 // 地景淡入：透明起步、闸门开了才加 ready、过渡 0.24s

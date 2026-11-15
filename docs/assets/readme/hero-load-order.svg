@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360" role="img" aria-label="First-paint order: the landscape photo is preloaded by the inline script and opens the gate on load; trail mount, section data and the CJK font slice queue behind it, and the phone drawer plate waits for the first scroll">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360" role="img" aria-label="First-paint order: the landscape photo is preloaded by the inline script and opens the gate on load; trail mount, section data and the CJK font slice queue behind it; the drawer plate also waits for the photo — desktop fetches on load, phone waits for the first scroll">
   <defs>
     <linearGradient id="photo" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#8ec9ff" stop-opacity=".14"/>
@@ -50,11 +50,13 @@
   <text class="s" x="438" y="235">CJK slice ~147KB</text>
   <text class="s" x="560" y="235">titles fall back to the system serif until then</text>
 
-  <!-- 抽屉底片 -->
+  <!-- 抽屉底片：一律等首屏照片；桌面 load 完即取，手机再等首滚 -->
   <text class="lane" x="60" y="272">drawer plate</text>
+  <rect x="430" y="260" width="150" height="22" fill="#f4f1ea" fill-opacity=".18"/>
+  <text class="s" x="438" y="275">desktop: fetch on photo load</text>
   <rect x="640" y="260" width="180" height="22" fill="#ff5c39" fill-opacity=".16" stroke="#ff5c39" stroke-opacity=".4"/>
-  <text class="s" x="648" y="275" fill="#ff5c39">waits for the first scroll</text>
-  <text class="s" x="180" y="275">phone home, 1280px resample · no scroll, no download</text>
+  <text class="s" x="648" y="275" fill="#ff5c39">phone: + first scroll</text>
+  <text class="s" x="180" y="275">~1.5MB · never races the LCP</text>
 
   <text class="s" x="60" y="322">a reload already past the hero, or leaving home for a secondary page, releases the drawer plate at once —</text>
   <text class="s" x="60" y="337">there it is the reading background. Returning home holds frame-by-frame accumulation for 240ms (RETURN_HOLD).</text>

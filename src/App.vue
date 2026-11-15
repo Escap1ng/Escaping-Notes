@@ -11,21 +11,26 @@ const router = useRouter()
 // 次级页（非首页）：main 加空白滚动余量，把页脚压出首屏
 const isSub = computed(() => route.path !== '/')
 
-/* 手机首页的抽屉底片排在最后取：它只在折线以下露脸，照片到位后也先不抓这 0.5MB——
-   那一拍下行让给字体分片与章节数据，底片等第一次滚动再开始下，没人滚就没人下。
-   历史：最早挂在照片后面立刻取，Slow 4G 上与 LCP 那张照片抢同一条下行，实测首屏
-   从 ~7s 拖到 ~21s；后来改成等照片，如今再往后挪一拍。两道放行：⑴ 滚动（含 scroll-cue
-   的平滑滚动与键盘）；⑵ 离开首页去次级页——那里的底片就是正文背景，等不得。
-   桌面与次级页从首帧起就是 live。 */
-const deferPlate = !isSub.value && matchMedia('(max-width: 720px)').matches
-const plateLive = ref(!deferPlate)
+/* 折线以下的风景底片一律等首屏照片（LCP）就位再取，不与它抢下行。
+   此前只有手机首页这么做，桌面首页从首帧就 live：那张 ~1.5MB 的底片和首屏照片同时起跑，
+   结果折线以下先显形为一张清晰照片，而顶部首屏还是模糊替身、刊头还透明着——
+   读起来就是"底部先于顶部加载"。现在两档都等闸门，只是放行时机不同：
+     桌面首页 —— 照片 load 完即取（下行已空闲，底片在折线以下，滚下去时通常已就位）；
+     手机首页 —— 照片 load 完再等第一次滚动（0.5MB 在手机上值得省，没人滚就没人下）；
+     次级页   —— 首帧即 live（那里的底片就是正文背景，等不得）。
+   历史：手机这道滚动闸门是 Slow 4G 实测逼出来的——底片挂在照片后面立刻取时与 LCP
+   抢同一条下行，首屏从 ~7s 拖到 ~21s。桌面这次补上的是同一课的前半段：先等照片。
+   两道放行不变：⑴ 滚动（含 scroll-cue 的平滑滚动与键盘）；⑵ 离开首页去次级页。 */
+const isHome = !isSub.value
+const narrowHome = isHome && matchMedia('(max-width: 720px)').matches
+const plateLive = ref(!isHome)
 
 function releasePlate() {
   plateLive.value = true
   removeEventListener('scroll', releasePlate)
 }
 
-// 去次级页立即放行：底片是正文背景，不能扣在滚动闸门后面
+// 去次级页立即放行：底片是正文背景，不能扣在闸门后面
 watch(isSub, (sub) => {
   if (sub) releasePlate()
 })
@@ -103,13 +108,18 @@ let ro = null
 
 onMounted(() => {
   measure()
-  if (deferPlate) {
+  if (isHome) {
     whenHeroReady().then(() => {
       // 照片已就位，展示衬线可以取回来了（首帧脚本挂的临时降级，见 site.css §3a）
       document.documentElement.classList.remove('hero-pending')
-      // 底片最后取：等第一次滚动；刷新时已滚过首屏则立即放行
-      if (scrollY > 0) releasePlate()
-      else addEventListener('scroll', releasePlate, { passive: true, once: true })
+      if (narrowHome) {
+        // 手机：底片最后取，等第一次滚动；刷新时已滚过首屏则立即放行
+        if (scrollY > 0) releasePlate()
+        else addEventListener('scroll', releasePlate, { passive: true, once: true })
+      } else {
+        // 桌面：下行已空闲，底片在折线以下，照片到位即取
+        releasePlate()
+      }
     })
   }
   // body 尺寸变化 = 页面变高了（内容/图片加载、路由切换、字体换入）：重测缓存
@@ -215,9 +225,10 @@ html[data-plate-blur] .sub-plate {
   filter: blur(var(--plate-blur));
 }
 
-/* 手机首页：首屏照片没到位之前底片先不挂，照片到位后也等第一次滚动再取。
-   只留下压暗渐变，页脚 / 抽屉露出来也不会看到半张图；live 类由 script 在滚动闸门后加
-   （去次级页立即加）。桌面与次级页从首帧起就是 live，所以这两条只影响窄屏首页。 */
+/* 首页（桌面与手机）：首屏照片没到位之前底片先不挂——否则那张 ~1.5MB 的底片会和 LCP
+   抢下行，折线以下先显形、顶部首屏还在替身上。只留下压暗渐变，页脚 / 抽屉露出来也不会
+   看到半张图；live 类由 script 在闸门后加：桌面照片到位即加，手机再等第一次滚动，
+   去次级页立即加。次级页从首帧起就是 live。 */
 .sub-plate:not(.live) {
   background-image: linear-gradient(to bottom, transparent 52%, var(--ink-0) 100%);
 }

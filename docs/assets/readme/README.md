@@ -13,7 +13,7 @@ GitHub 的 `#gh-light-mode-only` / `#gh-dark-mode-only` 片段按阅读者的界
 | `plate-paper.png` | 同上，浅色主题（墨压干版，`source-over`） | 要 |
 | `plate-layer.svg` · `plate-layer-light.svg` | 手写深 / 浅两版；数字取自 `src/App.vue`（`.sub-plate` 的 52% → 100% 压暗渐变、单张常驻、四周外撑 3 倍模糊半径）与 `site.css` 的 `--plate-*` / `--ink-0`，对比度两档实测取自 `App.vue` 注释与 `check_contrast` 输出 | 改底片层几何/节奏/实测值时手改，两版一起 |
 | `fall-timing.svg` · `fall-timing-light.svg` | 手写深 / 浅两版；时长与缓动取自 `site.css` §8 | 改转场时手改，两版一起 |
-| `hero-load-order.svg` · `hero-load-order-light.svg` | 手写深 / 浅两版；次序与数值取自 `src/lib/hero.js`（`whenHeroReady` 的 load/error/20s 兜底）、`HorizonHero.vue`（0.24s 淡入、36px 替身、0.9s 星轨淡入）、`site.css`（≤720px 1800px 重采样）、`StarTrails.vue`（`RETURN_HOLD=240`）与 `App.vue`（抽屉底片等首滚）；泳道长度表次序、不表毫秒 | 改首屏排程时手改，两版一起 |
+| `hero-load-order.svg` · `hero-load-order-light.svg` | 手写深 / 浅两版；次序与数值取自 `src/lib/hero.js`（`whenHeroReady` 的 load/error/20s 兜底）、`HorizonHero.vue`（0.24s 淡入、36px 替身、0.9s 星轨淡入）、`site.css`（≤720px 1800px 重采样）、`StarTrails.vue`（`RETURN_HOLD=240`）与 `App.vue`（底片一律等首屏照片：桌面 load 完即取、手机再等首滚）；泳道长度表次序、不表毫秒 | 改首屏排程时手改，两版一起 |
 | `ring-rework.svg` · `ring-rework-light.svg` | 手写深 / 浅两版；返工前后亮星位置的示意，数值取自 `docs/design.md` §3.1（R=0.996 / 相关 0.998→0.205 / `EXPOSURE_DEG=64`）；点位是示意排布，非逐根复算 | 改星等分层或曝光口径时手改，两版一起 |
 
 两版配色分别照抄 `site.css` §2（深色）/ §3（浅色）的 `--ink-1` / `--text-0` / `--text-1` / `--cold` / `--hot`；改主题令牌时两版都要跟。
