@@ -168,8 +168,21 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     <a class="skip-link" href="#main">跳到内容</a>
 
     <RouterLink to="/" class="brand" aria-label="返回首页">
-      <span class="mark" aria-hidden="true"></span>
-      <span class="brand-name en-mono">{{ content.site.name }}</span>
+      <!-- 星轨印记：三道同心弧 + 一枚星核，与右上角图标钮同一套 1.6 描边语言。
+           弧的缺口是" trails 还没扫完"的暗示；旧版那枚 5.6px 实心环在浅色下读成黑点，
+           且与一排细描边圆钮不是一族（2026-11-16 重做，见 docs/design.md §4.5）。 -->
+      <svg class="mark" viewBox="0 0 28 28" aria-hidden="true">
+        <g class="arcs">
+          <circle cx="14" cy="14" r="11.5" stroke-dasharray="54 18.3" transform="rotate(-90 14 14)" />
+          <circle cx="14" cy="14" r="8" stroke-dasharray="36 14.3" transform="rotate(30 14 14)" />
+          <circle cx="14" cy="14" r="4.5" stroke-dasharray="19 9.3" transform="rotate(150 14 14)" />
+        </g>
+        <circle class="core" cx="14" cy="14" r="1.8" />
+      </svg>
+      <span class="brand-text">
+        <span class="brand-name">{{ content.site.name }}</span>
+        <span class="brand-sub en-mono">{{ N.brand.sub }}</span>
+      </span>
     </RouterLink>
 
     <nav class="nav" aria-label="主导航">
@@ -428,7 +441,10 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
   font-weight: var(--fw-medium);
 }
 
-/* ---- 签名：镂空吸积环（mask 挖空中心，提亮加饱和） ---- */
+/* ---- 签名：星轨印记 + 双行刊头（2026-11-16 重做） ----
+   旧版是一枚 5.6px 壁的实心环 + 13px 等宽站名：浅色下环读成黑点、与一排 1.6 描边圆钮
+   不是一族，站名也没有刊头重量。docs 记过「4px 细环撑不住 13px 站名」——那次的病根是
+   标题太轻，所以这次两头一起动：印记改细描边（与图标钮同族），标题加重到 16px 展示衬线。 */
 .brand {
   display: inline-flex;
   align-items: center;
@@ -437,38 +453,66 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 .mark {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  /* 光子环：全冷蓝单色调，避免红蓝混出紫色。环面取 --brand-ring——品牌蓝按主题兑出的
-     那一枚（浅色约 #5085ea，深色仍是 #8ec9ff）；mix 里白色只占 25% 做高光段，结果仍是蓝的。
-     环壁比例不动（hole 50%、壁起点 53% → 24px 上 5.6px）；直径回 24px——32px 的实心环在
-     一排 1.6px 描边圆钮旁边读起来大一号（作者 2026-10-30：「控制大小」，不是改细）。 */
-  background: conic-gradient(
-    from 210deg,
-    var(--brand-ring),
-    color-mix(in srgb, var(--brand-ring) 75%, #fff) 22%,
-    var(--brand-ring) 44%,
-    var(--brand-ring)
-  );
-  -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 53%);
-  mask: radial-gradient(closest-side, transparent 50%, #000 53%);
-  filter: saturate(1.05);
-  /* 不再旋转：这是一枚标识，不是一段动画；转起来只会让它一直停在运动模糊里看不清 */
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  /* 线色取 --brand-ring（品牌蓝按主题兑出的那一枚，浅色 3.26:1 过非文本 3:1 线），
+     不跟 currentColor 走——站名 hover 变冷色时印记保持自己的品牌蓝 */
+  color: var(--brand-ring);
+}
+
+/* 星核是"星"，用 --white（深色暖白 / 浅色深墨），与星轨装置里星核的取色同一条 */
+.mark .core {
+  fill: var(--white);
+  stroke: none;
+}
+
+/* hover：三道弧整体缓转 30°，像长曝光又走了一段。只动 transform、不常驻动画
+   （标识不是一段动画，旧版那条「不再旋转」的结论对常驻仍成立）；减弱动效下不动 */
+.mark .arcs {
+  transform-origin: 14px 14px;
+  transition: transform var(--dur) cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.brand:hover .mark .arcs {
+  transform: rotate(30deg);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1;
 }
 
 .brand-name {
-  /* 13px / 0.1em：与导航 15px 只差一档，环不再是唯一有重量的东西；
-     0.14em 那种宽字距在小号等宽体上会把四个音节拆散。 */
-  font-size: var(--fs-xs);
-  letter-spacing: 0.1em;
+  /* 站名是纯大写英文，走 Didone 刊头子集（与首屏 ESCAPING NOTES 同一族）；
+     16px / 700 给标题应有的重量，压得住旁边那枚细描边印记 */
+  font-family: var(--font-display-en);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
   color: var(--text-0);
   transition: color var(--dur-fast);
 }
 
-/* 站名是回首页的链接，原先 hover 什么都不变，与同排五枚图标钮不一致 */
+.brand-sub {
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.3em;
+  color: var(--text-1);
+  transition: color var(--dur-fast);
+}
+
+/* 站名是回首页的链接，hover 与同排图标钮一致：主行变冷色，副行跟上但留在次级 */
 .brand:hover .brand-name {
   color: var(--cold);
+}
+
+.brand:hover .brand-sub {
+  color: var(--text-0);
 }
 
 /* ---- 导航 ---- */
@@ -617,6 +661,20 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 .en-header.plate:not(.stuck) .nav-link:hover,
 .en-header.plate:not(.stuck) .nav-link.active,
 .en-header.plate:not(.stuck) .ico-btn:hover {
+  color: var(--plate-fg);
+}
+
+/* 刊头副行与印记在照片上同样落当刻字色：--text-1 在 paper4 顶带只有 2.4:1，
+   副行那 11.5px 小字不换成纸色就读不出来；印记整线落纸色（不兑透明，细线兑了更看不见） */
+.en-header.plate:not(.stuck) .brand-sub {
+  color: var(--plate-hdr);
+}
+
+.en-header.plate:not(.stuck) .mark {
+  color: var(--plate-hdr);
+}
+
+.en-header.plate:not(.stuck) .brand:hover .brand-sub {
   color: var(--plate-fg);
 }
 
@@ -955,7 +1013,8 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 @media (max-width: 480px) {
-  .brand-name {
+  /* 窄屏整组刊头文字收起，只留印记（热区由 pointer:coarse 那档外撑） */
+  .brand-text {
     display: none;
   }
 }
@@ -973,7 +1032,7 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
     width: 44px;
     min-width: 44px;
   }
-  /* 窄屏只留 24px 吸积环：热区用不可见的 ::after 撑到 44×44，观感与顶栏高度都不变 */
+  /* 窄屏只留 28px 星轨印记：热区用不可见的 ::after 撑到 44×44，观感与顶栏高度都不变 */
   .brand {
     position: relative;
   }
@@ -985,8 +1044,11 @@ const themeLabel = computed(() => (theme.mode === 'well' ? N.theme.dark : N.them
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mark {
-    animation: none;
+  /* 印记 hover 的缓转是 transform：减弱动效下两态都钉成 none（与衍射芒同一条） */
+  .mark .arcs,
+  .brand:hover .mark .arcs {
+    transform: none;
+    transition: none;
   }
   .ico-btn:hover {
     transform: none;

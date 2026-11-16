@@ -21,6 +21,10 @@ export const N = {
   // 首屏站名。`description` 是全站摘要：RSS 频道与分享卡的说法都从这里出，
   // 静态壳里那三枚 <meta> 逐字与它对齐（tests/content-rolls.test.mjs 会核）
   heroTitle: 'ESCAPING NOTES',
+
+  // 顶栏刊头的中文副行（主行是 site.name）。界面只说人话：「逃逸笔记」是站名的直译，
+  // 不借隐喻；与 heroTitle 的全大写英文主行各管一处，别把两行合成一句。
+  brand: { sub: '逃逸笔记' },
   description:
     'Escap1ng 的个人博客：技术、设计、生活，想到哪写到哪。首页是一段随滚动加速的星轨长曝光，文章按时间排在这里。',
 
@@ -138,6 +142,12 @@ export const N = {
     endsAria: '上下篇与返回目录',
     imgAlt: '文章插图，点按关闭预览',
     toc: '目录',
+    // 代码块右上角那枚复制钮（PostView 挂载后注入 .en-prose pre）。
+    // copyFail 是剪贴板被浏览器拒掉时的那一句：非安全上下文（http 直连 IP）与
+    // 未授权的 iframe 里 navigator.clipboard 压根不存在，静默失败读者会以为按了没用。
+    codeCopy: '复制代码',
+    codeCopied: '已复制 ✓',
+    codeFail: '复制失败 · 请手动选择',
   },
   postEnd: { back: '返回文章列表' },
   postPrev: '← 上一篇',

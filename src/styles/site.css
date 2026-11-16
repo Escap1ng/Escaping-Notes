@@ -1347,7 +1347,8 @@ html:root .en-prose h6 {
   letter-spacing: -0.01em;
   /* 折行均衡（§4.7）：多行小标题不再末行孤悬一两个字 */
   text-wrap: balance;
-  /* 目录与文中锚点跳进来的落点：顶栏是 fixed（z-60），不留出 --page-top 会被压在栏下 */
+  /* 目录与文中锚点跳进来的落点：顶栏是 fixed（z-60），不留出 --page-top 会被压在栏下。
+     文章页的目录已改到右侧竖栏（PostView 的 .toc），不再压住正文顶沿，所以这里不加额外让位。 */
   scroll-margin-top: calc(var(--page-top) - 24px);
 }
 
@@ -1420,23 +1421,75 @@ html:root .en-prose code {
   padding: 2px 6px;
 }
 
-html:root .en-prose pre {
-  position: relative;
-  background: var(--ink-1);
+/* 代码块：壳 + 工具条 + 代码体。壳由 PostView 在正文渲染完之后套上（decorateProse），
+   语言名取自 markdown.js 早就写好的 data-lang，复制钮在右。
+   为什么样式在这儿而不在 PostView scoped：正文是 v-html，scoped 的属性选择器挂不到
+   注入出来的节点上——这一节的存在理由就是"命中 v-html，放全局"。 */
+html:root .en-prose .code-wrap {
+  margin: var(--space-2) 0;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  padding: var(--space-2) var(--space-2) var(--space-2) 20px;
-  overflow: auto;
+  background: var(--ink-1);
+  /* 冷色竖条从 pre 挪到壳上：原先只贴代码体，现在整块（含工具条）是一根，
+     与 h2 那根左竖条同一套语言 */
+  border-left: 2px solid var(--cold);
+  overflow: hidden;
 }
 
-html:root .en-prose pre::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 12px;
-  bottom: 12px;
-  width: 2px;
-  background: var(--cold);
+html:root .en-prose .code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding: var(--space-0) var(--space-1) var(--space-0) var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+html:root .en-prose .code-lang {
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+
+html:root .en-prose .code-copy {
+  margin-left: auto; /* 没有语言名时（未标语言的围栏）钮仍靠右 */
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-3xs);
+  color: var(--text-1);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast),
+    background var(--dur-fast);
+}
+
+html:root .en-prose .code-copy:hover {
+  color: var(--cold);
+  background: color-mix(in srgb, var(--cold) 12%, transparent);
+}
+
+/* 成功 / 失败借 §5b 那套全站唯一的反馈色：中性 → 冷（成了）/ 热（没成） */
+html:root .en-prose .code-copy[data-state='ok'] {
+  color: var(--cold);
+}
+
+html:root .en-prose .code-copy[data-state='err'] {
+  color: var(--hot);
+}
+
+/* 代码体自己不再画边框与圆角：那两样归壳。左侧内边距留 20px 与原样一致 */
+html:root .en-prose pre {
+  position: relative;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: var(--space-2);
+  overflow: auto;
 }
 
 html:root .en-prose pre code {
@@ -1476,6 +1529,11 @@ html:root .en-prose blockquote {
   margin: var(--space-2) 0;
   padding: var(--space-1) var(--space-2);
   border-left: 2px solid var(--cold);
+  /* 一层极淡的冷色底，把引用从正文里"抬"出来一点：原先只有左竖线，长引用与正文
+     糊在一起，读到一半分不清哪句是别人的话。8% 兑透明——两套主题下都只是轻微着色，
+     字仍用 --text-1，对比度不因这层底而掉档（底色越接近 --ink-0，比值越接近原值）。 */
+  background: color-mix(in srgb, var(--cold) 8%, transparent);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
   color: var(--text-1);
   /* 本站引用均为中文（§4.7）：宋体栈没有真斜体，italic 会被浏览器合成倾斜，
      汉字笔画发糊。引用感交给冷色竖线与次文字色，字身保持直立 */
@@ -1502,11 +1560,34 @@ html:root .en-prose li::marker {
   color: var(--cold);
 }
 
+/* 分隔线：中间一颗星核。原先是一条通栏细线，与目录带、文末那两条上下边框长得一样，
+   读者分不出"这是段落间的停顿"还是"这是版面的框"。改成两端渐隐 + 中心一点冷色，
+   正是本站的星轨语汇（§6b 的衍射芒同源），而不是又一种新的装饰。
+   height 保持 1px、border 保持 0：这条线仍然是线，星核由 ::after 绝对定位画。 */
 html:root .en-prose hr {
+  position: relative;
   height: 1px;
   border: 0;
   margin: var(--space-3) 0;
-  background: var(--line);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--line) 22%,
+    var(--line) 78%,
+    transparent
+  );
+}
+
+html:root .en-prose hr::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: var(--r-pill);
+  background: var(--cold);
 }
 
 html:root .en-prose table {
@@ -1525,6 +1606,16 @@ html:root .en-prose td {
 
 html:root .en-prose th {
   background: var(--ink-1);
+  font-weight: var(--fw-bold);
+  /* 表头压一行小字距，与全站 eyebrow 同一套"这是标签不是正文"的读法 */
+  letter-spacing: 0.02em;
+}
+
+/* 斑马纹：宽表横着读容易串行，隔行兑一点 --ink-1 就有了轨道。
+   40% 兑 --ink-0 而不是直接铺 --ink-1：那样与表头同色，表头就不再是表头了。
+   只染 tbody 的偶数行——thead 里的 tr 不参与，表头保持整块实底。 */
+html:root .en-prose tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--ink-1) 40%, var(--ink-0));
 }
 
 /* 窄屏表格横向滚动：三列表格在 320px 上宽 331px，最后一列会顶出视口；html 的

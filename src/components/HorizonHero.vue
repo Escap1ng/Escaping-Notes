@@ -3,6 +3,7 @@
 // 长曝光星轨装置由 StarTrails 提供（等首屏照片 load 完再按需挂载），本组件只负责叙事排版
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 import { N } from '../data/narrative.js'
+import { content } from '../data/index.js'
 import { whenHeroReady } from '../lib/hero.js'
 
 /* 星轨是首屏最重的运行期工作：挂载即跑一次预曝光 buildPlate，之后每帧合成。
@@ -84,6 +85,9 @@ onUnmounted(() => {
 
     <div ref="textEl" class="hero-text" :class="{ in: heroIn, still }">
       <h1 class="title">{{ N.heroTitle }}</h1>
+      <!-- 口号铭牌：site.motto 是唯一来源（关于页自述下那行也读它），空串则整行不渲染。
+           斜体衬线小字，作为题记挂在刊头下面——居中约束只认刊头，铭牌不参与抢星环那条线 -->
+      <p v-if="content.site.motto" class="hero-motto">{{ content.site.motto }}</p>
     </div>
 
     <!-- 下滑提示：首屏右下角一枚圆钮，细描边里一枚下箭头轻轻往下走；可点（平滑滚到折线以下），
@@ -118,19 +122,33 @@ onUnmounted(() => {
   --svh: 100vh;
   --band-h: clamp(calc(var(--svh) * 0.54), 31vw, calc(var(--svh) * 0.7));
   --peak-y: calc(var(--svh) - var(--band-h) + 0.208 * max(var(--band-h), 31vw));
-  /* lockup 自己的高 = 行数 × 行高 × 字号。--hero-lines 是断行数：桌面 1，手机
-     （窄且够高）2，见下面那条窄屏规则。三枚令牌都引字号/行高，改一处不会让上面
-     那条几何链悄悄失准 */
-  /* 刊头字宽（100px 下实测，0.04em 字距已计入）：整行 "ESCAPING NOTES" 9.219em，
-     断两行时 "ESCAPING" 5.352em、"NOTES" 3.594em。
-     桌面取 8.8vw，整行约占 81% 视口：1440 上 127px、1920 上 169px；横向留白
-     320/360/390 为 30.2/34.0/36.9px，三档窄屏都不出画。
-     手机两行取 15vw：长行 ESCAPING 占约 80% 视口（320 上 257px，留白 31px）；
-     而整行 9.219em × 15vw ≈ 1.38 视口宽，必然在词间空格处分行——不靠标记断行。 */
-  --fs-hero-title: 8.8vw;
+  /* 刊头字宽（100px 下实测的基准）：整行 "ESCAPING NOTES" 在 0.04em 字距下 9.219em、
+     长行 "ESCAPING" 5.352em。扣掉字距得纯字形宽：整行 9.219 − 14×0.04 = 8.659em，
+     长行 5.352 − 8×0.04 = 5.032em（CSS 字距每个字符后都加一份，含末字符）。
+     2026-11-16 第二轮（作者「重心有问题，标题还是不好看」）：**撤掉 scaleX 横向拉伸**。
+     拉伸是假加宽——它把竖笔压胖、细横笔仍发尖，对比反而更失衡，读着就是"变形字"。
+     改成天然手法：字距 0.04→0.10em 把行撑开（时装刊头的宽排法），字身比例一寸不动。
+     0.10em 下整行 8.659 + 1.4 = 10.059em、长行 5.032 + 0.8 = 5.832em。
+     字号按此重算保持原占比：桌面 8vw（整行 80.5% 视口）、手机两行 13.6vw
+     （长行 79.3%，320 上 254px、留白 34px）；整行 10.059×13.6vw ≈ 1.37 视口宽，
+     必然在词间空格处分行——不靠标记断行。测试按这两个宽度对拍。 */
+  --fs-hero-title: 8vw;
   --lh-hero-title: 1.1;
   --hero-lines: 1;
-  --lockup-h: calc(var(--hero-lines) * var(--lh-hero-title) * var(--fs-hero-title));
+  /* 口号铭牌：比刊头小两档的题记，行高 1.4，与刊头的间隙走 --space-2。
+     这三个数同时喂 .hero-motto 的排版与下面的几何，一处改两处跟着走 */
+  --fs-motto: clamp(var(--fs-sm), 0.6vw + 8px, var(--fs-md));
+  --lh-motto: 1.4;
+  --motto-gap: var(--space-2);
+  --motto-h: calc(var(--lh-motto) * var(--fs-motto) + var(--motto-gap));
+  /* 两个高度分开记，这是重心的关键（2026-11-16）：
+     --title-h 只有刊头，--lockup-h 是刊头 + 铭牌的实际内容高。
+     上一轮把铭牌并进同一个 --lockup-h 去做居中，等于把"整组"的中心抬到星环上方——
+     大标题被往上拽约 25px、铭牌反而正压星环中心，作者判「重心有问题」。
+     现在居中约束只认刊头（见 --hero-title-b），铭牌作为附属挂在它下面，
+     刊头因此回到加铭牌之前那个被认可的位置。 */
+  --title-h: calc(var(--hero-lines) * var(--lh-hero-title) * var(--fs-hero-title));
+  --lockup-h: calc(var(--title-h) + var(--motto-h));
   --crest-gap: 56px;
 }
 
@@ -228,14 +246,24 @@ onUnmounted(() => {
      下推量与居中模型严格对应：加 T 顶部垫后块顶 = 原块顶 + T/2，所以 T = 2×(目标 − 原块顶)。 */
   --arc-y: calc(var(--svh) * 0.38);
   --arc-gap: 32px;
-  --hero-block-b: min(
-    calc(var(--peak-y) - var(--crest-gap)),
-    calc(var(--arc-y) - var(--arc-gap) + var(--lockup-h) / 2)
+  /* 两道约束都锚**刊头自己**，不是刊头 + 铭牌那一组（2026-11-16 修重心）：
+     ② 刊头块心抬到星环中心上方 --arc-gap → 刊头块底 = 星环 − gap + --title-h/2；
+     ① 不压山尖：铭牌底（= 刊头块底 + --motto-h）≤ 峰顶 − --crest-gap，
+        反解到刊头块底就是下面第一项。取两者更靠上的一条。
+     铭牌因此是"挂在刊头下面的题记"，它自己不去争星环那条线。 */
+  --hero-title-b: min(
+    calc(var(--peak-y) - var(--crest-gap) - var(--motto-h)),
+    calc(var(--arc-y) - var(--arc-gap) + var(--title-h) / 2)
   );
+  /* 内容盒里实际占高的是整组（刊头 + 铭牌），所以垫量按 --lockup-h 反解；
+     居中的是整组，但整组的底边被钉在"刊头块底 + 铭牌高"上 */
+  --hero-block-b: calc(var(--hero-title-b) + var(--motto-h));
   --hero-pad-b: min(
     max(var(--space-4), calc(var(--svh) + var(--lockup-h) - 2 * var(--hero-block-b))),
     calc(var(--svh) * 0.42)
   );
+  /* 刊头顶边的自由空间 = 居中后剩下的上半段。内容盒里占高的是整组，所以减 --lockup-h；
+     整组的顶边就是刊头顶边（铭牌挂在下面），于是这个数直接就是刊头顶边的位置 */
   --hero-top-free: calc((var(--svh) - var(--hero-pad-b) - var(--lockup-h)) / 2);
   --hero-header-clear: 96px;
   padding: max(0px, calc(2 * (var(--hero-header-clear) - var(--hero-top-free)))) var(--space-3)
@@ -286,17 +314,41 @@ onUnmounted(() => {
   }
 }
 
-/* 站名刊头：唯一主角。高对比 Didone 子集，字号随视口铺满约 85% 宽；
-   字距留在 0.04em——0.18em 在刊头级字号上会散成一排孤岛。 */
+/* 站名刊头：唯一主角。高对比 Didone 子集，字号随视口铺满约 80% 宽。
+   字距 0.10em（2026-11-16 第二轮）：0.04em 配瘦字身读着窄，而 scaleX 拉伸是假加宽
+   （竖笔压胖、细横笔仍发尖，读作变形字），已撤。宽字距是时装刊头的天然排法：
+   行撑开了，字身比例一寸没动。0.18em 才是"散成一排孤岛"，0.10em 在刊头级字号上仍成词。
+   末字符后也带一份字距，视觉上整行会偏左半个字距——用等量 text-indent 补回居中。 */
 .title {
   margin: 0;
   font-family: var(--font-display-en);
   font-size: var(--fs-hero-title);
   font-weight: var(--fw-bold);
   line-height: var(--lh-hero-title); /* 展示级标题：行高刻意脱离四档刻度（同 .en-title/.en-h2） */
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
+  text-indent: 0.1em;
   white-space: nowrap;
+  /* 给细横笔补一点肉：Didone 的横笔在大字号下细到发尖，作者判"不好看"。
+     同色描边 0.6px 只把最细的笔画托起来，不改字形比例，也不像描边字那样发糊。
+     深色底上字是暖白、描边同色，所以两套主题都只是"笔画略实"，不出现彩边。 */
+  -webkit-text-stroke: 0.6px currentColor;
   text-shadow: 0 2px 26px color-mix(in srgb, var(--ink-0) 55%, transparent);
+}
+
+/* 口号铭牌：比刊头小两档的斜体题记（2026-11-16）。拉丁走系统衬线的真斜体
+   （Georgia/Times 一系），不合成倾斜；与正体 Didone 成"碑刻 + 手写题记"的对照。
+   字距 0.18em 与刊头的宽排法呼应，次文字色 + 半透，明确是附属而非第二个标题。
+   它不参与星环那条居中约束（见 --hero-title-b），只挂在刊头下面 */
+.hero-motto {
+  margin: var(--motto-gap) 0 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--fs-motto);
+  line-height: var(--lh-motto);
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  color: color-mix(in srgb, var(--text-1) 88%, transparent);
+  text-shadow: 0 1px 14px color-mix(in srgb, var(--ink-0) 45%, transparent);
 }
 
 /* 下滑提示：首屏右下角一枚 46px 圆钮，细描边里一枚下箭头轻轻往下走——
@@ -371,7 +423,9 @@ onUnmounted(() => {
    块放在 .title 之后：同为 .title 一条规则，写在前面会被上面的 white-space: nowrap 盖掉。 */
 @media (max-width: 720px) and (min-height: 600px) {
   .hero {
-    --fs-hero-title: 15vw;
+    /* 13.6vw：0.10em 字距下长行 5.832em，13.6vw × 5.832 ≈ 79.3% 视口
+       （320 上 254px、左右各留 34px），与加铭牌之前的占比一致 */
+    --fs-hero-title: 13.6vw;
     --lh-hero-title: 1;
     --hero-lines: 2;
   }
