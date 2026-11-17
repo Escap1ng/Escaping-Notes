@@ -90,10 +90,13 @@ onUnmounted(() => {
       <p v-if="content.site.motto" class="hero-motto">{{ content.site.motto }}</p>
     </div>
 
-    <!-- 下滑提示：首屏右下角一枚圆钮，细描边里一枚下箭头轻轻往下走；可点（平滑滚到折线以下），
-         随 --shift 淡出 -->
-    <button class="scroll-cue" type="button" aria-label="向下滚动" @click="scrollDown">
-      <svg class="cue-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 6 8 10.8 12.8 6" /></svg>
+    <!-- 下滑提示（2026-11-17 第四版）：小字标签 + 一道垂线 + 一颗沿线下滑的星。
+         圆盘那三版都否了（实心像贴纸 / 裸细环看不清 / 加卡面成平庸悬浮钮）——
+         这版不做容器，做一条"曝光还在往下走"的轨迹，与刊头的碑刻感同族。
+         可点（平滑滚到折线以下），随 --shift 淡出 -->
+    <button class="scroll-cue" type="button" :aria-label="N.hero.scroll" @click="scrollDown">
+      <span class="cue-label" aria-hidden="true">{{ N.hero.scroll }}</span>
+      <span class="cue-track" aria-hidden="true"><span class="cue-star"></span></span>
     </button>
 
   </section>
@@ -351,68 +354,103 @@ onUnmounted(() => {
   text-shadow: 0 1px 14px color-mix(in srgb, var(--ink-0) 45%, transparent);
 }
 
-/* 下滑提示：首屏右下角一枚 46px 圆钮，细描边里一枚下箭头轻轻往下走——
-   读作"往下走"，形状与顶栏那排圆钮同族，但大一圈（32 vs 46），不至于被读成第五个顶栏按钮。
-   2026-10-30 从正中挪到右侧：折线声波的峰就在正中，圆钮压在波峰上像一颗樱桃，也让
-   "下面还有"跟波形抢同一处视线。同日由 38×58 胶囊改成圆形。
-   透明度挂 --shift：滚过首屏前 1/6 即淡出，不留残影。
-   按钮本身不动（动的是箭头，就不会晃到点击位置）；46 靠 ::after 补到 58 的触控热区
-   （manual §4 的 44px 兜底）。减弱动效下箭头停在正中的静态一撇。 */
+/* 下滑提示（2026-11-17 第四版，作者「重做」→「太不清楚了」→「还是不好看」）。
+   四版明账，别再回头试：① 52% ink-0 半透盘 + 淡冷细边 → 白贴纸；② 撤盘改裸细弧、
+   次色兑 75% → 亮照片上看不见；③ 整色 text-0 + 2px → 仍「太不清楚」；④ 实底卡面 +
+   饱和冷环 → 清楚了，但成了枚平庸悬浮钮，「还是不好看」。**病根是"圆盘容器"这个形态**：
+   它在星空刊头旁边永远读作控件贴纸，加底更重、去底更虚，两头都不对。
+   这版不做容器：一条 32px 垂线 + 一颗沿线下滑的星 + 一枚等宽小字标签，
+   读作"曝光还在往下走"，是星轨语汇的微缩，与刊头碑刻感同族（编辑部式滚动提示）。
+   **颜色用 --plate-hdr / --plate-fg**：这两枚本就是"压深色底片"专用（次级页顶栏在用），
+   两套主题下都是浅色——首屏底部是深色山体（浅色版也是暗山脊），所以不再赌照片明暗，
+   也不用 --cold（浅色主题那枚深蓝压暗山只有 1.8:1，正是 §8 记过的债）。
+   位置沿用 2026-10-30：右下角，不压折线波峰。透明度挂 --shift：滚过前 1/6 即淡出。
+   热区：整块（标签 + 线）约 40×70，已过 44px 短边兜底的大半，另用 ::after 外撑 6px。 */
 .scroll-cue {
   position: absolute;
   right: var(--space-4);
   bottom: var(--space-4);
   z-index: 2;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  /* 冷色=交互：下滑提示是"该动了"的信号，用灰读不出，用冷色一眼锁定 */
-  border: 1.5px solid color-mix(in srgb, var(--cold) 75%, transparent);
-  /* 半透底托：山脊照片明暗不定，裸描边会被吃掉，垫一层同族底把箭头托出来 */
-  background: color-mix(in srgb, var(--ink-0) 52%, transparent);
-  border-radius: 50%;
-  color: var(--cold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--plate-hdr);
   cursor: pointer;
   opacity: calc(1 - var(--shift, 0) * 6);
-  transition: border-color var(--dur-fast), background-color var(--dur-fast);
 }
 
 .scroll-cue::after {
   content: '';
   position: absolute;
   inset: -6px;
+}
+
+/* 标签：实测提示区背景平均亮度 76.9（暗山脊），浅色压上去对比充足。
+   **刻意不挂 .en-mono**：那条基元把 color:--text-1（灰）**直接设在这枚元素上**，
+   而浅色原先只写在父钮 .scroll-cue 上、靠继承下来——直接声明永远赢继承，
+   于是标签一直是灰字压暗山。这才是两版「发虚」的真因，不是字号也不是选色。
+   现在颜色显式写在标签自己身上；等宽字族与仪器口径也在这里写一遍
+   （--fs-xs、0.08em、大写），脱离基元后仍是同一档仪器文字。 */
+.cue-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--plate-hdr);
+  text-shadow: 0 1px 10px color-mix(in srgb, var(--ink-0) 55%, transparent);
+  transition: color var(--dur-fast);
+}
+
+/* 垂线：上端渐隐、下端实色，读作"轨迹从上方延续下来"。
+   1.5px（不是 1px）：1px 在高分屏缩略观看时几乎消失，实拍第一版就偏细弱 */
+.cue-track {
+  position: relative;
+  display: block;
+  width: 1.5px;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, currentColor 40%);
+}
+
+/* 星点：5px 实心圆 + 一圈同色微光，沿垂线自上而下滑行。
+   用 --plate-fg（两主题都是浅色）保证在暗山脊上始终是一颗亮星 */
+.cue-star {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
   border-radius: 50%;
+  background: var(--plate-fg);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--plate-fg) 75%, transparent);
+  animation: cue-fall 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 描边箭头，与顶栏那组 en-svg 同一套（fill:none + 圆头圆角），不另画实心三角形 */
-.cue-arrow {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  animation: cue-track 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+.scroll-cue:hover .cue-label {
+  color: var(--plate-fg);
 }
 
-.scroll-cue:hover {
-  border-color: var(--cold);
-  background: color-mix(in srgb, var(--ink-0) 62%, transparent);
-}
-
-/* 箭头在圆内轻轻起伏：3px 往返 + 透明度 0.55↔1，全程可见。
-   旧版是"走 6px、两端淡出"，一半时间按钮里是空的——换成圆钮之后那半个空圆像坏了。 */
-@keyframes cue-track {
-  0%,
-  100% {
-    transform: translateY(-3px);
-    opacity: 0.55;
+/* 星点沿线下滑：两端淡入淡出（这里允许——线始终在，不像旧版空圆读成坏了），
+   走完整条 32px 轨迹，读作一次曝光下行 */
+@keyframes cue-fall {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
   }
-  50% {
-    transform: translateY(3px);
+  25% {
     opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(31px);
+    opacity: 0;
   }
 }
 
@@ -450,13 +488,13 @@ onUnmounted(() => {
   }
 }
 
-/* 减弱动效：全站那条规则把动画时长压到 0.01ms、只跑一次，箭头会停在"走到底、已淡出"
-   的那一帧上——这里显式停回正中那道静态一撇，别让提示整个消失。 */
+/* 减弱动效：全站那条规则把动画时长压到 0.01ms、只跑一次，星点会停在"滑到底、已淡出"
+   的那一帧上——这里显式停在线中段并给足不透明度，别让整枚提示只剩一条空线。 */
 @media (prefers-reduced-motion: reduce) {
-  .cue-arrow {
+  .cue-star {
     animation: none;
-    opacity: 0.9;
-    transform: none;
+    opacity: 1;
+    transform: translateY(16px);
   }
 }
 
