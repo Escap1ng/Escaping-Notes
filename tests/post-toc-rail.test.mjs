@@ -126,14 +126,29 @@ test('底板收窄后仍容得下最宽正文栏：44 字 × 字号上限 + 左�
   )
 })
 
-test('窄屏档把外层定位复位，横带不被撑高', () => {
+test('窄屏档把外层定位复位，清单不被撑高', () => {
   const mb = mediaBlock(VUE, '@media (max-width: 1400px)')
   assert.ok(mb, '找不到窄屏回退档')
   const b = block(mb, '.toc')
   assert.ok(b, '窄屏档里没有 .toc')
-  assert.match(b, /position:\s*static/, '窄屏必须退回静态横带')
+  assert.match(b, /position:\s*static/, '窄屏必须退回静态清单')
   assert.match(b, /top:\s*auto/, '窄屏要复位 top')
-  assert.match(b, /bottom:\s*auto/, '窄屏要复位 bottom，否则横带被撑到整块底板高')
+  assert.match(b, /bottom:\s*auto/, '窄屏要复位 bottom，否则清单被撑到整块底板高')
+})
+
+test('窄屏目录是竖排清单，不是折行横带（2026-11-17 作者手机实拍「目录不好」）', () => {
+  const mb = mediaBlock(VUE, '@media (max-width: 1400px)')
+  const inner = block(mb, '.toc-inner')
+  assert.ok(inner, '窄屏档里没有 .toc-inner')
+  assert.match(inner, /flex-direction:\s*column/, '窄屏目录必须竖排：横带折行在手机上读成乱序')
+  assert.ok(!/flex-wrap:\s*wrap/.test(inner), '竖排清单不该再 wrap')
+  const sub = block(mb, '.toc-item.sub')
+  assert.ok(sub && /padding-left:\s*var\(--space-2\)/.test(sub), 'h3 层级要靠缩进表达')
+  // 负向对照：退回横带（row + wrap），同一条判据必须变红。
+  // 全局替换：外层 .toc 与内层 .toc-inner 各有一处 column，只换第一处造不出横带
+  const bad = mb.replace(/flex-direction:\s*column/g, 'flex-direction: row')
+  const badInner = block(bad, '.toc-inner')
+  assert.ok(!/flex-direction:\s*column/.test(badInner), '这条负向对照没造出横带')
 })
 
 test('被否掉的粘顶横带不许复活：--toc-h 与 §9 的额外让位都已撤除', () => {

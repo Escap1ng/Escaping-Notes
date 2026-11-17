@@ -173,12 +173,27 @@ function Add-SkyVeil([System.Drawing.Graphics]$g, [int]$w, [int]$h, [double]$fra
 # differs -- so the two can never drift apart again. Downscale from the FINISHED desktop
 # file (not the original) to keep the byte cost low and the pixels identical in tone.
 #   hero  -> 1800px (site.css --hero-img-sm), drawer -> 1280px (--plate-img-sm)
-function Resample([string]$srcFile, [string]$outFile, [int]$w, [long]$quality) {
+function Resample([string]$srcFile, [string]$outFile, [int]$w, [long]$quality,
+                  [System.Drawing.Color]$edgeVeil = $null, [int]$edgeRows = 0) {
   $img = [System.Drawing.Image]::FromFile($srcFile)
   try {
     $h = [int][Math]::Round($img.Height * ($w / [double]$img.Width))
     $bmp = New-Bmp $w $h
     $bmp.Gfx.DrawImage($img, (New-Object System.Drawing.Rectangle(0, 0, $w, $h)))
+    # 顶边纱（2026-11-17，作者手机实拍「有一条横线」）：降采样 + JPEG 会在第 0 行留下
+    # 边缘振铃——浅色 hero-sm 顶行实测 225,228,233，对页底 242,245,249 差 17 阶，
+    # 而 CSS 把素材第 0 行钉死在横带顶边，于是手机上读成一条横杠（桌面成品顶行差 1 阶，无此病）。
+    # 这里在编码前用页底色把顶行盖回、并在 edgeRows 内线性收敛到 0：边界两侧同色，缝消失。
+    # 纱只落在天空纱早已不透明的顶段，山一寸不碰。深色 hero-sm 顶行本就等于页底，盖了也幂等。
+    if ($null -ne $edgeVeil -and $edgeRows -gt 0) {
+      $er = New-Object System.Drawing.Rectangle(0, 0, $w, $edgeRows)
+      $c0 = [System.Drawing.Color]::FromArgb(255, $edgeVeil)
+      $c1 = [System.Drawing.Color]::FromArgb(0, $edgeVeil)
+      $eb = New-Object System.Drawing.Drawing2D.LinearGradientBrush($er, $c0, $c1,
+        [System.Drawing.Drawing2D.LinearGradientMode]::Vertical)
+      $bmp.Gfx.FillRectangle($eb, $er)
+      $eb.Dispose()
+    }
     $bmp.Gfx.Dispose()
     $p = New-Object System.Drawing.Imaging.EncoderParameters(1)
     $p.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
@@ -392,7 +407,9 @@ finally {
 # Phone variants, from the finished desktop files (see Resample above). Quality 82: these are
 # 1800/1280px wide and already carry a runtime 12px blur on the drawer, so the old 72 was
 # leaving visible blocks in the hero's sky gradient at phone width.
-Resample (Join-Path $OutDir 'plate-hero.jpg') (Join-Path $OutDir 'plate-hero-sm.jpg') 1800 82
-Resample (Join-Path $OutDir 'plate-hero-deep.jpg') (Join-Path $OutDir 'plate-hero-deep-sm.jpg') 1800 82
+# 首屏两张带顶边纱（见 Resample 的 edgeVeil）：6 行在 1800 宽上约 20px 桌面像素，
+# 落在天空纱不透明段内；纱色必须与 site.css 两主题的 --ink-0 同值（$INK_LIGHT/$INK_DEEP）。
+Resample (Join-Path $OutDir 'plate-hero.jpg') (Join-Path $OutDir 'plate-hero-sm.jpg') 1800 82 $INK_LIGHT 6
+Resample (Join-Path $OutDir 'plate-hero-deep.jpg') (Join-Path $OutDir 'plate-hero-deep-sm.jpg') 1800 82 $INK_DEEP 6
 Resample (Join-Path $OutDir 'plate-bg-paper4.jpg') (Join-Path $OutDir 'plate-bg-paper4-sm.jpg') 1280 78
 Resample (Join-Path $OutDir 'plate-bg-deep.jpg') (Join-Path $OutDir 'plate-bg-deep-sm.jpg') 1280 78

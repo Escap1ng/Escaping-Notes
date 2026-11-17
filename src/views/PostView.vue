@@ -697,13 +697,16 @@ onUnmounted(() => {
 }
 
 /* ≤1400px：板外没有 176px 的边槽，右栏会被 html 的 overflow-x: clip 直接裁掉（连滚都滚不到）。
-   这一档退回正文上方的静态横带——不粘顶（作者判顶部看不清），
+   这一档退回正文上方的静态清单——不粘顶（作者判顶部看不清）。
+   2026-11-17 作者手机实拍「目录不好」：旧版是 flex-wrap 横带，窄屏上条目折行参差、
+   h3 的缩进在折行里读成乱序。改成**竖排清单**：眉标独占一行，条目各占一行、
+   层级靠缩进表达——目录本来就该读作一份清单，不是一段缠行的文字。
    它此时只是"开头那份清单"，滚动位置由顶部那条进度线交代。 */
 @media (max-width: 1400px) {
   .toc {
     position: static;
     right: auto;
-    /* 横带自己按内容收高：宽屏那档的 top/bottom 撑满底板，这里必须一起复位 */
+    /* 清单自己按内容收高：宽屏那档的 top/bottom 撑满底板，这里必须一起复位 */
     top: auto;
     bottom: auto;
     width: auto;
@@ -713,38 +716,35 @@ onUnmounted(() => {
     border-left: 0;
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: var(--space-2);
+    flex-direction: column;
   }
   .toc-inner {
     position: static;
     max-height: none;
     overflow: visible;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: var(--space-2);
-    row-gap: var(--space-0);
-    /* 横带坐在阅读底板里（板自己就是卡面），内层不再叠第二张卡 */
+    flex-direction: column;
+    gap: var(--space-0);
+    /* 清单坐在阅读底板里（板自己就是卡面），内层不再叠第二张卡 */
     padding: 0;
     background: none;
     border: 0;
     border-radius: 0;
   }
+  .toc-label {
+    margin-bottom: var(--space-0);
+  }
   .toc-item {
     font-size: var(--fs-xs);
-    padding: 0;
+    padding: 3px 0;
   }
   .toc-item.active::before {
-    left: calc(-1 * var(--space-0));
+    left: calc(-1 * var(--space-1));
     top: 0.2em;
     bottom: 0.2em;
   }
   .toc-item.sub {
-    padding-left: 0;
-    margin-left: var(--space-2);
+    padding-left: var(--space-2);
+    margin-left: 0;
   }
 }
 
