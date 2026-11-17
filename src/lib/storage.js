@@ -17,6 +17,8 @@ export const KEYS = {
   // index.html 的首帧内联按字面量读——只有偏离默认档那一档（glass）需要写上属性。
   // 四处口径（这里的键名、surface.js 的两档值、index.html、site.css 的 [data-card-surface]）
   // 由 tests/card-surface.test.mjs 钉住。
+  recentSearch: `${PREFIX}recent-search`, // 搜索卡最近用过的词（JSON 数组，≤6 条，新的在前）。
+  // 只是 convenience：读不出 / 解析不了就当没有，不炸站；清空即 removeItem。
 }
 
 export function read(key, fallback = null, area = localStorage) {

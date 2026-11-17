@@ -169,6 +169,22 @@ export const N = {
   },
   theme: { dark: '深色', light: '浅色' },
 
+  // 搜索卡（2026-11-17 重做）：界面只说人话，状态行沿用全站 "//" 仪器前缀。
+  // {n} 由组件替换。判据与 /blog 同一套 filter，文案不另起一套口径。
+  search: {
+    aria: '搜索文章',
+    placeholder: '标题 / 摘要 / 标签',
+    close: '关闭搜索',
+    loading: '// 取数中',
+    idle: '// 输入词即筛',
+    hits: '// {n} 篇相符',
+    all: '在文章列表看全部 {n} 篇',
+    recent: '最近搜索',
+    clear: '清空',
+    keys: '↑↓ 选择 · Enter 打开 · Esc 关闭',
+    enter: 'Enter 看全部',
+  },
+
   empty: {
     posts: '// 还没有文章',
     search: '// 没有符合条件的结果', // 「筛选后为空」≠「本来就没有内容」
